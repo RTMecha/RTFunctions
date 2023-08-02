@@ -202,12 +202,12 @@ namespace RTFunctions.Functions
 
         public static Type arcadePlugin;
 
-        public static void AddLevel()
+        public static void AddLevel(string path)
         {
             if (arcadePlugin == null)
                 return;
 
-
+            arcadePlugin.GetMethod("AddLevel").Invoke(arcadePlugin, new object[] { path });
         }
 
         #endregion
