@@ -16,7 +16,7 @@ using RTFunctions.Patchers;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.1.2")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.2.1")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
