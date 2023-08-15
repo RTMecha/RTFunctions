@@ -367,11 +367,11 @@ namespace RTFunctions.Functions
 			}
 			if (_object["empty"] != null)
 			{
-				beatmapObject.objectType = (_object["empty"].AsBool ? DataManager.GameData.BeatmapObject.ObjectType.Empty : DataManager.GameData.BeatmapObject.ObjectType.Normal);
+				beatmapObject.objectType = (_object["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal);
 			}
 			else if (_object["h"] != null)
 			{
-				beatmapObject.objectType = (_object["h"].AsBool ? DataManager.GameData.BeatmapObject.ObjectType.Helper : DataManager.GameData.BeatmapObject.ObjectType.Normal);
+				beatmapObject.objectType = (_object["h"].AsBool ? ObjectType.Helper : ObjectType.Normal);
 			}
 			else if (_object["ot"] != null)
 			{
@@ -403,7 +403,7 @@ namespace RTFunctions.Functions
 			}
 			if (_object["ak"] != null)
 			{
-				beatmapObject.autoKillType = (_object["ak"].AsBool ? DataManager.GameData.BeatmapObject.AutoKillType.LastKeyframe : DataManager.GameData.BeatmapObject.AutoKillType.OldStyleNoAutokill);
+				beatmapObject.autoKillType = (_object["ak"].AsBool ? AutoKillType.LastKeyframe : AutoKillType.OldStyleNoAutokill);
 			}
 			else if (_object["akt"] != null)
 			{
@@ -1287,14 +1287,38 @@ namespace RTFunctions.Functions
                     EventKeyframe eventKeyframe11 = new EventKeyframe();
 					JSONNode jsonnode11 = _events["follow_player"][num4];
 					eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-					eventKeyframe11.SetEventValues(new float[]
+					if (!string.IsNullOrEmpty(jsonnode11["z2"]))
 					{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat,
-						jsonnode11["z"].AsFloat,
-						jsonnode11["x2"].AsFloat,
-						jsonnode11["y2"].AsFloat
-					});
+						eventKeyframe11.SetEventValues(new float[]
+						{
+							jsonnode11["x"].AsFloat,
+							jsonnode11["y"].AsFloat,
+							jsonnode11["z"].AsFloat,
+							jsonnode11["x2"].AsFloat,
+							jsonnode11["y2"].AsFloat,
+							jsonnode11["z2"].AsFloat,
+							jsonnode11["x3"].AsFloat,
+							jsonnode11["y3"].AsFloat,
+							jsonnode11["z3"].AsFloat,
+							jsonnode11["x4"].AsFloat,
+						});
+					}
+					else
+					{
+						eventKeyframe11.SetEventValues(new float[]
+						{
+							jsonnode11["x"].AsFloat,
+							jsonnode11["y"].AsFloat,
+							jsonnode11["z"].AsFloat,
+							jsonnode11["x2"].AsFloat,
+							jsonnode11["y2"].AsFloat,
+							9999f,
+							-9999f,
+							9999f,
+							-9999f,
+							1f
+						});
+					}
 					eventKeyframe11.random = jsonnode11["r"].AsInt;
 					DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
 					if (jsonnode11["ct"] != null)
@@ -1383,6 +1407,11 @@ namespace RTFunctions.Functions
 					if (type == 24)
 					{
 						allEvents[type][0].eventValues[3] = 0.5f;
+						allEvents[type][0].eventValues[5] = 9999f;
+						allEvents[type][0].eventValues[6] = -9999f;
+						allEvents[type][0].eventValues[7] = 9999f;
+						allEvents[type][0].eventValues[8] = -9999f;
+						allEvents[type][0].eventValues[9] = 1f;
 					}
 					if (type == 25)
 					{
