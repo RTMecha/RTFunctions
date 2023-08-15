@@ -18,49 +18,147 @@ namespace RTFunctions.Functions.Managers
 {
     public class QuickElementManager : MonoBehaviour
     {
+        public static QuickElementManager inst;
+
         void Awake()
         {
+            inst = this;
 
+            if (Resources.LoadAll<QuickElement>("terminal/quick-elements") != null)
+            {
+                foreach (QuickElement quickElement in Resources.LoadAll<QuickElement>("terminal/quick-elements"))
+                {
+                    if (!quickElements.ContainsKey(quickElement.name))
+                        quickElements.Add(quickElement.name, quickElement);
+                }
+            }
+
+            inst.StartCoroutine(LoadExternalQuickElements());
         }
 
+        public static Dictionary<string, QuickElement> AllQuickElements
+        {
+            get
+            {
+                foreach (var qe in quickElements)
+                {
+                    if (!allQuickElements.ContainsKey(qe.Key))
+                    {
+                        allQuickElements.Add(qe.Key, qe.Value);
+                    }
+                }
+                
+                foreach (var qe in customQuickElements)
+                {
+                    if (!allQuickElements.ContainsKey(qe.Key))
+                    {
+                        allQuickElements.Add(qe.Key, qe.Value);
+                    }
+                }
+
+                return allQuickElements;
+            }
+            set
+            {
+                allQuickElements = value;
+            }
+        }
+
+        private static Dictionary<string, QuickElement> allQuickElements = new Dictionary<string, QuickElement>();
+        public static Dictionary<string, QuickElement> customQuickElements = new Dictionary<string, QuickElement>();
         public static Dictionary<string, QuickElement> quickElements = new Dictionary<string, QuickElement>();
 
         public static void CreateNewQuickElement(string name)
         {
-            var quickElement = new QuickElement();
-            quickElement.name = name;
+            if (!AllQuickElements.ContainsKey(name))
+            {
+                var quickElement = ScriptableObject.CreateInstance<QuickElement>();
+                quickElement.name = name;
 
-            var kf = new QuickElement.Keyframe();
-            kf.text = "null";
-            kf.time = 1f;
+                quickElement.keyframes = new List<QuickElement.Keyframe>();
+                quickElement.effects = new List<QuickElement.Effect>();
+
+                var kf1 = new QuickElement.Keyframe();
+                kf1.text = "._.";
+                kf1.time = 1f;
+
+                quickElement.keyframes.Add(kf1);
+
+                var kf2 = new QuickElement.Keyframe();
+                kf2.text = "-_-";
+                kf2.time = 0.1f;
+
+                quickElement.keyframes.Add(kf2);
+
+                var kf3 = new QuickElement.Keyframe();
+                kf3.text = "._.";
+                kf3.time = 1f;
+
+                quickElement.keyframes.Add(kf3);
+
+                var loop = new QuickElement.Effect();
+                loop.name = "loop";
+                loop.data = new List<string>();
+                loop.data.Add("loop");
+
+                quickElement.effects.Add(loop);
+
+                customQuickElements.Add(name, quickElement);
+            }
         }
 
         public static string ConvertQuickElement(BeatmapObject beatmapObject, string element)
         {
-            if (quickElements.ContainsKey(element) && quickElements[element].keyframes.Count > 0)
+            if (AllQuickElements.ContainsKey(element) && AllQuickElements[element].keyframes.Count > 0)
             {
-                var quickElement = quickElements[element];
+                var quickElement = AllQuickElements[element];
 
-                var times = new List<float>();
-                var texts = new List<string>();
-
-                float totaltime = 0f;
-                foreach (var kf in quickElement.keyframes)
+                if (quickElement.effects != null && quickElement.effects.Find(x => x.data.Count > 0 && x.name == "loop") != null)
                 {
-                    texts.Add(kf.text);
-                    times.Add(totaltime);
-                    totaltime += kf.time;
+                    var times = new List<float>();
+                    var texts = new List<string>();
+
+                    float totaltime = 0f;
+                    foreach (var kf in quickElement.keyframes)
+                    {
+                        texts.Add(kf.text);
+                        times.Add(totaltime);
+                        totaltime += kf.time;
+                    }
+
+                    var currentTime = AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime;
+                    var index = times.FindIndex(x => x > currentTime % totaltime) - 1;
+
+                    if (index >= 0 && texts.Count > index)
+                        return texts[index];
+                    else if (texts.Count > 0)
+                        return texts[texts.Count - 1];
+                    else
+                        return "error";
                 }
-
-                var currentTime = AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime;
-                var index = times.FindIndex(x => x > currentTime) - 1;
-
-                if (index >= 0 && texts.Count > index)
-                    return texts[index];
-                else if (texts.Count > 0)
-                    return texts[texts.Count - 1];
                 else
-                    return "error";
+                {
+                    var times = new List<float>();
+                    var texts = new List<string>();
+
+                    float totaltime = 0f;
+                    foreach (var kf in quickElement.keyframes)
+                    {
+                        texts.Add(kf.text);
+                        times.Add(totaltime);
+                        totaltime += kf.time;
+                    }
+
+                    var currentTime = AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime;
+                    var index = times.FindIndex(x => x > currentTime) - 1;
+
+                    if (index >= 0 && texts.Count > index)
+                        return texts[index];
+                    else if (texts.Count > 0)
+                        return texts[texts.Count - 1];
+                    else
+                        return "error";
+                }
             }
 
             return "";
@@ -68,19 +166,14 @@ namespace RTFunctions.Functions.Managers
 
         public static void SaveExternalQuickElements()
         {
-            var dictionary = new Dictionary<string, QuickElement>();
-
-            if (Resources.LoadAll<QuickElement>("terminal/quick-elements") != null)
+            if (!RTFile.DirectoryExists(RTFile.ApplicationDirectory + "beatmaps/quickelements"))
             {
-                foreach (QuickElement quickElement in Resources.LoadAll<QuickElement>("terminal/quick-elements"))
-                {
-                    dictionary.Add(quickElement.name, quickElement);
-                }
+                Directory.CreateDirectory(RTFile.ApplicationDirectory + "beatmaps/quickelements");
             }
 
-            foreach (var quickElement in quickElements)
+            foreach (var quickElement in customQuickElements)
             {
-                if (!dictionary.ContainsKey(quickElement.Key))
+                if (!quickElements.ContainsKey(quickElement.Key))
                 {
                     var jn = JSON.Parse("{}");
 
@@ -92,7 +185,16 @@ namespace RTFunctions.Functions.Managers
                         jn["keys"][i]["time"] = quickElement.Value.keyframes[i].time.ToString();
                     }
 
-                    RTFile.WriteToFile("beatmaps/quickelements" + quickElement.Value.name, jn.ToString(3));
+                    for (int i = 0; i < quickElement.Value.effects.Count; i++)
+                    {
+                        jn["effects"][i]["name"] = quickElement.Value.effects[i].name;
+                        for (int j = 0; j < quickElement.Value.effects[i].data.Count; j++)
+                        {
+                            jn["effects"][i]["data"][j] = quickElement.Value.effects[i].data[j];
+                        }
+                    }
+
+                    RTFile.WriteToFile("beatmaps/quickelements/" + quickElement.Value.name + ".lsqe", jn.ToString(3));
                 }
             }
         }
@@ -107,13 +209,16 @@ namespace RTFunctions.Functions.Managers
                     var json = FileManager.inst.LoadJSONFileRaw(file);
                     var jn = JSON.Parse(json);
 
-                    var quickElement = new QuickElement();
+                    var quickElement = ScriptableObject.CreateInstance<QuickElement>();
 
                     quickElement.name = Path.GetFileName(file).Replace(".lsqe", "");
                     if (!string.IsNullOrEmpty(jn["name"]))
                     {
                         quickElement.name = jn["name"];
                     }
+
+                    quickElement.keyframes = new List<QuickElement.Keyframe>();
+                    quickElement.effects = new List<QuickElement.Effect>();
 
                     if (jn["keys"] != null)
                     {
@@ -127,8 +232,37 @@ namespace RTFunctions.Functions.Managers
                             {
                                 keyframe.time = result;
                             }
+
+                            quickElement.keyframes.Add(keyframe);
                         }
                     }
+                    else
+                    {
+                        var keyframe = new QuickElement.Keyframe();
+                        keyframe.text = "null";
+                        keyframe.time = 1f;
+
+                        quickElement.keyframes.Add(keyframe);
+                    }
+
+                    if (jn["effects"] != null)
+                    {
+                        for (int i = 0; i < jn["effects"].Count; i++)
+                        {
+                            var effect = new QuickElement.Effect();
+                            effect.name = jn["effects"][i]["name"];
+                            effect.data = new List<string>();
+                            for (int j = 0; j < jn["effects"][i]["data"].Count; j++)
+                            {
+                                effect.data.Add(jn["effects"][i]["data"][j]);
+                            }
+
+                            quickElement.effects.Add(effect);
+                        }
+                    }
+
+                    if (!AllQuickElements.ContainsKey(quickElement.name))
+                        customQuickElements.Add(quickElement.name, quickElement);
                 }
             }
 
