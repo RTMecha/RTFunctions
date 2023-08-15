@@ -23,12 +23,12 @@ namespace RTFunctions.Functions
 
         public static Objects inst;
 
-        private void Awake()
+        void Awake()
         {
             inst = this;
         }
 
-        private void Update()
+        void Update()
         {
             if (DataManager.inst.gameData != null)
             {
@@ -187,6 +187,8 @@ namespace RTFunctions.Functions
 
         public static Dictionary<string, FunctionObject> beatmapObjects = new Dictionary<string, FunctionObject>();
 
+        public static List<BackgroundObject> backgroundObjects = new List<BackgroundObject>();
+
         public class FunctionObject
         {
             public FunctionObject(BeatmapObject beatmapObject)
@@ -214,6 +216,17 @@ namespace RTFunctions.Functions
             public MeshFilter meshFilter;
 
             public RTObject rtObject;
+        }
+
+        public class BackgroundObject
+        {
+            public BackgroundObject()
+            {
+
+            }
+
+            public DataManager.GameData.BackgroundObject bg;
+            public List<GameObject> gameObjects;
         }
     }
 }
