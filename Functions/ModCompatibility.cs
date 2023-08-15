@@ -22,6 +22,8 @@ namespace RTFunctions.Functions
 
         public static GameObject bepinex;
 
+        public static Dictionary<string, object> sharedFunctions = new Dictionary<string, object>();
+
         private void Awake()
         {
             inst = this;
