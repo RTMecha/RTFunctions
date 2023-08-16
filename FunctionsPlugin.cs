@@ -13,10 +13,11 @@ using SimpleJSON;
 
 using RTFunctions.Functions;
 using RTFunctions.Patchers;
+using RTFunctions.Enums;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.2.1")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.2.2")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
