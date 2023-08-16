@@ -1368,7 +1368,7 @@ namespace RTFunctions.Functions
 				{
 					allEvents[type].Add(new EventKeyframe
                     {
-						eventValues = new float[9],
+						eventValues = new float[10],
 						eventTime = 0f
 					});
 					if (type == 11)
