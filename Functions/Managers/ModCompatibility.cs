@@ -75,6 +75,9 @@ namespace RTFunctions.Functions.Managers
             {
                 fontPlugin = bepinex.GetComponentByName("FontPlugin").GetType();
             }
+
+            if (bepinex.GetComponentByName("EventsCorePlugin"))
+                eventsCorePlugin = bepinex.GetComponentByName("EventsCorePlugin").GetType();
         }
 
         #region CreativePlayers

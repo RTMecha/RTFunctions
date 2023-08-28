@@ -26,7 +26,7 @@ using Screen = UnityEngine.Screen;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.3.0")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.3.1")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
