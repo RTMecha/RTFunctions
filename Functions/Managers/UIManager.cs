@@ -10,6 +10,8 @@ using UnityEngine.UI;
 
 using TMPro;
 
+using RTFunctions.Functions.IO;
+
 namespace RTFunctions.Functions.Managers
 {
     public class UIManager : MonoBehaviour
@@ -84,6 +86,7 @@ namespace RTFunctions.Functions.Managers
             var dictionary = new Dictionary<string, object>();
             var gameObject = new GameObject(_name);
             gameObject.transform.SetParent(_parent);
+            gameObject.transform.localScale = Vector3.one;
             gameObject.layer = 5;
 
             dictionary.Add("GameObject", gameObject);
@@ -99,6 +102,7 @@ namespace RTFunctions.Functions.Managers
             var dictionary = new Dictionary<string, object>();
             var gameObject = new GameObject(_name);
             gameObject.transform.SetParent(_parent);
+            gameObject.transform.localScale = Vector3.one;
             gameObject.layer = 5;
 
             dictionary.Add("GameObject", gameObject);
@@ -118,6 +122,7 @@ namespace RTFunctions.Functions.Managers
             var gameObject = Instantiate(textMeshPro);
             gameObject.name = _name;
             gameObject.transform.SetParent(_parent);
+            gameObject.transform.localScale = Vector3.one;
 
             dictionary.Add("GameObject", gameObject);
             dictionary.Add("RectTransform", gameObject.GetComponent<RectTransform>());
@@ -184,6 +189,7 @@ namespace RTFunctions.Functions.Managers
             var dictionary = new Dictionary<string, object>();
             var gameObject = new GameObject(_name);
             gameObject.transform.SetParent(_parent);
+            gameObject.transform.localScale = Vector3.one;
             dictionary.Add("GameObject", gameObject);
             dictionary.Add("RectTransform", gameObject.AddComponent<RectTransform>());
 
@@ -205,7 +211,7 @@ namespace RTFunctions.Functions.Managers
 
             ((Image)checkmark["Image"]).color = new Color(0.1216f, 0.1216f, 0.1216f, 1f);
 
-            GetImage((Image)checkmark["Image"], "BepInEx/plugins/Assets/editor_gui_checkmark.png");
+            GetImage((Image)checkmark["Image"], RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/editor_gui_checkmark.png");
 
             return dictionary;
         }
@@ -227,7 +233,7 @@ namespace RTFunctions.Functions.Managers
             var arrow = GenerateUIImage("Arrow", ((GameObject)dropdownBase["GameObject"]).transform);
             var arrowImage = (Image)arrow["Image"];
             arrowImage.color = new Color(0.2157f, 0.2157f, 0.2196f, 1f);
-            GetImage(arrowImage, "BepInEx/plugins/Assets/editor_gui_left.png");
+            GetImage(arrowImage, RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/editor_gui_left.png");
             ((GameObject)arrow["GameObject"]).transform.rotation = Quaternion.Euler(0f, 0f, 90f);
 
             SetRectTransform((RectTransform)label["RectTransform"], new Vector2(-15.3f, 0f), Vector2.one, Vector2.zero, new Vector2(0.5f, 0.5f), new Vector2(-46.6f, 0f));
@@ -288,7 +294,7 @@ namespace RTFunctions.Functions.Managers
             SetRectTransform((RectTransform)itemCheckmark["RectTransform"], new Vector2(8f, 0f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(32f, 32f));
             var itemCheckImage = (Image)itemCheckmark["Image"];
             itemCheckImage.color = new Color(0.1216f, 0.1216f, 0.1216f, 1f);
-            GetImage(itemCheckImage, "BepInEx/plugins/Assets/editor_gui_diamond.png");
+            GetImage(itemCheckImage, RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/editor_gui_diamond.png");
 
             var itemLabel = GenerateUIText("Item Label", item.transform);
             SetRectTransform((RectTransform)itemLabel["RectTransform"], new Vector2(15f, 0.5f), Vector2.one, Vector2.zero, new Vector2(0.5f, 0.5f), new Vector2(-50f, -3f));
@@ -313,11 +319,42 @@ namespace RTFunctions.Functions.Managers
             return dictionary;
         }
 
+        public static ColorBlock SetColorBlock(ColorBlock cb, Color normal, Color highlighted, Color pressed, Color selected, Color disabled, float fade = 0.2f)
+        {
+            cb.normalColor = normal;
+            cb.highlightedColor = highlighted;
+            cb.pressedColor = pressed;
+            cb.selectedColor = selected;
+            cb.disabledColor = disabled;
+            cb.fadeDuration = fade;
+            return cb;
+        }
+
+        public static void SetLayoutGroup(HorizontalLayoutGroup layoutGroup, bool controlHeight, bool controlWidth, bool expandHeight, bool expandWidth, bool scaleHeight = false, bool scaleWidth = false)
+        {
+            layoutGroup.childControlHeight = controlHeight;
+            layoutGroup.childControlWidth = controlWidth;
+            layoutGroup.childForceExpandHeight = expandHeight;
+            layoutGroup.childForceExpandWidth = expandWidth;
+            layoutGroup.childScaleHeight = scaleHeight;
+            layoutGroup.childScaleWidth = scaleWidth;
+        }
+
+        public static void SetLayoutGroup(VerticalLayoutGroup layoutGroup, bool controlHeight, bool controlWidth, bool expandHeight, bool expandWidth, bool scaleHeight = false, bool scaleWidth = false)
+        {
+            layoutGroup.childControlHeight = controlHeight;
+            layoutGroup.childControlWidth = controlWidth;
+            layoutGroup.childForceExpandHeight = expandHeight;
+            layoutGroup.childForceExpandWidth = expandWidth;
+            layoutGroup.childScaleHeight = scaleHeight;
+            layoutGroup.childScaleWidth = scaleWidth;
+        }
+
         public static void GetImage(Image _image, string _filePath)
         {
             if (RTFile.FileExists(_filePath))
             {
-                DataManager.inst.StartCoroutine(GetSprite(RTFile.ApplicationDirectory + _filePath, new Vector2(), delegate (Sprite cover)
+                DataManager.inst.StartCoroutine(GetSprite(_filePath, new Vector2(), delegate (Sprite cover)
                 {
                     _image.sprite = cover;
                 }, delegate (string errorFile)

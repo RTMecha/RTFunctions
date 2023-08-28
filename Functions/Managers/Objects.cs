@@ -15,7 +15,7 @@ using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
 using EventKeyframe = DataManager.GameData.EventKeyframe;
 
-namespace RTFunctions.Functions
+namespace RTFunctions.Functions.Managers
 {
     public class Objects : MonoBehaviour
     {

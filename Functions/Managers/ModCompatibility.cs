@@ -12,7 +12,7 @@ using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
 using EventKeyframe = DataManager.GameData.EventKeyframe;
 using Prefab = DataManager.GameData.Prefab;
 
-namespace RTFunctions.Functions
+namespace RTFunctions.Functions.Managers
 {
     public class ModCompatibility : MonoBehaviour
     {
@@ -45,6 +45,7 @@ namespace RTFunctions.Functions
                 {
                     catalystType = CatalystType.Regular;
                     catalyst = bepinex.GetComponentByName("CatalystBase").GetType();
+                    catalystInstance = catalyst.GetField("Instance").GetValue(bepinex.GetComponentByName("CatalystBase"));
 
                     if ((string)catalyst.GetField("Name").GetValue(catalyst) == "Editor Catalyst")
                     {
@@ -185,6 +186,7 @@ namespace RTFunctions.Functions
 
         public static Type catalyst;
         public static CatalystType catalystType;
+        public static object catalystInstance;
         public enum CatalystType
         {
             NotChecked,

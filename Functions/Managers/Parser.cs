@@ -22,7 +22,7 @@ using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
 using EventKeyframe = DataManager.GameData.EventKeyframe;
 using Prefab = DataManager.GameData.Prefab;
 
-namespace RTFunctions.Functions
+namespace RTFunctions.Functions.Managers
 {
     public static class Parser
 	{
@@ -301,7 +301,10 @@ namespace RTFunctions.Functions
 						eventKeyframe4.SetEventValues(new float[]
 						{
 							jsonnode4["x"].AsFloat,
-							jsonnode4["y"].AsFloat
+							jsonnode4["y"].AsFloat,
+							0f,
+							0f,
+							0f
 						});
 					}
 					else
@@ -309,6 +312,9 @@ namespace RTFunctions.Functions
 						eventKeyframe4.SetEventValues(new float[]
 						{
 							jsonnode4["x"].AsFloat,
+							0f,
+							0f,
+							0f,
 							0f
 						});
 					}
@@ -498,6 +504,7 @@ namespace RTFunctions.Functions
 				{
 					active = _backgroundObjects[i]["active"].AsBool;
 				}
+
 				string name;
 				if (_backgroundObjects[i]["name"] != null)
 				{
@@ -507,6 +514,7 @@ namespace RTFunctions.Functions
 				{
 					name = "Background";
 				}
+
 				int kind;
 				if (_backgroundObjects[i]["kind"] != null)
 				{
@@ -516,6 +524,7 @@ namespace RTFunctions.Functions
 				{
 					kind = 1;
 				}
+
 				string text;
 				if (_backgroundObjects[i]["text"] != null)
 				{
@@ -525,44 +534,52 @@ namespace RTFunctions.Functions
 				{
 					text = "";
 				}
-				Vector2[] array = new Vector2[4];
-				for (int j = 0; j < array.Length; j++)
-				{
-					if (_backgroundObjects[i]["points"][j]["x"] != null)
-					{
-						array[j] = new Vector2(_backgroundObjects[i]["points"][j]["x"].AsFloat, _backgroundObjects[i]["points"][j]["y"].AsFloat);
-					}
-				}
+
+				//Vector2[] array = new Vector2[4];
+				//for (int j = 0; j < array.Length; j++)
+				//{
+				//	if (_backgroundObjects[i]["points"][j]["x"] != null)
+				//	{
+				//		array[j] = new Vector2(_backgroundObjects[i]["points"][j]["x"].AsFloat, _backgroundObjects[i]["points"][j]["y"].AsFloat);
+				//	}
+				//}
+
 				Vector2 pos = new Vector2(_backgroundObjects[i]["pos"]["x"].AsFloat, _backgroundObjects[i]["pos"]["y"].AsFloat);
 				Vector2 scale = new Vector2(_backgroundObjects[i]["size"]["x"].AsFloat, _backgroundObjects[i]["size"]["y"].AsFloat);
+
 				float asFloat = _backgroundObjects[i]["rot"].AsFloat;
 				int asInt = _backgroundObjects[i]["color"].AsInt;
 				int asInt2 = _backgroundObjects[i]["layer"].AsInt;
+
 				bool reactive = false;
 				if (_backgroundObjects[i]["r_set"] != null)
 				{
 					reactive = true;
 				}
+
 				if (_backgroundObjects[i]["r_set"]["active"] != null)
 				{
 					reactive = _backgroundObjects[i]["r_set"]["active"].AsBool;
 				}
-				DataManager.GameData.BackgroundObject.ReactiveType reactiveType = DataManager.GameData.BackgroundObject.ReactiveType.LOW;
+
+				var reactiveType = DataManager.GameData.BackgroundObject.ReactiveType.LOW;
 				if (_backgroundObjects[i]["r_set"]["type"] != null)
 				{
 					reactiveType = (DataManager.GameData.BackgroundObject.ReactiveType)Enum.Parse(typeof(DataManager.GameData.BackgroundObject.ReactiveType), _backgroundObjects[i]["r_set"]["type"]);
 				}
+
 				float reactiveScale = 1f;
 				if (_backgroundObjects[i]["r_set"]["scale"] != null)
 				{
 					reactiveScale = _backgroundObjects[i]["r_set"]["scale"].AsFloat;
 				}
+
 				bool drawFade = true;
 				if (_backgroundObjects[i]["fade"] != null)
 				{
 					drawFade = _backgroundObjects[i]["fade"].AsBool;
 				}
-				DataManager.GameData.BackgroundObject item = new DataManager.GameData.BackgroundObject(active, name, kind, text, pos, scale, asFloat, asInt, asInt2, reactive, reactiveType, reactiveScale, drawFade);
+				var item = new DataManager.GameData.BackgroundObject(active, name, kind, text, pos, scale, asFloat, asInt, asInt2, reactive, reactiveType, reactiveScale, drawFade);
 				DataManager.inst.gameData.backgroundObjects.Add(item);
 			}
 			yield break;
