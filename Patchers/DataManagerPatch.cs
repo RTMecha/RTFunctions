@@ -37,14 +37,18 @@ namespace RTFunctions.Patchers
             objects.transform.SetParent(systemManager.transform);
             objects.AddComponent<Objects>();
 
+            var uiManager = new GameObject("UIManager");
+            uiManager.transform.SetParent(systemManager.transform);
+            uiManager.AddComponent<UIManager>();
+
             var quickElements = new GameObject("QuickElementsManager");
             quickElements.transform.SetParent(systemManager.transform);
             quickElements.AddComponent<QuickElementManager>();
 
-            EnumPatcher.AddEnumValue(typeof(DataManager.Language), "japanese");
-            EnumPatcher.AddEnumValue(typeof(DataManager.Language), "thai");
-            EnumPatcher.AddEnumValue(typeof(DataManager.Language), "russian");
-            EnumPatcher.AddEnumValue(typeof(DataManager.Language), "pirate");
+            EnumPatcher.AddEnumValue<DataManager.Language>("japanese");
+            EnumPatcher.AddEnumValue<DataManager.Language>("thai");
+            EnumPatcher.AddEnumValue<DataManager.Language>("russian");
+            EnumPatcher.AddEnumValue<DataManager.Language>("pirate");
 
             ___languagesToIndex.Add("japanese", 2);
             ___languagesToIndex.Add("thai", 3);
