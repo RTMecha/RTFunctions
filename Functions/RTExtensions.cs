@@ -16,6 +16,10 @@ using DG.Tweening;
 
 using LSFunctions;
 
+using RTFunctions.Enums;
+using RTFunctions.Functions.Managers;
+using RTFunctions.Functions.IO;
+
 using BeatmapObject = DataManager.GameData.BeatmapObject;
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
@@ -25,8 +29,8 @@ using Object = UnityEngine.Object;
 
 namespace RTFunctions.Functions
 {
-    public static class RTExtensions
-    {
+	public static class RTExtensions
+	{
 		#region Scene
 
 		/// <summary>
@@ -39,10 +43,10 @@ namespace RTFunctions.Functions
 		{
 			var b = _beatmapObject.GetGameObject();
 			if (b != null)
-            {
+			{
 				result = b;
 				return true;
-            }
+			}
 			result = null;
 			return false;
 		}
@@ -54,19 +58,23 @@ namespace RTFunctions.Functions
 		/// <returns>GameObject from beatmapGameObjects if Catalyst is not installed, otherwise returns VisualObject from ILevelObject within Catalyst.</returns>
 		public static GameObject GetGameObject(this BeatmapObject _beatmapObject)
 		{
-			if (ModCompatibility.catalyst != null && ModCompatibility.catalystType == ModCompatibility.CatalystType.Editor)
+			if (ModCompatibility.catalyst != null && ModCompatibility.catalystInstance != null && ModCompatibility.catalystType == ModCompatibility.CatalystType.Editor)
 			{
-				var iLevelObject = _beatmapObject.GetILevelObject();
-				if (iLevelObject != null)
-				{
-					var visualObject = iLevelObject.GetType().GetField("visualObject", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(iLevelObject);
+				//var iLevelObject = _beatmapObject.GetILevelObject();
+				//if (iLevelObject != null)
+				//{
+				//	var visualObject = iLevelObject.GetType().GetField("visualObject").GetValue(iLevelObject);
+				//
+				//	if (visualObject != null)
+				//	{
+				//		return (GameObject)visualObject.GetType().GetField("gameObject").GetValue(visualObject);
+				//	}
+				//}
+				//return null;
 
-					if (visualObject != null)
-					{
-						return (GameObject)visualObject.GetType().GetField("gameObject", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(visualObject);
-					}
-				}
-				return null;
+				//var catalyst = GameObject.Find("BepInEx_Manager").GetComponentByName("CatalystBase");
+				//var instance = catalyst.GetType().GetField("Instance").GetValue(catalyst);
+				return (GameObject)ModCompatibility.catalystInstance.GetType().GetMethod("GetGameObject").Invoke(ModCompatibility.catalystInstance, new object[] { _beatmapObject });
 			}
 
 			var chain = _beatmapObject.GetTransformChain();
@@ -80,16 +88,16 @@ namespace RTFunctions.Functions
 		}
 
 		public static bool TryGetTransformChain(this BeatmapObject _beatmapObject, out List<Transform> result)
-        {
+		{
 			var tf = _beatmapObject.GetTransformChain();
 			if (tf != null && tf.Count > 0 && !tf.Any(x => x == null))
-            {
+			{
 				result = tf;
 				return true;
-            }
+			}
 			result = null;
 			return false;
-        }
+		}
 
 		/// <summary>
 		/// Gets the transform parent chain associated with the beatmap object.
@@ -170,28 +178,28 @@ namespace RTFunctions.Functions
 		}
 
 		public static bool TryFind(string find, out GameObject result)
-        {
+		{
 			var e = GameObject.Find(find);
 			if (e != null)
-            {
+			{
 				result = e;
 				return true;
-            }
+			}
 			result = null;
 			return false;
-        }
+		}
 
 		public static bool TryFind(this Transform tf, string find, out Transform result)
-        {
+		{
 			var e = tf.Find(find);
 			if (e != null)
-            {
+			{
 				result = e;
 				return true;
-            }
+			}
 			result = null;
 			return false;
-        }
+		}
 
 		#endregion
 
@@ -330,35 +338,35 @@ namespace RTFunctions.Functions
 		public static BeatmapObject GetParent(this BeatmapObject _beatmapObject) => DataManager.inst.gameData.beatmapObjects.Find(x => x.id == _beatmapObject.parent);
 
 		public static bool TrySetParent(this BeatmapObject _beatmapObject, string id)
-        {
+		{
 			if (DataManager.inst.gameData.beatmapObjects.Find(x => x.id == id) != null)
-            {
+			{
 				_beatmapObject.parent = id;
 				_beatmapObject.updateObject();
 				return true;
-            }
+			}
 			return false;
-        }
+		}
 
 		public static void updateObject(this BeatmapObject _beatmapObject)
-        {
+		{
 			if (ModCompatibility.inst != null && ModCompatibility.catalystType == ModCompatibility.CatalystType.Editor)
-            {
+			{
 				ModCompatibility.updateCatalystObject(_beatmapObject);
 				return;
-            }
+			}
 			string id = _beatmapObject.id;
 
 			foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
-            {
+			{
 				if (beatmapObject.parent == id)
-                {
+				{
 					beatmapObject.updateObject();
-                }					
-            }
+				}
+			}
 
 			if (ObjectManager.inst.beatmapGameObjects.ContainsKey(id))
-            {
+			{
 				Object.Destroy(ObjectManager.inst.beatmapGameObjects[id].obj);
 				ObjectManager.inst.beatmapGameObjects[id].sequence.all.Kill(false);
 				ObjectManager.inst.beatmapGameObjects[id].sequence.col.Kill(false);
@@ -366,16 +374,16 @@ namespace RTFunctions.Functions
 			}
 
 			if (!_beatmapObject.fromPrefab)
-            {
+			{
 				_beatmapObject.active = false;
 				for (int i = 0; i < _beatmapObject.events.Count; i++)
-                {
+				{
 					foreach (var eventKeyframe in _beatmapObject.events[i])
-                    {
+					{
 						eventKeyframe.active = false;
-                    }
-                }
-            }
+					}
+				}
+			}
 		}
 
 		public static DataManager.BeatmapTheme CreateTheme(this DataManager dataManager, string _name, string _id, Color _bg, Color _gui, List<Color> _players, List<Color> _objects, List<Color> _bgs)
@@ -394,34 +402,34 @@ namespace RTFunctions.Functions
 		}
 
 		public static EventKeyframe NextEventKeyframe(this BeatmapObject beatmapObject, int type)
-        {
+		{
 			return beatmapObject.events[type].Find(x => x.eventTime > AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime);
-        }
+		}
 
 		public static EventKeyframe PrevEventKeyframe(this BeatmapObject beatmapObject, int type)
-        {
+		{
 			var index = beatmapObject.events[type].FindIndex(x => x.eventTime > AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime) - 1;
 			if (index < 0)
-            {
+			{
 				index = 0;
-            }
+			}
 
 			return beatmapObject.events[type][index];
-        }
+		}
 
 		public static GameObject GetShape(this List<ObjectManager.ObjectPrefabHolder> prefabs, int s, int so, bool includeShape = true)
-        {
+		{
 			int _s = Mathf.Clamp(s, 0, prefabs.Count - 1);
 			int _so = Mathf.Clamp(so, 0, prefabs[_s].options.Count - 1);
 
 			if (!includeShape && (_s == 4 || _s == 6))
-            {
+			{
 				_s = 0;
 				_so = 0;
-            }
+			}
 
 			return prefabs[_s].options[_so];
-        }
+		}
 
 		#endregion
 
@@ -444,22 +452,24 @@ namespace RTFunctions.Functions
 			return obj;
 		}
 
-        #endregion
+		#endregion
 
-        #region Event Keyframes
+		#region Event Keyframes
+
+		public static EventKeyframe ClosestEventKeyframe(int _type, object n = null) => DataManager.inst.gameData.eventObjects.allEvents[_type][ClosestEventKeyframe(_type)];
 
 		/// <summary>
 		/// Gets closest event keyframe to current time.
 		/// </summary>
 		/// <param name="_type">Event Keyframe Type</param>
 		/// <returns>Event Keyframe Index</returns>
-        public static int ClosestEventKeyframe(int _type)
+		public static int ClosestEventKeyframe(int _type)
 		{
 			var allEvents = DataManager.inst.gameData.eventObjects.allEvents;
 			float time = AudioManager.inst.CurrentAudioSource.time;
-			if (allEvents[_type].Find((DataManager.GameData.EventKeyframe x) => x.eventTime >= time) != null)
+			if (allEvents[_type].Find(x => x.eventTime > time) != null)
 			{
-				var nextKFE = allEvents[_type].Find((DataManager.GameData.EventKeyframe x) => x.eventTime >= time);
+				var nextKFE = allEvents[_type].Find(x => x.eventTime > time);
 				var nextKF = allEvents[_type].IndexOf(nextKFE);
 				var prevKF = nextKF - 1;
 
@@ -490,6 +500,8 @@ namespace RTFunctions.Functions
 			return 0;
 		}
 
+		public static EventKeyframe ClosestKeyframe(this BeatmapObject beatmapObject, int _type, object n = null) => beatmapObject.events[_type][beatmapObject.ClosestKeyframe(_type)];
+
 		/// <summary>
 		/// Gets closest event keyframe to current time within a beatmap object.
 		/// </summary>
@@ -498,11 +510,16 @@ namespace RTFunctions.Functions
 		/// <returns>Event Keyframe Index</returns>
 		public static int ClosestKeyframe(this BeatmapObject beatmapObject, int _type)
 		{
-			if (beatmapObject.events[_type].Find((DataManager.GameData.EventKeyframe x) => x.eventTime >= AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime) != null)
+			if (beatmapObject.events[_type].Find(x => x.eventTime > AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime) != null)
 			{
-				var nextKFE = beatmapObject.events[_type].Find((DataManager.GameData.EventKeyframe x) => x.eventTime >= AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime);
+				var nextKFE = beatmapObject.events[_type].Find(x => x.eventTime > AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime);
 				var nextKF = beatmapObject.events[_type].IndexOf(nextKFE);
 				var prevKF = nextKF - 1;
+
+				if (prevKF < 0)
+					prevKF = 0;
+
+				var prevKFE = beatmapObject.events[_type][prevKF];
 
 				if (nextKF == 0)
 				{
@@ -528,6 +545,15 @@ namespace RTFunctions.Functions
 						return nextKF;
 					}
 				}
+				{
+					var dis = RTMath.Distance(nextKFE.eventTime, prevKFE.eventTime);
+					var time = AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime;
+
+					var prevClose = time > dis + prevKFE.eventTime / 2f;
+					var nextClose = time < nextKFE.eventTime - dis / 2f;
+
+					
+                }
 			}
 			return 0;
 		}
@@ -551,8 +577,6 @@ namespace RTFunctions.Functions
 		{
 			return color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
 		}
-
-        public static bool GameDataIsNull => DataManager.inst == null && DataManager.inst.gameData == null;
 
 		public static bool TryGetComponent<T>(this GameObject gameObject, out T result)
         {
@@ -586,12 +610,10 @@ namespace RTFunctions.Functions
         {
 			var gameObject = component.gameObject;
 
-			Object.Destroy(component);
+			Object.DestroyImmediate(component);
 
 			if (gameObject != null)
-            {
 				return gameObject.AddComponent(newComponent.GetType());
-            }
 			return null;
         }
 
@@ -618,6 +640,16 @@ namespace RTFunctions.Functions
 					Array.Reverse(byteArr, i * 4, 4);
 			}
 			return byteArr;
+		}
+
+		public static void Add<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, KeyValuePair<TKey, TValue> keyValuePair)
+		{
+			dictionary.Add(keyValuePair.Key, keyValuePair.Value);
+		}
+
+		public static KeyValuePair<TKey, TValue> NewKeyValuePair<TKey, TValue>(TKey key, TValue value)
+		{
+			return new KeyValuePair<TKey, TValue>(key, value);
 		}
 
 		#endregion
