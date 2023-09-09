@@ -6,6 +6,11 @@ namespace RTFunctions.Functions.IO
 {
 	public static class RTMath
 	{
+		public static float Lerp(float x, float y, float t) => x + (y - x) * t;
+		public static Vector2 Lerp(Vector2 x, Vector2 y, float t) => x + (y - x) * t;
+		public static Vector3 Lerp(Vector3 x, Vector3 y, float t) => x + (y - x) * t;
+		public static Color Lerp(Color x, Color y, float t) => x + (y - x) * t;
+
 		public static Vector3 CenterOfVectors(List<Vector3> vectors)
 		{
 			Vector3 vector = Vector3.zero;
@@ -84,9 +89,14 @@ namespace RTFunctions.Functions.IO
 			return Mathf.Round(_value * (float)num) / (float)num;
 		}
 
-		public static float Distance(float h, float l)
+		public static float Distance(float x, float y)
         {
-			return -(-h + l);
-        }
+			if (x > y)
+				return -(-x + y);
+			else
+				return (-x + y);
+		}
+
+		public static float InverseLerp(float x, float y, float t) => (t - x) / (y - x);
 	}
 }
