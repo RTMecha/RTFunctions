@@ -26,17 +26,26 @@ using Screen = UnityEngine.Screen;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.3.1")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.3.2")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
 		//EnumPatcher from https://github.com/SlimeRancherModding/SRML
+		//Easing code from https://github.com/Reimnop/Catalyst
 
 		//Updates:
 
+		public static string VersionNumber
+		{
+			get
+			{
+				return PluginInfo.PLUGIN_VERSION;
+			}
+		}
+
 		public static FunctionsPlugin inst;
 		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
-		private readonly Harmony harmony = new Harmony("rtfunctions");
+		readonly Harmony harmony = new Harmony("rtfunctions");
 
 		public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
 		public static ConfigEntry<KeyCode> OpenPAPersistentFolder { get; set; }
@@ -228,6 +237,21 @@ namespace RTFunctions
 			harmony.PatchAll(typeof(SaveManagerPatch));
 
 			Logger.LogInfo($"Plugin RT Functions is loaded!");
+
+			Application.quitting += delegate ()
+			{
+				if (EditorManager.inst != null && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
+				{
+					string str = RTFile.basePath;
+					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-backup.lsb";
+					if (RTFile.FileExists(modBackup))
+						File.Delete(modBackup);
+
+					string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
+					if (RTFile.FileExists(lvl))
+						File.Copy(lvl, modBackup);
+				}
+			};
 		}
 
 		static void UpdateSettings(object sender, EventArgs e)
@@ -299,30 +323,30 @@ namespace RTFunctions
 			RTHelpers.screenScaleInverse = 1f / RTHelpers.screenScale;
 
 			if (!Application.runInBackground)
-            {
 				Application.runInBackground = true;
+
+			if (!LSHelpers.IsUsingInputField())
+			{
+				if (Input.GetKeyDown(OpenPAFolder.Value))
+					RTFile.OpenInFileBrowser.Open(RTFile.ApplicationDirectory);
+
+				if (Input.GetKeyDown(OpenPAPersistentFolder.Value))
+					RTFile.OpenInFileBrowser.Open(RTFile.PersistentApplicationDirectory);
+
+				if (Input.GetKeyDown(KeyCode.I))
+					Debug.LogFormat("{0}Objects alive: {1}", className, DataManager.inst.gameData.beatmapObjects.FindAll(x => x.TimeWithinLifespan()).Count);
 			}
-
-			if (Input.GetKeyDown(OpenPAFolder.Value))
-            {
-				RTFile.OpenInFileBrowser.Open(RTFile.ApplicationDirectory);
-            }
-
-			if (Input.GetKeyDown(OpenPAPersistentFolder.Value))
-            {
-				RTFile.OpenInFileBrowser.Open(RTFile.PersistentApplicationDirectory);
-            }
 		}
 
 		[HarmonyPatch(typeof(SystemManager), "Awake")]
 		[HarmonyPostfix]
-		private static void DisableLoggers() => Debug.unityLogger.logEnabled = DebugsOn.Value;
+		static void DisableLoggers() => Debug.unityLogger.logEnabled = DebugsOn.Value;
 
 		[HarmonyPatch(typeof(SystemManager), "Update")]
 		[HarmonyPrefix]
-		private static bool SystemManagerUpdatePrefix()
+		static bool SystemManagerUpdatePrefix()
 		{
-			if ((Input.GetKeyDown(KeyCode.P) && !LSHelpers.IsUsingInputField()) || (Input.GetKeyDown(KeyCode.F9) && !LSHelpers.IsUsingInputField()))
+			if ((Input.GetKeyDown(KeyCode.P) && !LSHelpers.IsUsingInputField()) || (Input.GetKeyDown(KeyCode.F12) && !LSHelpers.IsUsingInputField()))
 			{
 				TakeScreenshot();
 			}
@@ -443,7 +467,53 @@ namespace RTFunctions
 			yield break;
         }
 
-		public static void SetCameraRenderDistance()
+        #region Debugging
+
+        public static int ObjectsOnScreenCount()
+		{
+			int posnum = 0;
+			float camPosX = 1.775f * EventManager.inst.camZoom + EventManager.inst.camPos.x;
+			float camPosY = 1f * EventManager.inst.camZoom + EventManager.inst.camPos.y;
+
+			foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
+			{
+				if (Objects.beatmapObjects.ContainsKey(beatmapObject.id))
+				{
+					var functionObject = Objects.beatmapObjects[beatmapObject.id];
+					if (functionObject.gameObject != null && functionObject.meshFilter != null)
+					{
+						var lossyScale = Vector3.one;
+						var position = functionObject.gameObject.transform.position;
+
+						foreach (var chain in functionObject.transformChain)
+						{
+							var chvector = chain.transform.localScale;
+							lossyScale = new Vector3(lossyScale.x * chvector.x, lossyScale.y * chvector.y, 1f);
+						}
+
+						var array = new Vector3[functionObject.meshFilter.mesh.vertices.Length];
+						for (int i = 0; i < array.Length; i++)
+						{
+							var a = functionObject.meshFilter.mesh.vertices[i];
+							array[i] = new Vector3(a.x * lossyScale.x, a.y * lossyScale.y, 0f) + position;
+						}
+
+						if (array.All(x => x.x > camPosX || x.y > camPosY || x.x < -camPosX || x.y < -camPosY))
+						{
+							posnum += 1;
+						}
+					}
+				}
+			}
+
+			return posnum;
+		}
+
+		public static int ObjectsAliveCount() => DataManager.inst.gameData.beatmapObjects.FindAll(x => x.TimeWithinLifespan()).Count;
+
+        #endregion
+
+        public static void SetCameraRenderDistance()
 		{
 			if (GameManager.inst == null)
 				return;
@@ -505,7 +575,7 @@ namespace RTFunctions
 
 		public static List<Universe> universes = new List<Universe>
 		{
-			new Universe(Universe.UniDes.Chardax, "000"),
+			new Universe("Axiom Nexus", Universe.UniDes.Chardax, "000"),
 		};
 
 		public static User player = new User(displayName, UnityEngine.Random.Range(0, ulong.MaxValue).ToString(), new Universe(Universe.UniDes.MUS));
