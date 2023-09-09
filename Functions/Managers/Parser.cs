@@ -15,12 +15,17 @@ using UnityEngine.Networking;
 
 using SimpleJSON;
 using DG.Tweening;
+using LSFunctions;
+
+using RTFunctions.Functions.IO;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
+
 using EventKeyframe = DataManager.GameData.EventKeyframe;
 using Prefab = DataManager.GameData.Prefab;
+using PrefabObject = DataManager.GameData.PrefabObject;
 
 namespace RTFunctions.Functions.Managers
 {
@@ -28,21 +33,37 @@ namespace RTFunctions.Functions.Managers
 	{
 		//Move this to RTFunctions.Functions.IO
 
+		public static IEnumerator ParseRTFunctionsData(JSONNode _rt)
+        {
+			if (!string.IsNullOrEmpty(_rt["v"]))
+            {
+				RTHelpers.levelVersion = _rt["v"];
+            }
+
+			yield break;
+        }
+
 		public static IEnumerator ParseBeatmap(string _json, bool editor = false)
 		{
-			JSONNode jsonnode = JSON.Parse(_json);
+			JSONNode jn = JSON.Parse(_json);
 			if (!editor)
 			{
-				DataManager.inst.gameData.ParseThemeData(jsonnode["themes"]);
+				DataManager.inst.gameData.ParseThemeData(jn["themes"]);
 			}
-			DataManager.inst.gameData.ParseEditorData(jsonnode["ed"]);
-			DataManager.inst.gameData.ParseLevelData(jsonnode["level_data"]);
-			DataManager.inst.gameData.ParseCheckpointData(jsonnode["checkpoints"]);
-			ParsePrefabs(jsonnode["prefabs"]);
-			ParsePrefabObjects(jsonnode["prefab_objects"]);
-			DataManager.inst.StartCoroutine(ParseGameObjects(jsonnode["beatmap_objects"]));
-			DataManager.inst.gameData.ParseBackgroundObjects(jsonnode["bg_objects"]);
-			DataManager.inst.StartCoroutine(ParseEventObjects(jsonnode["events"]));
+
+			if (jn["mod"] != null)
+            {
+				yield return DataManager.inst.StartCoroutine(ParseRTFunctionsData(jn["mod"]));
+            }
+
+			DataManager.inst.gameData.ParseEditorData(jn["ed"]);
+			DataManager.inst.gameData.ParseLevelData(jn["level_data"]);
+			DataManager.inst.gameData.ParseCheckpointData(jn["checkpoints"]);
+			ParsePrefabs(jn["prefabs"]);
+			ParsePrefabObjects(jn["prefab_objects"]);
+			DataManager.inst.StartCoroutine(ParseGameObjects(jn["beatmap_objects"]));
+			DataManager.inst.gameData.ParseBackgroundObjects(jn["bg_objects"]);
+			DataManager.inst.StartCoroutine(ParseEventObjects(jn["events"]));
 			yield break;
 		}
 
@@ -142,7 +163,7 @@ namespace RTFunctions.Functions.Managers
 		{
 			if (DataManager.inst.gameData.prefabs == null)
 			{
-				DataManager.inst.gameData.prefabs = new List<DataManager.GameData.Prefab>();
+				DataManager.inst.gameData.prefabs = new List<Prefab>();
 			}
 			DataManager.inst.gameData.prefabs.Clear();
 
@@ -157,7 +178,7 @@ namespace RTFunctions.Functions.Managers
 						list.Add(beatmapObject);
 					}
 				}
-				List<DataManager.GameData.PrefabObject> list2 = new List<DataManager.GameData.PrefabObject>();
+				List<PrefabObject> list2 = new List<PrefabObject>();
 				for (int k = 0; k < _prefabs[i]["prefab_objects"].Count; k++)
 				{
 					list2.Add(DataManager.inst.gameData.ParsePrefabObject(_prefabs[i]["prefab_objects"][k]));
@@ -173,13 +194,113 @@ namespace RTFunctions.Functions.Managers
 		{
 			if (DataManager.inst.gameData.prefabObjects == null)
 			{
-				DataManager.inst.gameData.prefabObjects = new List<DataManager.GameData.PrefabObject>();
+				DataManager.inst.gameData.prefabObjects = new List<PrefabObject>();
 			}
 			DataManager.inst.gameData.prefabObjects.Clear();
 			for (int i = 0; i < _prefabObjects.Count; i++)
 			{
-				DataManager.inst.gameData.prefabObjects.Add(DataManager.inst.gameData.ParsePrefabObject(_prefabObjects[i]));
+				DataManager.inst.StartCoroutine(ParsePrefabObject(_prefabObjects[i], delegate (PrefabObject _po)
+				{
+					DataManager.inst.gameData.prefabObjects.Add(_po);
+				}));
 			}
+		}
+
+		public static IEnumerator ParsePrefabObject(JSONNode _prefabObject, Action<PrefabObject> action)
+		{
+			var prefabObject = new PrefabObject();
+			//prefabObject.ID = _prefabObject["id"];
+			prefabObject.prefabID = _prefabObject["pid"];
+			prefabObject.StartTime = _prefabObject["st"].AsFloat;
+
+			if (!string.IsNullOrEmpty(_prefabObject["rc"]))
+				prefabObject.RepeatCount = int.Parse(_prefabObject["rc"]);
+
+			if (!string.IsNullOrEmpty(_prefabObject["ro"]))
+				prefabObject.RepeatOffsetTime = float.Parse(_prefabObject["ro"]);
+
+			if (_prefabObject["id"] != null)
+			{
+				prefabObject.ID = _prefabObject["id"];
+			}
+			else
+			{
+				prefabObject.ID = LSText.randomString(16);
+			}
+			if (_prefabObject["ed"]["locked"] != null)
+			{
+				prefabObject.editorData.locked = _prefabObject["ed"]["locked"].AsBool;
+			}
+			if (_prefabObject["ed"]["shrink"] != null)
+			{
+				prefabObject.editorData.collapse = _prefabObject["ed"]["shrink"].AsBool;
+			}
+			if (_prefabObject["ed"]["bin"] != null)
+			{
+				prefabObject.editorData.Bin = _prefabObject["ed"]["bin"].AsInt;
+			}
+			if (_prefabObject["ed"]["layer"] != null)
+			{
+				prefabObject.editorData.Layer = _prefabObject["ed"]["layer"].AsInt;
+			}
+			if (_prefabObject["e"]["pos"] != null)
+			{
+                EventKeyframe eventKeyframe = new EventKeyframe();
+				JSONNode jsonnode = _prefabObject["e"]["pos"];
+				eventKeyframe.SetEventValues(new float[]
+				{
+					jsonnode["x"].AsFloat,
+					jsonnode["y"].AsFloat
+				});
+				eventKeyframe.random = jsonnode["r"].AsInt;
+				eventKeyframe.SetEventRandomValues(new float[]
+				{
+					jsonnode["rx"].AsFloat,
+					jsonnode["ry"].AsFloat,
+					jsonnode["rz"].AsFloat
+				});
+				eventKeyframe.active = false;
+				prefabObject.events[0] = eventKeyframe;
+			}
+			if (_prefabObject["e"]["sca"] != null)
+			{
+                EventKeyframe eventKeyframe2 = new EventKeyframe();
+				JSONNode jsonnode2 = _prefabObject["e"]["sca"];
+				eventKeyframe2.SetEventValues(new float[]
+				{
+					jsonnode2["x"].AsFloat,
+					jsonnode2["y"].AsFloat
+				});
+				eventKeyframe2.random = jsonnode2["r"].AsInt;
+				eventKeyframe2.SetEventRandomValues(new float[]
+				{
+					jsonnode2["rx"].AsFloat,
+					jsonnode2["ry"].AsFloat,
+					jsonnode2["rz"].AsFloat
+				});
+				eventKeyframe2.active = false;
+				prefabObject.events[1] = eventKeyframe2;
+			}
+			if (_prefabObject["e"]["rot"] != null)
+			{
+                EventKeyframe eventKeyframe3 = new EventKeyframe();
+				JSONNode jsonnode3 = _prefabObject["e"]["rot"];
+				eventKeyframe3.SetEventValues(new float[]
+				{
+					jsonnode3["x"].AsFloat
+				});
+				eventKeyframe3.random = jsonnode3["r"].AsInt;
+				eventKeyframe3.SetEventRandomValues(new float[]
+				{
+					jsonnode3["rx"].AsFloat,
+					0f,
+					jsonnode3["rz"].AsFloat
+				});
+				eventKeyframe3.active = false;
+				prefabObject.events[2] = eventKeyframe3;
+			}
+			action(prefabObject);
+			yield break;
 		}
 
 		public static IEnumerator ParseObject(JSONNode _object, Action<BeatmapObject> action)
@@ -1214,31 +1335,60 @@ namespace RTFunctions.Functions.Managers
 					DataManager.inst.gameData.eventObjects.allEvents[20].Add(eventKeyframe11);
 				}
 
-				for (int num4 = 0; num4 < _events["overlay"].Count; num4++)
+				if (_events["invert"] != null)
 				{
-                    EventKeyframe eventKeyframe11 = new EventKeyframe();
-					JSONNode jsonnode11 = _events["overlay"][num4];
-					eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-					eventKeyframe11.SetEventValues(new float[]
+					for (int num4 = 0; num4 < _events["invert"].Count; num4++)
 					{
+						var eventKeyframe11 = new EventKeyframe();
+						JSONNode jsonnode11 = _events["invert"][num4];
+						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
+						eventKeyframe11.SetEventValues(new float[]
+						{
 						jsonnode11["x"].AsFloat,
 						jsonnode11["y"].AsFloat
-					});
-					eventKeyframe11.random = jsonnode11["r"].AsInt;
-					DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-					if (jsonnode11["ct"] != null)
-					{
-						curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-						eventKeyframe11.curveType = curveType11;
-					}
-					eventKeyframe11.SetEventRandomValues(new float[]
-					{
+						});
+						eventKeyframe11.random = jsonnode11["r"].AsInt;
+						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
+						if (jsonnode11["ct"] != null)
+						{
+							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
+							eventKeyframe11.curveType = curveType11;
+						}
+						eventKeyframe11.SetEventRandomValues(new float[]
+						{
 						jsonnode11["rx"].AsFloat,
 						jsonnode11["ry"].AsFloat
-					});
-					eventKeyframe11.active = false;
-					DataManager.inst.gameData.eventObjects.allEvents[21].Add(eventKeyframe11);
+						});
+						eventKeyframe11.active = false;
+						DataManager.inst.gameData.eventObjects.allEvents[21].Add(eventKeyframe11);
+					}
 				}
+
+				//for (int num4 = 0; num4 < _events["overlay"].Count; num4++)
+				//{
+    //                var eventKeyframe11 = new EventKeyframe();
+				//	JSONNode jsonnode11 = _events["overlay"][num4];
+				//	eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
+				//	eventKeyframe11.SetEventValues(new float[]
+				//	{
+				//		jsonnode11["x"].AsFloat,
+				//		jsonnode11["y"].AsFloat
+				//	});
+				//	eventKeyframe11.random = jsonnode11["r"].AsInt;
+				//	DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
+				//	if (jsonnode11["ct"] != null)
+				//	{
+				//		curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
+				//		eventKeyframe11.curveType = curveType11;
+				//	}
+				//	eventKeyframe11.SetEventRandomValues(new float[]
+				//	{
+				//		jsonnode11["rx"].AsFloat,
+				//		jsonnode11["ry"].AsFloat
+				//	});
+				//	eventKeyframe11.active = false;
+				//	DataManager.inst.gameData.eventObjects.allEvents[21].Add(eventKeyframe11);
+				//}
 
 				for (int num4 = 0; num4 < _events["timeline"].Count; num4++)
 				{
@@ -1411,7 +1561,7 @@ namespace RTFunctions.Functions.Managers
 					}
 					if (type == 21)
 					{
-						allEvents[type][0].eventValues[0] = 18f;
+						allEvents[type][0].eventValues[0] = 0f;
 					}
 					if (type == 22)
 					{

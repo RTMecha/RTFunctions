@@ -25,7 +25,7 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
-        private static void StartPostfix(DataManager __instance, ref Dictionary<string, int> ___languagesToIndex, ref Dictionary<int, string> ___indexToLangauge)
+        static void StartPostfix(DataManager __instance, ref Dictionary<string, int> ___languagesToIndex, ref Dictionary<int, string> ___indexToLangauge)
         {
             var systemManager = SystemManager.inst;
 
@@ -164,7 +164,7 @@ namespace RTFunctions.Patchers
 
         [HarmonyPatch("GeneratePrefabJSON")]
         [HarmonyPrefix]
-        public static bool GeneratePrefabJSON(ref JSONNode __result, Prefab __0)
+        static bool GeneratePrefabJSON(ref JSONNode __result, Prefab __0)
         {
             JSONNode jn = JSON.Parse("{}");
             jn["name"] = __0.Name;
@@ -185,13 +185,15 @@ namespace RTFunctions.Patchers
                 if (__0.objects[i] != null)
                 {
                     jn["objects"][i]["id"] = __0.objects[i].id;
+                    jn["objects"][i]["pid"] = __0.objects[i].prefabID;
+                    jn["objects"][i]["piid"] = __0.objects[i].prefabInstanceID;
 
                     if (__0.objects[i].GetParentType().ToString() != "101")
                     {
                         jn["objects"][i]["pt"] = __0.objects[i].GetParentType().ToString();
                     }
 
-                    if (__0.objects[i].getParentOffsets().FindIndex((float x) => x != 0f) != -1)
+                    if (__0.objects[i].getParentOffsets().FindIndex(x => x != 0f) != -1)
                     {
                         int num = 0;
                         foreach (float num2 in __0.objects[i].getParentOffsets())
@@ -378,6 +380,11 @@ namespace RTFunctions.Patchers
                     jn["prefab_objects"][i]["id"] = __0.prefabObjects[i].ID;
                     jn["prefab_objects"][i]["pid"] = __0.prefabObjects[i].prefabID;
                     jn["prefab_objects"][i]["st"] = __0.prefabObjects[i].StartTime.ToString();
+
+                    if (__0.prefabObjects[i].RepeatCount > 0)
+                        jn["prefab_objects"][i]["rc"] = __0.prefabObjects[i].RepeatCount.ToString();
+                    if (__0.prefabObjects[i].RepeatOffsetTime > 0f)
+                        jn["prefab_objects"][i]["ro"] = __0.prefabObjects[i].RepeatOffsetTime.ToString();
 
                     if (__0.prefabObjects[i].editorData.locked)
                     {
