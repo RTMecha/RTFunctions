@@ -12,7 +12,9 @@ namespace RTFunctions.Functions.IO
 {
     public static class RTHelpers
     {
-		public static float screenScale;
+		public static string levelVersion = FunctionsPlugin.VersionNumber;
+
+        public static float screenScale;
 		public static float screenScaleInverse;
 
         public static float getPitch()
