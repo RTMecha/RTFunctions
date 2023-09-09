@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,12 +16,14 @@ using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
 using EventKeyframe = DataManager.GameData.EventKeyframe;
 
+using OGPrefab = DataManager.GameData.Prefab;
+using OGPrefabObject = DataManager.GameData.PrefabObject;
+using OGBackground = DataManager.GameData.BackgroundObject;
+
 namespace RTFunctions.Functions.Managers
 {
     public class Objects : MonoBehaviour
     {
-        //Move this to RTFunctions.Functions.Managers
-
         public static Objects inst;
 
         void Awake()
@@ -28,18 +31,105 @@ namespace RTFunctions.Functions.Managers
             inst = this;
         }
 
-        void Update()
+        public static IEnumerable<BeatmapObject> iBeatmapObject
+        {
+            get
+            {
+                foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
+                {
+                    if (beatmapObject.objectType != ObjectType.Empty && beatmapObject.TimeWithinLifespan() && !beatmapObjects.ContainsKey(beatmapObject.id))
+                    {
+                        yield return beatmapObject;
+                    }
+                }
+            }
+        }
+
+        public IEnumerator updateObjects()
         {
             if (DataManager.inst.gameData != null)
             {
                 foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
                 {
-                    if (!beatmapObjects.ContainsKey(beatmapObject.id) && beatmapObject.objectType != ObjectType.Empty && beatmapObject.TimeWithinLifespan())
+                    if (beatmapObject.objectType != ObjectType.Empty && !beatmapObjects.ContainsKey(beatmapObject.id))
                     {
                         var functionObject = new FunctionObject(beatmapObject);
 
-                        updateFunctionObject(functionObject);
                         beatmapObjects.Add(beatmapObject.id, functionObject);
+                        updateFunctionObject(functionObject);
+                    }
+                    else if (beatmapObjects.ContainsKey(beatmapObject.id))
+                        beatmapObjects.Remove(beatmapObject.id);
+                }
+            }
+
+            yield break;
+        }
+
+        public IEnumerator updateObjects(ObjEditor.ObjectSelection objectSelection)
+        {
+            if (objectSelection.IsObject() && objectSelection.GetObjectData() != null)
+            {
+                var beatmapObject = objectSelection.GetObjectData();
+
+                if (beatmapObject.objectType != ObjectType.Empty && !beatmapObjects.ContainsKey(beatmapObject.id))
+                {
+                    var functionObject = new FunctionObject(beatmapObject);
+
+                    beatmapObjects.Add(beatmapObject.id, functionObject);
+                    updateFunctionObject(functionObject);
+                }
+                else if (beatmapObjects.ContainsKey(beatmapObject.id))
+                    beatmapObjects.Remove(beatmapObject.id);
+            }
+
+            yield break;
+        }
+
+        public void updateObjects(BeatmapObject beatmapObject)
+        {
+            if (beatmapObject.objectType != ObjectType.Empty && !beatmapObjects.ContainsKey(beatmapObject.id))
+            {
+                var functionObject = new FunctionObject(beatmapObject);
+
+                beatmapObjects.Add(beatmapObject.id, functionObject);
+                updateFunctionObject(functionObject);
+            }
+            //else if (beatmapObjects.ContainsKey(beatmapObject.id))
+            //    beatmapObjects.Remove(beatmapObject.id);
+        }
+
+        List<BeatmapObject> AliveObjects
+        {
+            get
+            {
+                return DataManager.inst.gameData.beatmapObjects.FindAll(x => x.objectType != ObjectType.Empty && x.TimeWithinLifespan());
+            }
+        }
+
+        void Update()
+        {
+            if (DataManager.inst.gameData != null)
+            {
+                //foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
+                //{
+                //    if (beatmapObject.TimeWithinLifespan())
+                //        updateObjects(beatmapObject);
+                //    else
+                //        beatmapObjects.Remove(beatmapObject.id);
+                //}
+
+                foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
+                {
+                    if (beatmapObject.objectType != ObjectType.Empty && beatmapObject.TimeWithinLifespan())
+                    {
+                        if (!beatmapObjects.ContainsKey(beatmapObject.id))
+                        {
+                            var functionObject = new FunctionObject(beatmapObject);
+
+                            beatmapObjects.Add(beatmapObject.id, functionObject);
+                            updateFunctionObject(functionObject);
+                        }
                     }
                 }
 
@@ -58,7 +148,7 @@ namespace RTFunctions.Functions.Managers
                 }
             }
 
-            if (DataManager.inst.gameData == null || DataManager.inst.gameData.beatmapObjects.Count < 1)
+            if (DataManager.inst.gameData == null || DataManager.inst.gameData.beatmapObjects == null || DataManager.inst.gameData.beatmapObjects.Count < 1)
             {
                 beatmapObjects.Clear();
             }
@@ -185,14 +275,21 @@ namespace RTFunctions.Functions.Managers
             }
         }
 
+        public List<FunctionObject> functionObjects = new List<FunctionObject>();
+
         public static Dictionary<string, FunctionObject> beatmapObjects = new Dictionary<string, FunctionObject>();
 
         public static List<BackgroundObject> backgroundObjects = new List<BackgroundObject>();
 
+        public static Dictionary<string, Prefab> prefabs = new Dictionary<string, Prefab>();
+
         public class FunctionObject
         {
+            public string id;
+
             public FunctionObject(BeatmapObject beatmapObject)
             {
+                id = beatmapObject.id;
                 this.beatmapObject = beatmapObject;
                 otherComponents = new Dictionary<string, object>();
             }
@@ -225,8 +322,31 @@ namespace RTFunctions.Functions.Managers
 
             }
 
-            public DataManager.GameData.BackgroundObject bg;
+            public OGBackground bg;
+
             public List<GameObject> gameObjects;
+            public Vector2Int shape;
+
+            public Vector2Int reactivePosChannels;
+            public Vector2Int reactiveScaChannels;
+            public int reactiveRotChannel;
+
+            public Vector2 reactivePosIntensity;
+            public Vector2 reactiveScaIntensity;
+            public float reactiveRotIntensity;
+        }
+
+        public class Prefab
+        {
+            public Prefab()
+            {
+
+            }
+
+            public OGPrefab prefab;
+
+            public List<BeatmapObject> objects = new List<BeatmapObject>();
+            public Dictionary<string, object> modifiers = new Dictionary<string, object>();
         }
     }
 }
