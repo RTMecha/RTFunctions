@@ -45,6 +45,15 @@ namespace RTFunctions.Patchers
             quickElements.transform.SetParent(systemManager.transform);
             quickElements.AddComponent<QuickElementManager>();
 
+            var spriteManager = new GameObject("SpriteManager");
+            spriteManager.transform.SetParent(systemManager.transform);
+            spriteManager.AddComponent<RTSpriteManager>();
+
+            var networkManager = new GameObject("NetworkManager");
+            networkManager.transform.SetParent(systemManager.transform);
+            networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkManager>();
+            networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkEditorManager>();
+
             EnumPatcher.AddEnumValue<DataManager.Language>("japanese");
             EnumPatcher.AddEnumValue<DataManager.Language>("thai");
             EnumPatcher.AddEnumValue<DataManager.Language>("russian");
@@ -385,6 +394,9 @@ namespace RTFunctions.Patchers
                         jn["prefab_objects"][i]["rc"] = __0.prefabObjects[i].RepeatCount.ToString();
                     if (__0.prefabObjects[i].RepeatOffsetTime > 0f)
                         jn["prefab_objects"][i]["ro"] = __0.prefabObjects[i].RepeatOffsetTime.ToString();
+
+                    jn["prefab_objects"][i]["ed"]["layer"] = __0.prefabObjects[i].editorData.Layer.ToString();
+                    jn["prefab_objects"][i]["ed"]["bin"] = __0.prefabObjects[i].editorData.Bin.ToString();
 
                     if (__0.prefabObjects[i].editorData.locked)
                     {
