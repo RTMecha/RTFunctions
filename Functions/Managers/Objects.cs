@@ -123,13 +123,25 @@ namespace RTFunctions.Functions.Managers
                 {
                     if (beatmapObject.objectType != ObjectType.Empty && beatmapObject.TimeWithinLifespan())
                     {
-                        if (!beatmapObjects.ContainsKey(beatmapObject.id))
+                        try
                         {
                             var functionObject = new FunctionObject(beatmapObject);
 
                             beatmapObjects.Add(beatmapObject.id, functionObject);
                             updateFunctionObject(functionObject);
                         }
+                        catch
+                        {
+
+                        }
+
+                        //if (!beatmapObjects.ContainsKey(beatmapObject.id))
+                        //{
+                        //    var functionObject = new FunctionObject(beatmapObject);
+
+                        //    beatmapObjects.Add(beatmapObject.id, functionObject);
+                        //    updateFunctionObject(functionObject);
+                        //}
                     }
                 }
 
@@ -283,6 +295,8 @@ namespace RTFunctions.Functions.Managers
 
         public static Dictionary<string, Prefab> prefabs = new Dictionary<string, Prefab>();
 
+        public static Dictionary<string, PrefabObject> prefabObjects = new Dictionary<string, PrefabObject>();
+
         public class FunctionObject
         {
             public string id;
@@ -336,11 +350,23 @@ namespace RTFunctions.Functions.Managers
             public float reactiveRotIntensity;
         }
 
+        public class PrefabObject
+        {
+            public PrefabObject(OGPrefabObject prefabObject)
+            {
+                this.prefabObject = prefabObject;
+            }
+
+            public OGPrefabObject prefabObject;
+            public Dictionary<string, object> modifiers = new Dictionary<string, object>();
+            public float speed = 1f;
+        }
+
         public class Prefab
         {
-            public Prefab()
+            public Prefab(OGPrefab prefab)
             {
-
+                this.prefab = prefab;
             }
 
             public OGPrefab prefab;
