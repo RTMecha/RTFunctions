@@ -38,6 +38,9 @@ namespace RTFunctions.Patchers
             FunctionsPlugin.prevLanguage = FunctionsPlugin.Language.Value;
             FunctionsPlugin.Language.Value = (FunctionsPlugin.Lang)DataManager.inst.GetSettingInt("Language_i", 0);
 
+            FunctionsPlugin.prevControllerRumble = FunctionsPlugin.ControllerRumble.Value;
+            FunctionsPlugin.ControllerRumble.Value = DataManager.inst.GetSettingBool("ControllerVibrate", true);
+
             if (RTFile.FileExists(RTFile.ApplicationDirectory + "settings/functions.lss"))
             {
                 string rawProfileJSON = FileManager.inst.LoadJSONFile("settings/functions.lss");
