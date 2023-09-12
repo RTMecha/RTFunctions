@@ -31,6 +31,9 @@ namespace RTFunctions.Patchers
 		[HarmonyPrefix]
 		static bool AddPrefabToLevelPrefix(DataManager.GameData.PrefabObject __0)
 		{
+			if (!Objects.prefabObjects.ContainsKey(__0.ID))
+				Objects.prefabObjects.Add(__0.ID, new Objects.PrefabObject(__0));
+
 			bool flag = DataManager.inst.gameData.prefabs.FindIndex(x => x.ID == __0.prefabID) != -1;
 			if (!flag)
 			{
@@ -48,11 +51,14 @@ namespace RTFunctions.Patchers
 
 			float timeToAdd = 0f;
 
+			var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == __0.prefabID);
+
+			if (!Objects.prefabs.ContainsKey(prefab.ID))
+				Objects.prefabs.Add(prefab.ID, new Objects.Prefab(prefab));
+
 			for (int i = 0; i < __0.RepeatCount + 1; i++)
 			{
 				var dictionary = new Dictionary<string, string>();
-
-				var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == __0.prefabID);
 
 				foreach (var beatmapObject in prefab.objects)
 				{
