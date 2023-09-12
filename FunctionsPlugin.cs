@@ -15,6 +15,8 @@ using LSFunctions;
 using SimpleJSON;
 using DG.Tweening;
 
+using RTFunctions.Functions.Animation;
+using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions;
@@ -23,6 +25,7 @@ using RTFunctions.Enums;
 
 using Application = UnityEngine.Application;
 using Screen = UnityEngine.Screen;
+using Ease = RTFunctions.Functions.Animation.Ease;
 
 namespace RTFunctions
 {
@@ -204,6 +207,28 @@ namespace RTFunctions
 
 		#endregion
 
+		#region Controller Rumble
+
+		public static ConfigEntry<bool> ControllerRumble { get; set; }
+
+		static bool ControllerRumbleProp
+		{
+			get
+			{
+				return DataManager.inst.GetSettingBool("ControllerVibrate", true);
+			}
+			set
+			{
+				DataManager.inst.UpdateSettingBool("ControllerVibrate", value);
+
+				SaveManager.inst.UpdateSettingsFile(false);
+			}
+		}
+
+		public static bool prevControllerRumble;
+		
+		#endregion
+
 		void Awake()
 		{
 			inst = this;
@@ -219,6 +244,7 @@ namespace RTFunctions
 			MusicVol = Config.Bind("Settings", "Volume Music", 9, new ConfigDescription("Music volume.", new AcceptableValueRange<int>(0, 9)));
 			SFXVol = Config.Bind("Settings", "Volume SFX", 9, new ConfigDescription("SFX volume.", new AcceptableValueRange<int>(0, 9)));
 			Language = Config.Bind("Settings", "Language", Lang.english, "This is currently here for testing purposes. This version of the game has not been translated yet.");
+			ControllerRumble = Config.Bind("Settings", "Controller Vibrate", true, "If the controllers should vibrate or not.");
 
 			displayName = DisplayName.Value;
 
@@ -252,6 +278,8 @@ namespace RTFunctions
 						File.Copy(lvl, modBackup);
 				}
 			};
+
+			//SequenceManager.Init();
 		}
 
 		static void UpdateSettings(object sender, EventArgs e)
@@ -313,6 +341,12 @@ namespace RTFunctions
 				prevLanguage = Language.Value;
 				LanguageProp = Language.Value;
             }
+			
+			if (prevControllerRumble != ControllerRumble.Value)
+            {
+				prevControllerRumble = ControllerRumble.Value;
+				ControllerRumbleProp = ControllerRumble.Value;
+            }
 
 			SaveProfile();
 		}
@@ -367,6 +401,20 @@ namespace RTFunctions
             __instance.SetCreatorName(DisplayName.Value);
 			if (SteamWrapper.inst != null)
 				SteamWrapper.inst.user.displayName = DisplayName.Value;
+		}
+
+		[HarmonyPatch(typeof(LSText), "randomString")]
+		[HarmonyPrefix]
+		static bool randomStringPrefix(int length, ref string __result)
+		{
+			string text = "";
+			char[] array = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*_+{}|:<>?,.;'[]▓▒░▐▆▉☰☱☲☳☴☵☶☷►▼◄▬▩▨▧▦▥▤▣▢□■¤ÿòèµ¶™ßÃ®¾ð¥œ⁕(◠‿◠✿)".ToCharArray();
+			while (text.Length < length)
+			{
+				text += array[UnityEngine.Random.Range(0, array.Length)].ToString();
+			}
+			__result = text;
+			return false;
 		}
 
         public static void TakeScreenshot()
@@ -445,24 +493,47 @@ namespace RTFunctions
 				text.font = Font.GetDefault();
 				text.text = "Took Screenshot!";
 
-				var tween = DOTween.To(delegate (float x)
-				{
-					im.color = new Color(1f, 1f, 1f, x);
-					text.color = new Color(1f, 1f, 1f, x);
-				}, 1f, 0f, 1.5f).SetEase(DataManager.inst.AnimationList[2].Animation);
+                //var colorKeyframes = new List<IKeyframe<Color>>();
+                //colorKeyframes.Add(new ColorKeyframe(0f, new Color(1f, 1f, 1f, 1f), Ease.Linear));
+                //colorKeyframes.Add(new ColorKeyframe(1.5f, new Color(1f, 1f, 1f, 0f), Ease.SineIn));
+                //var colorSequence = new Sequence<Color>(colorKeyframes);
 
-				DOTween.To(delegate (float x)
-				{
-					imageRT.anchoredPosition = new Vector2(850f, x);
-				}, -480f, -600f, 1.5f).SetEase(DataManager.inst.AnimationList[8].Animation);
+                //var moveKeyframes = new List<IKeyframe<Vector2>>();
+                //moveKeyframes.Add(new Vector2Keyframe(0f, new Vector2(850f, -480f), Ease.Linear));
+                //moveKeyframes.Add(new Vector2Keyframe(0f, new Vector2(850f, -600f), Ease.BackIn));
+                //var moveSequence = new Sequence<Vector2>(moveKeyframes);
 
-				tween.OnComplete(delegate ()
-				{
-					scr = null;
+                //text.material.AnimateColor(colorSequence);
+                //im.material.AnimateColor(colorSequence);
 
-					Destroy(inter);
-				});
-			}
+                //SequenceManager.inst.AnimateVector2(delegate (Vector2 x)
+                //{
+                //	imageRT.anchoredPosition = x;
+                //}, moveSequence, onComplete: delegate ()
+                //{
+                //	scr = null;
+
+                //	Destroy(inter);
+                //});
+
+                var tween = DOTween.To(delegate (float x)
+                {
+                    im.color = new Color(1f, 1f, 1f, x);
+                    text.color = new Color(1f, 1f, 1f, x);
+                }, 1f, 0f, 1.5f).SetEase(DataManager.inst.AnimationList[2].Animation);
+
+                DOTween.To(delegate (float x)
+                {
+                    imageRT.anchoredPosition = new Vector2(850f, x);
+                }, -480f, -600f, 1.5f).SetEase(DataManager.inst.AnimationList[8].Animation);
+
+                tween.OnComplete(delegate ()
+                {
+                    scr = null;
+
+                    Destroy(inter);
+                });
+            }
 
 			yield break;
         }
