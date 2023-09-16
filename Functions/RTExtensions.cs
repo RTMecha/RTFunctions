@@ -652,6 +652,18 @@ namespace RTFunctions.Functions
 			return new KeyValuePair<TKey, TValue>(key, value);
 		}
 
+		public static bool TryFind<T>(this List<T> ts, Predicate<T> match, out T item)
+        {
+			var t = ts.Find(match);
+			if (t != null)
+            {
+				item = t;
+				return true;
+            }
+			item = default(T);
+			return true;
+        }
+
 		#endregion
 	}
 }
