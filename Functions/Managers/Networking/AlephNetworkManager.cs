@@ -63,6 +63,80 @@ namespace RTFunctions.Functions.Managers.Networking
             RTFile.WriteToFile("E:/Project Arrhythmia mods/TestPlugin (bepinex)/4.1.16 Mods/RTFunctions/mod_info.lss", jn.ToString(3));
         }
 
+        public static IEnumerator DownloadJSONFile(string path, Action<string> callback, Action<string> onError)
+        {
+            using (var www = UnityWebRequest.Get(path))
+            {
+                yield return www.SendWebRequest();
+                if (www.isNetworkError || www.isHttpError)
+                {
+                    Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                    if (onError != null)
+                        onError(www.error);
+                }
+                else
+                {
+                    callback(www.downloadHandler.text);
+                }
+            }
+
+            yield break;
+        }
+
+        public static IEnumerator DownloadImageTexture(string path, Action<Texture2D> callback, Action<string> onError)
+        {
+            UnityWebRequest www = UnityWebRequestTexture.GetTexture(path);
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                if (onError != null)
+                    onError(www.error);
+            }
+            else
+            {
+                Texture2D tex = ((DownloadHandlerTexture)www.downloadHandler).texture;
+                callback(tex);
+            }
+        }
+
+        public static IEnumerator DownloadAudioClip(string path, AudioType audioType, Action<AudioClip> callback, Action<string> onError)
+        {
+            UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(path, audioType);
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                if (onError != null)
+                    onError(www.error);
+            }
+            else
+            {
+                AudioClip audioClip = ((DownloadHandlerAudioClip)www.downloadHandler).audioClip;
+                callback(audioClip);
+            }
+        }
+
+        public static IEnumerator DownloadAssetBundle(string path, Action<AssetBundle> callback, Action<string> onError)
+        {
+            UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(path);
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                if (onError != null)
+                    onError(www.error);
+            }
+            else
+            {
+                AssetBundle assetBundle = ((DownloadHandlerAssetBundle)www.downloadHandler).assetBundle;
+                callback(assetBundle);
+            }
+        }
+
         public static IEnumerator DownloadJSONFile(string path, Action<string> callback)
         {
             using (var www = UnityWebRequest.Get(path))
