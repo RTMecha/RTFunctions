@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,7 +25,7 @@ namespace RTFunctions.Functions.Managers
 
         public static Dictionary<string, object> sharedFunctions = new Dictionary<string, object>();
 
-        private void Awake()
+        void Awake()
         {
             inst = this;
 
@@ -32,7 +33,8 @@ namespace RTFunctions.Functions.Managers
 
             if (bepinex.GetComponentByName("ObjectModifiersPlugin"))
             {
-                objectModifiersPlugin = bepinex.GetComponentByName("ObjectModifiersPlugin").GetType();
+                var om = bepinex.GetComponentByName("ObjectModifiersPlugin");
+                objectModifiersPlugin = om.GetType();
             }
 
             if (catalyst == null && catalystType == CatalystType.NotChecked)
@@ -44,7 +46,10 @@ namespace RTFunctions.Functions.Managers
                 else
                 {
                     catalystType = CatalystType.Regular;
-                    catalyst = bepinex.GetComponentByName("CatalystBase").GetType();
+
+                    var cat = bepinex.GetComponentByName("CatalystBase");
+
+                    catalyst = cat.GetType();
                     catalystInstance = catalyst.GetField("Instance").GetValue(bepinex.GetComponentByName("CatalystBase"));
 
                     if ((string)catalyst.GetField("Name").GetValue(catalyst) == "Editor Catalyst")
@@ -56,34 +61,44 @@ namespace RTFunctions.Functions.Managers
 
             if (bepinex.GetComponentByName("ArcadePlugin"))
             {
-                arcadePlugin = bepinex .GetComponentByName("ArcadePlugin").GetType();
+                var arc = bepinex.GetComponentByName("ArcadePlugin");
+                arcadePlugin = arc.GetType();
             }
 
             if (bepinex.GetComponentByName("PlayerPlugin"))
             {
                 player = AccessTools.TypeByName("RTPlayer");
-                playerPlugin = bepinex.GetComponentByName("PlayerPlugin").GetType();
+                var p = bepinex.GetComponentByName("PlayerPlugin");
+                playerPlugin = p.GetType();
             }
 
             if (bepinex.GetComponentByName("EditorPlugin"))
             {
                 rtEditor = AccessTools.TypeByName("RTEditor");
-                editorPlugin = bepinex.GetComponentByName("EditorPlugin").GetType();
+
+                var ed = bepinex.GetComponentByName("EditorPlugin");
+
+                editorPlugin = ed.GetType();
             }
 
             if (bepinex.GetComponentByName("FontPlugin"))
             {
-                fontPlugin = bepinex.GetComponentByName("FontPlugin").GetType();
+                var f = bepinex.GetComponentByName("FontPlugin");
+                fontPlugin = f.GetType();
             }
 
             if (bepinex.GetComponentByName("EventsCorePlugin"))
-                eventsCorePlugin = bepinex.GetComponentByName("EventsCorePlugin").GetType();
+            {
+                var ec = bepinex.GetComponentByName("EventsCorePlugin");
+                eventsCorePlugin = ec.GetType();
+            }
         }
 
         #region CreativePlayers
 
         public static Type player;
         public static Type playerPlugin;
+        public static object playerPluginInstance;
 
         public static object GetRTPlayer(int index)
         {
@@ -248,5 +263,28 @@ namespace RTFunctions.Functions.Managers
         }
 
         #endregion
+
+        public static Dictionary<string, Mod> mods = new Dictionary<string, Mod>();
+
+        public class Mod
+        {
+            public Mod(object inst, Type type)
+            {
+                this.inst = inst;
+                this.type = type;
+            }
+
+            public object inst;
+            public Type type;
+
+            public Dictionary<string, Mod> components = new Dictionary<string, Mod>();
+
+            public Dictionary<string, MethodInfo> methods = new Dictionary<string, MethodInfo>();
+
+            
+
+            public void Invoke(string name, params object[] values)
+            { if (methods.ContainsKey(name) && inst != null) methods[name].Invoke(inst, values); }
+        }
     }
 }
