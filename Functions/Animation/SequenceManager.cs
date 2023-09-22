@@ -115,6 +115,50 @@ namespace RTFunctions.Functions.Animation
                 }
             }
 
+            for (int i = 0; i < anchoredPositionSequence.Count; i++)
+            {
+                var sequence = anchoredPositionSequence[i];
+                if (sequence.length < time)
+                {
+                    if (sequence.onComplete != null)
+                        sequence.onComplete();
+
+                    anchoredPositionSequence.RemoveAt(i);
+
+                    sequence = null;
+                }
+                else
+                {
+                    sequence.currentTime = time;
+                    if (sequence.instance != null)
+                        sequence.instance.anchoredPosition = sequence.sequence.Interpolate(time);
+                    else if (sequence.action != null)
+                        sequence.action(time);
+                }
+            }
+            
+            for (int i = 0; i < sizeDeltaSequence.Count; i++)
+            {
+                var sequence = sizeDeltaSequence[i];
+                if (sequence.length < time)
+                {
+                    if (sequence.onComplete != null)
+                        sequence.onComplete();
+
+                    sizeDeltaSequence.RemoveAt(i);
+
+                    sequence = null;
+                }
+                else
+                {
+                    sequence.currentTime = time;
+                    if (sequence.instance != null)
+                        sequence.instance.sizeDelta = sequence.sequence.Interpolate(time);
+                    else if (sequence.action != null)
+                        sequence.action(time);
+                }
+            }
+
             for (int i = 0; i < materialColorSequence.Count; i++)
             {
                 var sequence = materialColorSequence[i];
@@ -306,6 +350,9 @@ namespace RTFunctions.Functions.Animation
         public List<SequenceObject<Vector3, Transform>> localPositionSequence = new List<SequenceObject<Vector3, Transform>>();
         public List<SequenceObject<Vector3, Transform>> localScaleSequence = new List<SequenceObject<Vector3, Transform>>();
         public List<SequenceObject<Vector3, Transform>> localRotationSequence = new List<SequenceObject<Vector3, Transform>>();
+
+        public List<SequenceObject<Vector2, RectTransform>> anchoredPositionSequence = new List<SequenceObject<Vector2, RectTransform>>();
+        public List<SequenceObject<Vector2, RectTransform>> sizeDeltaSequence = new List<SequenceObject<Vector2, RectTransform>>();
 
         public List<SequenceObject<Color, Material>> materialColorSequence = new List<SequenceObject<Color, Material>>();
 

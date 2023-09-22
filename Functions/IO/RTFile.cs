@@ -3,6 +3,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -94,15 +95,9 @@ namespace RTFunctions.Functions.IO
 			}
 		}
 
-		public static bool FileExists(string _filePath)
-		{
-			return !string.IsNullOrEmpty(_filePath) && File.Exists(_filePath);
-		}
+		public static bool FileExists(string _filePath) => !string.IsNullOrEmpty(_filePath) && File.Exists(_filePath);
 
-		public static bool DirectoryExists(string _directoryPath)
-		{
-			return !string.IsNullOrEmpty(_directoryPath) && Directory.Exists(_directoryPath);
-		}
+		public static bool DirectoryExists(string _directoryPath) => !string.IsNullOrEmpty(_directoryPath) && Directory.Exists(_directoryPath);
 
 		public static void WriteToFile(string path, string json)
 		{
@@ -112,23 +107,45 @@ namespace RTFunctions.Functions.IO
 			streamWriter.Close();
 		}
 
+		public static string ReadFromFile(string path)
+		{
+			if (!File.Exists(path))
+			{
+				Debug.LogFormat("{0}Could not load JSON file [{1}]", FunctionsPlugin.className, path);
+				return null;
+			}
+			StreamReader streamReader = new StreamReader(path);
+			string result = streamReader.ReadToEnd().ToString();
+			streamReader.Close();
+			return result;
+		}
+
+		public static AudioType GetAudioType(string str)
+        {
+			var l = str.LastIndexOf('.');
+
+			var fileType = str.Substring(l, -(l - str.Length)).ToLower();
+
+			switch (fileType)
+            {
+				case ".wav":
+                    {
+						return AudioType.WAV;
+                    }
+				case ".ogg":
+                    {
+						return AudioType.OGGVORBIS;
+                    }
+            }				
+
+			return AudioType.UNKNOWN;
+        }
+
 		public static class OpenInFileBrowser
 		{
-			public static bool IsInMacOS
-			{
-				get
-				{
-					return SystemInfo.operatingSystem.IndexOf("Mac OS") != -1;
-				}
-			}
+			public static bool IsInMacOS => SystemInfo.operatingSystem.IndexOf("Mac OS") != -1;
 
-			public static bool IsInWinOS
-			{
-				get
-				{
-					return SystemInfo.operatingSystem.IndexOf("Windows") != -1;
-				}
-			}
+			public static bool IsInWinOS => SystemInfo.operatingSystem.IndexOf("Windows") != -1;
 
 			public static void OpenInMac(string path)
 			{

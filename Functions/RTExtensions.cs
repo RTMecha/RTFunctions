@@ -664,6 +664,14 @@ namespace RTFunctions.Functions
 			return true;
         }
 
+		public static Type[] ToTypes<T>(this T[] ts)
+        {
+			var t = new Type[ts.Length];
+			for (int i = 0; i < t.Length; i++)
+				t[i] = ts[i].GetType();
+			return t;
+        }
+
 		#endregion
 	}
 }

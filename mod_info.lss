@@ -1,6 +1,6 @@
 {
    "versions" : {
-      "events_core" : "1.5.0",
+      "events_core" : "1.5.1",
       "creative_players" : "2.3.2"
    }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using UnityEngine;
 using UnityEngine.UI;
@@ -838,9 +839,66 @@ namespace RTFunctions.Functions.IO
             }				
         }
 
+		public static float TimeCodeToFloat(string str)
+        {
+			//try
+			//{
+			//	var c = str.Split(':');
+
+			//	if (float.TryParse(c[0], out float num) && float.TryParse(c[0], out float second))
+			//	{
+			//		var first = num * 60f;
+
+			//		return first + second;
+			//	}
+			//}
+			//catch
+			//{
+
+			//}
+
+			if (RegexMatch(str, new Regex(@"([0-9]+):([0-9]+):([0-9.]+)"), out Match match1))
+            {
+				var hours = float.Parse(match1.Groups[1].ToString()) * 3600f;
+				var minutes = float.Parse(match1.Groups[2].ToString()) * 60f;
+				var seconds = float.Parse(match1.Groups[3].ToString());
+
+				return hours + minutes + seconds;
+            }
+			else if (RegexMatch(str, new Regex(@"([0-9]+):([0-9.]+)"), out Match match2))
+            {
+				var minutes = float.Parse(match2.Groups[1].ToString()) * 60f;
+				var seconds = float.Parse(match2.Groups[2].ToString());
+
+				return minutes + seconds;
+            }
+
+			return 0f;
+		}
+
+		public static bool RegexMatch(string str, Regex regex, out Match match)
+		{
+			if (regex != null && regex.Match(str).Success)
+			{
+				match = regex.Match(str);
+				return true;
+			}
+
+			match = null;
+			return false;
+		}
+
+		public static string Flip(string str)
+		{
+			string s;
+			s = str.Replace("Left", "LSLeft87344874").Replace("Right", "LSRight87344874").Replace("left", "LSleft87344874").Replace("right", "LSright87344874").Replace("LEFT", "LSLEFT87344874").Replace("RIGHT", "LSRIGHT87344874");
+
+			return s.Replace("LSLeft87344874", "Right").Replace("LSRight87344874", "Left").Replace("LSleft87344874", "right").Replace("LSright87344874", "left").Replace("LSLEFT87344874", "RIGHT").Replace("LSRIGHT87344874", "LEFT");
+		}
+
 		#region Cipher Encryptions because heck it
 
-        public static string AlphabetBinaryEncrypt(string c)
+		public static string AlphabetBinaryEncrypt(string c)
 		{
 			var t = c;
 			var str = "";

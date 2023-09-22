@@ -13,14 +13,14 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
-        private static void StartPostfix()
+        static void StartPostfix()
         {
             FunctionsPlugin.SetCameraRenderDistance();
         }
 
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
-        private static void UpdatePatch(GameManager __instance)
+        static void UpdatePatch(GameManager __instance)
         {
             if (__instance.LiveTheme.objectColors.Count == 9)
             {
@@ -38,7 +38,7 @@ namespace RTFunctions.Patchers
 
         [HarmonyPatch("getPitch")]
         [HarmonyPrefix]
-        public static bool getPitch(ref float __result)
+        static bool getPitch(ref float __result)
         {
             if (EditorManager.inst != null)
             {
