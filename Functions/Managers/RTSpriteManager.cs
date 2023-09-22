@@ -121,5 +121,7 @@ namespace RTFunctions.Functions.Managers
             }
             yield break;
         }
+
+        public static Sprite CreateSprite(Texture2D texture2D) => Sprite.Create(texture2D, new Rect(0f, 0f, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f), 100f);
     }
 }
