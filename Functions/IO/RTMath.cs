@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+
 namespace RTFunctions.Functions.IO
 {
 	public static class RTMath
@@ -11,24 +13,75 @@ namespace RTFunctions.Functions.IO
 		public static Vector3 Lerp(Vector3 x, Vector3 y, float t) => x + (y - x) * t;
 		public static Color Lerp(Color x, Color y, float t) => x + (y - x) * t;
 
+		public static float Clamp(float value, float min, float max) => Mathf.Clamp(value, min, max);
+		public static Vector2 Clamp(Vector2 value, Vector2 min, Vector2 max) => new Vector2(Mathf.Clamp(value.x, min.x, max.x), Mathf.Clamp(value.y, min.y, max.y));
+		public static Vector2Int Clamp(Vector2Int value, Vector2Int min, Vector2Int max) => new Vector2Int(Mathf.Clamp(value.x, min.x, max.x), Mathf.Clamp(value.y, min.y, max.y));
+		public static Vector3 Clamp(Vector3 value, Vector3 min, Vector3 max) => new Vector3(Mathf.Clamp(value.x, min.x, max.x), Mathf.Clamp(value.y, min.y, max.y), Mathf.Clamp(value.z, min.z, max.z));
+		public static Vector3Int Clamp(Vector3Int value, Vector3Int min, Vector3Int max) => new Vector3Int(Mathf.Clamp(value.x, min.x, max.x), Mathf.Clamp(value.y, min.y, max.y), Mathf.Clamp(value.z, min.z, max.z));
+
 		public static Vector3 CenterOfVectors(List<Vector3> vectors)
 		{
 			Vector3 vector = Vector3.zero;
 			if (vectors == null || vectors.Count == 0)
-			{
 				return vector;
-			}
 			foreach (Vector3 b in vectors)
-			{
 				vector += b;
-			}
 			return vector / (float)vectors.Count;
 		}
 
-		public static float roundToNearest(float value, float multipleOf)
+		public static Vector3 NearestVector(Vector3 a, List<Vector3> vectors)
 		{
-			return (float)Math.Round((decimal)value / (decimal)multipleOf, MidpointRounding.AwayFromZero) * multipleOf;
+			float[] distances = new float[vectors.Count];
+
+			int num = 0;
+			foreach (var v in vectors)
+			{
+				distances[num] = Vector3.Distance(a, v);
+
+				num++;
+			}
+
+			float x = float.PositiveInfinity;
+			num = 0;
+			for (int i = 0; i < distances.Length; i++)
+			{
+				if (distances[i] < x)
+				{
+					x = distances[i];
+					num = i;
+				}
+			}
+
+			return vectors[num];
 		}
+
+		public static Vector3 FurthestVector(Vector3 a, List<Vector3> vectors)
+		{
+			float[] distances = new float[vectors.Count];
+
+			int num = 0;
+			foreach (var v in vectors)
+			{
+				distances[num] = Vector3.Distance(a, v);
+
+				num++;
+			}
+
+			float x = 0f;
+			num = 0;
+			for (int i = 0; i < distances.Length; i++)
+			{
+				if (distances[i] > x)
+				{
+					x = distances[i];
+					num = i;
+				}
+			}
+
+			return vectors[num];
+		}
+
+		public static float roundToNearest(float value, float multipleOf) => (float)Math.Round((decimal)value / (decimal)multipleOf, MidpointRounding.AwayFromZero) * multipleOf;
 
 		public static Rect RectTransformToScreenSpace(RectTransform transform)
 		{
@@ -47,10 +100,7 @@ namespace RTFunctions.Functions.IO
 			return new Rect(x, y, vector.x, vector.y);
 		}
 
-		public static float InterpolateOverCurve(AnimationCurve curve, float from, float to, float t)
-		{
-			return from + curve.Evaluate(t) * (to - from);
-		}
+		public static float InterpolateOverCurve(AnimationCurve curve, float from, float to, float t) => from + curve.Evaluate(t) * (to - from);
 
 		public static Vector3 SphericalToCartesian(int radius, int polar)
 		{
