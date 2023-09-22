@@ -121,7 +121,7 @@ namespace RTFunctions.Functions.Managers
 
                 foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
                 {
-                    if (beatmapObject.objectType != ObjectType.Empty && beatmapObject.TimeWithinLifespan())
+                    if (beatmapObject.objectType != ObjectType.Empty && beatmapObject.TimeWithinLifespan() && !beatmapObjects.ContainsKey(beatmapObject.id))
                     {
                         try
                         {
