@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Net;
 using System.Net.WebSockets;
 
@@ -54,13 +55,24 @@ namespace RTFunctions.Functions.Managers.Networking
         //  Log(jn["base"]["name"]);
         //}));
 
-        public static void TestVersions()
+        public static IEnumerator DownloadBytes(string path, Action<byte[]> callback, Action<string> onError)
         {
-            var jn = JSON.Parse("{}");
-            jn["versions"]["events_core"] = "1.5.0";
-            jn["versions"]["creative_players"] = "2.3.2";
+            using (var www = UnityWebRequest.Get(path))
+            {
+                yield return www.SendWebRequest();
+                if (www.isNetworkError || www.isHttpError)
+                {
+                    Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                    if (onError != null)
+                        onError(www.error);
+                }
+                else
+                {
+                    callback(www.downloadHandler.data);
+                }
+            }
 
-            RTFile.WriteToFile("E:/Project Arrhythmia mods/TestPlugin (bepinex)/4.1.16 Mods/RTFunctions/mod_info.lss", jn.ToString(3));
+            yield break;
         }
 
         public static IEnumerator DownloadJSONFile(string path, Action<string> callback, Action<string> onError)
