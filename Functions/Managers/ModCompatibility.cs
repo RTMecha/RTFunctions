@@ -92,6 +92,31 @@ namespace RTFunctions.Functions.Managers
                 var ec = bepinex.GetComponentByName("EventsCorePlugin");
                 eventsCorePlugin = ec.GetType();
             }
+
+            if (bepinex.GetComponentByName("ExplorerBepInPlugin"))
+            {
+                try
+                {
+                    var ue = bepinex.GetComponentByName("ExplorerBepInPlugin");
+
+                    var mod = new Mod(ue, ue.GetType());
+
+                    var consoleController = AccessTools.TypeByName("UnityExplorer.CSConsole.ConsoleController");
+
+                    if (consoleController != null)
+                    {
+                        var csmod = new Mod(null, consoleController);
+                        csmod.methods.Add("Evaluate", consoleController.GetMethod("Evaluate", new Type[] { typeof(string), typeof(bool) }));
+                        mod.components.Add("ConsoleController", csmod);
+                    }
+
+                    mods.Add("UnityExplorer", mod);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogErrorFormat("{0}Error.\nMessage: {1}\nStackTrace: {2}", FunctionsPlugin.className, ex.Message, ex.StackTrace);
+                }
+            }
         }
 
         #region CreativePlayers
@@ -281,10 +306,24 @@ namespace RTFunctions.Functions.Managers
 
             public Dictionary<string, MethodInfo> methods = new Dictionary<string, MethodInfo>();
 
-            
+            public string version = "1.0.0";
+            string className;
+            public string ClassName
+            {
+                get => className;
+                private set
+                {
+                    className = $"[{value}] {version}\n";
+                }
+            }
+
+            public void StaticInvoke(string name, params object[] values)
+            { if (methods.ContainsKey(name)) AccessTools.Method(type, name, values.ToTypes()).Invoke(type, values); }
 
             public void Invoke(string name, params object[] values)
             { if (methods.ContainsKey(name) && inst != null) methods[name].Invoke(inst, values); }
+            public void InvokeStatic(string name, params object[] values)
+            { if (methods.ContainsKey(name)) methods[name].Invoke(type, values); }
         }
     }
 }
