@@ -29,7 +29,7 @@ using Ease = RTFunctions.Functions.Animation.Ease;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.3.2")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.4.0")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
@@ -58,6 +58,8 @@ namespace RTFunctions
 		private static ConfigEntry<string> DisplayName { get; set; }
 
 		public static string displayName;
+
+		public static ConfigEntry<bool> NotifyREPL { get; set; }
 
 		#region Fullscreen
 
@@ -234,6 +236,7 @@ namespace RTFunctions
 			inst = this;
 
 			DebugsOn = Config.Bind("Debugging", "Enabled", false, "If disabled, turns all Unity debug logs off. Might boost performance.");
+			NotifyREPL = Config.Bind("Debugging", "Notify REPL", false, "If in editor, code ran will have their results be notified.");
 			IncreasedClipPlanes = Config.Bind("Game", "Camera Clip Planes", true, "Increases the clip panes to a very high amount, allowing for object render depth to go really high or really low.");
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
 			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F3, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
@@ -264,6 +267,21 @@ namespace RTFunctions
 
 			Logger.LogInfo($"Plugin RT Functions is loaded!");
 
+			System.Windows.Forms.Application.ApplicationExit += delegate (object sender, EventArgs e)
+			{
+				if (EditorManager.inst != null && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
+				{
+					string str = RTFile.basePath;
+					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-backup.lsb";
+					if (RTFile.FileExists(modBackup))
+						File.Delete(modBackup);
+
+					string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
+					if (RTFile.FileExists(lvl))
+						File.Copy(lvl, modBackup);
+				}
+			};
+
 			Application.quitting += delegate ()
 			{
 				if (EditorManager.inst != null && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
@@ -278,6 +296,8 @@ namespace RTFunctions
 						File.Copy(lvl, modBackup);
 				}
 			};
+
+			RTCode.Init();
 
 			//SequenceManager.Init();
 		}
@@ -374,7 +394,13 @@ namespace RTFunctions
 
 		[HarmonyPatch(typeof(SystemManager), "Awake")]
 		[HarmonyPostfix]
-		static void DisableLoggers() => Debug.unityLogger.logEnabled = DebugsOn.Value;
+		static void DisableLoggers()
+		{
+			Debug.unityLogger.logEnabled = DebugsOn.Value;
+			//UnityEngine.Analytics.Analytics.initializeOnStartup = false;
+			//UnityEngine.Analytics.PerformanceReporting.enabled = false;
+			//UnityEngine.Analytics.Analytics.deviceStatsEnabled = false;
+		}
 
 		[HarmonyPatch(typeof(SystemManager), "Update")]
 		[HarmonyPrefix]
