@@ -26,90 +26,13 @@ namespace RTFunctions.Functions.Managers
     {
         public static Objects inst;
 
-        void Awake()
-        {
-            inst = this;
-        }
+        public bool active = false;
 
-        public static IEnumerable<BeatmapObject> iBeatmapObject
-        {
-            get
-            {
-                foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
-                {
-                    if (beatmapObject.objectType != ObjectType.Empty && beatmapObject.TimeWithinLifespan() && !beatmapObjects.ContainsKey(beatmapObject.id))
-                    {
-                        yield return beatmapObject;
-                    }
-                }
-            }
-        }
-
-        public IEnumerator updateObjects()
-        {
-            if (DataManager.inst.gameData != null)
-            {
-                foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
-                {
-                    if (beatmapObject.objectType != ObjectType.Empty && !beatmapObjects.ContainsKey(beatmapObject.id))
-                    {
-                        var functionObject = new FunctionObject(beatmapObject);
-
-                        beatmapObjects.Add(beatmapObject.id, functionObject);
-                        updateFunctionObject(functionObject);
-                    }
-                    else if (beatmapObjects.ContainsKey(beatmapObject.id))
-                        beatmapObjects.Remove(beatmapObject.id);
-                }
-            }
-
-            yield break;
-        }
-
-        public IEnumerator updateObjects(ObjEditor.ObjectSelection objectSelection)
-        {
-            if (objectSelection.IsObject() && objectSelection.GetObjectData() != null)
-            {
-                var beatmapObject = objectSelection.GetObjectData();
-
-                if (beatmapObject.objectType != ObjectType.Empty && !beatmapObjects.ContainsKey(beatmapObject.id))
-                {
-                    var functionObject = new FunctionObject(beatmapObject);
-
-                    beatmapObjects.Add(beatmapObject.id, functionObject);
-                    updateFunctionObject(functionObject);
-                }
-                else if (beatmapObjects.ContainsKey(beatmapObject.id))
-                    beatmapObjects.Remove(beatmapObject.id);
-            }
-
-            yield break;
-        }
-
-        public void updateObjects(BeatmapObject beatmapObject)
-        {
-            if (beatmapObject.objectType != ObjectType.Empty && !beatmapObjects.ContainsKey(beatmapObject.id))
-            {
-                var functionObject = new FunctionObject(beatmapObject);
-
-                beatmapObjects.Add(beatmapObject.id, functionObject);
-                updateFunctionObject(functionObject);
-            }
-            //else if (beatmapObjects.ContainsKey(beatmapObject.id))
-            //    beatmapObjects.Remove(beatmapObject.id);
-        }
-
-        List<BeatmapObject> AliveObjects
-        {
-            get
-            {
-                return DataManager.inst.gameData.beatmapObjects.FindAll(x => x.objectType != ObjectType.Empty && x.TimeWithinLifespan());
-            }
-        }
+        void Awake() => inst = this;
 
         void Update()
         {
-            if (DataManager.inst.gameData != null)
+            if (DataManager.inst.gameData != null && active)
             {
                 //foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
                 //{
@@ -121,13 +44,13 @@ namespace RTFunctions.Functions.Managers
 
                 foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
                 {
-                    if (beatmapObject.objectType != ObjectType.Empty && beatmapObject.TimeWithinLifespan() && !beatmapObjects.ContainsKey(beatmapObject.id))
+                    if (beatmapObject.objectType != ObjectType.Empty && beatmapObject.TimeWithinLifespan())
                     {
                         try
                         {
                             var functionObject = new FunctionObject(beatmapObject);
 
-                            beatmapObjects.Add(beatmapObject.id, functionObject);
+                            //beatmapObjects.Add(beatmapObject.id, functionObject);
                             updateFunctionObject(functionObject);
                         }
                         catch
@@ -145,25 +68,25 @@ namespace RTFunctions.Functions.Managers
                     }
                 }
 
-                for (int i = 0; i < beatmapObjects.Count; i++)
-                {
-                    var objectBeatmap = beatmapObjects.ElementAt(i);
-                    var beatmapObject = objectBeatmap.Value.beatmapObject;
-                    if (DataManager.inst.gameData.beatmapObjects.Find(x => x.id == objectBeatmap.Key) == null || beatmapObject.objectType == ObjectType.Empty || !beatmapObject.TimeWithinLifespan())
-                    {
-                        beatmapObjects.Remove(objectBeatmap.Key);
-                    }
-                    else if (objectBeatmap.Value.gameObject == null)
-                    {
-                        updateFunctionObject(objectBeatmap.Value);
-                    }
-                }
+                //for (int i = 0; i < beatmapObjects.Count; i++)
+                //{
+                //    var objectBeatmap = beatmapObjects.ElementAt(i);
+                //    var beatmapObject = objectBeatmap.Value.beatmapObject;
+                //    if (DataManager.inst.gameData.beatmapObjects.Find(x => x.id == objectBeatmap.Key) == null || beatmapObject.objectType == ObjectType.Empty || !beatmapObject.TimeWithinLifespan())
+                //    {
+                //        beatmapObjects.Remove(objectBeatmap.Key);
+                //    }
+                //    else if (objectBeatmap.Value.gameObject == null)
+                //    {
+                //        updateFunctionObject(objectBeatmap.Value);
+                //    }
+                //}
             }
 
-            if (DataManager.inst.gameData == null || DataManager.inst.gameData.beatmapObjects == null || DataManager.inst.gameData.beatmapObjects.Count < 1)
-            {
-                beatmapObjects.Clear();
-            }
+            //if (DataManager.inst.gameData == null || DataManager.inst.gameData.beatmapObjects == null || DataManager.inst.gameData.beatmapObjects.Count < 1)
+            //{
+            //    beatmapObjects.Clear();
+            //}
         }
 
         public static void updateFunctionObject(FunctionObject functionObject)
@@ -221,75 +144,75 @@ namespace RTFunctions.Functions.Managers
             }
         }
 
-        public static void updateFunctionObjects()
-        {
-            if (GameManager.inst != null && GameManager.inst.gameState != GameManager.State.Loading && GameManager.inst.gameState != GameManager.State.Parsing)
-            {
-                if (beatmapObjects.Count > 0)
-                {
-                    for (int i = 0; i < beatmapObjects.Count; i++)
-                    {
-                        var objectBeatmap = beatmapObjects.ElementAt(i);
-                        var functionObject = objectBeatmap.Value;
-                        var beatmapObject = objectBeatmap.Value.beatmapObject;
+        //public static void updateFunctionObjects()
+        //{
+        //    if (GameManager.inst != null && GameManager.inst.gameState != GameManager.State.Loading && GameManager.inst.gameState != GameManager.State.Parsing)
+        //    {
+        //        if (beatmapObjects.Count > 0)
+        //        {
+        //            for (int i = 0; i < beatmapObjects.Count; i++)
+        //            {
+        //                var objectBeatmap = beatmapObjects.ElementAt(i);
+        //                var functionObject = objectBeatmap.Value;
+        //                var beatmapObject = objectBeatmap.Value.beatmapObject;
 
-                        if (beatmapObject != null && functionObject.gameObject == null)
-                        {
-                            if (beatmapObject.TryGetGameObject(out GameObject gm) && gm != null && beatmapObject.TryGetTransformChain(out List<Transform> tf) && tf != null)
-                            {
-                                if (functionObject.gameObject == null && gm != null)
-                                {
-                                    functionObject.gameObject = gm;
-                                }
+        //                if (beatmapObject != null && functionObject.gameObject == null)
+        //                {
+        //                    if (beatmapObject.TryGetGameObject(out GameObject gm) && gm != null && beatmapObject.TryGetTransformChain(out List<Transform> tf) && tf != null)
+        //                    {
+        //                        if (functionObject.gameObject == null && gm != null)
+        //                        {
+        //                            functionObject.gameObject = gm;
+        //                        }
 
-                                if (functionObject.transformChain == null && tf != null)
-                                {
-                                    functionObject.transformChain = tf;
-                                }
+        //                        if (functionObject.transformChain == null && tf != null)
+        //                        {
+        //                            functionObject.transformChain = tf;
+        //                        }
 
-                                if (functionObject.renderer == null && gm != null)
-                                {
-                                    if (gm.TryGetComponent(out Renderer renderer) && renderer != null)
-                                        functionObject.renderer = renderer;
-                                }
+        //                        if (functionObject.renderer == null && gm != null)
+        //                        {
+        //                            if (gm.TryGetComponent(out Renderer renderer) && renderer != null)
+        //                                functionObject.renderer = renderer;
+        //                        }
 
-                                if (functionObject.collider == null && gm != null)
-                                {
-                                    if (gm.TryGetComponent(out Collider2D collider) && collider != null)
-                                        functionObject.collider = collider;
-                                }
+        //                        if (functionObject.collider == null && gm != null)
+        //                        {
+        //                            if (gm.TryGetComponent(out Collider2D collider) && collider != null)
+        //                                functionObject.collider = collider;
+        //                        }
 
-                                if (functionObject.meshFilter == null && gm != null)
-                                {
-                                    if (gm.TryGetComponent(out MeshFilter meshFilter) && meshFilter != null)
-                                        functionObject.meshFilter = gm.GetComponent<MeshFilter>();
-                                }
+        //                        if (functionObject.meshFilter == null && gm != null)
+        //                        {
+        //                            if (gm.TryGetComponent(out MeshFilter meshFilter) && meshFilter != null)
+        //                                functionObject.meshFilter = gm.GetComponent<MeshFilter>();
+        //                        }
 
-                                if (functionObject.selectObject == null && gm != null)
-                                {
-                                    if (gm.TryGetComponent(out SelectObjectInEditor selectObject) && selectObject != null)
-                                        functionObject.selectObject = selectObject;
-                                }
-                                if (functionObject.rtObject == null && gm != null)
-                                {
-                                    if (gm.TryGetComponent(out RTObject rt) && rt != null)
-                                        functionObject.rtObject = rt;
-                                }
-                                if (functionObject.text == null && gm != null && beatmapObject.shape == 4)
-                                {
-                                    if (gm.TryGetComponent(out TextMeshPro text) && text != null)
-                                        functionObject.text = text;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //                        if (functionObject.selectObject == null && gm != null)
+        //                        {
+        //                            if (gm.TryGetComponent(out SelectObjectInEditor selectObject) && selectObject != null)
+        //                                functionObject.selectObject = selectObject;
+        //                        }
+        //                        if (functionObject.rtObject == null && gm != null)
+        //                        {
+        //                            if (gm.TryGetComponent(out RTObject rt) && rt != null)
+        //                                functionObject.rtObject = rt;
+        //                        }
+        //                        if (functionObject.text == null && gm != null && beatmapObject.shape == 4)
+        //                        {
+        //                            if (gm.TryGetComponent(out TextMeshPro text) && text != null)
+        //                                functionObject.text = text;
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
         public List<FunctionObject> functionObjects = new List<FunctionObject>();
 
-        public static Dictionary<string, FunctionObject> beatmapObjects = new Dictionary<string, FunctionObject>();
+        //public static Dictionary<string, FunctionObject> beatmapObjects = new Dictionary<string, FunctionObject>();
 
         public static List<BackgroundObject> backgroundObjects = new List<BackgroundObject>();
 
