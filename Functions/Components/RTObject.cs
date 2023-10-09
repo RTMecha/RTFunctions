@@ -109,7 +109,7 @@ namespace RTFunctions.Functions.Components
 						colorHover = new Color(-highlightDoubleColor.r, -highlightDoubleColor.g, -highlightDoubleColor.b);
 					}
 
-					renderer.material.color += new Color(colorHover.r, colorHover.g, colorHover.b, m);
+					renderer.material.color += new Color(colorHover.r, colorHover.g, colorHover.b, 0f);
 				}
 				else
 				{
@@ -120,7 +120,7 @@ namespace RTFunctions.Functions.Components
 						colorHover = new Color(-highlightColor.r, -highlightColor.g, -highlightColor.b);
 					}
 
-					renderer.material.color += new Color(colorHover.r, colorHover.g, colorHover.b, m);
+					renderer.material.color += new Color(colorHover.r, colorHover.g, colorHover.b, 0f);
 				}
 			}
 
