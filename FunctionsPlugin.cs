@@ -18,6 +18,8 @@ using DG.Tweening;
 using RTFunctions.Functions.Animation;
 using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.Managers;
+using RTFunctions.Functions.Optimization;
+using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions;
 using RTFunctions.Patchers;
@@ -29,7 +31,7 @@ using Ease = RTFunctions.Functions.Animation.Ease;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.4.0")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.5.0")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
@@ -265,6 +267,13 @@ namespace RTFunctions
 			harmony.PatchAll(typeof(ObjectManagerPatch));
 			harmony.PatchAll(typeof(SaveManagerPatch));
 
+			// Hooks
+            {
+				GameManagerPatch.LevelStart += Updater.OnLevelStart;
+				GameManagerPatch.LevelEnd += Updater.OnLevelEnd;
+				ObjectManagerPatch.LevelTick += Updater.OnLevelTick;
+			}
+
 			Logger.LogInfo($"Plugin RT Functions is loaded!");
 
 			System.Windows.Forms.Application.ApplicationExit += delegate (object sender, EventArgs e)
@@ -443,7 +452,22 @@ namespace RTFunctions
 			return false;
 		}
 
-        public static void TakeScreenshot()
+		[HarmonyPatch(typeof(ObjEditor), "DeleteObject")]
+		[HarmonyPrefix]
+		static void ObjEditorDeletePrefix(ObjEditor __instance, ObjEditor.ObjectSelection __0)
+		{
+			Updater.updateProcessor(__0, false);
+		}
+
+		//[HarmonyPatch(typeof(InterfaceController), "Start")]
+		//[HarmonyPrefix]
+		//static void InterfaceControllerPrefix(InterfaceController __instance)
+		//{
+		//	if (__instance.gameObject.scene.name == "Main Menu")
+		//		GameManagerPatch.EndInvoke();
+		//}
+
+		public static void TakeScreenshot()
 		{
 			string directory = RTFile.ApplicationDirectory + "screenshots";
 			if (!Directory.Exists(directory))
@@ -572,36 +596,75 @@ namespace RTFunctions
 			float camPosX = 1.775f * EventManager.inst.camZoom + EventManager.inst.camPos.x;
 			float camPosY = 1f * EventManager.inst.camZoom + EventManager.inst.camPos.y;
 
-			foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
+			if (Updater.Active)
 			{
-				if (Objects.beatmapObjects.ContainsKey(beatmapObject.id))
+				foreach (var beatmapObject in Updater.levelProcessor.level.objects)
 				{
-					var functionObject = Objects.beatmapObjects[beatmapObject.id];
-					if (functionObject.gameObject != null && functionObject.meshFilter != null)
+					try
 					{
-						var lossyScale = Vector3.one;
-						var position = functionObject.gameObject.transform.position;
+						var bm = (LevelObject)beatmapObject;
 
-						foreach (var chain in functionObject.transformChain)
+						if (bm.visualObject.GameObject)
 						{
-							var chvector = chain.transform.localScale;
-							lossyScale = new Vector3(lossyScale.x * chvector.x, lossyScale.y * chvector.y, 1f);
-						}
+							//var lossyScale = Vector3.one;
+							//var position = bm.visualObject.GameObject.transform.position;
 
-						var array = new Vector3[functionObject.meshFilter.mesh.vertices.Length];
-						for (int i = 0; i < array.Length; i++)
-						{
-							var a = functionObject.meshFilter.mesh.vertices[i];
-							array[i] = new Vector3(a.x * lossyScale.x, a.y * lossyScale.y, 0f) + position;
-						}
+							//foreach (var chain in functionObject.transformChain)
+							//{
+							//	var chvector = chain.transform.localScale;
+							//	lossyScale = new Vector3(lossyScale.x * chvector.x, lossyScale.y * chvector.y, 1f);
+							//}
 
-						if (array.All(x => x.x > camPosX || x.y > camPosY || x.x < -camPosX || x.y < -camPosY))
-						{
-							posnum += 1;
+							//var array = new Vector3[functionObject.meshFilter.mesh.vertices.Length];
+							//for (int i = 0; i < array.Length; i++)
+							//{
+							//	var a = functionObject.meshFilter.mesh.vertices[i];
+							//	array[i] = new Vector3(a.x * lossyScale.x, a.y * lossyScale.y, 0f) + position;
+							//}
+
+							//if (array.All(x => x.x > camPosX || x.y > camPosY || x.x < -camPosX || x.y < -camPosY))
+							//{
+							//	posnum += 1;
+							//}
 						}
+					}
+					catch
+					{
+
 					}
 				}
 			}
+
+   //         foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
+			//{
+			//	if (Objects.beatmapObjects.ContainsKey(beatmapObject.id))
+			//	{
+			//		var functionObject = Objects.beatmapObjects[beatmapObject.id];
+			//		if (functionObject.gameObject != null && functionObject.meshFilter != null)
+			//		{
+			//			var lossyScale = Vector3.one;
+			//			var position = functionObject.gameObject.transform.position;
+
+			//			foreach (var chain in functionObject.transformChain)
+			//			{
+			//				var chvector = chain.transform.localScale;
+			//				lossyScale = new Vector3(lossyScale.x * chvector.x, lossyScale.y * chvector.y, 1f);
+			//			}
+
+			//			var array = new Vector3[functionObject.meshFilter.mesh.vertices.Length];
+			//			for (int i = 0; i < array.Length; i++)
+			//			{
+			//				var a = functionObject.meshFilter.mesh.vertices[i];
+			//				array[i] = new Vector3(a.x * lossyScale.x, a.y * lossyScale.y, 0f) + position;
+			//			}
+
+			//			if (array.All(x => x.x > camPosX || x.y > camPosY || x.x < -camPosX || x.y < -camPosY))
+			//			{
+			//				posnum += 1;
+			//			}
+			//		}
+			//	}
+			//}
 
 			return posnum;
 		}

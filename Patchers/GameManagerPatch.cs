@@ -8,9 +8,22 @@ using LSFunctions;
 
 namespace RTFunctions.Patchers
 {
+    public delegate void LevelEventHandler();
+
     [HarmonyPatch(typeof(GameManager))]
     public class GameManagerPatch : MonoBehaviour
     {
+        public static event LevelEventHandler LevelStart;
+        public static event LevelEventHandler LevelEnd;
+
+        [HarmonyPatch("PlayLevel")]
+        [HarmonyPostfix]
+        static void PlayLevelPostfix() => LevelStart?.Invoke();
+
+        public static void StartInvoke() => LevelStart?.Invoke();
+
+        public static void EndInvoke() => LevelEnd?.Invoke();
+
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
         static void StartPostfix()
@@ -30,6 +43,7 @@ namespace RTFunctions.Patchers
                 }
             }
 
+            // I have no idea what this was doing here
             if (InputDataManager.inst.gameActions != null && InputDataManager.inst.gameActions.Escape.WasPressed)
             {
                 __instance.UnPause();

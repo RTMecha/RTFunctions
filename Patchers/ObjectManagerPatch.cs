@@ -11,10 +11,15 @@ using LSFunctions;
 
 using RTFunctions.Functions;
 using RTFunctions.Functions.Managers;
+using RTFunctions.Functions.Optimization;
+using RTFunctions.Functions.Optimization.Level;
+using RTFunctions.Functions.Optimization.Objects;
 
 namespace RTFunctions.Patchers
 {
-    [HarmonyPatch(typeof(ObjectManager))]
+	public delegate void LevelTickEventHandler();
+
+	[HarmonyPatch(typeof(ObjectManager))]
     public class ObjectManagerPatch : MonoBehaviour
     {
         [HarmonyPatch("Awake")]
@@ -139,5 +144,86 @@ namespace RTFunctions.Patchers
 		//    Debug.LogFormat("{0}Updating Objects", FunctionsPlugin.className);
 		//    Objects.inst.StartCoroutine(Objects.inst.updateObjects());
 		//}
+
+
+		public static event LevelTickEventHandler LevelTick;
+
+		[HarmonyPatch("Update")]
+		[HarmonyPrefix]
+		public static bool UpdatePrefix()
+		{
+			LevelTick?.Invoke();
+			return false;
+		}
+
+		[HarmonyPatch("updateObjects", new System.Type[] { typeof(string) })]
+		[HarmonyPrefix]
+		private static bool updateObjectsPrefix1(ObjectManager __instance)
+		{
+			AddPrefabObjects(__instance);
+			Updater.updateObjects();
+			return false;
+		}
+
+		[HarmonyPatch("updateObjectsForAll", new System.Type[] { typeof(string) })]
+		[HarmonyPrefix]
+		private static bool updateObjectsPrefix2(ObjectManager __instance)
+		{
+			AddPrefabObjects(__instance);
+			Updater.updateObjects();
+			return false;
+		}
+
+		[HarmonyPatch("updateObjects", new System.Type[] { typeof(ObjEditor.ObjectSelection), typeof(bool) })]
+		[HarmonyPrefix]
+		private static bool updateObjectsPrefix3(ObjectManager __instance, ObjEditor.ObjectSelection __0, bool __1)
+		{
+			//CatalystBase.updateObjects();
+			if (__0.IsObject())
+			{
+				Updater.updateProcessor(__0);
+			}
+			if (__1)
+			{
+				__instance.updateObjectsForAll(__0.GetPrefabData().ID);
+			}
+			if (__0.IsPrefab())
+			{
+				__instance.updateObjects();
+			}
+			return false;
+		}
+
+		[HarmonyPatch("updateObjects", new System.Type[] { })]
+		[HarmonyPrefix]
+		private static bool updateObjectsPrefix4(ObjectManager __instance)
+		{
+			AddPrefabObjects(__instance);
+			Updater.updateObjects();
+			return false;
+		}
+
+		public static void AddPrefabObjects(ObjectManager __instance)
+		{
+			DataManager.inst.gameData.beatmapObjects.RemoveAll((DataManager.GameData.BeatmapObject x) => x.fromPrefab);
+			for (int i = 0; i < DataManager.inst.gameData.prefabObjects.Count; i++)
+			{
+				__instance.AddPrefabToLevel(DataManager.inst.gameData.prefabObjects[i]);
+			}
+			for (int j = 0; j < DataManager.inst.gameData.beatmapObjects.Count; j++)
+			{
+				if (!DataManager.inst.gameData.beatmapObjects[j].fromPrefab)
+				{
+					DataManager.inst.gameData.beatmapObjects[j].active = false;
+					for (int k = 0; k < DataManager.inst.gameData.beatmapObjects[j].events.Count; k++)
+					{
+						for (int l = 0; l < DataManager.inst.gameData.beatmapObjects[j].events[k].Count; l++)
+						{
+							DataManager.inst.gameData.beatmapObjects[j].events[k][l].active = false;
+						}
+					}
+				}
+			}
+		}
 	}
 }

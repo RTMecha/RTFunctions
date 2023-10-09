@@ -19,6 +19,7 @@ using LSFunctions;
 using RTFunctions.Enums;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.IO;
+using RTFunctions.Functions.Optimization;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
@@ -56,36 +57,7 @@ namespace RTFunctions.Functions
 		/// </summary>
 		/// <param name="_beatmapObject"></param>
 		/// <returns>GameObject from beatmapGameObjects if Catalyst is not installed, otherwise returns VisualObject from ILevelObject within Catalyst.</returns>
-		public static GameObject GetGameObject(this BeatmapObject _beatmapObject)
-		{
-			if (ModCompatibility.catalyst != null && ModCompatibility.catalystInstance != null && ModCompatibility.catalystType == ModCompatibility.CatalystType.Editor)
-			{
-				//var iLevelObject = _beatmapObject.GetILevelObject();
-				//if (iLevelObject != null)
-				//{
-				//	var visualObject = iLevelObject.GetType().GetField("visualObject").GetValue(iLevelObject);
-				//
-				//	if (visualObject != null)
-				//	{
-				//		return (GameObject)visualObject.GetType().GetField("gameObject").GetValue(visualObject);
-				//	}
-				//}
-				//return null;
-
-				//var catalyst = GameObject.Find("BepInEx_Manager").GetComponentByName("CatalystBase");
-				//var instance = catalyst.GetType().GetField("Instance").GetValue(catalyst);
-				return (GameObject)ModCompatibility.catalystInstance.GetType().GetMethod("GetGameObject").Invoke(ModCompatibility.catalystInstance, new object[] { _beatmapObject });
-			}
-
-			var chain = _beatmapObject.GetTransformChain();
-
-			if (chain.Count < 1)
-			{
-				return null;
-			}
-
-			return chain[chain.Count - 1].gameObject;
-		}
+		public static GameObject GetGameObject(this BeatmapObject _beatmapObject) => Updater.GetGameObject(_beatmapObject);
 
 		public static bool TryGetTransformChain(this BeatmapObject _beatmapObject, out List<Transform> result)
 		{
@@ -107,39 +79,19 @@ namespace RTFunctions.Functions
 		public static List<Transform> GetTransformChain(this BeatmapObject _beatmapObject)
 		{
 			var list = new List<Transform>();
-			if (ModCompatibility.catalyst != null && ModCompatibility.catalystType == ModCompatibility.CatalystType.Editor)
+			var tf1 = _beatmapObject.GetGameObject().transform;
+
+			while (tf1.parent != null && tf1.parent.gameObject.name != "GameObjects")
 			{
-				var tf1 = _beatmapObject.GetGameObject().transform;
+				tf1 = tf1.parent;
+			}
 
-				while (tf1.parent != null && tf1.parent.gameObject.name != "GameObjects")
-				{
-					tf1 = tf1.parent;
-				}
+			list.Add(tf1);
 
+			while (tf1.childCount != 0 && tf1.GetChild(0) != null)
+			{
+				tf1 = tf1.GetChild(0);
 				list.Add(tf1);
-
-				while (tf1.childCount != 0 && tf1.GetChild(0) != null)
-				{
-					tf1 = tf1.GetChild(0);
-					list.Add(tf1);
-				}
-
-				return list;
-			}
-
-			if (ObjectManager.inst == null || ObjectManager.inst.beatmapGameObjects.Count < 1 || !ObjectManager.inst.beatmapGameObjects.ContainsKey(_beatmapObject.id))
-			{
-				return list;
-			}
-
-			var gameObjectRef = ObjectManager.inst.beatmapGameObjects[_beatmapObject.id];
-			var tf = gameObjectRef.obj.transform;
-			list.Add(tf);
-
-			while (tf.childCount != 0 && tf.GetChild(0) != null)
-			{
-				tf = tf.GetChild(0);
-				list.Add(tf);
 			}
 
 			return list;
@@ -147,7 +99,7 @@ namespace RTFunctions.Functions
 
 		public static Color GetObjectColor(this BeatmapObject _beatmapObject, bool _ignoreTransparency)
 		{
-			if (_beatmapObject.objectType == BeatmapObject.ObjectType.Empty)
+			if (_beatmapObject.objectType == ObjectType.Empty)
 			{
 				return Color.white;
 			}
@@ -159,7 +111,7 @@ namespace RTFunctions.Functions
 				{
 					color = GameManager.inst.LiveTheme.objectColors[(int)_beatmapObject.events[3][0].eventValues[0]];
 				}
-				else if (AudioManager.inst.CurrentAudioSource.time > _beatmapObject.StartTime + _beatmapObject.GetObjectLifeLength() && _beatmapObject.autoKillType != BeatmapObject.AutoKillType.OldStyleNoAutokill)
+				else if (AudioManager.inst.CurrentAudioSource.time > _beatmapObject.StartTime + _beatmapObject.GetObjectLifeLength() && _beatmapObject.autoKillType != AutoKillType.OldStyleNoAutokill)
 				{
 					color = GameManager.inst.LiveTheme.objectColors[(int)_beatmapObject.events[3][_beatmapObject.events[3].Count - 1].eventValues[0]];
 				}
