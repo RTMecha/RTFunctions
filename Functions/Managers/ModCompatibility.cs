@@ -49,13 +49,26 @@ namespace RTFunctions.Functions.Managers
 
                     var cat = bepinex.GetComponentByName("CatalystBase");
 
-                    catalyst = cat.GetType();
-                    catalystInstance = catalyst.GetField("Instance").GetValue(bepinex.GetComponentByName("CatalystBase"));
-
-                    if ((string)catalyst.GetField("Name").GetValue(catalyst) == "Editor Catalyst")
+                    if (cat)
                     {
-                        catalystType = CatalystType.Editor;
+                        try
+                        {
+                            Destroy(bepinex.GetComponentByName("CatalystBase"));
+                            Debug.LogWarning($"{FunctionsPlugin.className}Catalyst functionality has moved to this mod, so no need to have it installed anymore.");
+                        }
+                        catch
+                        {
+
+                        }
                     }
+
+                    //catalyst = cat.GetType();
+                    //catalystInstance = catalyst.GetField("Instance").GetValue(bepinex.GetComponentByName("CatalystBase"));
+
+                    //if ((string)catalyst.GetField("Name").GetValue(catalyst) == "Editor Catalyst")
+                    //{
+                    //    catalystType = CatalystType.Editor;
+                    //}
                 }
             }
 
