@@ -31,7 +31,7 @@ using Ease = RTFunctions.Functions.Animation.Ease;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.5.0")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.5.1")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
@@ -266,6 +266,7 @@ namespace RTFunctions
 			harmony.PatchAll(typeof(GameManagerPatch));
 			harmony.PatchAll(typeof(ObjectManagerPatch));
 			harmony.PatchAll(typeof(SaveManagerPatch));
+			harmony.PatchAll(typeof(BackgroundManagerPatch));
 
 			// Hooks
             {
@@ -454,10 +455,7 @@ namespace RTFunctions
 
 		[HarmonyPatch(typeof(ObjEditor), "DeleteObject")]
 		[HarmonyPrefix]
-		static void ObjEditorDeletePrefix(ObjEditor __instance, ObjEditor.ObjectSelection __0)
-		{
-			Updater.updateProcessor(__0, false);
-		}
+		static void ObjEditorDeletePrefix(ObjEditor __instance, ObjEditor.ObjectSelection __0) => Updater.updateProcessor(__0, false);
 
 		//[HarmonyPatch(typeof(InterfaceController), "Start")]
 		//[HarmonyPrefix]
