@@ -9,14 +9,28 @@ using UnityEngine.EventSystems;
 
 using LSFunctions;
 
+using BeatmapTheme = DataManager.BeatmapTheme;
+
 namespace RTFunctions.Functions.IO
 {
     public static class RTHelpers
-    {
+	{
+		public static float perspectiveZoom = 1f;
 		public static string levelVersion = FunctionsPlugin.VersionNumber;
 
         public static float screenScale;
 		public static float screenScaleInverse;
+
+		public static BeatmapTheme BeatmapTheme
+        {
+			get
+            {
+				var beatmapTheme = GameManager.inst?.LiveTheme;
+				if (EditorManager.inst && EventEditor.inst.showTheme)
+					beatmapTheme = EventEditor.inst.previewTheme;
+				return beatmapTheme;
+			}
+        }
 
         public static float getPitch()
         {
@@ -808,10 +822,9 @@ namespace RTFunctions.Functions.IO
 			return "no shape";
 		}
 
-		public static string ColorToHex(Color32 color)
-		{
-			return color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
-		}
+        #region Color
+
+        public static string ColorToHex(Color32 color) => color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
 
 		public static Color ChangeColorHSV(Color color, float hue, float sat, float val)
 		{
@@ -822,7 +835,37 @@ namespace RTFunctions.Functions.IO
 			return LSColors.ColorFromHSV(num + hue, saturation + sat, value + val);
 		}
 
-		public static void CreateCollider(this PolygonCollider2D collider2D, MeshFilter meshFilter)
+		public static Color InvertColorHue(Color color)
+		{
+			double num;
+			double saturation;
+			double value;
+			LSColors.ColorToHSV(color, out num, out saturation, out value);
+			return LSColors.ColorFromHSV(num - 180.0, saturation, value);
+		}
+
+		public static Color InvertColorValue(Color color)
+		{
+			double num;
+			double sat;
+			double val;
+			LSColors.ColorToHSV(color, out num, out sat, out val);
+
+			if (val < 0.5)
+			{
+				val = -val + 1;
+			}
+			else
+			{
+				val = -(val - 1);
+			}
+
+			return LSColors.ColorFromHSV(num, sat, val);
+		}
+
+        #endregion
+
+        public static void CreateCollider(this PolygonCollider2D collider2D, MeshFilter meshFilter)
         {
 			if (meshFilter.mesh != null)
 			{
@@ -894,6 +937,19 @@ namespace RTFunctions.Functions.IO
 			s = str.Replace("Left", "LSLeft87344874").Replace("Right", "LSRight87344874").Replace("left", "LSleft87344874").Replace("right", "LSright87344874").Replace("LEFT", "LSLEFT87344874").Replace("RIGHT", "LSRIGHT87344874");
 
 			return s.Replace("LSLeft87344874", "Right").Replace("LSRight87344874", "Left").Replace("LSleft87344874", "right").Replace("LSright87344874", "left").Replace("LSLEFT87344874", "RIGHT").Replace("LSRIGHT87344874", "LEFT");
+		}
+
+		public static bool ColorMatch(Color a, Color b, float range, bool alpha = false)
+		{
+			if (alpha)
+			{
+				if (a.r < b.r + range && a.r > b.r - range && a.g < b.g + range && a.g > b.g - range && a.b < b.b + range && a.b > b.b - range && a.a < b.a + range && a.a > b.a - range)
+					return true;
+			}
+			else if (a.r < b.r + range && a.r > b.r - range && a.g < b.g + range && a.g > b.g - range && a.b < b.b + range && a.b > b.b - range)
+				return true;
+
+			return false;
 		}
 
 		#region Cipher Encryptions because heck it
