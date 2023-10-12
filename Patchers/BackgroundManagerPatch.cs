@@ -39,7 +39,7 @@ namespace RTFunctions.Patchers
 			gameObject.layer = 9;
 			gameObject.transform.SetParent(__instance.backgroundParent);
 			gameObject.transform.localScale = new Vector3(__0.scale.x, __0.scale.y, scaleZ);
-			gameObject.transform.Rotate(new Vector3(0f, 0f, __0.rot));
+			gameObject.transform.Rotate(new Vector3(newBG == null ? 0f : newBG.rotation.x, newBG == null ? 0f : newBG.rotation.y, __0.rot));
 
 			gameObject.GetComponent<SelectBackgroundInEditor>().obj = __instance.backgroundObjects.Count;
 			__instance.backgroundObjects.Add(gameObject);
@@ -119,7 +119,7 @@ namespace RTFunctions.Patchers
 						{
 							int layer = bg.depth - backgroundObject.layer;
 							float t = a.a / (float)layer * (float)i;
-							Color b = beatmapTheme.backgroundColors[0];
+							Color b = beatmapTheme.backgroundColors[bg.FadeColor];
 
 							if (RTHelpers.ColorMatch(b, beatmapTheme.backgroundColor, 0.05f))
 							{

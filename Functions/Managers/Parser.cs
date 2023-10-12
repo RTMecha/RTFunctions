@@ -721,51 +721,54 @@ namespace RTFunctions.Functions.Managers
 				var item = new DataManager.GameData.BackgroundObject(active, name, kind, text, pos, scale, asFloat, asInt, asInt2, reactive, reactiveType, reactiveScale, drawFade);
 				DataManager.inst.gameData.backgroundObjects.Add(item);
 
-				var newBG = new Objects.BackgroundObject(item);
+				var bg = new Objects.BackgroundObject(item);
 				if (jn[i]["zscale"] != null)
-					newBG.zscale = jn[i]["zscale"].AsFloat;
+					bg.zscale = jn[i]["zscale"].AsFloat;
 
 				if (jn[i]["depth"] != null)
-					newBG.depth = jn[i]["depth"].AsInt;
+					bg.depth = jn[i]["depth"].AsInt;
 
 				if (jn[i]["s"] != null && jn[i]["so"] != null)
-					newBG.shape = Objects.GetShape3D(jn[i]["s"].AsInt, jn[i]["so"]);
+					bg.shape = Objects.GetShape3D(jn[i]["s"].AsInt, jn[i]["so"]);
 
-				UnityEngine.Debug.Log($"{FunctionsPlugin.className}Trying to load reactive settings");
+				if (jn[i]["r_offset"] != null && jn[i]["r_offset"]["x"] != null && jn[i]["r_offset"]["y"] != null)
+					bg.rotation = new Vector2(jn[i]["r_offset"]["x"].AsFloat, jn[i]["r_offset"]["y"].AsFloat);
+				if (jn[i]["color_fade"] != null)
+					bg.FadeColor = jn[i]["color_fade"].AsInt;
+
 				if (jn[i]["rc"] != null)
 				{
-					UnityEngine.Debug.Log($"{FunctionsPlugin.className}Loaded reactive settings");
                     try
 					{
 						if (jn[i]["rc"]["pos"] != null && jn[i]["rc"]["pos"]["i"] != null && jn[i]["rc"]["pos"]["i"]["x"] != null && jn[i]["rc"]["pos"]["i"]["y"] != null)
-							newBG.reactivePosIntensity = new Vector2(jn[i]["rc"]["pos"]["i"]["x"].AsFloat, jn[i]["rc"]["pos"]["i"]["y"].AsFloat);
+							bg.reactivePosIntensity = new Vector2(jn[i]["rc"]["pos"]["i"]["x"].AsFloat, jn[i]["rc"]["pos"]["i"]["y"].AsFloat);
 						if (jn[i]["rc"]["pos"] != null && jn[i]["rc"]["pos"]["s"] != null && jn[i]["rc"]["pos"]["s"]["x"] != null && jn[i]["rc"]["pos"]["s"]["y"] != null)
-							newBG.reactivePosSamples = new Vector2Int(jn[i]["rc"]["pos"]["s"]["x"].AsInt, jn[i]["rc"]["pos"]["s"]["y"].AsInt);
+							bg.reactivePosSamples = new Vector2Int(jn[i]["rc"]["pos"]["s"]["x"].AsInt, jn[i]["rc"]["pos"]["s"]["y"].AsInt);
 
 						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["active"] != null)
-							newBG.reactiveIncludesZ = jn[i]["rc"]["z"]["active"].AsBool;
+							bg.reactiveIncludesZ = jn[i]["rc"]["z"]["active"].AsBool;
 
 						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["z"]["i"] != null)
-							newBG.reactiveZIntensity = jn[i]["rc"]["z"]["i"].AsFloat;
+							bg.reactiveZIntensity = jn[i]["rc"]["z"]["i"].AsFloat;
 						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["z"]["s"] != null)
-							newBG.reactiveZSample = jn[i]["rc"]["z"]["s"].AsInt;
+							bg.reactiveZSample = jn[i]["rc"]["z"]["s"].AsInt;
 
 						if (jn[i]["rc"]["sca"] != null && jn[i]["rc"]["sca"]["i"] != null && jn[i]["rc"]["sca"]["i"]["x"] != null && jn[i]["rc"]["sca"]["i"]["y"] != null)
-							newBG.reactiveScaIntensity = new Vector2(jn[i]["rc"]["sca"]["i"]["x"].AsFloat, jn[i]["rc"]["sca"]["i"]["y"].AsFloat);
+							bg.reactiveScaIntensity = new Vector2(jn[i]["rc"]["sca"]["i"]["x"].AsFloat, jn[i]["rc"]["sca"]["i"]["y"].AsFloat);
 						if (jn[i]["rc"]["sca"] != null && jn[i]["rc"]["sca"]["s"] != null && jn[i]["rc"]["sca"]["s"]["x"] != null && jn[i]["rc"]["sca"]["s"]["y"] != null)
-							newBG.reactiveScaSamples = new Vector2Int(jn[i]["rc"]["sca"]["s"]["x"].AsInt, jn[i]["rc"]["sca"]["s"]["y"].AsInt);
+							bg.reactiveScaSamples = new Vector2Int(jn[i]["rc"]["sca"]["s"]["x"].AsInt, jn[i]["rc"]["sca"]["s"]["y"].AsInt);
 
 						if (jn[i]["rc"]["rot"] != null && jn[i]["rc"]["rot"]["i"] != null)
-							newBG.reactiveRotIntensity = jn[i]["rc"]["rot"]["i"].AsFloat;
+							bg.reactiveRotIntensity = jn[i]["rc"]["rot"]["i"].AsFloat;
 						if (jn[i]["rc"]["rot"] != null && jn[i]["rc"]["rot"]["s"] != null)
-							newBG.reactiveRotSample = jn[i]["rc"]["rot"]["s"].AsInt;
+							bg.reactiveRotSample = jn[i]["rc"]["rot"]["s"].AsInt;
 
 						if (jn[i]["rc"]["col"] != null && jn[i]["rc"]["col"]["i"] != null)
-							newBG.reactiveColIntensity = jn[i]["rc"]["col"]["i"].AsFloat;
+							bg.reactiveColIntensity = jn[i]["rc"]["col"]["i"].AsFloat;
 						if (jn[i]["rc"]["col"] != null && jn[i]["rc"]["col"]["s"] != null)
-							newBG.reactiveColSample = jn[i]["rc"]["col"]["s"].AsInt;
+							bg.reactiveColSample = jn[i]["rc"]["col"]["s"].AsInt;
 						if (jn[i]["rc"]["col"] != null && jn[i]["rc"]["col"]["c"] != null)
-							newBG.reactiveCol = jn[i]["rc"]["col"]["c"].AsInt;
+							bg.reactiveCol = jn[i]["rc"]["col"]["c"].AsInt;
 					}
                     catch (Exception ex)
 					{
@@ -773,7 +776,7 @@ namespace RTFunctions.Functions.Managers
 					}
 				}
 
-				Objects.backgroundObjects.Add(newBG);
+				Objects.backgroundObjects.Add(bg);
 			}
 			yield break;
 		}

@@ -9953,7 +9953,6 @@ namespace RTFunctions.Functions.Managers
             public List<GameObject> gameObjects = new List<GameObject>();
             public List<Transform> transforms = new List<Transform>();
             public List<Renderer> renderers = new List<Renderer>();
-            public Shape shape;
 
             public Vector2Int reactivePosSamples;
             public Vector2Int reactiveScaSamples;
@@ -9966,8 +9965,17 @@ namespace RTFunctions.Functions.Managers
             public float reactiveRotIntensity;
             public float reactiveColIntensity;
 
+            public Vector2 rotation = Vector2.zero;
+            public Shape shape;
             public float zscale = 10f;
             public int depth = 9;
+            int fadeColor;
+            public int FadeColor
+            {
+                get => Mathf.Clamp(fadeColor, 0, 8);
+                set => fadeColor = Mathf.Clamp(value, 0, 8);
+            }
+
             public bool reactiveIncludesZ;
             public float reactiveZIntensity;
             public int reactiveZSample;
