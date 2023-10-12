@@ -31,8 +31,6 @@ namespace RTFunctions.Functions.Managers
 {
     public static class Parser
 	{
-		//Move this to RTFunctions.Functions.IO
-
 		public static IEnumerator ParseRTFunctionsData(JSONNode _rt)
         {
 			if (!string.IsNullOrEmpty(_rt["v"]))
@@ -57,12 +55,13 @@ namespace RTFunctions.Functions.Managers
             }
 
 			DataManager.inst.gameData.ParseEditorData(jn["ed"]);
-			DataManager.inst.gameData.ParseLevelData(jn["level_data"]);
+			ParseLevelData(jn["level_data"]);
 			DataManager.inst.gameData.ParseCheckpointData(jn["checkpoints"]);
 			ParsePrefabs(jn["prefabs"]);
 			ParsePrefabObjects(jn["prefab_objects"]);
 			DataManager.inst.StartCoroutine(ParseGameObjects(jn["beatmap_objects"]));
-			DataManager.inst.gameData.ParseBackgroundObjects(jn["bg_objects"]);
+			//DataManager.inst.gameData.ParseBackgroundObjects(jn["bg_objects"]);
+			DataManager.inst.StartCoroutine(ParseBackgroundObjects(jn["bg_objects"]));
 			DataManager.inst.StartCoroutine(ParseEventObjects(jn["events"]));
 			yield break;
 		}
@@ -131,6 +130,29 @@ namespace RTFunctions.Functions.Managers
 			yield break;
 		}
 
+		public static void ParseLevelData(JSONNode _levelData)
+		{
+			if (DataManager.inst.gameData.beatmapData == null)
+			{
+				DataManager.inst.gameData.beatmapData = new DataManager.GameData.BeatmapData();
+			}
+			if (DataManager.inst.gameData.beatmapData.levelData == null)
+			{
+				DataManager.inst.gameData.beatmapData.levelData = new DataManager.GameData.BeatmapData.LevelData();
+			}
+			if (_levelData["follow_player"] != null)
+			{
+				DataManager.inst.gameData.beatmapData.levelData.followPlayer = _levelData["follow_player"].AsBool;
+			}
+			if (_levelData["show_intro"] != null)
+			{
+				DataManager.inst.gameData.beatmapData.levelData.showIntro = _levelData["show_intro"].AsBool;
+			}
+
+			if (_levelData["bg_zoom"] != null)
+				RTHelpers.perspectiveZoom = _levelData["bg_zoom"].AsFloat;
+		}
+
 		public static IEnumerator ParseCheckpointData(JSONNode _checkpointData)
 		{
 			if (DataManager.inst.gameData.beatmapData == null)
@@ -187,7 +209,25 @@ namespace RTFunctions.Functions.Managers
 				prefab.ID = _prefabs[i]["id"];
 				prefab.MainObjectID = _prefabs[i]["main_obj_id"];
 				DataManager.inst.gameData.prefabs.Add(prefab);
+
+				var modPrefab = new Objects.Prefab(prefab);
+				Objects.prefabs.Add(modPrefab);
+
+				for (int j = 0; j < _prefabs[i]["objects"].Count; j++)
+					DataManager.inst.StartCoroutine(ParsePrefabModifiers(_prefabs[i]["objects"][j], modPrefab));
 			}
+		}
+
+		public static IEnumerator ParsePrefabModifiers(JSONNode _objects, Objects.Prefab prefab)
+		{
+			if (_objects["modifiers"] != null)
+            {
+				var dictionary = ParseModifier(_objects);
+
+				prefab.modifiers.Add(_objects["id"], dictionary["modifiers"]);
+            }
+
+			yield break;
 		}
 
 		public static void ParsePrefabObjects(JSONNode _prefabObjects)
@@ -611,50 +651,37 @@ namespace RTFunctions.Functions.Managers
 			yield break;
 		}
 
-		public static IEnumerator ParseBackgroundObjects(JSONNode _backgroundObjects)
+		public static IEnumerator ParseBackgroundObjects(JSONNode jn)
 		{
 			if (DataManager.inst.gameData.backgroundObjects == null)
-			{
 				DataManager.inst.gameData.backgroundObjects = new List<DataManager.GameData.BackgroundObject>();
-			}
-			DataManager.inst.gameData.backgroundObjects.Clear();
-			for (int i = 0; i < _backgroundObjects.Count; i++)
+            DataManager.inst.gameData.backgroundObjects.Clear();
+
+			Objects.backgroundObjects.Clear();
+
+            for (int i = 0; i < jn.Count; i++)
 			{
 				bool active = true;
-				if (_backgroundObjects[i]["active"] != null)
-				{
-					active = _backgroundObjects[i]["active"].AsBool;
-				}
+				if (jn[i]["active"] != null)
+					active = jn[i]["active"].AsBool;
 
 				string name;
-				if (_backgroundObjects[i]["name"] != null)
-				{
-					name = _backgroundObjects[i]["name"];
-				}
+				if (jn[i]["name"] != null)
+					name = jn[i]["name"];
 				else
-				{
 					name = "Background";
-				}
 
 				int kind;
-				if (_backgroundObjects[i]["kind"] != null)
-				{
-					kind = _backgroundObjects[i]["kind"].AsInt;
-				}
+				if (jn[i]["kind"] != null)
+					kind = jn[i]["kind"].AsInt;
 				else
-				{
 					kind = 1;
-				}
 
 				string text;
-				if (_backgroundObjects[i]["text"] != null)
-				{
-					text = _backgroundObjects[i]["text"];
-				}
+				if (jn[i]["text"] != null)
+					text = jn[i]["text"];
 				else
-				{
 					text = "";
-				}
 
 				//Vector2[] array = new Vector2[4];
 				//for (int j = 0; j < array.Length; j++)
@@ -665,43 +692,88 @@ namespace RTFunctions.Functions.Managers
 				//	}
 				//}
 
-				Vector2 pos = new Vector2(_backgroundObjects[i]["pos"]["x"].AsFloat, _backgroundObjects[i]["pos"]["y"].AsFloat);
-				Vector2 scale = new Vector2(_backgroundObjects[i]["size"]["x"].AsFloat, _backgroundObjects[i]["size"]["y"].AsFloat);
+				Vector2 pos = new Vector2(jn[i]["pos"]["x"].AsFloat, jn[i]["pos"]["y"].AsFloat);
+				Vector2 scale = new Vector2(jn[i]["size"]["x"].AsFloat, jn[i]["size"]["y"].AsFloat);
 
-				float asFloat = _backgroundObjects[i]["rot"].AsFloat;
-				int asInt = _backgroundObjects[i]["color"].AsInt;
-				int asInt2 = _backgroundObjects[i]["layer"].AsInt;
+				float asFloat = jn[i]["rot"].AsFloat;
+				int asInt = jn[i]["color"].AsInt;
+				int asInt2 = jn[i]["layer"].AsInt;
 
 				bool reactive = false;
-				if (_backgroundObjects[i]["r_set"] != null)
-				{
+				if (jn[i]["r_set"] != null)
 					reactive = true;
-				}
 
-				if (_backgroundObjects[i]["r_set"]["active"] != null)
-				{
-					reactive = _backgroundObjects[i]["r_set"]["active"].AsBool;
-				}
+				if (jn[i]["r_set"]["active"] != null)
+					reactive = jn[i]["r_set"]["active"].AsBool;
 
 				var reactiveType = DataManager.GameData.BackgroundObject.ReactiveType.LOW;
-				if (_backgroundObjects[i]["r_set"]["type"] != null)
-				{
-					reactiveType = (DataManager.GameData.BackgroundObject.ReactiveType)Enum.Parse(typeof(DataManager.GameData.BackgroundObject.ReactiveType), _backgroundObjects[i]["r_set"]["type"]);
-				}
+				if (jn[i]["r_set"]["type"] != null)
+					reactiveType = (DataManager.GameData.BackgroundObject.ReactiveType)Enum.Parse(typeof(DataManager.GameData.BackgroundObject.ReactiveType), jn[i]["r_set"]["type"]);
 
 				float reactiveScale = 1f;
-				if (_backgroundObjects[i]["r_set"]["scale"] != null)
-				{
-					reactiveScale = _backgroundObjects[i]["r_set"]["scale"].AsFloat;
-				}
+				if (jn[i]["r_set"]["scale"] != null)
+					reactiveScale = jn[i]["r_set"]["scale"].AsFloat;
 
 				bool drawFade = true;
-				if (_backgroundObjects[i]["fade"] != null)
-				{
-					drawFade = _backgroundObjects[i]["fade"].AsBool;
-				}
+				if (jn[i]["fade"] != null)
+					drawFade = jn[i]["fade"].AsBool;
+
 				var item = new DataManager.GameData.BackgroundObject(active, name, kind, text, pos, scale, asFloat, asInt, asInt2, reactive, reactiveType, reactiveScale, drawFade);
 				DataManager.inst.gameData.backgroundObjects.Add(item);
+
+				var newBG = new Objects.BackgroundObject(item);
+				if (jn[i]["zscale"] != null)
+					newBG.zscale = jn[i]["zscale"].AsFloat;
+
+				if (jn[i]["depth"] != null)
+					newBG.depth = jn[i]["depth"].AsInt;
+
+				if (jn[i]["s"] != null && jn[i]["so"] != null)
+					newBG.shape = Objects.GetShape3D(jn[i]["s"].AsInt, jn[i]["so"]);
+
+				UnityEngine.Debug.Log($"{FunctionsPlugin.className}Trying to load reactive settings");
+				if (jn[i]["rc"] != null)
+				{
+					UnityEngine.Debug.Log($"{FunctionsPlugin.className}Loaded reactive settings");
+                    try
+					{
+						if (jn[i]["rc"]["pos"] != null && jn[i]["rc"]["pos"]["i"] != null && jn[i]["rc"]["pos"]["i"]["x"] != null && jn[i]["rc"]["pos"]["i"]["y"] != null)
+							newBG.reactivePosIntensity = new Vector2(jn[i]["rc"]["pos"]["i"]["x"].AsFloat, jn[i]["rc"]["pos"]["i"]["y"].AsFloat);
+						if (jn[i]["rc"]["pos"] != null && jn[i]["rc"]["pos"]["s"] != null && jn[i]["rc"]["pos"]["s"]["x"] != null && jn[i]["rc"]["pos"]["s"]["y"] != null)
+							newBG.reactivePosSamples = new Vector2Int(jn[i]["rc"]["pos"]["s"]["x"].AsInt, jn[i]["rc"]["pos"]["s"]["y"].AsInt);
+
+						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["active"] != null)
+							newBG.reactiveIncludesZ = jn[i]["rc"]["z"]["active"].AsBool;
+
+						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["z"]["i"] != null)
+							newBG.reactiveZIntensity = jn[i]["rc"]["z"]["i"].AsFloat;
+						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["z"]["s"] != null)
+							newBG.reactiveZSample = jn[i]["rc"]["z"]["s"].AsInt;
+
+						if (jn[i]["rc"]["sca"] != null && jn[i]["rc"]["sca"]["i"] != null && jn[i]["rc"]["sca"]["i"]["x"] != null && jn[i]["rc"]["sca"]["i"]["y"] != null)
+							newBG.reactiveScaIntensity = new Vector2(jn[i]["rc"]["sca"]["i"]["x"].AsFloat, jn[i]["rc"]["sca"]["i"]["y"].AsFloat);
+						if (jn[i]["rc"]["sca"] != null && jn[i]["rc"]["sca"]["s"] != null && jn[i]["rc"]["sca"]["s"]["x"] != null && jn[i]["rc"]["sca"]["s"]["y"] != null)
+							newBG.reactiveScaSamples = new Vector2Int(jn[i]["rc"]["sca"]["s"]["x"].AsInt, jn[i]["rc"]["sca"]["s"]["y"].AsInt);
+
+						if (jn[i]["rc"]["rot"] != null && jn[i]["rc"]["rot"]["i"] != null)
+							newBG.reactiveRotIntensity = jn[i]["rc"]["rot"]["i"].AsFloat;
+						if (jn[i]["rc"]["rot"] != null && jn[i]["rc"]["rot"]["s"] != null)
+							newBG.reactiveRotSample = jn[i]["rc"]["rot"]["s"].AsInt;
+
+						if (jn[i]["rc"]["col"] != null && jn[i]["rc"]["col"]["i"] != null)
+							newBG.reactiveColIntensity = jn[i]["rc"]["col"]["i"].AsFloat;
+						if (jn[i]["rc"]["col"] != null && jn[i]["rc"]["col"]["s"] != null)
+							newBG.reactiveColSample = jn[i]["rc"]["col"]["s"].AsInt;
+						if (jn[i]["rc"]["col"] != null && jn[i]["rc"]["col"]["c"] != null)
+							newBG.reactiveCol = jn[i]["rc"]["col"]["c"].AsInt;
+					}
+                    catch (Exception ex)
+					{
+						UnityEngine.Debug.Log($"{FunctionsPlugin.className}Failed to load settings.\nEXCEPTION: {ex.Message}\nSTACKTRACE: {ex.StackTrace}");
+					}
+				}
+
+				Objects.backgroundObjects.Add(newBG);
 			}
 			yield break;
 		}
@@ -1364,32 +1436,6 @@ namespace RTFunctions.Functions.Managers
 					}
 				}
 
-				//for (int num4 = 0; num4 < _events["overlay"].Count; num4++)
-				//{
-    //                var eventKeyframe11 = new EventKeyframe();
-				//	JSONNode jsonnode11 = _events["overlay"][num4];
-				//	eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-				//	eventKeyframe11.SetEventValues(new float[]
-				//	{
-				//		jsonnode11["x"].AsFloat,
-				//		jsonnode11["y"].AsFloat
-				//	});
-				//	eventKeyframe11.random = jsonnode11["r"].AsInt;
-				//	DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-				//	if (jsonnode11["ct"] != null)
-				//	{
-				//		curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-				//		eventKeyframe11.curveType = curveType11;
-				//	}
-				//	eventKeyframe11.SetEventRandomValues(new float[]
-				//	{
-				//		jsonnode11["rx"].AsFloat,
-				//		jsonnode11["ry"].AsFloat
-				//	});
-				//	eventKeyframe11.active = false;
-				//	DataManager.inst.gameData.eventObjects.allEvents[21].Add(eventKeyframe11);
-				//}
-
 				for (int num4 = 0; num4 < _events["timeline"].Count; num4++)
 				{
                     EventKeyframe eventKeyframe11 = new EventKeyframe();
@@ -1757,5 +1803,10 @@ namespace RTFunctions.Functions.Managers
 			}
 			return null;
 		}
+
+		public static void PrefabToDAE(string path, Prefab prefab)
+        {
+
+        }
 	}
 }
