@@ -57,10 +57,7 @@ namespace RTFunctions.Patchers
 			float timeToAdd = 0f;
 
 			var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == __0.prefabID);
-
-			if (!Objects.prefabs.ContainsKey(prefab.ID))
-				Objects.prefabs.Add(prefab.ID, new Objects.Prefab(prefab));
-
+			
 			for (int i = 0; i < __0.RepeatCount + 1; i++)
 			{
 				var dictionary = new Dictionary<string, string>();
@@ -205,7 +202,8 @@ namespace RTFunctions.Patchers
 
 		public static void AddPrefabObjects(ObjectManager __instance)
 		{
-			DataManager.inst.gameData.beatmapObjects.RemoveAll((DataManager.GameData.BeatmapObject x) => x.fromPrefab);
+			
+			DataManager.inst.gameData.beatmapObjects.RemoveAll(x => x.fromPrefab);
 			for (int i = 0; i < DataManager.inst.gameData.prefabObjects.Count; i++)
 			{
 				__instance.AddPrefabToLevel(DataManager.inst.gameData.prefabObjects[i]);
