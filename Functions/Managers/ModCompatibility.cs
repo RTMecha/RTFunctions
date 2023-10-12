@@ -83,6 +83,7 @@ namespace RTFunctions.Functions.Managers
                 player = AccessTools.TypeByName("RTPlayer");
                 var p = bepinex.GetComponentByName("PlayerPlugin");
                 playerPlugin = p.GetType();
+                playerPluginInstance = p;
             }
 
             if (bepinex.GetComponentByName("EditorPlugin"))
@@ -129,6 +130,14 @@ namespace RTFunctions.Functions.Managers
                 {
                     Debug.LogErrorFormat("{0}Error.\nMessage: {1}\nStackTrace: {2}", FunctionsPlugin.className, ex.Message, ex.StackTrace);
                 }
+            }
+
+
+            if (bepinex.GetComponentByName("ShapesPlugin"))
+            {
+                var p = bepinex.GetComponentByName("ShapesPlugin");
+                shapesPlugin = p.GetType();
+                shapesPluginInstance = p;
             }
         }
 
@@ -299,6 +308,13 @@ namespace RTFunctions.Functions.Managers
                 return dictionary[_name];
             return Font.GetDefault();
         }
+
+        #endregion
+
+        #region CustomShapes
+
+        public static Type shapesPlugin;
+        public static object shapesPluginInstance;
 
         #endregion
 
