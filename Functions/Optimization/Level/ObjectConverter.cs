@@ -6,6 +6,7 @@ using UnityEngine;
 
 using RTFunctions.Functions.Animation;
 using RTFunctions.Functions.Animation.Keyframe;
+using RTFunctions.Functions.Components;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.Optimization.Objects.Visual;
@@ -40,7 +41,23 @@ namespace RTFunctions.Functions.Optimization.Level
         public Dictionary<string, BeatmapObject> beatmapObjects = new Dictionary<string, BeatmapObject>();
         //public Dictionary<string, GameObject> gameObjects = new Dictionary<string, GameObject>();
 
-        private readonly GameData gameData;
+        public bool ShowEmpties
+        {
+            get
+            {
+                return ModCompatibility.sharedFunctions.ContainsKey("ShowEmpties") && (bool)ModCompatibility.sharedFunctions["ShowEmpties"];
+            }
+        }
+        
+        public bool ShowDamagable
+        {
+            get
+            {
+                return ModCompatibility.sharedFunctions.ContainsKey("ShowDamagable") && (bool)ModCompatibility.sharedFunctions["ShowDamagable"];
+            }
+        }
+
+        readonly GameData gameData;
 
         public ObjectConverter(GameData gameData)
         {
@@ -179,7 +196,7 @@ namespace RTFunctions.Functions.Optimization.Level
             return null;
         }
 
-        private LevelObject ToLevelObject(BeatmapObject beatmapObject)
+        LevelObject ToLevelObject(BeatmapObject beatmapObject)
         {
             List<LevelParentObject> parentObjects = new List<LevelParentObject>();
 
@@ -194,6 +211,7 @@ namespace RTFunctions.Functions.Optimization.Level
             var shapeOption = Mathf.Clamp(beatmapObject.shapeOption, 0, ObjectManager.inst.objectPrefabs[shape].options.Count - 1);
 
             GameObject baseObject = Object.Instantiate(ObjectManager.inst.objectPrefabs[shape].options[shapeOption], parent == null ? null : parent.transform);
+            baseObject.transform.localScale = Vector3.one;
 
             GameObject visualObject = baseObject.transform.GetChild(0).gameObject;
             visualObject.transform.localPosition = new Vector3(beatmapObject.origin.x, beatmapObject.origin.y, beatmapObject.Depth * 0.1f);
@@ -228,6 +246,7 @@ namespace RTFunctions.Functions.Optimization.Level
 
             var top = new GameObject("top");
             top.transform.SetParent(ObjectManager.inst.objectParent.transform);
+            top.transform.localScale = Vector3.one;
 
             if (beatmapObject.fromPrefab && !string.IsNullOrEmpty(beatmapObject.prefabInstanceID))
             {
@@ -256,10 +275,126 @@ namespace RTFunctions.Functions.Optimization.Level
                 top.transform.localRotation = rot;
             }
 
+            var pc = beatmapObject.GetParentChain();
+            if (pc != null && pc.Count > 0)
+            {
+                var beatmapParent = pc[pc.Count - 1];
+
+                if (beatmapParent.parent == "CAMERA_PARENT")
+                {
+                    GameObject camParent;
+                    if (!ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]"))
+                    {
+                        camParent = new GameObject("CAMERA_PARENT [" + beatmapParent.id + "]");
+                        camParent.transform.SetParent(ObjectManager.inst.objectParent.transform);
+                        camParent.transform.localScale = Vector3.zero;
+                        var camParentComponent = camParent.AddComponent<CameraParent>();
+
+                        camParentComponent.parentObject = beatmapParent;
+
+                        camParentComponent.positionParent = beatmapParent.GetParentType(0);
+                        camParentComponent.scaleParent = beatmapParent.GetParentType(1);
+                        camParentComponent.rotationParent = beatmapParent.GetParentType(2);
+
+                        camParentComponent.positionParentOffset = beatmapParent.getParentOffset(0);
+                        camParentComponent.scaleParentOffset = beatmapParent.getParentOffset(1);
+                        camParentComponent.rotationParentOffset = beatmapParent.getParentOffset(2);
+                    }
+                    else if (!ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]").GetComponent<CameraParent>())
+                    {
+                        camParent = ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]").gameObject;
+
+                        var camParentComponent = camParent.AddComponent<CameraParent>();
+
+                        camParentComponent.parentObject = beatmapParent;
+
+                        camParentComponent.positionParent = beatmapParent.GetParentType(0);
+                        camParentComponent.scaleParent = beatmapParent.GetParentType(1);
+                        camParentComponent.rotationParent = beatmapParent.GetParentType(2);
+
+                        camParentComponent.positionParentOffset = beatmapParent.getParentOffset(0);
+                        camParentComponent.scaleParentOffset = beatmapParent.getParentOffset(1);
+                        camParentComponent.rotationParentOffset = beatmapParent.getParentOffset(2);
+                    }
+                    else
+                    {
+                        camParent = ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]").gameObject;
+
+                        var camParentComponent = camParent.GetComponent<CameraParent>();
+
+                        camParentComponent.parentObject = beatmapParent;
+
+                        camParentComponent.positionParent = beatmapParent.GetParentType(0);
+                        camParentComponent.scaleParent = beatmapParent.GetParentType(1);
+                        camParentComponent.rotationParent = beatmapParent.GetParentType(2);
+
+                        camParentComponent.positionParentOffset = beatmapParent.getParentOffset(0);
+                        camParentComponent.scaleParentOffset = beatmapParent.getParentOffset(1);
+                        camParentComponent.rotationParentOffset = beatmapParent.getParentOffset(2);
+                    }
+
+                    top.transform.SetParent(camParent.transform);
+                    top.transform.localScale = Vector3.one;
+                }
+                else if (ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT" + beatmapParent.id + "]"))
+                    Object.Destroy(ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT" + beatmapParent.id + "]").gameObject);
+
+                if (beatmapParent.parent == "PLAYER_PARENT")
+                {
+                    GameObject playerParent;
+                    if (!ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]"))
+                    {
+                        playerParent = new GameObject("PLAYER_PARENT [" + beatmapObject.id + "]");
+                        playerParent.transform.SetParent(ObjectManager.inst.objectParent.transform);
+                        playerParent.transform.localScale = Vector3.zero;
+                        var delayTracker = playerParent.AddComponent<RTDelayTracker>();
+
+                        delayTracker.move = beatmapObject.GetParentType(0);
+                        delayTracker.rotate = beatmapObject.GetParentType(2);
+
+                        delayTracker.moveDelay = beatmapObject.getParentOffset(0);
+                        delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
+                    }
+                    else if (!ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").GetComponent<CameraParent>())
+                    {
+                        playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
+
+                        var delayTracker = playerParent.AddComponent<RTDelayTracker>();
+
+                        delayTracker.move = beatmapObject.GetParentType(0);
+                        delayTracker.rotate = beatmapObject.GetParentType(2);
+
+                        delayTracker.moveDelay = beatmapObject.getParentOffset(0);
+                        delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
+                    }
+                    else
+                    {
+                        playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
+
+                        var delayTracker = playerParent.GetComponent<RTDelayTracker>();
+
+                        delayTracker.move = beatmapObject.GetParentType(0);
+                        delayTracker.rotate = beatmapObject.GetParentType(2);
+
+                        delayTracker.moveDelay = beatmapObject.getParentOffset(0);
+                        delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
+                    }
+
+                    top.transform.SetParent(playerParent.transform);
+                    top.transform.localScale = Vector3.one;
+                }
+            }
+
             if (parentObjects.Count > 0)
+            {
                 parentObjects[parentObjects.Count - 1].Transform.SetParent(top.transform);
+                parentObjects[parentObjects.Count - 1].Transform.localScale = Vector3.one;
+            }
             else
+            {
                 baseObject.transform.SetParent(top.transform);
+                baseObject.transform.localScale = Vector3.one;
+            }
 
             baseObject.SetActive(true);
             visualObject.SetActive(true);
@@ -290,169 +425,13 @@ namespace RTFunctions.Functions.Optimization.Level
 
             levelObject.SetActive(false);
 
-            //if (!Managers.Objects.beatmapObjects.ContainsKey(beatmapObject.id))
-            {
-                //var functionObject = new Managers.Objects.FunctionObject(beatmapObject);
-
-                //// Collider
-                //{
-                //    try
-                //    {
-                //        if (visualObject.TryGetComponent(out Collider2D collider))
-                //            functionObject.collider = collider;
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        StringBuilder stringBuilder = new StringBuilder();
-                //        stringBuilder.AppendLine($"Failed to generate FunctionObject for {beatmapObject.id} (Collider)");
-                //        stringBuilder.AppendLine($"Exception: {e.Message}");
-                //        stringBuilder.AppendLine(e.StackTrace);
-
-                //        Debug.LogError(stringBuilder.ToString());
-                //    }
-                //}
-
-                //// GameObject
-                //{
-                //    try
-                //    {
-                //        functionObject.gameObject = visualObject;
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        StringBuilder stringBuilder = new StringBuilder();
-                //        stringBuilder.AppendLine($"Failed to generate FunctionObject for {beatmapObject.id} (GameObject)");
-                //        stringBuilder.AppendLine($"Exception: {e.Message}");
-                //        stringBuilder.AppendLine(e.StackTrace);
-
-                //        Debug.LogError(stringBuilder.ToString());
-                //    }
-                //}
-
-                //// MeshFilter
-                //{
-                //    try
-                //    {
-                //        if (visualObject.TryGetComponent(out MeshFilter meshFilter))
-                //            functionObject.meshFilter = meshFilter;
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        StringBuilder stringBuilder = new StringBuilder();
-                //        stringBuilder.AppendLine($"Failed to generate FunctionObject for {beatmapObject.id} (MeshFilter)");
-                //        stringBuilder.AppendLine($"Exception: {e.Message}");
-                //        stringBuilder.AppendLine(e.StackTrace);
-
-                //        Debug.LogError(stringBuilder.ToString());
-                //    }
-                //}
-
-                //// Renderer
-                //{
-                //    try
-                //    {
-                //        if (visualObject.TryGetComponent(out Renderer renderer))
-                //            functionObject.renderer = renderer;
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        StringBuilder stringBuilder = new StringBuilder();
-                //        stringBuilder.AppendLine($"Failed to generate FunctionObject for {beatmapObject.id}");
-                //        stringBuilder.AppendLine($"Exception: {e.Message}");
-                //        stringBuilder.AppendLine(e.StackTrace);
-
-                //        Debug.LogError(stringBuilder.ToString());
-                //    }
-                //}
-
-                //// TextMeshPro
-                //{
-                //    try
-                //    {
-                //        if (visualObject.TryGetComponent(out TMPro.TextMeshPro textMeshPro))
-                //            functionObject.text = textMeshPro;
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        StringBuilder stringBuilder = new StringBuilder();
-                //        stringBuilder.AppendLine($"Failed to generate FunctionObject for {beatmapObject.id} (TextMeshPro)");
-                //        stringBuilder.AppendLine($"Exception: {e.Message}");
-                //        stringBuilder.AppendLine(e.StackTrace);
-
-                //        Debug.LogError(stringBuilder.ToString());
-                //    }
-                //}
-
-                //// TransformChain
-                //{
-                //    try
-                //    {
-                //        var list = new List<Transform>();
-                //        var tf1 = visualObject.transform;
-
-                //        while (tf1.parent != null && tf1.parent.gameObject.name != "GameObjects")
-                //        {
-                //            tf1 = tf1.parent;
-                //        }
-
-                //        list.Add(tf1);
-
-                //        while (tf1.childCount != 0 && tf1.GetChild(0) != null)
-                //        {
-                //            tf1 = tf1.GetChild(0);
-                //            list.Add(tf1);
-                //        }
-
-                //        functionObject.transformChain = list;
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        StringBuilder stringBuilder = new StringBuilder();
-                //        stringBuilder.AppendLine($"Failed to generate FunctionObject for {beatmapObject.id}");
-                //        stringBuilder.AppendLine($"Exception: {e.Message}");
-                //        stringBuilder.AppendLine(e.StackTrace);
-
-                //        Debug.LogError(stringBuilder.ToString());
-                //    }
-                //}
-
-                //// Editor
-                //{
-                //    try
-                //    {
-                //        if (EditorManager.inst != null)
-                //        {
-                //            if (visualObject.TryGetComponent(out Components.RTObject obj))
-                //                functionObject.rtObject = obj;
-
-                //            if (visualObject.TryGetComponent(out SelectObjectInEditor selectObjectInEditor))
-                //            {
-                //                selectObjectInEditor.obj = gameData.beatmapObjects.IndexOf(beatmapObject);
-                //                functionObject.selectObject = selectObjectInEditor;
-                //            }
-                //        }
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        StringBuilder stringBuilder = new StringBuilder();
-                //        stringBuilder.AppendLine($"Failed to generate FunctionObject for {beatmapObject.id} (Editor)");
-                //        stringBuilder.AppendLine($"Exception: {e.Message}");
-                //        stringBuilder.AppendLine(e.StackTrace);
-
-                //        Debug.LogError(stringBuilder.ToString());
-                //    }
-                //}
-
-                //Managers.Objects.beatmapObjects.Add(beatmapObject.id, functionObject);
-            }
-
             // Editor
             {
                 try
                 {
-                    if (EditorManager.inst != null)
+                    if (EditorManager.inst)
                     {
-                        if (visualObject.TryGetComponent(out Components.RTObject obj))
+                        if (visualObject.TryGetComponent(out RTObject obj))
                         {
                             obj.SetObject(beatmapObject.id);
 
@@ -468,9 +447,9 @@ namespace RTFunctions.Functions.Optimization.Level
                                 obj.layerOpacity = (float)ModCompatibility.sharedFunctions["ShowObjectsAlpha"];
 
                             //if (ModCompatibility.sharedFunctions.ContainsKey("ShowEmpties"))
-                            //    ???
+                            //    ??? = (bool)ModCompatibility.sharedFunctions["ShowEmpties"];
                             //if (ModCompatibility.sharedFunctions.ContainsKey("ShowDamagable"))
-                            //    ???
+                            //    ??? = (bool)ModCompatibility.sharedFunctions["ShowDamagable"];
                         }
 
                         if (visualObject.TryGetComponent(out SelectObjectInEditor selectObjectInEditor))
