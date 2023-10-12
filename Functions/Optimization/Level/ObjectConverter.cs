@@ -600,7 +600,7 @@ namespace RTFunctions.Functions.Optimization.Level
                 {
                     Vector2 random = ObjectManager.inst.RandomVector2Parser(eventKeyframe);
                     value.x = random.x;
-                    value.x = random.y;
+                    value.y = random.y;
                 }
 
                 currentValue = relative ? currentValue + value : value;
