@@ -31,7 +31,7 @@ using Ease = RTFunctions.Functions.Animation.Ease;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.5.2")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.5.3")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
@@ -40,19 +40,15 @@ namespace RTFunctions
 
 		//Updates:
 
-		public static string VersionNumber
-		{
-			get
-			{
-				return PluginInfo.PLUGIN_VERSION;
-			}
-		}
+		public static string VersionNumber => PluginInfo.PLUGIN_VERSION;
 
 		public static FunctionsPlugin inst;
 		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
 		readonly Harmony harmony = new Harmony("rtfunctions");
 
-		public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
+        #region Configs
+
+        public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
 		public static ConfigEntry<KeyCode> OpenPAPersistentFolder { get; set; }
 
 		private static ConfigEntry<bool> DebugsOn { get; set; }
@@ -63,9 +59,14 @@ namespace RTFunctions
 
 		public static ConfigEntry<bool> NotifyREPL { get; set; }
 
-		#region Fullscreen
+		public static ConfigEntry<bool> BGReactiveLerp { get; set; }
 
-		public static ConfigEntry<bool> Fullscreen { get; set; }
+        #endregion
+
+		// PA Settings
+        #region Fullscreen
+
+        public static ConfigEntry<bool> Fullscreen { get; set; }
 
 		static bool FullscreenProp
         {
@@ -250,6 +251,7 @@ namespace RTFunctions
 			SFXVol = Config.Bind("Settings", "Volume SFX", 9, new ConfigDescription("SFX volume.", new AcceptableValueRange<int>(0, 9)));
 			Language = Config.Bind("Settings", "Language", Lang.english, "This is currently here for testing purposes. This version of the game has not been translated yet.");
 			ControllerRumble = Config.Bind("Settings", "Controller Vibrate", true, "If the controllers should vibrate or not.");
+			BGReactiveLerp = Config.Bind("Level Backgrounds", "Reactive Color Lerp", true, "If on, reactive color will lerp from base color to reactive color. Otherwise, the reactive color will be added to the base color.");
 
 			displayName = DisplayName.Value;
 
