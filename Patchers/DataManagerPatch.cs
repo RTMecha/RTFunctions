@@ -54,6 +54,9 @@ namespace RTFunctions.Patchers
             networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkManager>();
             networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkEditorManager>();
 
+            EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
+            EnumPatcher.AddEnumValue<DataManager.GameData.BackgroundObject.ReactiveType>("CUSTOM");
+
             EnumPatcher.AddEnumValue<DataManager.Language>("japanese");
             EnumPatcher.AddEnumValue<DataManager.Language>("thai");
             EnumPatcher.AddEnumValue<DataManager.Language>("russian");
@@ -449,7 +452,7 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("ParseBeatmap")]
         [HarmonyPrefix]
-        private static bool ParseBeatmapPatch(string _json)
+        static bool ParseBeatmapPatch(string _json)
         {
             Debug.LogFormat("{0}Parse Beatmap", FunctionsPlugin.className);
             DataManager.inst.StartCoroutine(Parser.ParseBeatmap(_json));
@@ -462,7 +465,7 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("Lerp")]
         [HarmonyPrefix]
-        private static bool Lerp(BeatmapTheme __instance, ref BeatmapTheme _start, ref BeatmapTheme _end, float _val)
+        static bool Lerp(BeatmapTheme __instance, ref BeatmapTheme _start, ref BeatmapTheme _end, float _val)
         {
             __instance.guiColor = Color.Lerp(_start.guiColor, _end.guiColor, _val);
             __instance.backgroundColor = Color.Lerp(_start.backgroundColor, _end.backgroundColor, _val);
@@ -499,7 +502,7 @@ namespace RTFunctions.Patchers
 
         [HarmonyPatch("Parse")]
         [HarmonyPrefix]
-        private static bool ParsePrefix(BeatmapTheme __instance, ref BeatmapTheme __result, JSONNode __0, bool __1)
+        static bool ParsePrefix(BeatmapTheme __instance, ref BeatmapTheme __result, JSONNode __0, bool __1)
         {
             BeatmapTheme beatmapTheme = new BeatmapTheme();
             beatmapTheme.id = DataManager.inst.AllThemes.Count().ToString();
@@ -664,7 +667,7 @@ namespace RTFunctions.Patchers
 
         [HarmonyPatch("DeepCopy")]
         [HarmonyPrefix]
-        private static bool DeepCopyPatch(ref BeatmapTheme __result, BeatmapTheme __0, bool __1 = false)
+        static bool DeepCopyPatch(ref BeatmapTheme __result, BeatmapTheme __0, bool __1 = false)
         {
             BeatmapTheme themeCopy = new BeatmapTheme();
             themeCopy.name = __0.name;
@@ -713,7 +716,7 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("ParseGameObject")]
         [HarmonyPrefix]
-        private static bool ParseGameObjectPrefix(ref BeatmapObject __result, JSONNode __0)
+        static bool ParseGameObjectPrefix(ref BeatmapObject __result, JSONNode __0)
         {
             BeatmapObject beatmapObject = null;
             DataManager.inst.StartCoroutine(Parser.ParseObject(__0, delegate (BeatmapObject _beatmapObject)
@@ -731,7 +734,7 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("DeepCopy")]
         [HarmonyPrefix]
-        private static bool DeepCopyPrefix(ref Prefab __result, Prefab __0, bool __1 = true)
+        static bool DeepCopyPrefix(ref Prefab __result, Prefab __0, bool __1 = true)
         {
             Prefab prefab = new Prefab();
             prefab.Name = __0.Name;
