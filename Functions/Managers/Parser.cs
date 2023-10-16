@@ -745,8 +745,8 @@ namespace RTFunctions.Functions.Managers
 						if (jn[i]["rc"]["pos"] != null && jn[i]["rc"]["pos"]["s"] != null && jn[i]["rc"]["pos"]["s"]["x"] != null && jn[i]["rc"]["pos"]["s"]["y"] != null)
 							bg.reactivePosSamples = new Vector2Int(jn[i]["rc"]["pos"]["s"]["x"].AsInt, jn[i]["rc"]["pos"]["s"]["y"].AsInt);
 
-						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["active"] != null)
-							bg.reactiveIncludesZ = jn[i]["rc"]["z"]["active"].AsBool;
+						//if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["active"] != null)
+						//	bg.reactiveIncludesZ = jn[i]["rc"]["z"]["active"].AsBool;
 
 						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["z"]["i"] != null)
 							bg.reactiveZIntensity = jn[i]["rc"]["z"]["i"].AsFloat;
