@@ -443,6 +443,45 @@ namespace RTFunctions.Functions.IO
                 }
             }
         }
+
+        public static Action ConvertToAction(string input)
+        {
+            if (Evaluator == null)
+                Init();
+
+            try
+            {
+                CompiledMethod repl = Evaluator.Compile(input);
+
+                if (repl != null)
+                {
+                    try
+                    {
+                        return repl.InvokeEmpty;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogREPL($"{className}Exception invoking REPL: {ex}", EditorManager.NotificationType.Warning);
+
+                        return null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogREPL($"{className}Exception invoking REPL: {ex}", EditorManager.NotificationType.Warning);
+
+                return null;
+            }
+
+            return null;
+        }
+        
+        public static void InvokeEmpty(this CompiledMethod compiledMethod)
+        {
+            object ret = null;
+            compiledMethod.Invoke(ref ret);
+        }
     }
 
     public class ScriptEvaluator : Evaluator, IDisposable

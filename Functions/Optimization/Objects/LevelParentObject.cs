@@ -4,7 +4,7 @@ using RTFunctions.Functions.Animation;
 
 namespace RTFunctions.Functions.Optimization.Objects
 {
-    public class LevelParentObject
+    public class LevelParentObject : Exists
     {
         public Sequence<Vector2> PositionSequence { get; set; }
         public Sequence<Vector3> Position3DSequence { get; set; }

@@ -17,15 +17,11 @@ namespace RTFunctions.Functions.Optimization
 {
     public class Updater
     {
+        public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color> Updater] \n";
+
         public static LevelProcessor levelProcessor;
 
-        public static bool Active
-        {
-            get
-            {
-                return levelProcessor && levelProcessor.level;
-            }
-        }
+        public static bool Active => levelProcessor && levelProcessor.level;
 
         public static bool HasObject(BeatmapObject beatmapObject) => Active && (LevelObject)levelProcessor.level.objects.Find(x => x.ID == beatmapObject.id);
 
@@ -43,14 +39,14 @@ namespace RTFunctions.Functions.Optimization
 
         public static void OnLevelStart()
         {
-            Debug.Log("Loading level");
+            Debug.Log($"{className}Loading level");
 
             levelProcessor = new LevelProcessor(DataManager.inst.gameData);
         }
 
         public static void OnLevelEnd()
         {
-            Debug.Log("Cleaning up level");
+            Debug.Log($"{className}Cleaning up level");
 
             levelProcessor.Dispose();
             levelProcessor = null;
@@ -227,6 +223,7 @@ namespace RTFunctions.Functions.Optimization
                 // For the mods that add Z axis to position keyframes.
                 if (bm.events[0][0].eventValues.Length > 2)
                 {
+                    Debug.Log($"{Updater.className}Position does not include Z axis so I know not to remove this recache.");
                     collection = new ObjectConverter.CachedSequences()
                     {
                         Position3DSequence = converter.GetVector3Sequence(bm.events[0], new Vector3Keyframe(0.0f, Vector3.zero, Ease.Linear)),

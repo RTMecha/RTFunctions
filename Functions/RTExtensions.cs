@@ -184,6 +184,22 @@ namespace RTFunctions.Functions
 			return beatmapObjects;
 		}
 
+		public static List<BeatmapObject> GetParentChainSimple(this BeatmapObject beatmapObject)
+		{
+			List<BeatmapObject> beatmapObjects = new List<BeatmapObject>();
+
+			var orig = beatmapObject;
+			beatmapObjects.Add(orig);
+
+			while (!string.IsNullOrEmpty(orig.parent))
+			{
+				orig = DataManager.inst.gameData.beatmapObjects.Find(x => x.id == orig.parent);
+				beatmapObjects.Add(orig);
+			}
+
+			return beatmapObjects;
+		}
+
 		/// <summary>
 		/// Gets the every child connected to the beatmap object.
 		/// </summary>
@@ -300,42 +316,19 @@ namespace RTFunctions.Functions
 			return false;
 		}
 
-		public static void updateObject(this BeatmapObject _beatmapObject)
+		public static ObjEditor.ObjectSelection ToObjectSelection(this BeatmapObject beatmapObject)
 		{
-			if (ModCompatibility.inst != null && ModCompatibility.catalystType == ModCompatibility.CatalystType.Editor)
-			{
-				ModCompatibility.updateCatalystObject(_beatmapObject);
-				return;
-			}
-			string id = _beatmapObject.id;
+			var objectSelection = new ObjEditor.ObjectSelection(ObjEditor.ObjectSelection.SelectionType.Object, beatmapObject.id);
+			objectSelection.Index = DataManager.inst.gameData.beatmapObjects.IndexOf(beatmapObject);
+			return objectSelection;
+		}
 
-			foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
-			{
-				if (beatmapObject.parent == id)
-				{
-					beatmapObject.updateObject();
-				}
-			}
+		public static void updateObject(this BeatmapObject beatmapObject, bool reinsert = true)
+		{
+			var objectSelection = new ObjEditor.ObjectSelection(ObjEditor.ObjectSelection.SelectionType.Object, beatmapObject.id);
+			objectSelection.Index = DataManager.inst.gameData.beatmapObjects.IndexOf(beatmapObject);
 
-			if (ObjectManager.inst.beatmapGameObjects.ContainsKey(id))
-			{
-				Object.Destroy(ObjectManager.inst.beatmapGameObjects[id].obj);
-				ObjectManager.inst.beatmapGameObjects[id].sequence.all.Kill(false);
-				ObjectManager.inst.beatmapGameObjects[id].sequence.col.Kill(false);
-				ObjectManager.inst.beatmapGameObjects.Remove(id);
-			}
-
-			if (!_beatmapObject.fromPrefab)
-			{
-				_beatmapObject.active = false;
-				for (int i = 0; i < _beatmapObject.events.Count; i++)
-				{
-					foreach (var eventKeyframe in _beatmapObject.events[i])
-					{
-						eventKeyframe.active = false;
-					}
-				}
-			}
+			Updater.updateProcessor(objectSelection, reinsert);
 		}
 
 		public static DataManager.BeatmapTheme CreateTheme(this DataManager dataManager, string _name, string _id, Color _bg, Color _gui, List<Color> _players, List<Color> _objects, List<Color> _bgs)
@@ -353,10 +346,7 @@ namespace RTFunctions.Functions
 			return beatmapTheme;
 		}
 
-		public static EventKeyframe NextEventKeyframe(this BeatmapObject beatmapObject, int type)
-		{
-			return beatmapObject.events[type].Find(x => x.eventTime > AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime);
-		}
+		public static EventKeyframe NextEventKeyframe(this BeatmapObject beatmapObject, int type) => beatmapObject.events[type].Find(x => x.eventTime > AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime);
 
 		public static EventKeyframe PrevEventKeyframe(this BeatmapObject beatmapObject, int type)
 		{
@@ -386,23 +376,9 @@ namespace RTFunctions.Functions
 		#endregion
 
 		#region Catalyst
-
-		/// <summary>
-		/// Gets Catalyst ILevelObject for Catalyst support.
-		/// </summary>
-		/// <returns>ILevelObject</returns>
-		public static object GetILevelObject(this BeatmapObject _beatmapObject)
-		{
-			var catalyst = GameObject.Find("BepInEx_Manager").GetComponentByName("CatalystBase");
-
-			var instance = catalyst.GetType().GetField("Instance").GetValue(catalyst);
-
-			var getILevelObject = instance.GetType().GetMethod("GetLevelObject");
-
-			var obj = getILevelObject.Invoke(instance, new object[] { _beatmapObject });
-
-			return obj;
-		}
+		
+		[Obsolete("Editor Catalyst is fully implemented with RTFunctions, no need to use this.")]
+		public static object GetILevelObject(this BeatmapObject _beatmapObject) => null;
 
 		#endregion
 
@@ -525,10 +501,12 @@ namespace RTFunctions.Functions
 
 		#region Misc
 
-		public static string ColorToHex(Color32 color)
-		{
-			return color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
-		}
+		public static EventKeyframe GetEventKeyframe(this List<List<EventKeyframe>> eventKeyframes, int type, int index) => eventKeyframes[RTMath.Clamp(type, 0, eventKeyframes.Count - 1)].GetEventKeyframe(index);
+		public static EventKeyframe GetEventKeyframe(this List<EventKeyframe> eventKeyframes, int index) => eventKeyframes[RTMath.Clamp(index, 0, eventKeyframes.Count - 1)];
+
+		public static void SetColor(this Material material, Color color) => material.color = color;
+
+		public static string ColorToHex(Color32 color) => color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
 
 		public static bool TryGetComponent<T>(this GameObject gameObject, out T result)
         {
@@ -551,6 +529,14 @@ namespace RTFunctions.Functions
 		}
 
 		public static void ClearAll(this InputField.OnChangeEvent i)
+        {
+			i.m_Calls.m_ExecutingCalls.Clear();
+			i.m_Calls.m_PersistentCalls.Clear();
+			i.m_PersistentCalls.m_Calls.Clear();
+			i.RemoveAllListeners();
+		}
+		
+		public static void ClearAll(this Toggle.ToggleEvent i)
         {
 			i.m_Calls.m_ExecutingCalls.Clear();
 			i.m_Calls.m_PersistentCalls.Clear();

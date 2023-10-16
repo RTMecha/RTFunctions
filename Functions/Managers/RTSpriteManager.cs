@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.IO;
 
 using UnityEngine;
@@ -15,10 +13,7 @@ namespace RTFunctions.Functions.Managers
     {
         public static RTSpriteManager inst;
 
-        void Awake()
-        {
-            inst = this;
-        }
+        void Awake() => inst = this;
 
         public static void GetSprite(string _path, Image _image, TextureFormat _textureFormat = TextureFormat.ARGB32)
         {

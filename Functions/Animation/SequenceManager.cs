@@ -31,6 +31,7 @@ namespace RTFunctions.Functions.Animation
         float speed = 10f;
         float add = 0.001f;
         float time = 0f;
+        float timeOffset;
 
         public static void Init()
         {
@@ -43,11 +44,16 @@ namespace RTFunctions.Functions.Animation
             Debug.LogFormat("{0}Init() => SequenceManager", FunctionsPlugin.className);
         }
 
-        void Awake() => inst = this;
+        void Awake()
+        {
+            inst = this;
+            timeOffset = Time.time;
+        }
 
         void Update()
         {
-            time += add * speed;
+            //time += add * speed;
+            time = Time.time - timeOffset;
 
             for (int i = 0; i < localPositionSequence.Count; i++)
             {
@@ -248,7 +254,7 @@ namespace RTFunctions.Functions.Animation
             }
         }
 
-        public void ResetTime() => time = 0f;
+        public void ResetTime() => timeOffset = Time.time;
 
         public void SetSpeeds(float add = 0.001f, float speed = 10f)
         {

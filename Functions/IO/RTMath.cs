@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using RTFunctions.Functions.Animation;
 
+using BeatmapObject = DataManager.GameData.BeatmapObject;
 
 namespace RTFunctions.Functions.IO
 {
@@ -13,7 +15,57 @@ namespace RTFunctions.Functions.IO
 		public static Vector3 Lerp(Vector3 x, Vector3 y, float t) => x + (y - x) * t;
 		public static Color Lerp(Color x, Color y, float t) => x + (y - x) * t;
 
+		public static float Interpolate(BeatmapObject beatmapObject, int type, int value)
+		{
+			var time = AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime;
+
+			var nextKFIndex = beatmapObject.events[type].FindIndex(x => x.eventTime > time);
+
+			type = Clamp(type, 0, beatmapObject.events.Count - 1);
+
+			if (nextKFIndex >= 0)
+			{
+				var prevKFIndex = nextKFIndex - 1;
+				if (prevKFIndex < 0)
+					prevKFIndex = 0;
+
+				var nextKF = beatmapObject.events[type][nextKFIndex];
+				var prevKF = beatmapObject.events[type][prevKFIndex];
+
+				var next = nextKF.eventValues[value];
+				var prev = prevKF.eventValues[value];
+
+				if (float.IsNaN(prev))
+					prev = 0f;
+
+				if (float.IsNaN(next))
+					next = 0f;
+
+				var x = Lerp(prev, next, Ease.GetEaseFunction(nextKF.curveType.Name)(InverseLerp(prevKF.eventTime, nextKF.eventTime, time)));
+
+				if (prevKFIndex == nextKFIndex)
+					x = next;
+
+				if (float.IsNaN(x) || float.IsInfinity(x))
+					x = next;
+
+				return x;
+			}
+			else
+			{
+				var x = beatmapObject.events[type][beatmapObject.events[type].Count - 1].eventValues[value];
+
+				if (float.IsNaN(x) || float.IsInfinity(x))
+					x = 0f;
+
+				return x;
+			}
+		}
+
+		public static bool IsNaNInfinity(float f) => float.IsNaN(f) || float.IsInfinity(f);
+
 		public static float Clamp(float value, float min, float max) => Mathf.Clamp(value, min, max);
+		public static int Clamp(int value, int min, int max) => Mathf.Clamp(value, min, max);
 		public static Vector2 Clamp(Vector2 value, Vector2 min, Vector2 max) => new Vector2(Mathf.Clamp(value.x, min.x, max.x), Mathf.Clamp(value.y, min.y, max.y));
 		public static Vector2Int Clamp(Vector2Int value, Vector2Int min, Vector2Int max) => new Vector2Int(Mathf.Clamp(value.x, min.x, max.x), Mathf.Clamp(value.y, min.y, max.y));
 		public static Vector3 Clamp(Vector3 value, Vector3 min, Vector3 max) => new Vector3(Mathf.Clamp(value.x, min.x, max.x), Mathf.Clamp(value.y, min.y, max.y), Mathf.Clamp(value.z, min.z, max.z));
