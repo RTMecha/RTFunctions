@@ -13,6 +13,7 @@ using SimpleJSON;
 using RTFunctions.Functions;
 using RTFunctions.Enums;
 using RTFunctions.Functions.Managers;
+using RTFunctions.Functions.Animation;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
 using Prefab = DataManager.GameData.Prefab;
@@ -53,6 +54,8 @@ namespace RTFunctions.Patchers
             networkManager.transform.SetParent(systemManager.transform);
             networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkManager>();
             networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkEditorManager>();
+
+            AnimationManager.Init();
 
             EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
             EnumPatcher.AddEnumValue<DataManager.GameData.BackgroundObject.ReactiveType>("CUSTOM");
