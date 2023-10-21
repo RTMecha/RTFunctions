@@ -28,6 +28,8 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
             if (Renderer)
                 material = Renderer.material;
 
+            var local = GameObject.transform.localPosition;
+
             var regex = new System.Text.RegularExpressions.Regex(@"img\((.*?)\)");
             var match = regex.Match(text);
 
@@ -42,6 +44,9 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
                 FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadImageTexture("file://" + imagePath, delegate (Texture2D x)
                 {
                     ((SpriteRenderer)Renderer).sprite = RTSpriteManager.CreateSprite(x);
+                    GameObject.transform.localPosition = local;
+                    GameObject.transform.localPosition = local;
+                    GameObject.transform.localPosition = local;
                 }, delegate (string onError)
                 {
                     ((SpriteRenderer)Renderer).sprite = ArcadeManager.inst.defaultImage;
