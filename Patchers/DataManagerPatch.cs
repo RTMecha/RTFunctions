@@ -93,7 +93,7 @@ namespace RTFunctions.Patchers
                     new DataManager.LinkType("Spotify", "https://open.spotify.com/artist/{0}"),
                     new DataManager.LinkType("SoundCloud", "https://soundcloud.com/{0}"),
                     new DataManager.LinkType("Bandcamp", "https://{0}.bandcamp.com"),
-                    new DataManager.LinkType("Youtube", "https://www.youtube.com/user/{0}"),
+                    new DataManager.LinkType("Youtube", "https://www.youtube.com/{0}"),
                     new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/")
                 };
             }
