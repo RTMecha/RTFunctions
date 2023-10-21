@@ -650,6 +650,38 @@ namespace RTFunctions.Functions.Optimization.Level
                             Transform = gameObject.transform
                         };
                     }
+                else
+                {
+
+                    var pos = new List<IKeyframe<Vector3>>();
+                    pos.Add(new Vector3Keyframe(0f, Vector3.zero, Ease.Linear));
+
+                    var sca = new List<IKeyframe<Vector2>>();
+                    sca.Add(new Vector2Keyframe(0f, Vector2.one, Ease.Linear));
+
+                    var rot = new List<IKeyframe<float>>();
+                    rot.Add(new FloatKeyframe(0f, 0f, Ease.Linear));
+
+                    levelParentObject = new LevelParentObject
+                    {
+                        Position3DSequence = new Sequence<Vector3>(pos),
+                        ScaleSequence = new Sequence<Vector2>(sca),
+                        RotationSequence = new Sequence<float>(rot),
+
+                        TimeOffset = beatmapObject.StartTime,
+
+                        ParentAnimatePosition = beatmapObject.GetParentType(0),
+                        ParentAnimateScale = beatmapObject.GetParentType(1),
+                        ParentAnimateRotation = beatmapObject.GetParentType(2),
+
+                        ParentOffsetPosition = beatmapObject.getParentOffset(0),
+                        ParentOffsetScale = beatmapObject.getParentOffset(1),
+                        ParentOffsetRotation = beatmapObject.getParentOffset(2),
+
+                        GameObject = gameObject,
+                        Transform = gameObject.transform
+                    };
+                } // In case the CashedSequence is null, set defaults.
             }
             catch (Exception e)
             {
