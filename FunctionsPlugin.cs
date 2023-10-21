@@ -31,7 +31,7 @@ using Ease = RTFunctions.Functions.Animation.Ease;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.5.4")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.5.5")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
