@@ -153,7 +153,7 @@ namespace RTFunctions.Patchers
 			return false;
 		}
 
-		[HarmonyPatch("updateObjects", new System.Type[] { typeof(string) })]
+		[HarmonyPatch("updateObjects", new Type[] { typeof(string) })]
 		[HarmonyPrefix]
 		private static bool updateObjectsPrefix1(ObjectManager __instance)
 		{
@@ -162,7 +162,7 @@ namespace RTFunctions.Patchers
 			return false;
 		}
 
-		[HarmonyPatch("updateObjectsForAll", new System.Type[] { typeof(string) })]
+		[HarmonyPatch("updateObjectsForAll", new Type[] { typeof(string) })]
 		[HarmonyPrefix]
 		private static bool updateObjectsPrefix2(ObjectManager __instance)
 		{
@@ -171,7 +171,7 @@ namespace RTFunctions.Patchers
 			return false;
 		}
 
-		[HarmonyPatch("updateObjects", new System.Type[] { typeof(ObjEditor.ObjectSelection), typeof(bool) })]
+		[HarmonyPatch("updateObjects", new Type[] { typeof(ObjEditor.ObjectSelection), typeof(bool) })]
 		[HarmonyPrefix]
 		private static bool updateObjectsPrefix3(ObjectManager __instance, ObjEditor.ObjectSelection __0, bool __1)
 		{
@@ -191,7 +191,7 @@ namespace RTFunctions.Patchers
 			return false;
 		}
 
-		[HarmonyPatch("updateObjects", new System.Type[] { })]
+		[HarmonyPatch("updateObjects", new Type[] { })]
 		[HarmonyPrefix]
 		private static bool updateObjectsPrefix4(ObjectManager __instance)
 		{
