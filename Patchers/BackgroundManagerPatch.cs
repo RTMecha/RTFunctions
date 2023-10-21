@@ -188,7 +188,7 @@ namespace RTFunctions.Patchers
 
 							gameObject.transform.localPosition = new Vector3(backgroundObject.pos.x + x * bg.reactivePosIntensity[0], backgroundObject.pos.y + y * bg.reactivePosIntensity[1], (float)(32 + backgroundObject.layer * 10) + z * bg.reactiveZIntensity);
 							gameObject.transform.localScale = new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, bg.zscale) + new Vector3(backgroundObject.reactiveSize.x, backgroundObject.reactiveSize.y, 0f);
-							gameObject.transform.localRotation = Quaternion.Euler(new Vector3(0f, 0f, backgroundObject.rot + rot * bg.reactiveRotIntensity));
+							gameObject.transform.localRotation = Quaternion.Euler(new Vector3(bg.rotation.x, bg.rotation.y, backgroundObject.rot + rot * bg.reactiveRotIntensity));
 						}
 					}
 					else
