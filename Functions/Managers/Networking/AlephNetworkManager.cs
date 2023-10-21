@@ -214,5 +214,129 @@ namespace RTFunctions.Functions.Managers.Networking
                 callback(assetBundle);
             }
         }
+
+        public static IEnumerator DownloadBytes(string path, Action<float> percentage, Action<byte[]> callback, Action<string> onError)
+        {
+            UnityWebRequest www = UnityWebRequest.Get(path);
+            var webRequest = www.SendWebRequest();
+
+            while (!webRequest.isDone)
+            {
+                percentage(webRequest.progress);
+                yield return null;
+            }
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                if (onError != null)
+                    onError(www.error);
+            }
+            else
+            {
+                callback(www.downloadHandler.data);
+            }
+
+            yield break;
+        }
+        
+        public static IEnumerator DownloadJSONFile(string path, Action<float> percentage, Action<string> callback, Action<string> onError)
+        {
+            UnityWebRequest www = UnityWebRequest.Get(path);
+            {
+                var webRequest = www.SendWebRequest();
+
+                while (!webRequest.isDone)
+                {
+                    percentage(webRequest.progress);
+                    yield return null;
+                }
+
+                if (www.isNetworkError || www.isHttpError)
+                {
+                    Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                    if (onError != null)
+                        onError(www.error);
+                }
+                else
+                {
+                    callback(www.downloadHandler.text);
+                }
+            }
+
+            yield break;
+        }
+
+        public static IEnumerator DownloadImageTexture(string path, Action<float> percentage, Action<Texture2D> callback, Action<string> onError)
+        {
+            UnityWebRequest www = UnityWebRequestTexture.GetTexture(path);
+            var webRequest = www.SendWebRequest();
+
+            while (!webRequest.isDone)
+            {
+                percentage(webRequest.progress);
+                yield return null;
+            }
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                if (onError != null)
+                    onError(www.error);
+            }
+            else
+            {
+                Texture2D tex = ((DownloadHandlerTexture)www.downloadHandler).texture;
+                callback(tex);
+            }
+        }
+
+        public static IEnumerator DownloadAudioClip(string path, Action<float> percentage, AudioType audioType, Action<AudioClip> callback, Action<string> onError)
+        {
+            UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(path, audioType);
+            var webRequest = www.SendWebRequest();
+
+            while (!webRequest.isDone)
+            {
+                percentage(webRequest.progress);
+                yield return null;
+            }
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                if (onError != null)
+                    onError(www.error);
+            }
+            else
+            {
+                AudioClip audioClip = ((DownloadHandlerAudioClip)www.downloadHandler).audioClip;
+                callback(audioClip);
+            }
+        }
+
+        public static IEnumerator DownloadAssetBundle(string path, Action<float> percentage, Action<AssetBundle> callback, Action<string> onError)
+        {
+            UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(path);
+            var webRequest = www.SendWebRequest();
+
+            while (!webRequest.isDone)
+            {
+                percentage(webRequest.progress);
+                yield return null;
+            }
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                if (onError != null)
+                    onError(www.error);
+            }
+            else
+            {
+                AssetBundle assetBundle = ((DownloadHandlerAssetBundle)www.downloadHandler).assetBundle;
+                callback(assetBundle);
+            }
+        }
     }
 }
