@@ -109,7 +109,7 @@ namespace RTFunctions.Functions.IO
 
 		public static string ReadFromFile(string path)
 		{
-			if (!File.Exists(path))
+			if (!FileExists(path))
 			{
 				Debug.LogFormat("{0}Could not load JSON file [{1}]", FunctionsPlugin.className, path);
 				return null;

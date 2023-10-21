@@ -884,22 +884,6 @@ namespace RTFunctions.Functions.IO
 
 		public static float TimeCodeToFloat(string str)
         {
-			//try
-			//{
-			//	var c = str.Split(':');
-
-			//	if (float.TryParse(c[0], out float num) && float.TryParse(c[0], out float second))
-			//	{
-			//		var first = num * 60f;
-
-			//		return first + second;
-			//	}
-			//}
-			//catch
-			//{
-
-			//}
-
 			if (RegexMatch(str, new Regex(@"([0-9]+):([0-9]+):([0-9.]+)"), out Match match1))
             {
 				var hours = float.Parse(match1.Groups[1].ToString()) * 3600f;
@@ -934,9 +918,19 @@ namespace RTFunctions.Functions.IO
 		public static string Flip(string str)
 		{
 			string s;
-			s = str.Replace("Left", "LSLeft87344874").Replace("Right", "LSRight87344874").Replace("left", "LSleft87344874").Replace("right", "LSright87344874").Replace("LEFT", "LSLEFT87344874").Replace("RIGHT", "LSRIGHT87344874");
+			s = str.Replace("Left", "LSLeft87344874")
+				.Replace("Right", "LSRight87344874")
+				.Replace("left", "LSleft87344874")
+				.Replace("right", "LSright87344874")
+				.Replace("LEFT", "LSLEFT87344874")
+				.Replace("RIGHT", "LSRIGHT87344874");
 
-			return s.Replace("LSLeft87344874", "Right").Replace("LSRight87344874", "Left").Replace("LSleft87344874", "right").Replace("LSright87344874", "left").Replace("LSLEFT87344874", "RIGHT").Replace("LSRIGHT87344874", "LEFT");
+			return s.Replace("LSLeft87344874", "Right")
+				.Replace("LSRight87344874", "Left")
+				.Replace("LSleft87344874", "right")
+				.Replace("LSright87344874", "left")
+				.Replace("LSLEFT87344874", "RIGHT")
+				.Replace("LSRIGHT87344874", "LEFT");
 		}
 
 		public static bool ColorMatch(Color a, Color b, float range, bool alpha = false)
