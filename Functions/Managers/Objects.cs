@@ -9912,6 +9912,10 @@ namespace RTFunctions.Functions.Managers
             {
                 var bg = new BackgroundObject(og.bg);
                 bg.depth = og.depth;
+                bg.shape = og.shape;
+                bg.zscale = og.zscale;
+                bg.rotation = og.rotation;
+
                 bg.reactiveCol = og.reactiveCol;
                 bg.reactiveColSample = og.reactiveColSample;
                 bg.reactiveColIntensity = og.reactiveColIntensity;
@@ -9921,8 +9925,8 @@ namespace RTFunctions.Functions.Managers
                 bg.reactiveRotIntensity = og.reactiveRotIntensity;
                 bg.reactiveScaSamples = og.reactiveScaSamples;
                 bg.reactiveScaIntensity = og.reactiveScaIntensity;
-                bg.shape = og.shape;
-                bg.zscale = og.zscale;
+                bg.reactiveZIntensity = og.reactiveZIntensity;
+                bg.reactiveZSample = og.reactiveZSample;
                 return bg;
             }
 
