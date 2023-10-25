@@ -54,12 +54,12 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
             else ((SpriteRenderer)Renderer).sprite = ArcadeManager.inst.defaultImage;
         }
 
-        public override void SetColor(Color color)
-        {
-            //if (material)
-            //    material.color = new Color(color.r, color.g, color.b, color.a * opacity);
+        public override void SetColor(Color color) => material?.SetColor(new Color(color.r, color.g, color.b, color.a * opacity));
 
-            material?.SetColor(new Color(color.r, color.g, color.b, color.a * opacity));
-        }
+        //public override void SetColor(Color color)
+        //{
+        //    if (material)
+        //        material.color = new Color(color.r, color.g, color.b, color.a * opacity);
+        //}
     }
 }

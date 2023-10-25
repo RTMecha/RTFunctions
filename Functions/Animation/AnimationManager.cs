@@ -26,10 +26,7 @@ namespace RTFunctions.Functions.Animation
 			gameObject.transform.SetParent(SystemManager.inst.transform);
         }
 
-        void Awake()
-        {
-			inst = this;
-		}
+        void Awake() => inst = this;
 
 		void Update()
         {
