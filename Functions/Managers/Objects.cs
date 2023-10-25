@@ -9900,6 +9900,18 @@ namespace RTFunctions.Functions.Managers
 
         public static List<OGBeatmapObject> beatmapObjects = new List<OGBeatmapObject>();
 
+        public class BeatmapObject
+        {
+            public BeatmapObject(OGBeatmapObject bo)
+            {
+                this.bo = bo;
+            }
+
+            public OGBeatmapObject bo;
+
+            public List<object> modifiers = new List<object>();
+        }
+
         public class BackgroundObject : Exists
         {
             public BackgroundObject(OGBackground bg)

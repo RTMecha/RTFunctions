@@ -56,6 +56,9 @@ namespace RTFunctions.Functions.IO
             "RTFunctions.Functions.Managers",
             "RTFunctions.Functions.Animation",
             "RTFunctions.Functions.Animation.Keyframe",
+            "RTFunctions.Functions.Optimization",
+            "RTFunctions.Functions.Optimization.Objects",
+            "RTFunctions.Functions.Optimization.Objects.Visual",
         };
 
         static readonly List<string> DefaultTypes = new List<string>
