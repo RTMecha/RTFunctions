@@ -207,6 +207,8 @@ namespace RTFunctions.Functions
 			public static bool addFirstCheckpoints = true;
 			public static bool addSecondCheckpoints = false;
 
+			public static bool objectsWithMatchingIDAddKeyframes = false;
+
 			#endregion
 
 			//ProjectData.Combiner.Combine(RTFile.ApplicationDirectory + "beatmaps/editor/Classic Arrhythmia/Combine 1/level.lsb", RTFile.ApplicationDirectory + "beatmaps/editor/Classic Arrhythmia/Combine 2/level.lsb", RTFile.ApplicationDirectory + "beatmaps/editor/Classic Arrhythmia/Combined/level.lsb");
@@ -330,7 +332,22 @@ namespace RTFunctions.Functions
 					gameData.beatmapObjects.Add(Reader.ParseBeatmapObject(jn["beatmap_objects"][i]));
 
 				for (int i = 0; i < jn32["beatmap_objects"].Count; i++)
-					gameData.beatmapObjects.Add(Reader.ParseBeatmapObject(jn32["beatmap_objects"][i]));
+				{
+					var beatmapObject = Reader.ParseBeatmapObject(jn32["beatmap_objects"][i]);
+
+					if (!objectsWithMatchingIDAddKeyframes)
+						gameData.beatmapObjects.Add(beatmapObject);
+					else if (gameData.beatmapObjects.TryFind(x => x.bo.id == beatmapObject.bo.id, out Objects.BeatmapObject modObject))
+                    {
+						for (int j = 0; j < modObject.bo.events.Count; j++)
+                        {
+							beatmapObject.bo.events[j].RemoveAt(0);
+							modObject.bo.events[j].AddRange(beatmapObject.bo.events[j]);
+						}
+                    }
+					else
+						gameData.beatmapObjects.Add(beatmapObject);
+				}
 
 				#endregion
 
@@ -1852,7 +1869,7 @@ namespace RTFunctions.Functions
 				List<PrefabObject> list2 = new List<PrefabObject>();
 				for (int k = 0; k < jn["prefab_objects"].Count; k++)
 				{
-					list2.Add(DataManager.inst.gameData.ParsePrefabObject(jn["prefab_objects"][k]));
+					list2.Add(ParsePrefabObject(jn["prefab_objects"][k]).prefabObject);
 				}
 				Prefab prefab = new Prefab(jn["name"], jn["type"].AsInt, jn["offset"].AsFloat, list, list2);
 				prefab.ID = jn["id"];
