@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Linq;
 using System.IO;
 
@@ -15,23 +16,24 @@ using LSFunctions;
 using SimpleJSON;
 using DG.Tweening;
 
+using RTFunctions.Functions;
 using RTFunctions.Functions.Animation;
 using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
 using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.IO;
-using RTFunctions.Functions;
 using RTFunctions.Patchers;
 using RTFunctions.Enums;
 
 using Application = UnityEngine.Application;
 using Screen = UnityEngine.Screen;
 using Ease = RTFunctions.Functions.Animation.Ease;
+using Version = RTFunctions.Functions.Version;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.6.1")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.6.2")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
@@ -40,11 +42,11 @@ namespace RTFunctions
 
 		//Updates:
 
-		public static string VersionNumber => PluginInfo.PLUGIN_VERSION;
+		public static Version VersionNumber => new Version(PluginInfo.PLUGIN_VERSION);
 
 		public static FunctionsPlugin inst;
 		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
-		readonly Harmony harmony = new Harmony("rtfunctions");
+		public static readonly Harmony harmony = new Harmony("rtfunctions");
 
         #region Configs
 
@@ -68,21 +70,30 @@ namespace RTFunctions
 
         public static ConfigEntry<bool> Fullscreen { get; set; }
 
-		static bool FullscreenProp
-        {
-			get
-            {
-				return DataManager.inst.GetSettingBool("FullScreen", false);
-            }
-			set
-            {
-				DataManager.inst.UpdateSettingBool("FullScreen", value);
-				SaveManager.inst.ApplyVideoSettings();
-				SaveManager.inst.UpdateSettingsFile(false);
-			}
-        }
+		static void SetFullscreen(bool value)
+		{
+			prevFullscreen = Fullscreen.Value;
 
-		public static bool prevFullscreen;
+			DataManager.inst.UpdateSettingBool("FullScreen", value);
+			SaveManager.inst.ApplyVideoSettings();
+			SaveManager.inst.UpdateSettingsFile(false);
+		}
+
+        //static bool FullscreenProp
+        //{
+        //    get
+        //    {
+        //        return DataManager.inst.GetSettingBool("FullScreen", false);
+        //    }
+        //    set
+        //    {
+        //        DataManager.inst.UpdateSettingBool("FullScreen", value);
+        //        SaveManager.inst.ApplyVideoSettings();
+        //        SaveManager.inst.UpdateSettingsFile(false);
+        //    }
+        //}
+
+        public static bool prevFullscreen;
 
         #endregion
 
@@ -90,27 +101,42 @@ namespace RTFunctions
 
 		public static ConfigEntry<Resolutions> Resolution { get; set; }
 
-		static Resolutions ResolutionProp
-        {
-			get
-            {
-				return (Resolutions)DataManager.inst.GetSettingInt("Resolution_i", 0);
-			}
-			set
-			{
-				DataManager.inst.UpdateSettingInt("Resolution_i", (int)value);
+		static void SetResolution(Resolutions value)
+		{
+			prevResolution = Resolution.Value;
 
-				var res = DataManager.inst.resolutions[(int)value];
+			DataManager.inst.UpdateSettingInt("Resolution_i", (int)value);
 
-				DataManager.inst.UpdateSettingFloat("Resolution_x", res.x);
-				DataManager.inst.UpdateSettingFloat("Resolution_y", res.y);
+			var res = DataManager.inst.resolutions[(int)value];
 
-				SaveManager.inst.ApplyVideoSettings();
-				SaveManager.inst.UpdateSettingsFile(false);
-			}
-        }
+			DataManager.inst.UpdateSettingFloat("Resolution_x", res.x);
+			DataManager.inst.UpdateSettingFloat("Resolution_y", res.y);
 
-		public static Resolutions prevResolution;
+			SaveManager.inst.ApplyVideoSettings();
+			SaveManager.inst.UpdateSettingsFile(false);
+		}
+
+        //static Resolutions ResolutionProp
+        //{
+        //    get
+        //    {
+        //        return (Resolutions)DataManager.inst.GetSettingInt("Resolution_i", 0);
+        //    }
+        //    set
+        //    {
+        //        DataManager.inst.UpdateSettingInt("Resolution_i", (int)value);
+
+        //        var res = DataManager.inst.resolutions[(int)value];
+
+        //        DataManager.inst.UpdateSettingFloat("Resolution_x", res.x);
+        //        DataManager.inst.UpdateSettingFloat("Resolution_y", res.y);
+
+        //        SaveManager.inst.ApplyVideoSettings();
+        //        SaveManager.inst.UpdateSettingsFile(false);
+        //    }
+        //}
+
+        public static Resolutions prevResolution;
 
         #endregion
 
@@ -118,21 +144,30 @@ namespace RTFunctions
 
 		public static ConfigEntry<int> MasterVol { get; set; }
 
-		static int MasterVolProp
-        {
-            get
-            {
-				return DataManager.inst.GetSettingInt("MasterVolume", 9);
-			}
-			set
-            {
-				DataManager.inst.UpdateSettingInt("MasterVolume", value);
+		static void SetMasterVol(int value)
+		{
+			prevMasterVol = MasterVol.Value;
 
-				SaveManager.inst.UpdateSettingsFile(false);
-			}
-        }
+			DataManager.inst.UpdateSettingInt("MasterVolume", value);
 
-		public static int prevMasterVol;
+			SaveManager.inst.UpdateSettingsFile(false);
+		}
+
+        //static int MasterVolProp
+        //{
+        //    get
+        //    {
+        //        return DataManager.inst.GetSettingInt("MasterVolume", 9);
+        //    }
+        //    set
+        //    {
+        //        DataManager.inst.UpdateSettingInt("MasterVolume", value);
+
+        //        SaveManager.inst.UpdateSettingsFile(false);
+        //    }
+        //}
+
+        public static int prevMasterVol;
 
 		#endregion
 
@@ -140,19 +175,28 @@ namespace RTFunctions
 
 		public static ConfigEntry<int> MusicVol { get; set; }
 
-		static int MusicVolProp
+		static void SetMusicVol(int value)
 		{
-			get
-			{
-				return DataManager.inst.GetSettingInt("MusicVolume", 9);
-			}
-			set
-			{
-				DataManager.inst.UpdateSettingInt("MusicVolume", value);
+			prevMusicVol = MusicVol.Value;
 
-				SaveManager.inst.UpdateSettingsFile(false);
-			}
+			DataManager.inst.UpdateSettingInt("MusicVolume", value);
+
+			SaveManager.inst.UpdateSettingsFile(false);
 		}
+
+		//static int MusicVolProp
+		//{
+		//	get
+		//	{
+		//		return DataManager.inst.GetSettingInt("MusicVolume", 9);
+		//	}
+		//	set
+		//	{
+		//		DataManager.inst.UpdateSettingInt("MusicVolume", value);
+
+		//		SaveManager.inst.UpdateSettingsFile(false);
+		//	}
+		//}
 
 		public static int prevMusicVol;
 
@@ -162,19 +206,28 @@ namespace RTFunctions
 
         public static ConfigEntry<int> SFXVol { get; set; }
 
-		static int SFXVolProp
+		static void SetSFXVol(int value)
 		{
-			get
-			{
-				return DataManager.inst.GetSettingInt("EffectsVolume", 9);
-			}
-			set
-			{
-				DataManager.inst.UpdateSettingInt("EffectsVolume", value);
+			prevSFXVol = SFXVol.Value;
 
-				SaveManager.inst.UpdateSettingsFile(false);
-			}
+			DataManager.inst.UpdateSettingInt("EffectsVolume", value);
+
+			SaveManager.inst.UpdateSettingsFile(false);
 		}
+
+		//static int SFXVolProp
+		//{
+		//	get
+		//	{
+		//		return DataManager.inst.GetSettingInt("EffectsVolume", 9);
+		//	}
+		//	set
+		//	{
+		//		DataManager.inst.UpdateSettingInt("EffectsVolume", value);
+
+		//		SaveManager.inst.UpdateSettingsFile(false);
+		//	}
+		//}
 
 		public static int prevSFXVol;
 
@@ -194,19 +247,28 @@ namespace RTFunctions
 
 		public static ConfigEntry<Lang> Language { get; set; }
 
-		static Lang LanguageProp
+		static void SetLanguage(Lang value)
 		{
-			get
-			{
-				return (Lang)DataManager.inst.GetCurrentLanguageEnum();
-			}
-			set
-			{
-				DataManager.inst.GetSettingInt("Language_i", (int)value);
+			prevLanguage = Language.Value;
 
-				SaveManager.inst.UpdateSettingsFile(false);
-			}
+			DataManager.inst.GetSettingInt("Language_i", (int)value);
+
+			SaveManager.inst.UpdateSettingsFile(false);
 		}
+
+		//static Lang LanguageProp
+		//{
+		//	get
+		//	{
+		//		return (Lang)DataManager.inst.GetCurrentLanguageEnum();
+		//	}
+		//	set
+		//	{
+		//		DataManager.inst.GetSettingInt("Language_i", (int)value);
+
+		//		SaveManager.inst.UpdateSettingsFile(false);
+		//	}
+		//}
 
 		public static Lang prevLanguage;
 
@@ -216,19 +278,28 @@ namespace RTFunctions
 
 		public static ConfigEntry<bool> ControllerRumble { get; set; }
 
-		static bool ControllerRumbleProp
+		static void SetControllerRumble(bool value)
 		{
-			get
-			{
-				return DataManager.inst.GetSettingBool("ControllerVibrate", true);
-			}
-			set
-			{
-				DataManager.inst.UpdateSettingBool("ControllerVibrate", value);
+			prevControllerRumble = ControllerRumble.Value;
 
-				SaveManager.inst.UpdateSettingsFile(false);
-			}
+			DataManager.inst.UpdateSettingBool("ControllerVibrate", value);
+
+			SaveManager.inst.UpdateSettingsFile(false);
 		}
+
+		//static bool ControllerRumbleProp
+		//{
+		//	get
+		//	{
+		//		return DataManager.inst.GetSettingBool("ControllerVibrate", true);
+		//	}
+		//	set
+		//	{
+		//		DataManager.inst.UpdateSettingBool("ControllerVibrate", value);
+
+		//		SaveManager.inst.UpdateSettingsFile(false);
+		//	}
+		//}
 
 		public static bool prevControllerRumble;
 		
@@ -259,19 +330,25 @@ namespace RTFunctions
 
 			Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(UpdateSettings);
 
-			harmony.PatchAll(typeof(FunctionsPlugin));
-			harmony.PatchAll(typeof(DataManagerPatch));
-			harmony.PatchAll(typeof(DataManagerGameDataPatch));
-			harmony.PatchAll(typeof(DataManagerBeatmapThemePatch));
-			harmony.PatchAll(typeof(DataManagerBeatmapObjectPatch));
-			harmony.PatchAll(typeof(DataManagerPrefabPatch));
-			harmony.PatchAll(typeof(GameManagerPatch));
-			harmony.PatchAll(typeof(ObjectManagerPatch));
-			harmony.PatchAll(typeof(SaveManagerPatch));
-			harmony.PatchAll(typeof(BackgroundManagerPatch));
+			// Patchers
+			{
+				harmony.PatchAll(typeof(FunctionsPlugin));
+				harmony.PatchAll(typeof(DataManagerPatch));
+				harmony.PatchAll(typeof(DataManagerGameDataPatch));
+				harmony.PatchAll(typeof(DataManagerBeatmapThemePatch));
+				harmony.PatchAll(typeof(DataManagerBeatmapObjectPatch));
+				harmony.PatchAll(typeof(DataManagerPrefabPatch));
+				harmony.PatchAll(typeof(GameManagerPatch));
+				harmony.PatchAll(typeof(ObjectManagerPatch));
+				harmony.PatchAll(typeof(SaveManagerPatch));
+				harmony.PatchAll(typeof(BackgroundManagerPatch));
+
+				Patcher.PatchPropertySetter(typeof(DataManager.GameData.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
+					typeof(FunctionsPlugin), "DepthSetterPrefix", BindingFlags.Public | BindingFlags.Static);
+			}
 
 			// Hooks
-            {
+			{
 				GameManagerPatch.LevelStart += Updater.OnLevelStart;
 				GameManagerPatch.LevelEnd += Updater.OnLevelEnd;
 				ObjectManagerPatch.LevelTick += Updater.OnLevelTick;
@@ -340,44 +417,44 @@ namespace RTFunctions
 
 			if (prevFullscreen != Fullscreen.Value)
 			{
-				prevFullscreen = Fullscreen.Value;
-				FullscreenProp = Fullscreen.Value;
+				SetFullscreen(Fullscreen.Value);
+				//FullscreenProp = Fullscreen.Value;
 			}
 
 			if (prevResolution != Resolution.Value)
             {
-				prevResolution = Resolution.Value;
-				ResolutionProp = Resolution.Value;
+				SetResolution(Resolution.Value);
+				//ResolutionProp = Resolution.Value;
             }
 
 			if (prevMasterVol != MasterVol.Value)
             {
-				prevMasterVol = MasterVol.Value;
-				MasterVolProp = MasterVol.Value;
+				SetMasterVol(MasterVol.Value);
+				//MasterVolProp = MasterVol.Value;
             }
 
 			if (prevMusicVol != MusicVol.Value)
             {
-				prevMusicVol = MusicVol.Value;
-				MusicVolProp = MusicVol.Value;
+				SetMusicVol(MusicVol.Value);
+				//MusicVolProp = MusicVol.Value;
             }
 
 			if (prevSFXVol != SFXVol.Value)
             {
-				prevSFXVol = SFXVol.Value;
-				SFXVolProp = SFXVol.Value;
+				SetSFXVol(SFXVol.Value);
+				//SFXVolProp = SFXVol.Value;
             }
 
 			if (prevLanguage != Language.Value)
             {
-				prevLanguage = Language.Value;
-				LanguageProp = Language.Value;
+				SetLanguage(Language.Value);
+				//LanguageProp = Language.Value;
             }
 			
 			if (prevControllerRumble != ControllerRumble.Value)
             {
-				prevControllerRumble = ControllerRumble.Value;
-				ControllerRumbleProp = ControllerRumble.Value;
+				SetControllerRumble(ControllerRumble.Value);
+				//ControllerRumbleProp = ControllerRumble.Value;
             }
 
 			SaveProfile();
@@ -404,7 +481,9 @@ namespace RTFunctions
 			}
 		}
 
-		[HarmonyPatch(typeof(SystemManager), "Awake")]
+        #region Patchers
+
+        [HarmonyPatch(typeof(SystemManager), "Awake")]
 		[HarmonyPostfix]
 		static void DisableLoggers()
 		{
@@ -466,6 +545,15 @@ namespace RTFunctions
 		//	if (__instance.gameObject.scene.name == "Main Menu")
 		//		GameManagerPatch.EndInvoke();
 		//}
+
+		public static bool DepthSetterPrefix(int value, DataManager.GameData.BeatmapObject __instance)
+		{
+			var field = __instance.GetType().GetField("depth", BindingFlags.NonPublic | BindingFlags.Instance);
+			field.SetValue(__instance, value);
+			return false;
+		}
+
+		#endregion
 
 		public static void TakeScreenshot()
 		{
