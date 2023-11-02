@@ -309,7 +309,7 @@ namespace RTFunctions.Functions.Optimization
                 if (gameObject != null)
                 {
                     // Get the top-most parent that isn't the "GameObjects" object.
-                    while (gameObject.transform.parent.name != "GameObjects")
+                    while (gameObject.transform.parent.name != "GameObjects" && !gameObject.transform.parent.name.Contains("CAMERA_PARENT ["))
                         gameObject = gameObject.transform.parent.gameObject;
 
                     // Remove GameObject.
