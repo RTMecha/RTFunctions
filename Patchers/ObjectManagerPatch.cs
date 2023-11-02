@@ -147,7 +147,7 @@ namespace RTFunctions.Patchers
 
 		[HarmonyPatch("Update")]
 		[HarmonyPrefix]
-		public static bool UpdatePrefix()
+		static bool UpdatePrefix()
 		{
 			LevelTick?.Invoke();
 			return false;
@@ -155,7 +155,7 @@ namespace RTFunctions.Patchers
 
 		[HarmonyPatch("updateObjects", new Type[] { typeof(string) })]
 		[HarmonyPrefix]
-		private static bool updateObjectsPrefix1(ObjectManager __instance)
+		static bool updateObjectsPrefix1(ObjectManager __instance)
 		{
 			AddPrefabObjects(__instance);
 			Updater.updateObjects();
@@ -164,7 +164,7 @@ namespace RTFunctions.Patchers
 
 		[HarmonyPatch("updateObjectsForAll", new Type[] { typeof(string) })]
 		[HarmonyPrefix]
-		private static bool updateObjectsPrefix2(ObjectManager __instance)
+		static bool updateObjectsPrefix2(ObjectManager __instance)
 		{
 			AddPrefabObjects(__instance);
 			Updater.updateObjects();
@@ -173,7 +173,7 @@ namespace RTFunctions.Patchers
 
 		[HarmonyPatch("updateObjects", new Type[] { typeof(ObjEditor.ObjectSelection), typeof(bool) })]
 		[HarmonyPrefix]
-		private static bool updateObjectsPrefix3(ObjectManager __instance, ObjEditor.ObjectSelection __0, bool __1)
+		static bool updateObjectsPrefix3(ObjectManager __instance, ObjEditor.ObjectSelection __0, bool __1)
 		{
 			//CatalystBase.updateObjects();
 			if (__0.IsObject())
@@ -193,7 +193,7 @@ namespace RTFunctions.Patchers
 
 		[HarmonyPatch("updateObjects", new Type[] { })]
 		[HarmonyPrefix]
-		private static bool updateObjectsPrefix4(ObjectManager __instance)
+		static bool updateObjectsPrefix4(ObjectManager __instance)
 		{
 			AddPrefabObjects(__instance);
 			Updater.updateObjects();
