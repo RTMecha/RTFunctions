@@ -335,6 +335,13 @@ namespace RTFunctions.Functions.Managers
 
             public Dictionary<string, MethodInfo> methods = new Dictionary<string, MethodInfo>();
 
+            Dictionary<string, Delegate> _methods = new Dictionary<string, Delegate>();
+            public Dictionary<string, Delegate> Methods
+            {
+                get => _methods;
+                set => _methods = value;
+            }
+
             public string version = "1.0.0";
             string className;
             public string ClassName
@@ -353,6 +360,9 @@ namespace RTFunctions.Functions.Managers
             { if (methods.ContainsKey(name) && inst != null) methods[name].Invoke(inst, values); }
             public void InvokeStatic(string name, params object[] values)
             { if (methods.ContainsKey(name)) methods[name].Invoke(type, values); }
+
+            public void InvokeDelegate(string name, params object[] values)
+            { if (Methods.ContainsKey(name)) Methods[name].DynamicInvoke(values); }
         }
     }
 }

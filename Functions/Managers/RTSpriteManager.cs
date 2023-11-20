@@ -32,13 +32,15 @@ namespace RTFunctions.Functions.Managers
             {
                 if (((float)_texture.texture.width > _limits.x && _limits.x > 0f) || ((float)_texture.texture.height > _limits.y && _limits.y > 0f))
                 {
-                    onError(_path);
+                    if (onError != null)
+                        onError(_path);
                     return;
                 }
                 callback(_texture);
             }, delegate (string error)
             {
-                onError(_path);
+                if (onError != null)
+                    onError(_path);
             }, _textureFormat));
             yield break;
         }
@@ -47,7 +49,8 @@ namespace RTFunctions.Functions.Managers
         {
             if (!RTFile.FileExists(_filepath))
             {
-                onError(_filepath);
+                if (onError != null)
+                    onError(_filepath);
             }
             else
             {
@@ -100,7 +103,8 @@ namespace RTFunctions.Functions.Managers
         {
             if (!RTFile.FileExists(path) || textureSize.x <= 0 || textureSize.y <= 0)
             {
-                onError(path);
+                if (onError != null)
+                    onError(path);
             }
             else
             {
@@ -114,6 +118,28 @@ namespace RTFunctions.Functions.Managers
 
                 callback(texture2d);
             }
+            yield break;
+        }
+
+        public static IEnumerator LoadImageFileBytes(byte[] bytes, Vector2Int textureSize, TextureFormat textureFormat = TextureFormat.RGBA32, bool mipChain = false, Action<Texture2D> callback = null, Action<string> onError = null)
+        {
+            if (bytes == null || bytes.Length < 1 || textureSize.x <= 0 || textureSize.y <= 0)
+            {
+                if (onError != null)
+                    onError("");
+            }
+            else
+            {
+                var texture2d = new Texture2D(textureSize.x, textureSize.y, textureFormat, mipChain);
+                texture2d.LoadImage(bytes);
+
+                texture2d.wrapMode = TextureWrapMode.Clamp;
+                texture2d.filterMode = FilterMode.Point;
+                texture2d.Apply();
+
+                callback(texture2d);
+            }
+
             yield break;
         }
 

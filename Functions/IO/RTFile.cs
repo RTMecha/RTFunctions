@@ -164,6 +164,10 @@ namespace RTFunctions.Functions.IO
 					{
 						return AudioType.OGGVORBIS;
 					}
+				case ".mp3":
+					{
+						return AudioType.MPEG;
+					}
 			}
 
 			return AudioType.UNKNOWN;
@@ -183,9 +187,9 @@ namespace RTFunctions.Functions.IO
 			}
 		}
 
-		public static float[] ConvertByteToFloat(byte[] array)
+		public static float[] ConvertByteToFloat(byte[] array, int length = 4)
 		{
-			float[] floatArr = new float[array.Length / 4];
+			float[] floatArr = new float[array.Length / length];
 			for (int i = 0; i < floatArr.Length; i++)
 			{
 				if (BitConverter.IsLittleEndian)
@@ -197,17 +201,85 @@ namespace RTFunctions.Functions.IO
 			return floatArr;
 		}
 
-		public static float[] ConvertByteToFloat2(byte[] array)
+		public static float[] ConvertByteToFloat(byte[] array, BitType bitType, int length)
 		{
-			float[] floatArr = new float[array.Length / 2];
+			float[] floatArr = new float[array.Length / length];
 
 			for (int i = 0; i < floatArr.Length; i++)
 			{
-				floatArr[i] = ((float)BitConverter.ToInt16(array, i * 2)) / 32768.0f;
+				switch (bitType)
+                {
+					case BitType.Bit16:
+                        {
+                            floatArr[i] = ((float)BitConverter.ToInt16(array, i * length)) / 32768.0f;
+							break;
+                        }
+					case BitType.Bit32:
+                        {
+                            floatArr[i] = ((float)BitConverter.ToInt32(array, i * length)) / 2147483648.0f;
+							break;
+                        }
+                }
 			}
 
 			return floatArr;
 		}
+
+		public static float[] Convert16BitToFloat(byte[] input)
+		{
+			int inputSamples = input.Length / 2; // 16 bit input, so 2 bytes per sample
+			float[] output = new float[inputSamples];
+			int outputIndex = 0;
+			for (int n = 0; n < inputSamples; n++)
+			{
+				short sample = BitConverter.ToInt16(input, n * 2);
+				output[outputIndex++] = sample / 32768f;
+			}
+			return output;
+		}
+
+		public static float[] Convert24BitToFloat(byte[] input)
+		{
+			int inputSamples = input.Length / 3; // 24 bit input
+			float[] output = new float[inputSamples];
+			int outputIndex = 0;
+			var temp = new byte[4];
+			for (int n = 0; n < inputSamples; n++)
+			{
+				// copy 3 bytes in
+				Array.Copy(input, n * 3, temp, 0, 3);
+				int sample = BitConverter.ToInt32(temp, 0);
+				output[outputIndex++] = sample / 16777216f;
+			}
+			return output;
+		}
+		
+		public static float[] Convert32BitToFloat(byte[] input)
+		{
+			int inputSamples = input.Length / 4; // 24 bit input
+			float[] output = new float[inputSamples];
+			int outputIndex = 0;
+			var temp = new byte[4];
+			for (int n = 0; n < inputSamples; n++)
+			{
+				Array.Copy(input, n * 4, temp, 0, 4);
+				int sample = BitConverter.ToInt32(temp, 0);
+				output[outputIndex++] = sample / 2147483648f;
+			}
+			return output;
+		}
+
+		public enum BitType
+        {
+			Bit2,
+			Bit4,
+			Bit8,
+			Bit12,
+			Bit16,
+			Bit24,
+			Bit32,
+			Bit64
+        }
 
 		public static class ZipUtil
 		{
@@ -238,6 +310,8 @@ namespace RTFunctions.Functions.IO
 			}
 
 			// RTFile.UnZip("E:/SteamLibrary/steamapps/common/Project Arrhythmia/beatmaps/testzip.zip", "E:/SteamLibrary/steamapps/common/Project Arrhythmia/beatmaps/testzip output");
+
+			// UPDATE THIS
 			public static void UnZip(string path, string output)
 			{
 				var archive = ZipFile.OpenRead(path);
@@ -260,7 +334,9 @@ namespace RTFunctions.Functions.IO
 			{
 				var bytes = GetZipData(path, file);
 
-				System.Drawing.Image image = System.Drawing.Image.FromStream(new MemoryStream(bytes));
+				var mem = new MemoryStream(bytes);
+
+				System.Drawing.Image image = System.Drawing.Image.FromStream(mem);
 
 				var texture2d = new Texture2D(image.Width, image.Height, TextureFormat.RGBA32, false);
 				texture2d.LoadImage(bytes);
@@ -271,6 +347,9 @@ namespace RTFunctions.Functions.IO
 
 				image.Dispose();
 				image = null;
+
+				mem.Dispose();
+				mem = null;
 
 				return texture2d;
 			}
@@ -292,18 +371,21 @@ namespace RTFunctions.Functions.IO
 			//	return clip;
 			//}
 
+			// Only supports .zip for now
 			public static AudioClip GetZipAudioClip(string path, int file)
 			{
 				var bytes = GetZipData(path, file);
 
-				using (Stream s = new MemoryStream(bytes))
-				{
-					AudioClip audioClip = AudioClip.Create("ZipClip", bytes.Length, 1, 48000, false);
-					float[] f = ConvertByteToFloat(bytes);
-					audioClip.SetData(f, 0);
+				return GetAudioWAV(bytes, "ZipClip");
 
-					return audioClip;
-				}
+				//using (Stream s = new MemoryStream(bytes))
+				//{
+				//	AudioClip audioClip = AudioClip.Create("ZipClip", bytes.Length, 1, 48000, false);
+				//	float[] f = ConvertByteToFloat(bytes);
+				//	audioClip.SetData(f, 0);
+
+				//	return audioClip;
+				//}
 			}
 
 			public static byte[] GetZipData(string path, int file)
@@ -406,7 +488,7 @@ namespace RTFunctions.Functions.IO
 
 			#region Constructors & Finalizer
 
-			private PcmHeader(int bitDepth,
+			PcmHeader(int bitDepth,
 				int audioSize,
 				int audioStartIndex,
 				ushort channels,
@@ -476,7 +558,7 @@ namespace RTFunctions.Functions.IO
 
 			#region Private Methods
 
-			private static string GetAudioFormatFromCode(ushort code)
+			static string GetAudioFormatFromCode(ushort code)
 			{
 				switch (code)
 				{
@@ -493,10 +575,10 @@ namespace RTFunctions.Functions.IO
 
 			#region Private types & Data
 
-			private const int SizeIndex = 16;
+			const int SizeIndex = 16;
 
-			private readonly float _positiveDepth;
-			private readonly float _negativeDepth;
+			readonly float _positiveDepth;
+			readonly float _negativeDepth;
 
 			#endregion
 		}
@@ -514,7 +596,7 @@ namespace RTFunctions.Functions.IO
 
 			#region Constructors & Finalizer
 
-			private PcmData(float[] value, int channels, int sampleRate)
+			PcmData(float[] value, int channels, int sampleRate)
 			{
 				Value = value;
 				Length = value.Length;
@@ -570,7 +652,93 @@ namespace RTFunctions.Functions.IO
 			#endregion
 		}
 
-		public static AudioClip GetAudioClip(byte[] bytes, string name)
+		readonly struct VorbisHeader
+		{
+			#region Public types & data
+
+			public int BitDepth { get; }
+			public int AudioSampleSize { get; }
+			public int AudioSampleCount { get; }
+			public ushort Channels { get; }
+			public int SampleRate { get; }
+			public int AudioStartIndex { get; }
+			public int ByteRate { get; }
+			public ushort BlockAlign { get; }
+
+			#endregion
+
+			#region Constructors & Finalizer
+
+			VorbisHeader(int bitDepth,
+				int audioSize,
+				int audioStartIndex,
+				ushort channels,
+				int sampleRate,
+				int byteRate,
+				ushort blockAlign)
+			{
+				BitDepth = bitDepth;
+				_negativeDepth = Mathf.Pow(2f, BitDepth - 1f);
+				_positiveDepth = _negativeDepth - 1f;
+
+				AudioSampleSize = bitDepth / 8;
+				AudioSampleCount = Mathf.FloorToInt(audioSize / (float)AudioSampleSize);
+				AudioStartIndex = audioStartIndex;
+
+				Channels = channels;
+				SampleRate = sampleRate;
+				ByteRate = byteRate;
+				BlockAlign = blockAlign;
+			}
+
+			#endregion
+
+			#region Private types & Data
+
+			const int SizeIndex = 16;
+
+			readonly float _positiveDepth;
+			readonly float _negativeDepth;
+
+			#endregion
+		}
+
+		readonly struct VorbisData
+		{
+			#region Public types & data
+
+			public float[] Value { get; }
+			public int Length { get; }
+			public int Channels { get; }
+			public int SampleRate { get; }
+
+			#endregion
+
+			#region Constructors & Finalizer
+
+			VorbisData(float[] value, int channels, int sampleRate)
+			{
+				Value = value;
+				Length = value.Length;
+				Channels = channels;
+				SampleRate = sampleRate;
+            }
+
+            #endregion
+
+        }
+
+        public static AudioClip GetAudioClip(string path)
+        {
+            var f = Convert16BitToFloat(File.ReadAllBytes(path));
+
+            AudioClip audioClip = AudioClip.Create("testSound", f.Length, 2, 44100, false);
+            audioClip.SetData(f, 0);
+
+			return audioClip;
+        }
+
+        public static AudioClip GetAudioClip(byte[] bytes, string name)
 		{
 			switch (GetAudioType(name))
 			{
@@ -587,26 +755,21 @@ namespace RTFunctions.Functions.IO
 			return audioClip;
 		}
 
-		// Having some issues with NVorbis.
-		/*System.TypeLoadException: Could not resolve the signature of a virtual method
-			at NVorbis.Ogg.ContainerReader..ctor (System.IO.Stream stream, System.Boolean closeOnDispose) [0x00037] in <8f21883748914ac28e7a9d074cea1495>:0 
-			at NVorbis.VorbisReader+<>c.<.cctor>b__82_0 (System.IO.Stream s, System.Boolean cod) [0x00000] in <8f21883748914ac28e7a9d074cea1495>:0 
-			at NVorbis.VorbisReader..ctor (System.IO.Stream stream, System.Boolean closeOnDispose) [0x00018] in <8f21883748914ac28e7a9d074cea1495>:0 
-		*/
+        // Having some issues with NVorbis.
 
-		//public static AudioClip GetAudioOGG(byte[] bytes, string name = "clip")
-		//{
-		//    using (var vorbis = new NVorbis.VorbisReader(new MemoryStream(bytes, false)))
-		//    {
-		//        Debug.Log($"Found ogg ch={vorbis.Channels} freq={vorbis.SampleRate} samp={vorbis.TotalSamples}");
+        //public static AudioClip GetAudioOGG(byte[] bytes, string name = "clip")
+        //{
+        //    using (var vorbis = new NVorbis.VorbisReader(new MemoryStream(bytes, false)))
+        //    {
+        //        Debug.Log($"Found ogg ch={vorbis.Channels} freq={vorbis.SampleRate} samp={vorbis.TotalSamples}");
 
-		//        float[] _audioBuffer = new float[vorbis.TotalSamples]; // Just dump everything
-		//        int read = vorbis.ReadSamples(_audioBuffer, 0, (int)vorbis.TotalSamples);
-		//        AudioClip audioClip = AudioClip.Create(name, (int)(vorbis.TotalSamples / vorbis.Channels), vorbis.Channels, vorbis.SampleRate, false);
-		//        audioClip.SetData(_audioBuffer, 0);
+        //        float[] _audioBuffer = new float[vorbis.TotalSamples]; // Just dump everything
+        //        int read = vorbis.ReadSamples(_audioBuffer, 0, (int)vorbis.TotalSamples);
+        //        AudioClip audioClip = AudioClip.Create(name, (int)(vorbis.TotalSamples / vorbis.Channels), vorbis.Channels, vorbis.SampleRate, false);
+        //        audioClip.SetData(_audioBuffer, 0);
 
-		//        return audioClip;
-		//    }
-		//}
-	}
+        //        return audioClip;
+        //    }
+        //}
+    }
 }

@@ -10,6 +10,7 @@ using UnityEngine;
 using LSFunctions;
 
 using RTFunctions.Functions;
+using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
 using RTFunctions.Functions.Optimization.Level;
@@ -36,14 +37,14 @@ namespace RTFunctions.Patchers
 		[HarmonyPrefix]
 		static bool AddPrefabToLevelPrefix(DataManager.GameData.PrefabObject __0)
 		{
-			if (!Objects.prefabObjects.ContainsKey(__0.ID))
-				Objects.prefabObjects.Add(__0.ID, new Objects.PrefabObject(__0));
+			var prefabObject = (PrefabObject)__0;
 
 			bool flag = DataManager.inst.gameData.prefabs.FindIndex(x => x.ID == __0.prefabID) != -1;
 			if (!flag)
 			{
 				DataManager.inst.gameData.prefabObjects.RemoveAll(x => x.prefabID == __0.prefabID);
 			}
+
 			if (!(!string.IsNullOrEmpty(__0.prefabID) && flag))
 			{
 				return false;
@@ -60,33 +61,31 @@ namespace RTFunctions.Patchers
 			
 			for (int i = 0; i < __0.RepeatCount + 1; i++)
 			{
-				var dictionary = new Dictionary<string, string>();
+				var ids = new Dictionary<string, string>();
 
 				foreach (var beatmapObject in prefab.objects)
 				{
 					string value = LSText.randomString(16);
-					dictionary.Add(beatmapObject.id, value);
+					ids.Add(beatmapObject.id, value);
 				}
 
 				string iD = __0.ID;
 				foreach (var beatmapObj in prefab.objects)
 				{
-					var beatmapObject = DataManager.GameData.BeatmapObject.DeepCopy(beatmapObj, false);
-					if (dictionary.ContainsKey(beatmapObj.id))
-					{
-						beatmapObject.id = dictionary[beatmapObj.id];
-					}
-					if (dictionary.ContainsKey(beatmapObj.parent))
-					{
-						beatmapObject.parent = dictionary[beatmapObj.parent];
-					}
+					var beatmapObject = BeatmapObject.DeepCopy((BeatmapObject)beatmapObj, false);
+					if (ids.ContainsKey(beatmapObj.id))
+						beatmapObject.id = ids[beatmapObj.id];
+
+					if (ids.ContainsKey(beatmapObj.parent))
+						beatmapObject.parent = ids[beatmapObj.parent];
 					else if (DataManager.inst.gameData.beatmapObjects.FindIndex(x => x.id == beatmapObj.parent) == -1)
-					{
 						beatmapObject.parent = "";
-					}
+
 					beatmapObject.active = false;
 					beatmapObject.fromPrefab = true;
                     beatmapObject.prefabInstanceID = iD;
+
+					beatmapObject.StartTime = __0.StartTime + prefab.Offset + (beatmapObject.StartTime + timeToAdd) * prefabObject.speed;
 
                     beatmapObject.StartTime += timeToAdd;
 					beatmapObject.StartTime += __0.StartTime;
@@ -99,6 +98,8 @@ namespace RTFunctions.Patchers
 					//	beatmapObject.editorData.Layer = EditorManager.inst.layer;
 					//}
 					DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
+
+					Updater.UpdateProcessor(beatmapObject);
 				}
 
 				timeToAdd += t;
@@ -158,7 +159,7 @@ namespace RTFunctions.Patchers
 		static bool updateObjectsPrefix1(ObjectManager __instance)
 		{
 			AddPrefabObjects(__instance);
-			Updater.updateObjects();
+			//Updater.UpdateObjects();
 			return false;
 		}
 
@@ -167,7 +168,7 @@ namespace RTFunctions.Patchers
 		static bool updateObjectsPrefix2(ObjectManager __instance)
 		{
 			AddPrefabObjects(__instance);
-			Updater.updateObjects();
+			Updater.UpdateObjects();
 			return false;
 		}
 
@@ -175,7 +176,6 @@ namespace RTFunctions.Patchers
 		[HarmonyPrefix]
 		static bool updateObjectsPrefix3(ObjectManager __instance, ObjEditor.ObjectSelection __0, bool __1)
 		{
-			//CatalystBase.updateObjects();
 			if (__0.IsObject())
 			{
 				Updater.updateProcessor(__0);
@@ -186,7 +186,10 @@ namespace RTFunctions.Patchers
 			}
 			if (__0.IsPrefab())
 			{
-				__instance.updateObjects();
+				foreach (var bm in DataManager.inst.gameData.beatmapObjects.FindAll(x => x.prefabInstanceID == __0.GetPrefabObjectData().ID))
+                {
+					Updater.UpdateProcessor(bm);
+                }
 			}
 			return false;
 		}
@@ -196,7 +199,7 @@ namespace RTFunctions.Patchers
 		static bool updateObjectsPrefix4(ObjectManager __instance)
 		{
 			AddPrefabObjects(__instance);
-			Updater.updateObjects();
+			Updater.UpdateObjects();
 			return false;
 		}
 

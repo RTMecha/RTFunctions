@@ -13,7 +13,9 @@ using SimpleJSON;
 using RTFunctions.Functions;
 using RTFunctions.Enums;
 using RTFunctions.Functions.Managers;
+using RTFunctions.Functions.Managers.Networking;
 using RTFunctions.Functions.Animation;
+using RTFunctions.Functions.IO;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
 using Prefab = DataManager.GameData.Prefab;
@@ -50,11 +52,13 @@ namespace RTFunctions.Patchers
             spriteManager.transform.SetParent(systemManager.transform);
             spriteManager.AddComponent<RTSpriteManager>();
 
-            var networkManager = new GameObject("NetworkManager");
-            networkManager.transform.SetParent(systemManager.transform);
-            networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkManager>();
-            networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkEditorManager>();
+            //var networkManager = new GameObject("NetworkManager");
+            //networkManager.transform.SetParent(systemManager.transform);
+            //networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkManager>();
+            //networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkEditorManager>();
 
+            AlephNetworkManager.Init();
+            RTCode.Init();
             AnimationManager.Init();
 
             EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
@@ -96,7 +100,7 @@ namespace RTFunctions.Patchers
                     new DataManager.LinkType("Spotify", "https://open.spotify.com/artist/{0}"),
                     new DataManager.LinkType("SoundCloud", "https://soundcloud.com/{0}"),
                     new DataManager.LinkType("Bandcamp", "https://{0}.bandcamp.com"),
-                    new DataManager.LinkType("Youtube", "https://www.youtube.com/{0}"),
+                    new DataManager.LinkType("YouTube", "https://www.youtube.com/{0}"),
                     new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/")
                 };
             }
@@ -672,7 +676,7 @@ namespace RTFunctions.Patchers
         [HarmonyPrefix]
         static bool DeepCopyPatch(ref BeatmapTheme __result, BeatmapTheme __0, bool __1 = false)
         {
-            BeatmapTheme themeCopy = new BeatmapTheme();
+            var themeCopy = new BeatmapTheme();
             themeCopy.name = __0.name;
             themeCopy.playerColors = new List<Color>((from cols in __0.playerColors
                                                       select new Color(cols.r, cols.g, cols.b, cols.a)).ToList());
@@ -721,13 +725,7 @@ namespace RTFunctions.Patchers
         [HarmonyPrefix]
         static bool ParseGameObjectPrefix(ref BeatmapObject __result, JSONNode __0)
         {
-            BeatmapObject beatmapObject = null;
-            DataManager.inst.StartCoroutine(Parser.ParseObject(__0, delegate (BeatmapObject _beatmapObject)
-            {
-                beatmapObject = _beatmapObject;
-            }));
-
-            __result = beatmapObject;
+            __result = Functions.Data.BeatmapObject.Parse(__0);
             return false;
         }
     }

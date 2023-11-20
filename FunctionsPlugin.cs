@@ -63,6 +63,8 @@ namespace RTFunctions
 
 		public static ConfigEntry<bool> BGReactiveLerp { get; set; }
 
+		public static ConfigEntry<bool> LDM { get; set; }
+
         #endregion
 
 		// PA Settings
@@ -323,6 +325,7 @@ namespace RTFunctions
 			Language = Config.Bind("Settings", "Language", Lang.english, "This is currently here for testing purposes. This version of the game has not been translated yet.");
 			ControllerRumble = Config.Bind("Settings", "Controller Vibrate", true, "If the controllers should vibrate or not.");
 			BGReactiveLerp = Config.Bind("Level Backgrounds", "Reactive Color Lerp", true, "If on, reactive color will lerp from base color to reactive color. Otherwise, the reactive color will be added to the base color.");
+			LDM = Config.Bind("Level", "Low Detail Mode", false, "If enabled, any objects with \"LDM\" on will not be rendered.");
 
 			displayName = DisplayName.Value;
 
@@ -344,7 +347,10 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(BackgroundManagerPatch));
 
 				Patcher.PatchPropertySetter(typeof(DataManager.GameData.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
-					typeof(FunctionsPlugin), "DepthSetterPrefix", BindingFlags.Public | BindingFlags.Static);
+					typeof(FunctionsPlugin), "DepthSetterPrefix", null);
+
+				//Patcher.PatchPropertySetter(typeof(Functions.Data.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
+				//	typeof(FunctionsPlugin), "DepthSetterPrefix", new Type[] { typeof(int), typeof(DataManager.GameData.BeatmapObject) });
 			}
 
 			// Hooks
@@ -354,41 +360,43 @@ namespace RTFunctions
 				ObjectManagerPatch.LevelTick += Updater.OnLevelTick;
 			}
 
-			Logger.LogInfo($"Plugin RT Functions is loaded!");
-
 			System.Windows.Forms.Application.ApplicationExit += delegate (object sender, EventArgs e)
 			{
-				if (EditorManager.inst != null && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
+				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
 					string str = RTFile.basePath;
 					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
-					string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
-					if (RTFile.FileExists(lvl))
-						File.Copy(lvl, modBackup);
+					//string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
+					//if (RTFile.FileExists(lvl))
+					//	File.Copy(lvl, modBackup);
+
+					StartCoroutine(DataManager.inst.SaveData(modBackup));
 				}
 			};
 
 			Application.quitting += delegate ()
 			{
-				if (EditorManager.inst != null && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
+				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
 					string str = RTFile.basePath;
-					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-backup.lsb";
+					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-unity-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
-					string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
-					if (RTFile.FileExists(lvl))
-						File.Copy(lvl, modBackup);
+					//string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
+					//if (RTFile.FileExists(lvl))
+					//	File.Copy(lvl, modBackup);
+
+					StartCoroutine(DataManager.inst.SaveData(modBackup));
 				}
 			};
 
-			RTCode.Init();
-
 			//SequenceManager.Init();
+
+			Logger.LogInfo($"Plugin RT Functions is loaded!");
 		}
 
 		static void UpdateSettings(object sender, EventArgs e)
@@ -546,13 +554,19 @@ namespace RTFunctions
 		//		GameManagerPatch.EndInvoke();
 		//}
 
-		public static bool DepthSetterPrefix(int value, DataManager.GameData.BeatmapObject __instance)
+		public static bool DepthSetterPrefix(int value, object __instance)
 		{
-			var field = __instance.GetType().GetField("depth", BindingFlags.NonPublic | BindingFlags.Instance);
-			field.SetValue(__instance, value);
+			// Instance is not null
+			//Debug.Log($"{className}BeatmapObject Instance: {__instance}");
+
+			if (__instance is Functions.Data.BeatmapObject)
+				((Functions.Data.BeatmapObject)__instance).depth = value;
+			else
+				((DataManager.GameData.BeatmapObject)__instance).depth = value;
+
 			return false;
 		}
-
+		
 		#endregion
 
 		public static void TakeScreenshot()

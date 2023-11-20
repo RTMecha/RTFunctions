@@ -78,9 +78,8 @@ namespace RTFunctions.Functions.Animation
 					if (anim.Length >= time)
 					{
 						anim.completed = false;
-						if (anim.action != null)
-							anim.action(anim.sequence.Interpolate(time));
-					}
+                        anim.action?.Invoke(anim.sequence.Interpolate(time));
+                    }
 					else if (!anim.completed)
 					{
 						anim.completed = true;
@@ -89,9 +88,7 @@ namespace RTFunctions.Functions.Animation
 				}
 
 				if (floatAnimations.All(x => x.completed) && !completed[0])
-				{
 					completed[0] = true;
-				}
 
 				if (vector2Animations == null || vector2Animations.Count < 1)
 					completed[1] = true;
@@ -102,9 +99,8 @@ namespace RTFunctions.Functions.Animation
 					if (anim.Length >= time)
 					{
 						anim.completed = false;
-						if (anim.action != null)
-							anim.action(anim.sequence.Interpolate(time));
-					}
+                        anim.action?.Invoke(anim.sequence.Interpolate(time));
+                    }
 					else if (!anim.completed)
 					{
 						anim.completed = true;
@@ -113,9 +109,7 @@ namespace RTFunctions.Functions.Animation
 				}
 
 				if (vector2Animations.All(x => x.completed) && !completed[1])
-				{
 					completed[1] = true;
-				}
 
 				if (vector3Animations == null || vector3Animations.Count < 1)
 					completed[2] = true;
@@ -126,9 +120,8 @@ namespace RTFunctions.Functions.Animation
 					if (anim.Length >= time)
 					{
 						anim.completed = false;
-						if (anim.action != null)
-							anim.action(anim.sequence.Interpolate(time));
-					}
+                        anim.action?.Invoke(anim.sequence.Interpolate(time));
+                    }
 					else if (!anim.completed)
 					{
 						anim.completed = true;
@@ -137,9 +130,7 @@ namespace RTFunctions.Functions.Animation
 				}
 
 				if (vector3Animations.All(x => x.completed) && !completed[2])
-				{
 					completed[2] = true;
-				}
 
 				if (colorAnimations == null || colorAnimations.Count < 1)
 					completed[3] = true;
@@ -150,9 +141,8 @@ namespace RTFunctions.Functions.Animation
 					if (anim.Length >= time)
 					{
 						anim.completed = false;
-						if (anim.action != null)
-							anim.action(anim.sequence.Interpolate(time));
-					}
+                        anim.action?.Invoke(anim.sequence.Interpolate(time));
+                    }
 					else if (!anim.completed)
 					{
 						anim.completed = true;
@@ -161,15 +151,12 @@ namespace RTFunctions.Functions.Animation
 				}
 
 				if (colorAnimations.All(x => x.completed) && !completed[3])
-				{
 					completed[3] = true;
-				}
 
 				if (completed.All(x => x == true) && playing)
 				{
 					playing = false;
-					if (onComplete != null)
-						onComplete();
+					onComplete?.Invoke();
 				}
 			}
 
@@ -180,10 +167,7 @@ namespace RTFunctions.Functions.Animation
             public float Time
             {
                 get => time;
-                private set
-                {
-                    time = value;
-                }
+                private set => time = value;
             }
 
             float timeOffset;
@@ -233,8 +217,7 @@ namespace RTFunctions.Functions.Animation
 						return;
 
 					completed = true;
-					if (onComplete != null)
-						onComplete();
+                    onComplete?.Invoke();
 				}
 
 				public float Length
@@ -243,8 +226,11 @@ namespace RTFunctions.Functions.Animation
 					{
 						float t = 0f;
 
-						var x = keyframes.OrderBy(x => x.Time).ToList();
-						t = x[x.Count - 1].Time;
+						if (keyframes.Count > 0)
+						{
+							var x = keyframes.OrderBy(x => x.Time).ToList();
+							t = x[x.Count - 1].Time;
+						}
 
 						return t;
 					}

@@ -14,20 +14,21 @@ using HarmonyLib;
 using SimpleJSON;
 using LSFunctions;
 
+using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 
+using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
+using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using BasePrefab = DataManager.GameData.Prefab;
+using BasePrefabObject = DataManager.GameData.PrefabObject;
+using BaseBackgroundObject = DataManager.GameData.BackgroundObject;
+using BaseBeatmapTheme = DataManager.BeatmapTheme;
+using BaseMarker = DataManager.GameData.BeatmapData.Marker;
+using BaseCheckpoint = DataManager.GameData.BeatmapData.Checkpoint;
+
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
-
-using OGBeatmapObject = DataManager.GameData.BeatmapObject;
-using Prefab = DataManager.GameData.Prefab;
-using PrefabObject = DataManager.GameData.PrefabObject;
-using OGBackgroundObject = DataManager.GameData.BackgroundObject;
-using BeatmapTheme = DataManager.BeatmapTheme;
-using Marker = DataManager.GameData.BeatmapData.Marker;
-using Checkpoint = DataManager.GameData.BeatmapData.Checkpoint;
 
 namespace RTFunctions.Functions
 {
@@ -160,15 +161,15 @@ namespace RTFunctions.Functions
 
 		public class GameData
         {
-			public List<Objects.BeatmapObject> beatmapObjects = new List<Objects.BeatmapObject>();
-			public List<Objects.BackgroundObject> backgroundObjects = new List<Objects.BackgroundObject>();
-			public Dictionary<string, BeatmapTheme> beatmapThemes = new Dictionary<string, BeatmapTheme>();
-			public List<List<EventKeyframe>> events = new List<List<EventKeyframe>>();
-			public List<Marker> markers = new List<Marker>();
-			public List<Checkpoint> checkpoints = new List<Checkpoint>();
+			public List<BaseBeatmapObject> beatmapObjects = new List<BaseBeatmapObject>();
+			public List<BaseBackgroundObject> backgroundObjects = new List<BaseBackgroundObject>();
+			public Dictionary<string, BaseBeatmapTheme> beatmapThemes = new Dictionary<string, BaseBeatmapTheme>();
+			public List<List<BaseEventKeyframe>> events = new List<List<BaseEventKeyframe>>();
+			public List<BaseMarker> markers = new List<BaseMarker>();
+			public List<BaseCheckpoint> checkpoints = new List<BaseCheckpoint>();
 
-			public List<Objects.Prefab> prefabs = new List<Objects.Prefab>();
-			public List<Objects.PrefabObject> prefabObjects = new List<Objects.PrefabObject>();
+			public List<BasePrefab> prefabs = new List<BasePrefab>();
+			public List<BasePrefabObject> prefabObjects = new List<BasePrefabObject>();
         }
 
 		public class MetaData
@@ -178,7 +179,7 @@ namespace RTFunctions.Functions
 
 		public static class Converter
         {
-            public static void ConvertPrefabToDAE(Prefab prefab)
+            public static void ConvertPrefabToDAE(BasePrefab prefab)
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
@@ -197,56 +198,6 @@ namespace RTFunctions.Functions
                 sb.AppendLine("    <geometry id=\"Beatmap-mesh\" name=\"Beatmap\">");
                 sb.AppendLine("      <mesh>");
 
-            }
-
-			public static void ConvertVGtoLS(string path, string output)
-            {
-				if (!Directory.Exists(output))
-					Directory.CreateDirectory(output);
-
-				if (RTFile.FileExists(path + "/level.vgd"))
-				{
-					var jn = JSON.Parse(RTFile.ReadFromFile(path + "/level.vgd"));
-
-					var gameData = new GameData();
-
-					for (int i = 0; i < jn["objects"].Count; i++)
-						gameData.beatmapObjects.Add(Reader.ParseBeatmapObjectVG(jn["objects"][i]));
-
-					gameData.events.Clear();
-					for (int i = 0; i < jn["events"].Count; i++)
-                    {
-						gameData.events.Add(new List<EventKeyframe>());
-						for (int j = 0; j < jn["events"][i].Count; j++)
-							gameData.events[i].Add(Reader.ParseVGKeyframe(jn["events"][i][j]));
-                    }
-
-					Writer.onSave = delegate ()
-					{
-						if (EditorManager.inst)
-							EditorManager.inst.DisplayNotification("Converted the level!", 2f, EditorManager.NotificationType.Success);
-					};
-					if (output.LastIndexOf('/') == output.Length - 1)
-						Writer.SaveData(output + "level.lsb", gameData);
-					else
-						Writer.SaveData(output + "/level.lsb", gameData);
-				}
-
-				string audioPath = "";
-				if (RTFile.FileExists(path + "/audio.ogg"))
-                {
-					audioPath = path + "/audio.ogg";
-
-				}
-				else if (RTFile.FileExists(path + "/level.ogg"))
-                {
-					audioPath = path + "/level.ogg";
-                }
-
-				if (!string.IsNullOrEmpty(audioPath))
-                {
-					File.Copy(audioPath, output + "/level.ogg");
-                }
             }
         }
 
@@ -338,15 +289,15 @@ namespace RTFunctions.Functions
 
 				for (int i = 0; i < jn["prefabs"].Count; i++)
                 {
-					var prefab = Reader.ParsePrefab(jn["prefabs"][i]);
-					if (gameData.prefabs.Find(x => x.prefab.ID == prefab.prefab.ID) == null)
+					var prefab = Prefab.Parse(jn["prefabs"][i]);
+					if (gameData.prefabs.Find(x => x.ID == prefab.ID) == null)
 						gameData.prefabs.Add(prefab);
                 }
 				
 				for (int i = 0; i < jn32["prefabs"].Count; i++)
                 {
-					var prefab = Reader.ParsePrefab(jn32["prefabs"][i]);
-					if (gameData.prefabs.Find(x => x.prefab.ID == prefab.prefab.ID) == null)
+					var prefab = Prefab.Parse(jn32["prefabs"][i]);
+					if (gameData.prefabs.Find(x => x.ID == prefab.ID) == null)
 						gameData.prefabs.Add(prefab);
                 }
 
@@ -356,15 +307,15 @@ namespace RTFunctions.Functions
 
 				for (int i = 0; i < jn["prefab_objects"].Count; i++)
                 {
-					var prefab = Reader.ParsePrefabObject(jn["prefab_objects"][i]);
-					if (gameData.prefabObjects.Find(x => x.prefabObject.ID == prefab.prefabObject.ID) == null)
+					var prefab = PrefabObject.Parse(jn["prefab_objects"][i]);
+					if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
 						gameData.prefabObjects.Add(prefab);
                 }
 				
 				for (int i = 0; i < jn32["prefab_objects"].Count; i++)
                 {
-					var prefab = Reader.ParsePrefabObject(jn32["prefabs"][i]);
-					if (gameData.prefabObjects.Find(x => x.prefabObject.ID == prefab.prefabObject.ID) == null)
+					var prefab = PrefabObject.Parse(jn32["prefabs"][i]);
+					if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
 						gameData.prefabObjects.Add(prefab);
                 }
 
@@ -385,20 +336,20 @@ namespace RTFunctions.Functions
                 #region Objects
 
                 for (int i = 0; i < jn["beatmap_objects"].Count; i++)
-					gameData.beatmapObjects.Add(Reader.ParseBeatmapObject(jn["beatmap_objects"][i]));
+					gameData.beatmapObjects.Add(BeatmapObject.Parse(jn["beatmap_objects"][i]));
 
 				for (int i = 0; i < jn32["beatmap_objects"].Count; i++)
 				{
-					var beatmapObject = Reader.ParseBeatmapObject(jn32["beatmap_objects"][i]);
+					var beatmapObject = BeatmapObject.Parse(jn32["beatmap_objects"][i]);
 
 					if (!objectsWithMatchingIDAddKeyframes)
 						gameData.beatmapObjects.Add(beatmapObject);
-					else if (gameData.beatmapObjects.TryFind(x => x.bo.id == beatmapObject.bo.id, out Objects.BeatmapObject modObject))
+					else if (gameData.beatmapObjects.TryFind(x => x.id == beatmapObject.id, out BaseBeatmapObject modObject))
                     {
-						for (int j = 0; j < modObject.bo.events.Count; j++)
+						for (int j = 0; j < modObject.events.Count; j++)
                         {
-							beatmapObject.bo.events[j].RemoveAt(0);
-							modObject.bo.events[j].AddRange(beatmapObject.bo.events[j]);
+							beatmapObject.events[j].RemoveAt(0);
+							modObject.events[j].AddRange(beatmapObject.events[j]);
 						}
                     }
 					else
@@ -410,16 +361,16 @@ namespace RTFunctions.Functions
 				#region Backgrounds
 
 				for (int i = 0; i < jn["bg_objects"].Count; i++)
-					gameData.backgroundObjects.Add(Reader.ParseBackgroundObject(jn["bg_objects"][i]));
+					gameData.backgroundObjects.Add(BackgroundObject.Parse(jn["bg_objects"][i]));
 				
 				for (int i = 0; i < jn32["bg_objects"].Count; i++)
-					gameData.backgroundObjects.Add(Reader.ParseBackgroundObject(jn32["bg_objects"][i]));
+					gameData.backgroundObjects.Add(BackgroundObject.Parse(jn32["bg_objects"][i]));
 
                 #endregion
 
                 #region Events
 
-                gameData.events = new List<List<EventKeyframe>>();
+                gameData.events = new List<List<BaseEventKeyframe>>();
 
 				var l = Reader.ParseEventkeyframes(jn["events"]);
 				var l32 = Reader.ParseEventkeyframes(jn32["events"]);
@@ -459,318 +410,9 @@ namespace RTFunctions.Functions
 				VG
             }
 
-			public static Objects.BeatmapObject ParseBeatmapObjectVG(JSONNode jn)
-			{
-				int num = 0;
-				OGBeatmapObject beatmapObject = new OGBeatmapObject();
-
-				if (jn["id"] != null)
-					beatmapObject.id = jn["id"];
-				else
-					beatmapObject.id = LSText.randomString(16);
-
-				#region Events
-
-				List<List<EventKeyframe>> list = new List<List<EventKeyframe>>();
-				list.Add(new List<EventKeyframe>());
-				list.Add(new List<EventKeyframe>());
-				list.Add(new List<EventKeyframe>());
-				list.Add(new List<EventKeyframe>());
-				if (jn["events"] != null)
-				{
-					for (int i = 0; i < jn["events"]["pos"].Count; i++)
-					{
-						EventKeyframe eventKeyframe = new EventKeyframe();
-						JSONNode jsonnode = jn["events"]["pos"][i];
-						eventKeyframe.eventTime = jsonnode["t"].AsFloat;
-						if (!string.IsNullOrEmpty(jsonnode["z"]))
-						{
-							eventKeyframe.SetEventValues(new float[]
-							{
-							jsonnode["x"].AsFloat,
-							jsonnode["y"].AsFloat,
-							jsonnode["z"].AsFloat
-							});
-						}
-						else
-						{
-							eventKeyframe.SetEventValues(new float[]
-							{
-								jsonnode["x"].AsFloat,
-								jsonnode["y"].AsFloat,
-								0f
-							});
-						}
-						eventKeyframe.random = jsonnode["r"].AsInt;
-						DataManager.LSAnimation curveType = DataManager.inst.AnimationList[0];
-						if (jsonnode["ct"] != null)
-						{
-							curveType = DataManager.inst.AnimationListDictionaryStr[jsonnode["ct"]];
-							eventKeyframe.curveType = curveType;
-						}
-						eventKeyframe.SetEventRandomValues(new float[]
-						{
-							jsonnode["rx"].AsFloat,
-							jsonnode["ry"].AsFloat,
-							jsonnode["rz"].AsFloat
-						});
-						eventKeyframe.active = false;
-						list[0].Add(eventKeyframe);
-					}
-					for (int j = 0; j < jn["events"]["sca"].Count; j++)
-					{
-						EventKeyframe eventKeyframe2 = new EventKeyframe();
-						JSONNode jsonnode2 = jn["events"]["sca"][j];
-						eventKeyframe2.eventTime = jsonnode2["t"].AsFloat;
-						eventKeyframe2.SetEventValues(new float[]
-						{
-							jsonnode2["x"].AsFloat,
-							jsonnode2["y"].AsFloat
-						});
-						eventKeyframe2.random = jsonnode2["r"].AsInt;
-						DataManager.LSAnimation curveType2 = DataManager.inst.AnimationList[0];
-						if (jsonnode2["ct"] != null)
-						{
-							curveType2 = DataManager.inst.AnimationListDictionaryStr[jsonnode2["ct"]];
-							eventKeyframe2.curveType = curveType2;
-						}
-						eventKeyframe2.SetEventRandomValues(new float[]
-						{
-							jsonnode2["rx"].AsFloat,
-							jsonnode2["ry"].AsFloat,
-							jsonnode2["rz"].AsFloat
-						});
-						list[1].Add(eventKeyframe2);
-					}
-					for (int k = 0; k < jn["events"]["rot"].Count; k++)
-					{
-						EventKeyframe eventKeyframe3 = new EventKeyframe();
-						JSONNode jsonnode3 = jn["events"]["rot"][k];
-						eventKeyframe3.eventTime = jsonnode3["t"].AsFloat;
-						eventKeyframe3.SetEventValues(new float[]
-						{
-						jsonnode3["x"].AsFloat
-						});
-						eventKeyframe3.random = jsonnode3["r"].AsInt;
-						DataManager.LSAnimation curveType3 = DataManager.inst.AnimationList[0];
-						if (jsonnode3["ct"] != null)
-						{
-							curveType3 = DataManager.inst.AnimationListDictionaryStr[jsonnode3["ct"]];
-							eventKeyframe3.curveType = curveType3;
-						}
-						eventKeyframe3.SetEventRandomValues(new float[]
-						{
-							jsonnode3["rx"].AsFloat,
-							0f,
-							jsonnode3["rz"].AsFloat
-						});
-						list[2].Add(eventKeyframe3);
-					}
-					for (int l = 0; l < jn["events"]["col"].Count; l++)
-					{
-						EventKeyframe eventKeyframe4 = new EventKeyframe();
-						JSONNode jsonnode4 = jn["events"]["col"][l];
-						eventKeyframe4.eventTime = jsonnode4["t"].AsFloat;
-						if (!string.IsNullOrEmpty(jsonnode4["y"]) && !string.IsNullOrEmpty(jsonnode4["z"]))
-						{
-							eventKeyframe4.SetEventValues(new float[]
-							{
-							jsonnode4["x"].AsFloat,
-							jsonnode4["y"].AsFloat,
-							jsonnode4["z"].AsFloat,
-							jsonnode4["x2"].AsFloat,
-							jsonnode4["y2"].AsFloat,
-							});
-						}
-						else if (!string.IsNullOrEmpty(jsonnode4["y"]))
-						{
-							eventKeyframe4.SetEventValues(new float[]
-							{
-							jsonnode4["x"].AsFloat,
-							jsonnode4["y"].AsFloat,
-							0f,
-							0f,
-							0f
-							});
-						}
-						else
-						{
-							eventKeyframe4.SetEventValues(new float[]
-							{
-							jsonnode4["x"].AsFloat,
-							0f,
-							0f,
-							0f,
-							0f
-							});
-						}
-						eventKeyframe4.random = jsonnode4["r"].AsInt;
-						DataManager.LSAnimation curveType4 = DataManager.inst.AnimationList[0];
-						if (jsonnode4["ct"] != null)
-						{
-							curveType4 = DataManager.inst.AnimationListDictionaryStr[jsonnode4["ct"]];
-							eventKeyframe4.curveType = curveType4;
-						}
-						eventKeyframe4.SetEventRandomValues(new float[]
-						{
-							jsonnode4["rx"].AsFloat
-						});
-						list[3].Add(eventKeyframe4);
-					}
-				}
-				else if (jn["e"] != null)
-                {
-					for (int i = 0; i < jn["e"].Count; i++)
-                    {
-						for (int j = 0; j < jn["e"][i]["kf"].Count; j++)
-						{
-                            var kf = jn["e"][i]["kf"][j];
-
-							list[i].Add(ParseVGKeyframe(kf));
-						}
-                    }
-                }
-				else
-				{
-					list[0].Add(new EventKeyframe(0f, new float[3], new float[3], 0));
-					list[1].Add(new EventKeyframe(0f, new float[2] { 1f, 1f }, new float[3], 0));
-					list[2].Add(new EventKeyframe(0f, new float[2], new float[3], 0));
-					list[3].Add(new EventKeyframe(0f, new float[5], new float[5], 0));
-				}
-
-				beatmapObject.events = list;
-
-				#endregion
-
-				#region ID
-
-				if (jn["piid"] != null)
-					beatmapObject.prefabInstanceID = jn["piid"];
-				if (jn["pid"] != null)
-					beatmapObject.prefabID = jn["pid"];
-				if (jn["p"] != null)
-					beatmapObject.parent = jn["p"];
-
-				#endregion
-
-				#region Other Data
-
-				if (jn["pt"] != null)
-				{
-					string pt = jn["pt"];
-					AccessTools.Field(typeof(OGBeatmapObject), "parentType").SetValue(beatmapObject, pt);
-				}
-				if (jn["p_t"] != null)
-				{
-					string pt = jn["p_t"];
-					AccessTools.Field(typeof(OGBeatmapObject), "parentType").SetValue(beatmapObject, pt);
-				}
-				if (jn["po"] != null)
-				{
-					AccessTools.Field(typeof(OGBeatmapObject), "parentOffsets").SetValue(beatmapObject, new List<float>(from n in jn["po"].AsArray.Children
-																														select n.AsFloat).ToList());
-				}
-				if (jn["p_o"] != null)
-				{
-					AccessTools.Field(typeof(OGBeatmapObject), "parentOffsets").SetValue(beatmapObject, new List<float>(from n in jn["p_o"].AsArray.Children
-																														select n.AsFloat).ToList());
-				}
-				if (jn["d"] != null)
-					AccessTools.Field(typeof(OGBeatmapObject), "depth").SetValue(beatmapObject, jn["d"].AsInt);
-				else
-					num++;
-				if (jn["empty"] != null)
-					beatmapObject.objectType = (jn["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal);
-				else if (jn["h"] != null)
-					beatmapObject.objectType = (jn["h"].AsBool ? ObjectType.Helper : ObjectType.Normal);
-				else if (jn["ot"] != null)
-					beatmapObject.objectType = (ObjectType)jn["ot"].AsInt;
-				if (jn["st"] != null)
-					beatmapObject.StartTime = jn["st"].AsFloat;
-				else
-					beatmapObject.StartTime = 0f;
-				if (jn["name"] != null)
-					beatmapObject.name = jn["name"];
-				if (jn["n"] != null)
-					beatmapObject.name = jn["n"];
-				if (jn["shape"] != null)
-					beatmapObject.shape = jn["shape"].AsInt;
-				if (jn["s"] != null)
-					beatmapObject.shape = jn["s"].AsInt;
-				if (jn["so"] != null)
-					beatmapObject.shapeOption = jn["so"].AsInt;
-				if (jn["text"] != null)
-					beatmapObject.text = jn["text"];
-				if (jn["ak"] != null)
-					beatmapObject.autoKillType = (jn["ak"].AsBool ? AutoKillType.LastKeyframe : AutoKillType.OldStyleNoAutokill);
-				else if (jn["akt"] != null)
-					beatmapObject.autoKillType = (AutoKillType)jn["akt"].AsInt;
-				if (jn["ako"] != null)
-					beatmapObject.autoKillOffset = jn["ako"].AsFloat;
-				if (jn["o"] != null)
-					beatmapObject.origin = new Vector2(jn["o"]["x"].AsFloat, jn["o"]["y"].AsFloat);
-				else
-					beatmapObject.origin = Vector2.zero;
-
-				#endregion
-
-				if (jn["ed"] != null)
-				{
-					if (jn["ed"]["bin"] != null)
-						beatmapObject.editorData.locked = jn["ed"]["locked"].AsBool;
-					if (jn["ed"]["bin"] != null)
-						beatmapObject.editorData.collapse = jn["ed"]["shrink"].AsBool;
-					if (jn["ed"]["bin"] != null)
-						beatmapObject.editorData.Bin = jn["ed"]["bin"].AsInt;
-					if (jn["ed"]["layer"] != null)
-						beatmapObject.editorData.Layer = jn["ed"]["layer"].AsInt;
-				}
-
-				var obj = new Objects.BeatmapObject(beatmapObject);
-
-				if (jn["modifiers"] != null)
-				{
-					for (int j = 0; j < jn["modifiers"].Count; j++)
-					{
-						var dictionary = new Dictionary<string, object>();
-
-						dictionary.Add("type", int.Parse(jn["modifiers"][j]["type"]));
-
-						if (!string.IsNullOrEmpty(jn["modifiers"][j]["not"]))
-						{
-							dictionary.Add("not", bool.Parse(jn["modifiers"][j]["not"]));
-						}
-						else
-						{
-							dictionary.Add("not", false);
-						}
-
-						var list2 = new List<string>();
-
-						for (int k = 0; k < jn["modifiers"][j]["commands"].Count; k++)
-						{
-							list2.Add(jn["modifiers"][j]["commands"][k]);
-						}
-
-						dictionary.Add("commands", list2);
-
-						dictionary.Add("constant", bool.Parse(jn["modifiers"][j]["const"]));
-
-						if (!string.IsNullOrEmpty(jn["modifiers"][j]["value"]))
-							dictionary.Add("value", (string)jn["modifiers"][j]["value"]);
-						else
-							dictionary.Add("value", "0");
-
-						obj.modifiers.Add(dictionary);
-					}
-				}
-
-				return obj;
-			}
-
-			public static EventKeyframe ParseVGKeyframe(JSONNode jn)
+			public static BaseEventKeyframe ParseVGKeyframe(JSONNode jn)
             {
-				var keyframe = new EventKeyframe();
+				var keyframe = new BaseEventKeyframe();
 
 				float[] ev = new float[jn["ev"].Count];
 
@@ -801,297 +443,14 @@ namespace RTFunctions.Functions
 				return keyframe;
 			}
 
-			public static Objects.BeatmapObject ParseBeatmapObject(JSONNode jn)
-            {
-				int num = 0;
-				OGBeatmapObject beatmapObject = new OGBeatmapObject();
-
-				if (jn["id"] != null)
-					beatmapObject.id = jn["id"];
-				else
-					beatmapObject.id = LSText.randomString(16);
-
-                #region Events
-
-                List<List<EventKeyframe>> list = new List<List<EventKeyframe>>();
-				list.Add(new List<EventKeyframe>());
-				list.Add(new List<EventKeyframe>());
-				list.Add(new List<EventKeyframe>());
-				list.Add(new List<EventKeyframe>());
-				if (jn["events"] != null)
-				{
-					for (int i = 0; i < jn["events"]["pos"].Count; i++)
-					{
-						EventKeyframe eventKeyframe = new EventKeyframe();
-						JSONNode jsonnode = jn["events"]["pos"][i];
-						eventKeyframe.eventTime = jsonnode["t"].AsFloat;
-						if (!string.IsNullOrEmpty(jsonnode["z"]))
-						{
-							eventKeyframe.SetEventValues(new float[]
-							{
-							jsonnode["x"].AsFloat,
-							jsonnode["y"].AsFloat,
-							jsonnode["z"].AsFloat
-							});
-						}
-						else
-						{
-							eventKeyframe.SetEventValues(new float[]
-							{
-								jsonnode["x"].AsFloat,
-								jsonnode["y"].AsFloat,
-								0f
-							});
-						}
-						eventKeyframe.random = jsonnode["r"].AsInt;
-						DataManager.LSAnimation curveType = DataManager.inst.AnimationList[0];
-						if (jsonnode["ct"] != null)
-						{
-							curveType = DataManager.inst.AnimationListDictionaryStr[jsonnode["ct"]];
-							eventKeyframe.curveType = curveType;
-						}
-						eventKeyframe.SetEventRandomValues(new float[]
-						{
-							jsonnode["rx"].AsFloat,
-							jsonnode["ry"].AsFloat,
-							jsonnode["rz"].AsFloat
-						});
-						eventKeyframe.active = false;
-						list[0].Add(eventKeyframe);
-					}
-					for (int j = 0; j < jn["events"]["sca"].Count; j++)
-					{
-						EventKeyframe eventKeyframe2 = new EventKeyframe();
-						JSONNode jsonnode2 = jn["events"]["sca"][j];
-						eventKeyframe2.eventTime = jsonnode2["t"].AsFloat;
-						eventKeyframe2.SetEventValues(new float[]
-						{
-							jsonnode2["x"].AsFloat,
-							jsonnode2["y"].AsFloat
-						});
-						eventKeyframe2.random = jsonnode2["r"].AsInt;
-						DataManager.LSAnimation curveType2 = DataManager.inst.AnimationList[0];
-						if (jsonnode2["ct"] != null)
-						{
-							curveType2 = DataManager.inst.AnimationListDictionaryStr[jsonnode2["ct"]];
-							eventKeyframe2.curveType = curveType2;
-						}
-						eventKeyframe2.SetEventRandomValues(new float[]
-						{
-							jsonnode2["rx"].AsFloat,
-							jsonnode2["ry"].AsFloat,
-							jsonnode2["rz"].AsFloat
-						});
-						list[1].Add(eventKeyframe2);
-					}
-					for (int k = 0; k < jn["events"]["rot"].Count; k++)
-					{
-						EventKeyframe eventKeyframe3 = new EventKeyframe();
-						JSONNode jsonnode3 = jn["events"]["rot"][k];
-						eventKeyframe3.eventTime = jsonnode3["t"].AsFloat;
-						eventKeyframe3.SetEventValues(new float[]
-						{
-						jsonnode3["x"].AsFloat
-						});
-						eventKeyframe3.random = jsonnode3["r"].AsInt;
-						DataManager.LSAnimation curveType3 = DataManager.inst.AnimationList[0];
-						if (jsonnode3["ct"] != null)
-						{
-							curveType3 = DataManager.inst.AnimationListDictionaryStr[jsonnode3["ct"]];
-							eventKeyframe3.curveType = curveType3;
-						}
-						eventKeyframe3.SetEventRandomValues(new float[]
-						{
-							jsonnode3["rx"].AsFloat,
-							0f,
-							jsonnode3["rz"].AsFloat
-						});
-						list[2].Add(eventKeyframe3);
-					}
-					for (int l = 0; l < jn["events"]["col"].Count; l++)
-					{
-						EventKeyframe eventKeyframe4 = new EventKeyframe();
-						JSONNode jsonnode4 = jn["events"]["col"][l];
-						eventKeyframe4.eventTime = jsonnode4["t"].AsFloat;
-						if (!string.IsNullOrEmpty(jsonnode4["y"]) && !string.IsNullOrEmpty(jsonnode4["z"]))
-						{
-							eventKeyframe4.SetEventValues(new float[]
-							{
-							jsonnode4["x"].AsFloat,
-							jsonnode4["y"].AsFloat,
-							jsonnode4["z"].AsFloat,
-							jsonnode4["x2"].AsFloat,
-							jsonnode4["y2"].AsFloat,
-							});
-						}
-						else if (!string.IsNullOrEmpty(jsonnode4["y"]))
-						{
-							eventKeyframe4.SetEventValues(new float[]
-							{
-							jsonnode4["x"].AsFloat,
-							jsonnode4["y"].AsFloat,
-							0f,
-							0f,
-							0f
-							});
-						}
-						else
-						{
-							eventKeyframe4.SetEventValues(new float[]
-							{
-							jsonnode4["x"].AsFloat,
-							0f,
-							0f,
-							0f,
-							0f
-							});
-						}
-						eventKeyframe4.random = jsonnode4["r"].AsInt;
-						DataManager.LSAnimation curveType4 = DataManager.inst.AnimationList[0];
-						if (jsonnode4["ct"] != null)
-						{
-							curveType4 = DataManager.inst.AnimationListDictionaryStr[jsonnode4["ct"]];
-							eventKeyframe4.curveType = curveType4;
-						}
-						eventKeyframe4.SetEventRandomValues(new float[]
-						{
-							jsonnode4["rx"].AsFloat
-						});
-						list[3].Add(eventKeyframe4);
-					}
-				}
-				else
-                {
-					list[0].Add(new EventKeyframe(0f, new float[3], new float[3], 0));
-					list[1].Add(new EventKeyframe(0f, new float[2] { 1f, 1f }, new float[3], 0));
-					list[2].Add(new EventKeyframe(0f, new float[2], new float[3], 0));
-					list[3].Add(new EventKeyframe(0f, new float[5], new float[5], 0));
-                }
-
-				beatmapObject.events = list;
-
-                #endregion
-
-                #region ID
-
-                if (jn["piid"] != null)
-					beatmapObject.prefabInstanceID = jn["piid"];
-				if (jn["pid"] != null)
-					beatmapObject.prefabID = jn["pid"];
-				if (jn["p"] != null)
-					beatmapObject.parent = jn["p"];
-
-                #endregion
-
-                #region Other Data
-
-                if (jn["pt"] != null)
-				{
-					string pt = jn["pt"];
-					AccessTools.Field(typeof(OGBeatmapObject), "parentType").SetValue(beatmapObject, pt);
-				}
-				if (jn["po"] != null)
-				{
-					AccessTools.Field(typeof(OGBeatmapObject), "parentOffsets").SetValue(beatmapObject, new List<float>(from n in jn["po"].AsArray.Children
-																													  select n.AsFloat).ToList());
-				}
-				if (jn["d"] != null)
-					AccessTools.Field(typeof(OGBeatmapObject), "depth").SetValue(beatmapObject, jn["d"].AsInt);
-				else
-					num++;
-				if (jn["empty"] != null)
-					beatmapObject.objectType = (jn["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal);
-				else if (jn["h"] != null)
-					beatmapObject.objectType = (jn["h"].AsBool ? ObjectType.Helper : ObjectType.Normal);
-				else if (jn["ot"] != null)
-					beatmapObject.objectType = (ObjectType)jn["ot"].AsInt;
-				if (jn["st"] != null)
-					beatmapObject.StartTime = jn["st"].AsFloat;
-				else
-					beatmapObject.StartTime = 0f;
-				if (jn["name"] != null)
-					beatmapObject.name = jn["name"];
-				if (jn["shape"] != null)
-					beatmapObject.shape = jn["shape"].AsInt;
-				if (jn["so"] != null)
-					beatmapObject.shapeOption = jn["so"].AsInt;
-				if (jn["text"] != null)
-					beatmapObject.text = jn["text"];
-				if (jn["ak"] != null)
-					beatmapObject.autoKillType = (jn["ak"].AsBool ? AutoKillType.LastKeyframe : AutoKillType.OldStyleNoAutokill);
-				else if (jn["akt"] != null)
-					beatmapObject.autoKillType = (AutoKillType)jn["akt"].AsInt;
-				if (jn["ako"] != null)
-					beatmapObject.autoKillOffset = jn["ako"].AsFloat;
-				if (jn["o"] != null)
-					beatmapObject.origin = new Vector2(jn["o"]["x"].AsFloat, jn["o"]["y"].AsFloat);
-				else
-					beatmapObject.origin = Vector2.zero;
-
-                #endregion
-
-                if (jn["ed"] != null)
-				{
-					if (jn["ed"]["bin"] != null)
-						beatmapObject.editorData.locked = jn["ed"]["locked"].AsBool;
-					if (jn["ed"]["bin"] != null)
-						beatmapObject.editorData.collapse = jn["ed"]["shrink"].AsBool;
-					if (jn["ed"]["bin"] != null)
-						beatmapObject.editorData.Bin = jn["ed"]["bin"].AsInt;
-					if (jn["ed"]["layer"] != null)
-						beatmapObject.editorData.Layer = jn["ed"]["layer"].AsInt;
-				}
-
-				var obj = new Objects.BeatmapObject(beatmapObject);
-
-				if (jn["modifiers"] != null)
-                {
-					for (int j = 0; j < jn["modifiers"].Count; j++)
-					{
-						var dictionary = new Dictionary<string, object>();
-
-						dictionary.Add("type", int.Parse(jn["modifiers"][j]["type"]));
-
-						if (!string.IsNullOrEmpty(jn["modifiers"][j]["not"]))
-						{
-							dictionary.Add("not", bool.Parse(jn["modifiers"][j]["not"]));
-						}
-						else
-						{
-							dictionary.Add("not", false);
-						}
-
-						var list2 = new List<string>();
-
-						for (int k = 0; k < jn["modifiers"][j]["commands"].Count; k++)
-						{
-							list2.Add(jn["modifiers"][j]["commands"][k]);
-						}
-
-						dictionary.Add("commands", list2);
-
-						dictionary.Add("constant", bool.Parse(jn["modifiers"][j]["const"]));
-
-						if (!string.IsNullOrEmpty(jn["modifiers"][j]["value"]))
-							dictionary.Add("value", (string)jn["modifiers"][j]["value"]);
-						else
-							dictionary.Add("value", "0");
-
-						obj.modifiers.Add(dictionary);
-					}
-				}
-
-				return obj;
-			}
-
-			public static List<List<EventKeyframe>> ParseEventkeyframes(JSONNode jn, bool orderTime = false)
+			public static List<List<BaseEventKeyframe>> ParseEventkeyframes(JSONNode jn, bool orderTime = false)
 			{
-				var allEvents = new List<List<EventKeyframe>>();
+				var allEvents = new List<List<BaseEventKeyframe>>();
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int i = 0; i < jn["pos"].Count; i++)
 				{
-					EventKeyframe eventKeyframe = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe = new BaseEventKeyframe();
 					JSONNode jsonnode = jn["pos"][i];
 					eventKeyframe.eventTime = jsonnode["t"].AsFloat;
 					eventKeyframe.SetEventValues(new float[]
@@ -1115,10 +474,10 @@ namespace RTFunctions.Functions
 					allEvents[0].Add(eventKeyframe);
 				}
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int j = 0; j < jn["zoom"].Count; j++)
 				{
-					EventKeyframe eventKeyframe2 = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe2 = new BaseEventKeyframe();
 					JSONNode jsonnode2 = jn["zoom"][j];
 					eventKeyframe2.eventTime = jsonnode2["t"].AsFloat;
 					eventKeyframe2.SetEventValues(new float[]
@@ -1140,10 +499,10 @@ namespace RTFunctions.Functions
 					allEvents[1].Add(eventKeyframe2);
 				}
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int k = 0; k < jn["rot"].Count; k++)
 				{
-					EventKeyframe eventKeyframe3 = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe3 = new BaseEventKeyframe();
 					JSONNode jsonnode3 = jn["rot"][k];
 					eventKeyframe3.eventTime = jsonnode3["t"].AsFloat;
 					eventKeyframe3.SetEventValues(new float[]
@@ -1165,10 +524,10 @@ namespace RTFunctions.Functions
 					allEvents[2].Add(eventKeyframe3);
 				}
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int l = 0; l < jn["shake"].Count; l++)
 				{
-					EventKeyframe eventKeyframe4 = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe4 = new BaseEventKeyframe();
 					JSONNode jsonnode4 = jn["shake"][l];
 					eventKeyframe4.eventTime = jsonnode4["t"].AsFloat;
 					if (!string.IsNullOrEmpty(jsonnode4["z"]))
@@ -1204,10 +563,10 @@ namespace RTFunctions.Functions
 					allEvents[3].Add(eventKeyframe4);
 				}
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int m = 0; m < jn["theme"].Count; m++)
 				{
-					EventKeyframe eventKeyframe5 = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe5 = new BaseEventKeyframe();
 					JSONNode jsonnode5 = jn["theme"][m];
 					eventKeyframe5.eventTime = jsonnode5["t"].AsFloat;
 					eventKeyframe5.SetEventValues(new float[]
@@ -1229,10 +588,10 @@ namespace RTFunctions.Functions
 					allEvents[4].Add(eventKeyframe5);
 				}
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int n = 0; n < jn["chroma"].Count; n++)
 				{
-					EventKeyframe eventKeyframe6 = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe6 = new BaseEventKeyframe();
 					JSONNode jsonnode6 = jn["chroma"][n];
 					eventKeyframe6.eventTime = jsonnode6["t"].AsFloat;
 					eventKeyframe6.SetEventValues(new float[]
@@ -1254,10 +613,10 @@ namespace RTFunctions.Functions
 					allEvents[5].Add(eventKeyframe6);
 				}
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int num = 0; num < jn["bloom"].Count; num++)
 				{
-					EventKeyframe eventKeyframe7 = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe7 = new BaseEventKeyframe();
 					JSONNode jsonnode7 = jn["bloom"][num];
 					eventKeyframe7.eventTime = jsonnode7["t"].AsFloat;
 					if (!string.IsNullOrEmpty(jsonnode7["y"]))
@@ -1297,10 +656,10 @@ namespace RTFunctions.Functions
 					allEvents[6].Add(eventKeyframe7);
 				}
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int num2 = 0; num2 < jn["vignette"].Count; num2++)
 				{
-					EventKeyframe eventKeyframe8 = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe8 = new BaseEventKeyframe();
 					JSONNode jsonnode8 = jn["vignette"][num2];
 					eventKeyframe8.eventTime = jsonnode8["t"].AsFloat;
 					if (!string.IsNullOrEmpty(jsonnode8["x3"]))
@@ -1349,10 +708,10 @@ namespace RTFunctions.Functions
 					allEvents[7].Add(eventKeyframe8);
 				}
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int num3 = 0; num3 < jn["lens"].Count; num3++)
 				{
-					EventKeyframe eventKeyframe9 = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe9 = new BaseEventKeyframe();
 					JSONNode jsonnode9 = jn["lens"][num3];
 					eventKeyframe9.eventTime = jsonnode9["t"].AsFloat;
 					if (!string.IsNullOrEmpty(jsonnode9["y"]))
@@ -1396,10 +755,10 @@ namespace RTFunctions.Functions
 					allEvents[8].Add(eventKeyframe9);
 				}
 
-				allEvents.Add(new List<EventKeyframe>());
+				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int num4 = 0; num4 < jn["grain"].Count; num4++)
 				{
-					EventKeyframe eventKeyframe10 = new EventKeyframe();
+					BaseEventKeyframe eventKeyframe10 = new BaseEventKeyframe();
 					JSONNode jsonnode10 = jn["grain"][num4];
 					eventKeyframe10.eventTime = jsonnode10["t"].AsFloat;
 					eventKeyframe10.SetEventValues(new float[]
@@ -1427,10 +786,10 @@ namespace RTFunctions.Functions
 
 				if (jn["cg"] != null)
 				{
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["cg"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["cg"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1462,10 +821,10 @@ namespace RTFunctions.Functions
 						allEvents[10].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["rip"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["rip"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1492,10 +851,10 @@ namespace RTFunctions.Functions
 						allEvents[11].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["rb"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["rb"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1519,10 +878,10 @@ namespace RTFunctions.Functions
 						allEvents[12].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["cs"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["cs"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1546,10 +905,10 @@ namespace RTFunctions.Functions
 						allEvents[13].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["offset"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["offset"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1573,10 +932,10 @@ namespace RTFunctions.Functions
 						allEvents[14].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["grd"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["grd"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1603,10 +962,10 @@ namespace RTFunctions.Functions
 						allEvents[15].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["dbv"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["dbv"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1630,10 +989,10 @@ namespace RTFunctions.Functions
 						allEvents[16].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["scan"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["scan"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1658,10 +1017,10 @@ namespace RTFunctions.Functions
 						allEvents[17].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["blur"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["blur"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1685,10 +1044,10 @@ namespace RTFunctions.Functions
 						allEvents[18].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["pixel"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["pixel"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1712,10 +1071,10 @@ namespace RTFunctions.Functions
 						allEvents[19].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["bg"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["bg"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1739,12 +1098,12 @@ namespace RTFunctions.Functions
 						allEvents[20].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					if (jn["invert"] != null)
 					{
 						for (int num4 = 0; num4 < jn["invert"].Count; num4++)
 						{
-							var eventKeyframe11 = new EventKeyframe();
+							var eventKeyframe11 = new BaseEventKeyframe();
 							JSONNode jsonnode11 = jn["invert"][num4];
 							eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 							eventKeyframe11.SetEventValues(new float[]
@@ -1769,10 +1128,10 @@ namespace RTFunctions.Functions
 						}
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["timeline"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["timeline"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1801,10 +1160,10 @@ namespace RTFunctions.Functions
 						allEvents[22].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["player"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["player"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1830,10 +1189,10 @@ namespace RTFunctions.Functions
 						allEvents[23].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["follow_player"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["follow_player"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						if (!string.IsNullOrEmpty(jsonnode11["z2"]))
@@ -1884,10 +1243,10 @@ namespace RTFunctions.Functions
 						allEvents[24].Add(eventKeyframe11);
 					}
 
-					allEvents.Add(new List<EventKeyframe>());
+					allEvents.Add(new List<BaseEventKeyframe>());
 					for (int num4 = 0; num4 < jn["audio"].Count; num4++)
 					{
-						EventKeyframe eventKeyframe11 = new EventKeyframe();
+						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
 						JSONNode jsonnode11 = jn["audio"][num4];
 						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
 						eventKeyframe11.SetEventValues(new float[]
@@ -1916,7 +1275,7 @@ namespace RTFunctions.Functions
 				{
 					if (allEvents[type].Count < 1)
 					{
-						allEvents[type].Add(new EventKeyframe
+						allEvents[type].Add(new BaseEventKeyframe
 						{
 							eventValues = new float[10],
 							eventTime = 0f
@@ -1977,9 +1336,9 @@ namespace RTFunctions.Functions
 				return allEvents;
             }
 
-			public static BeatmapTheme ParseBeatmapTheme(JSONNode jn)
+			public static BaseBeatmapTheme ParseBeatmapTheme(JSONNode jn)
             {
-				BeatmapTheme beatmapTheme = new BeatmapTheme();
+				BaseBeatmapTheme beatmapTheme = new BaseBeatmapTheme();
 				beatmapTheme.id = DataManager.inst.AllThemes.Count().ToString();
 
 				if (jn["id"] != null)
@@ -2114,117 +1473,7 @@ namespace RTFunctions.Functions
 				return beatmapTheme;
             }
 
-			public static Objects.BackgroundObject ParseBackgroundObject(JSONNode jn)
-			{
-				bool active = true;
-				if (jn["active"] != null)
-					active = jn["active"].AsBool;
-
-				string name;
-				if (jn["name"] != null)
-					name = jn["name"];
-				else
-					name = "Background";
-
-				int kind;
-				if (jn["kind"] != null)
-					kind = jn["kind"].AsInt;
-				else
-					kind = 1;
-
-				string text;
-				if (jn["text"] != null)
-					text = jn["text"];
-				else
-					text = "";
-				
-				Vector2 pos = new Vector2(jn["pos"]["x"].AsFloat, jn["pos"]["y"].AsFloat);
-				Vector2 scale = new Vector2(jn["size"]["x"].AsFloat, jn["size"]["y"].AsFloat);
-
-				float asFloat = jn["rot"].AsFloat;
-				int asInt = jn["color"].AsInt;
-				int asInt2 = jn["layer"].AsInt;
-
-				bool reactive = false;
-				if (jn["r_set"] != null)
-					reactive = true;
-
-				if (jn["r_set"]["active"] != null)
-					reactive = jn["r_set"]["active"].AsBool;
-
-				var reactiveType = OGBackgroundObject.ReactiveType.LOW;
-				if (jn["r_set"]["type"] != null)
-					reactiveType = (OGBackgroundObject.ReactiveType)Enum.Parse(typeof(OGBackgroundObject.ReactiveType), jn["r_set"]["type"]);
-
-				float reactiveScale = 1f;
-				if (jn["r_set"]["scale"] != null)
-					reactiveScale = jn["r_set"]["scale"].AsFloat;
-
-				bool drawFade = true;
-				if (jn["fade"] != null)
-					drawFade = jn["fade"].AsBool;
-
-				var item = new OGBackgroundObject(active, name, kind, text, pos, scale, asFloat, asInt, asInt2, reactive, reactiveType, reactiveScale, drawFade);
-
-				var bg = new Objects.BackgroundObject(item);
-				if (jn["zscale"] != null)
-					bg.zscale = jn["zscale"].AsFloat;
-
-				if (jn["depth"] != null)
-					bg.depth = jn["depth"].AsInt;
-
-				if (jn["s"] != null && jn["so"] != null)
-					bg.shape = Objects.GetShape3D(jn["s"].AsInt, jn["so"]);
-
-				if (jn["r_offset"] != null && jn["r_offset"]["x"] != null && jn["r_offset"]["y"] != null)
-					bg.rotation = new Vector2(jn["r_offset"]["x"].AsFloat, jn["r_offset"]["y"].AsFloat);
-				if (jn["color_fade"] != null)
-					bg.FadeColor = jn["color_fade"].AsInt;
-
-				if (jn["rc"] != null)
-				{
-					try
-					{
-						if (jn["rc"]["pos"] != null && jn["rc"]["pos"]["i"] != null && jn["rc"]["pos"]["i"]["x"] != null && jn["rc"]["pos"]["i"]["y"] != null)
-							bg.reactivePosIntensity = new Vector2(jn["rc"]["pos"]["i"]["x"].AsFloat, jn["rc"]["pos"]["i"]["y"].AsFloat);
-						if (jn["rc"]["pos"] != null && jn["rc"]["pos"]["s"] != null && jn["rc"]["pos"]["s"]["x"] != null && jn["rc"]["pos"]["s"]["y"] != null)
-							bg.reactivePosSamples = new Vector2Int(jn["rc"]["pos"]["s"]["x"].AsInt, jn["rc"]["pos"]["s"]["y"].AsInt);
-
-						//if (jn["rc"]["z"] != null && jn["rc"]["active"] != null)
-						//	bg.reactiveIncludesZ = jn["rc"]["z"]["active"].AsBool;
-
-						if (jn["rc"]["z"] != null && jn["rc"]["z"]["i"] != null)
-							bg.reactiveZIntensity = jn["rc"]["z"]["i"].AsFloat;
-						if (jn["rc"]["z"] != null && jn["rc"]["z"]["s"] != null)
-							bg.reactiveZSample = jn["rc"]["z"]["s"].AsInt;
-
-						if (jn["rc"]["sca"] != null && jn["rc"]["sca"]["i"] != null && jn["rc"]["sca"]["i"]["x"] != null && jn["rc"]["sca"]["i"]["y"] != null)
-							bg.reactiveScaIntensity = new Vector2(jn["rc"]["sca"]["i"]["x"].AsFloat, jn["rc"]["sca"]["i"]["y"].AsFloat);
-						if (jn["rc"]["sca"] != null && jn["rc"]["sca"]["s"] != null && jn["rc"]["sca"]["s"]["x"] != null && jn["rc"]["sca"]["s"]["y"] != null)
-							bg.reactiveScaSamples = new Vector2Int(jn["rc"]["sca"]["s"]["x"].AsInt, jn["rc"]["sca"]["s"]["y"].AsInt);
-
-						if (jn["rc"]["rot"] != null && jn["rc"]["rot"]["i"] != null)
-							bg.reactiveRotIntensity = jn["rc"]["rot"]["i"].AsFloat;
-						if (jn["rc"]["rot"] != null && jn["rc"]["rot"]["s"] != null)
-							bg.reactiveRotSample = jn["rc"]["rot"]["s"].AsInt;
-
-						if (jn["rc"]["col"] != null && jn["rc"]["col"]["i"] != null)
-							bg.reactiveColIntensity = jn["rc"]["col"]["i"].AsFloat;
-						if (jn["rc"]["col"] != null && jn["rc"]["col"]["s"] != null)
-							bg.reactiveColSample = jn["rc"]["col"]["s"].AsInt;
-						if (jn["rc"]["col"] != null && jn["rc"]["col"]["c"] != null)
-							bg.reactiveCol = jn["rc"]["col"]["c"].AsInt;
-					}
-					catch (Exception ex)
-					{
-                        Debug.Log($"{FunctionsPlugin.className}Failed to load settings.\nEXCEPTION: {ex.Message}\nSTACKTRACE: {ex.StackTrace}");
-					}
-				}
-
-				return bg;
-			}
-
-			public static Marker ParseMarker(JSONNode jn)
+			public static BaseMarker ParseMarker(JSONNode jn)
             {
 				bool active = jn["active"].AsBool;
 
@@ -2247,137 +1496,17 @@ namespace RTFunctions.Functions
 					color = jn["col"].AsInt;
 				}
 
-				return new Marker(active, name, desc, color, time);
+				return new BaseMarker(active, name, desc, color, time);
 			}
 
-			public static Checkpoint ParseCheckpoint(JSONNode jn)
+			public static BaseCheckpoint ParseCheckpoint(JSONNode jn)
             {
 				bool active = jn["active"].AsBool;
 				string name = jn["name"];
 				Vector2 pos = new Vector2(jn["pos"]["x"].AsFloat, jn["pos"]["y"].AsFloat);
 				float time = jn["t"].AsFloat;
 
-				return new Checkpoint(active, name, time, pos);
-			}
-
-			public static Objects.Prefab ParsePrefab(JSONNode jn)
-            {
-				var list = new List<OGBeatmapObject>();
-				for (int j = 0; j < jn["objects"].Count; j++)
-				{
-					var beatmapObject = ParseBeatmapObject(jn["objects"][j]);
-					if (beatmapObject != null)
-						list.Add(beatmapObject.bo);
-				}
-
-				List<PrefabObject> list2 = new List<PrefabObject>();
-				for (int k = 0; k < jn["prefab_objects"].Count; k++)
-				{
-					list2.Add(ParsePrefabObject(jn["prefab_objects"][k]).prefabObject);
-				}
-				Prefab prefab = new Prefab(jn["name"], jn["type"].AsInt, jn["offset"].AsFloat, list, list2);
-				prefab.ID = jn["id"];
-				prefab.MainObjectID = jn["main_obj_id"];
-
-				var modPrefab = new Objects.Prefab(prefab);
-				return modPrefab;
-			}
-
-			public static Objects.PrefabObject ParsePrefabObject(JSONNode jn)
-            {
-				var prefabObject = new PrefabObject();
-				prefabObject.prefabID = jn["pid"];
-				prefabObject.StartTime = jn["st"].AsFloat;
-
-				if (!string.IsNullOrEmpty(jn["rc"]))
-					prefabObject.RepeatCount = int.Parse(jn["rc"]);
-
-				if (!string.IsNullOrEmpty(jn["ro"]))
-					prefabObject.RepeatOffsetTime = float.Parse(jn["ro"]);
-
-				if (jn["id"] != null)
-				{
-					prefabObject.ID = jn["id"];
-				}
-				else
-				{
-					prefabObject.ID = LSText.randomString(16);
-				}
-				if (jn["ed"]["locked"] != null)
-				{
-					prefabObject.editorData.locked = jn["ed"]["locked"].AsBool;
-				}
-				if (jn["ed"]["shrink"] != null)
-				{
-					prefabObject.editorData.collapse = jn["ed"]["shrink"].AsBool;
-				}
-				if (jn["ed"]["bin"] != null)
-				{
-					prefabObject.editorData.Bin = jn["ed"]["bin"].AsInt;
-				}
-				if (jn["ed"]["layer"] != null)
-				{
-					prefabObject.editorData.Layer = jn["ed"]["layer"].AsInt;
-				}
-				if (jn["e"]["pos"] != null)
-				{
-					EventKeyframe eventKeyframe = new EventKeyframe();
-					JSONNode jsonnode = jn["e"]["pos"];
-					eventKeyframe.SetEventValues(new float[]
-					{
-					jsonnode["x"].AsFloat,
-					jsonnode["y"].AsFloat
-					});
-					eventKeyframe.random = jsonnode["r"].AsInt;
-					eventKeyframe.SetEventRandomValues(new float[]
-					{
-					jsonnode["rx"].AsFloat,
-					jsonnode["ry"].AsFloat,
-					jsonnode["rz"].AsFloat
-					});
-					eventKeyframe.active = false;
-					prefabObject.events[0] = eventKeyframe;
-				}
-				if (jn["e"]["sca"] != null)
-				{
-					EventKeyframe eventKeyframe2 = new EventKeyframe();
-					JSONNode jsonnode2 = jn["e"]["sca"];
-					eventKeyframe2.SetEventValues(new float[]
-					{
-					jsonnode2["x"].AsFloat,
-					jsonnode2["y"].AsFloat
-					});
-					eventKeyframe2.random = jsonnode2["r"].AsInt;
-					eventKeyframe2.SetEventRandomValues(new float[]
-					{
-					jsonnode2["rx"].AsFloat,
-					jsonnode2["ry"].AsFloat,
-					jsonnode2["rz"].AsFloat
-					});
-					eventKeyframe2.active = false;
-					prefabObject.events[1] = eventKeyframe2;
-				}
-				if (jn["e"]["rot"] != null)
-				{
-					EventKeyframe eventKeyframe3 = new EventKeyframe();
-					JSONNode jsonnode3 = jn["e"]["rot"];
-					eventKeyframe3.SetEventValues(new float[]
-					{
-					jsonnode3["x"].AsFloat
-					});
-					eventKeyframe3.random = jsonnode3["r"].AsInt;
-					eventKeyframe3.SetEventRandomValues(new float[]
-					{
-					jsonnode3["rx"].AsFloat,
-					0f,
-					jsonnode3["rz"].AsFloat
-					});
-					eventKeyframe3.active = false;
-					prefabObject.events[2] = eventKeyframe3;
-				}
-
-				var modPrefabObject = new Objects.PrefabObject(prefabObject);
-				return modPrefabObject;
+				return new BaseCheckpoint(active, name, time, pos);
 			}
         }
 
@@ -2403,7 +1532,7 @@ namespace RTFunctions.Functions
 				Debug.Log("Saving Object Prefabs");
 				for (int i = 0; i < _data.prefabObjects.Count; i++)
 				{
-					var prefabObject = _data.prefabObjects[i].prefabObject;
+					var prefabObject = _data.prefabObjects[i];
 
 					jn["prefab_objects"][i]["id"] = prefabObject.ID.ToString();
 					jn["prefab_objects"][i]["pid"] = prefabObject.prefabID.ToString();
@@ -2463,13 +1592,13 @@ namespace RTFunctions.Functions
                 {
                     for (int i = 0; i < _data.prefabs.Count; i++)
                     {
-                        jn["prefabs"][i] = DataManager.inst.GeneratePrefabJSON(_data.prefabs[i].prefab);
+                        jn["prefabs"][i] = DataManager.inst.GeneratePrefabJSON(_data.prefabs[i]);
                     }
                 }
                 Debug.Log("Saving themes");
 				if (_data.beatmapThemes != null)
 				{
-					List<BeatmapTheme> levelThemes = new List<BeatmapTheme>();
+					List<BaseBeatmapTheme> levelThemes = new List<BaseBeatmapTheme>();
 
 					for (int i = 0; i < _data.beatmapThemes.Count; i++)
 					{
@@ -2530,16 +1659,16 @@ namespace RTFunctions.Functions
 				Debug.Log("Saving Beatmap Objects");
 				if (_data.beatmapObjects != null)
 				{
-					List<Objects.BeatmapObject> list = _data.beatmapObjects.FindAll(x => !x.bo.fromPrefab);
+					List<BaseBeatmapObject> list = _data.beatmapObjects.FindAll(x => !x.fromPrefab);
 					jn["beatmap_objects"] = new JSONArray();
 					for (int i = 0; i < list.Count; i++)
 					{
-						if (list[i] != null && list[i].bo.events != null && !list[i].bo.fromPrefab)
+						if (list[i] != null && list[i].events != null && !list[i].fromPrefab)
 						{
-							var bo = list[i].bo;
+							var bo = list[i];
 
 							jn["beatmap_objects"][i]["id"] = bo.id;
-							if (!string.IsNullOrEmpty(list[i].bo.prefabID))
+							if (!string.IsNullOrEmpty(list[i].prefabID))
 							{
 								jn["beatmap_objects"][i]["pid"] = bo.prefabID;
 							}
@@ -2674,30 +1803,26 @@ namespace RTFunctions.Functions
 								}
 							}
 
-							for (int j = 0; j < _data.beatmapObjects[i].modifiers.Count; j++)
+							for (int j = 0; j < ((BeatmapObject)_data.beatmapObjects[i]).modifiers.Count; j++)
 							{
-								var modifier = (Dictionary<string, object>)_data.beatmapObjects[i].modifiers[j];
+								var modifier = ((BeatmapObject)_data.beatmapObjects[i]).modifiers[j];
 
-								if (modifier.ContainsKey("type"))
-									jn["beatmap_objects"][i]["modifiers"][j]["type"] = (int)modifier["type"];
+								jn["beatmap_objects"][i]["modifiers"][j]["type"] = (int)modifier.type;
 
-								if (modifier.ContainsKey("not") && (bool)modifier["not"])
-									jn["beatmap_objects"][i]["modifiers"][j]["not"] = ((bool)modifier["not"]).ToString();
+								if (modifier.not)
+									jn["beatmap_objects"][i]["modifiers"][j]["not"] = modifier.not.ToString();
 
-								if (modifier.ContainsKey("commands"))
 								{
-									var commands = ((List<string>)modifier["commands"]);
+									var commands = modifier.commands;
 									for (int k = 0; k < commands.Count; k++)
 									{
 										jn["beatmap_objects"][i]["modifiers"][j]["commands"][k] = commands[k];
 									}
 								}
 
-								if (modifier.ContainsKey("value"))
-									jn["beatmap_objects"][i]["modifiers"][j]["value"] = (string)modifier["value"];
+								jn["beatmap_objects"][i]["modifiers"][j]["value"] = modifier.value;
 
-								if (modifier.ContainsKey("constant"))
-									jn["beatmap_objects"][i]["modifiers"][j]["const"] = ((bool)modifier["constant"]).ToString();
+								jn["beatmap_objects"][i]["modifiers"][j]["const"] = modifier.constant.ToString();
 							}
 						}
 					}
@@ -2713,24 +1838,24 @@ namespace RTFunctions.Functions
 
 					try
 					{
-						var bg = Objects.backgroundObjects[i];
+						var bg = (BackgroundObject)_data.backgroundObjects[i];
 
-						jn["bg_objects"][i]["active"] = bg.bg.active.ToString();
-						jn["bg_objects"][i]["name"] = bg.bg.name.ToString();
-						jn["bg_objects"][i]["kind"] = bg.bg.kind.ToString();
-						jn["bg_objects"][i]["pos"]["x"] = bg.bg.pos.x.ToString();
-						jn["bg_objects"][i]["pos"]["y"] = bg.bg.pos.y.ToString();
-						jn["bg_objects"][i]["size"]["x"] = bg.bg.scale.x.ToString();
-						jn["bg_objects"][i]["size"]["y"] = bg.bg.scale.y.ToString();
-						jn["bg_objects"][i]["rot"] = bg.bg.rot.ToString();
-						jn["bg_objects"][i]["color"] = bg.bg.color.ToString();
-						jn["bg_objects"][i]["layer"] = bg.bg.layer.ToString();
-						jn["bg_objects"][i]["fade"] = bg.bg.drawFade.ToString();
+						jn["bg_objects"][i]["active"] = bg.active.ToString();
+						jn["bg_objects"][i]["name"] = bg.name.ToString();
+						jn["bg_objects"][i]["kind"] = bg.kind.ToString();
+						jn["bg_objects"][i]["pos"]["x"] = bg.pos.x.ToString();
+						jn["bg_objects"][i]["pos"]["y"] = bg.pos.y.ToString();
+						jn["bg_objects"][i]["size"]["x"] = bg.scale.x.ToString();
+						jn["bg_objects"][i]["size"]["y"] = bg.scale.y.ToString();
+						jn["bg_objects"][i]["rot"] = bg.rot.ToString();
+						jn["bg_objects"][i]["color"] = bg.color.ToString();
+						jn["bg_objects"][i]["layer"] = bg.layer.ToString();
+						jn["bg_objects"][i]["fade"] = bg.drawFade.ToString();
 
-						if (bg.bg.reactive)
+						if (bg.reactive)
 						{
-							jn["bg_objects"][i]["r_set"]["type"] = bg.bg.reactiveType.ToString();
-							jn["bg_objects"][i]["r_set"]["scale"] = bg.bg.reactiveScale.ToString();
+							jn["bg_objects"][i]["r_set"]["type"] = bg.reactiveType.ToString();
+							jn["bg_objects"][i]["r_set"]["scale"] = bg.reactiveScale.ToString();
 						}
 						jn["bg_objects"][i]["zscale"] = bg.zscale.ToString();
 						jn["bg_objects"][i]["depth"] = bg.depth.ToString();

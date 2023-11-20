@@ -8,6 +8,7 @@ using HarmonyLib;
 
 using UnityEngine;
 
+using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 
@@ -22,45 +23,34 @@ namespace RTFunctions.Patchers
 		[HarmonyPrefix]
 		static bool CreateBackgroundObject(BackgroundManager __instance, ref GameObject __result, DataManager.GameData.BackgroundObject __0)
 		{
-			int index = DataManager.inst.gameData.backgroundObjects.IndexOf(__0);
-			float scaleZ = 10f;
-			int depth = 9;
-			Objects.BackgroundObject newBG = null;
-			if (index != -1 && index < Objects.backgroundObjects.Count)
-            {
-				newBG = Objects.backgroundObjects[index];
-				scaleZ = newBG.zscale;
-				depth = newBG.depth;
-			}
+			var backgroundObject = (BackgroundObject)__0;
+
+			float scaleZ = backgroundObject.zscale;
+			int depth = backgroundObject.depth;
 
 			var gameObject = Instantiate(__instance.backgroundPrefab, new Vector3(__0.pos.x, __0.pos.y, (float)(32 + __0.layer * 10)), Quaternion.identity);
 			gameObject.name = __0.name;
-			//gameObject.isStatic = true;
 			gameObject.layer = 9;
 			gameObject.transform.SetParent(__instance.backgroundParent);
 			gameObject.transform.localScale = new Vector3(__0.scale.x, __0.scale.y, scaleZ);
-			gameObject.transform.localRotation = Quaternion.Euler(new Vector3(newBG == null ? 0f : newBG.rotation.x, newBG == null ? 0f : newBG.rotation.y, __0.rot));
+			gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, __0.rot));
 
 			gameObject.GetComponent<SelectBackgroundInEditor>().obj = __instance.backgroundObjects.Count;
 			__instance.backgroundObjects.Add(gameObject);
 
-			if (newBG != null)
-			{
-				newBG.gameObjects.Clear();
-				newBG.transforms.Clear();
-				newBG.renderers.Clear();
+				backgroundObject.gameObjects.Clear();
+				backgroundObject.transforms.Clear();
+				backgroundObject.renderers.Clear();
 
-				newBG.gameObjects.Add(gameObject);
-				newBG.transforms.Add(gameObject.transform);
-				newBG.renderers.Add(gameObject.GetComponent<Renderer>());
-			}
+				backgroundObject.gameObjects.Add(gameObject);
+				backgroundObject.transforms.Add(gameObject.transform);
+				backgroundObject.renderers.Add(gameObject.GetComponent<Renderer>());
 
 			if (__0.drawFade)
 			{
 				for (int i = 1; i < depth - __0.layer; i++)
 				{
 					var gameObject2 = Instantiate(__instance.backgroundFadePrefab, Vector3.zero, Quaternion.identity);
-					//gameObject2.isStatic = true;
 					gameObject2.name = $"{__0.name} Fade [{i}]";
 
 					gameObject2.transform.SetParent(gameObject.transform);
@@ -69,16 +59,13 @@ namespace RTFunctions.Patchers
 					gameObject2.transform.localRotation = Quaternion.Euler(Vector3.zero);
 					gameObject2.layer = 9;
 
-					if (newBG != null)
-					{
-						newBG.gameObjects.Add(gameObject2);
-						newBG.transforms.Add(gameObject2.transform);
-						newBG.renderers.Add(gameObject2.GetComponent<Renderer>());
-					}
+					backgroundObject.gameObjects.Add(gameObject2);
+					backgroundObject.transforms.Add(gameObject2.transform);
+					backgroundObject.renderers.Add(gameObject2.GetComponent<Renderer>());
 				}
 			}
 
-			newBG.SetShape(newBG.shape.Type, newBG.shape.Option);
+			backgroundObject.SetShape(backgroundObject.shape.Type, backgroundObject.shape.Option);
 
 			__result = gameObject;
 			return false;
@@ -99,7 +86,7 @@ namespace RTFunctions.Patchers
 				int num = 0;
 				foreach (var bg in Objects.backgroundObjects)
                 {
-					var backgroundObject = bg.bg;
+					var backgroundObject = bg;
 
 					var beatmapTheme = RTHelpers.BeatmapTheme;
 

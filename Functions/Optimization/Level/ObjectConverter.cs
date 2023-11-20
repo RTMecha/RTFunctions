@@ -61,25 +61,25 @@ namespace RTFunctions.Functions.Optimization.Level
             foreach (BeatmapObject beatmapObject in beatmapObjects.Values)
             {
                 CachedSequences collection = new CachedSequences();
-                if (beatmapObject.events[0][0].eventValues.Length > 2)
-                {
+                //if (beatmapObject.events[0][0].eventValues.Length > 2)
+                //{
                     collection = new CachedSequences()
                     {
                         Position3DSequence = GetVector3Sequence(beatmapObject.events[0], new Vector3Keyframe(0.0f, Vector3.zero, Ease.Linear)),
                         ScaleSequence = GetVector2Sequence(beatmapObject.events[1], new Vector2Keyframe(0.0f, Vector2.one, Ease.Linear)),
                         RotationSequence = GetFloatSequence(beatmapObject.events[2], new FloatKeyframe(0.0f, 0.0f, Ease.Linear), true)
                     };
-                }
-                else
-                {
-                    Debug.Log($"{Updater.className}Position does not include Z axis so I know not to remove this.");
-                    collection = new CachedSequences()
-                    {
-                        PositionSequence = GetVector2Sequence(beatmapObject.events[0], new Vector2Keyframe(0.0f, Vector2.zero, Ease.Linear)),
-                        ScaleSequence = GetVector2Sequence(beatmapObject.events[1], new Vector2Keyframe(0.0f, Vector2.one, Ease.Linear)),
-                        RotationSequence = GetFloatSequence(beatmapObject.events[2], new FloatKeyframe(0.0f, 0.0f, Ease.Linear), true)
-                    };
-                }
+                //}
+                //else
+                //{
+                //    Debug.Log($"{Updater.className}Position does not include Z axis so I know not to remove this.");
+                //    collection = new CachedSequences()
+                //    {
+                //        PositionSequence = GetVector2Sequence(beatmapObject.events[0], new Vector2Keyframe(0.0f, Vector2.zero, Ease.Linear)),
+                //        ScaleSequence = GetVector2Sequence(beatmapObject.events[1], new Vector2Keyframe(0.0f, Vector2.one, Ease.Linear)),
+                //        RotationSequence = GetFloatSequence(beatmapObject.events[2], new FloatKeyframe(0.0f, 0.0f, Ease.Linear), true)
+                //    };
+                //}
 
                 // Empty objects don't need a color sequence, so it is not cached
                 if (beatmapObject.objectType != ObjectType.Empty)
@@ -106,23 +106,23 @@ namespace RTFunctions.Functions.Optimization.Level
                 cachedSequences.Add(beatmapObject.id, collection);
             }
 
-            if (!cachedSequences.ContainsKey("CAMERA_PARENT"))
-            {
-                CachedSequences collection = new CachedSequences();
-                collection = new CachedSequences
-                {
-                    PositionSequence = GetVector2Sequence(gameData.eventObjects.allEvents[0], new Vector2Keyframe(0.0f, Vector2.zero, Ease.Linear)),
-                    OpacitySequence = GetFloatSequence(gameData.eventObjects.allEvents[1], new FloatKeyframe(0.0f, 0.0f, Ease.Linear)),
-                    RotationSequence = GetFloatSequence(gameData.eventObjects.allEvents[2], new FloatKeyframe(0.0f, 0.0f, Ease.Linear)),
-                };
-            }
+            //if (!cachedSequences.ContainsKey("CAMERA_PARENT"))
+            //{
+            //    CachedSequences collection = new CachedSequences();
+            //    collection = new CachedSequences
+            //    {
+            //        PositionSequence = GetVector2Sequence(gameData.eventObjects.allEvents[0], new Vector2Keyframe(0.0f, Vector2.zero, Ease.Linear)),
+            //        OpacitySequence = GetFloatSequence(gameData.eventObjects.allEvents[1], new FloatKeyframe(0.0f, 0.0f, Ease.Linear)),
+            //        RotationSequence = GetFloatSequence(gameData.eventObjects.allEvents[2], new FloatKeyframe(0.0f, 0.0f, Ease.Linear)),
+            //    };
+            //}
         }
 
         public IEnumerable<ILevelObject> ToLevelObjects()
         {
-            foreach (BeatmapObject beatmapObject in gameData.beatmapObjects)
+            foreach (var beatmapObject in gameData.beatmapObjects)
             {
-                if (beatmapObject.objectType == ObjectType.Empty)
+                if (beatmapObject.objectType == ObjectType.Empty || !(beatmapObject is Data.BeatmapObject) || ((Data.BeatmapObject)beatmapObject).LDM && FunctionsPlugin.LDM.Value)
                 {
                     continue;
                 }
@@ -154,29 +154,27 @@ namespace RTFunctions.Functions.Optimization.Level
 
         public ILevelObject ToILevelObject(BeatmapObject beatmapObject)
         {
-            if (beatmapObject.objectType != ObjectType.Empty)
+            if (beatmapObject.objectType == ObjectType.Empty || !(beatmapObject is Data.BeatmapObject) || ((Data.BeatmapObject)beatmapObject).LDM && FunctionsPlugin.LDM.Value)
+                return null;
+
+            LevelObject levelObject = null;
+
+            try
             {
-                LevelObject levelObject = null;
-
-                try
-                {
-                    levelObject = ToLevelObject(beatmapObject);
-                }
-                catch (Exception e)
-                {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    stringBuilder.AppendLine($"{Updater.className}Failed to convert object '{beatmapObject.id}' to {nameof(LevelObject)}.");
-                    stringBuilder.AppendLine($"Exception: {e.Message}");
-                    stringBuilder.AppendLine(e.StackTrace);
-
-                    Debug.LogError(stringBuilder.ToString());
-                }
-
-                if (levelObject != null)
-                    return levelObject;
-
-                //return ToLevelObject(beatmapObject);
+                levelObject = ToLevelObject(beatmapObject);
             }
+            catch (Exception e)
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.AppendLine($"{Updater.className}Failed to convert object '{beatmapObject.id}' to {nameof(LevelObject)}.");
+                stringBuilder.AppendLine($"Exception: {e.Message}");
+                stringBuilder.AppendLine(e.StackTrace);
+
+                Debug.LogError(stringBuilder.ToString());
+            }
+
+            if (levelObject != null)
+                return levelObject;
             return null;
         }
 
@@ -197,7 +195,7 @@ namespace RTFunctions.Functions.Optimization.Level
 
             GameObject visualObject = baseObject.transform.GetChild(0).gameObject;
             visualObject.transform.localPosition = new Vector3(beatmapObject.origin.x, beatmapObject.origin.y, beatmapObject.Depth * 0.1f);
-            //visualObject.name = "Visual [ " + beatmapObject.id + " ]";
+            //visualObject.transform.localPosition = new Vector3(beatmapObject.origin.x, beatmapObject.origin.y, 0f);
             visualObject.name = "Visual [ " + beatmapObject.name + " ]";
 
             int num = 0;
@@ -625,7 +623,8 @@ namespace RTFunctions.Functions.Optimization.Level
                             ParentOffsetRotation = beatmapObject.getParentOffset(2),
 
                             GameObject = gameObject,
-                            Transform = gameObject.transform
+                            Transform = gameObject.transform,
+                            ID = beatmapObject.id
                         };
                     }
                     else
@@ -700,10 +699,10 @@ namespace RTFunctions.Functions.Optimization.Level
         {
             List<IKeyframe<Vector3>> keyframes = new List<IKeyframe<Vector3>>(eventKeyframes.Count);
 
-            Vector3 currentValue = Vector3.zero;
-            foreach (EventKeyframe eventKeyframe in eventKeyframes)
+            var currentValue = Vector3.zero;
+            foreach (var eventKeyframe in eventKeyframes)
             {
-                Vector3 value = new Vector3(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1], eventKeyframe.eventValues[2]);
+                var value = new Vector3(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1], eventKeyframe.eventValues.Length > 2 ? eventKeyframe.eventValues[2] : 0f);
                 if (eventKeyframe.random != 0)
                 {
                     Vector2 random = ObjectManager.inst.RandomVector2Parser(eventKeyframe);
@@ -711,7 +710,10 @@ namespace RTFunctions.Functions.Optimization.Level
                     value.y = random.y;
                 }
 
-                currentValue = relative ? currentValue + value : value;
+                if (eventKeyframe is Data.EventKeyframe)
+                    currentValue = ((Data.EventKeyframe)eventKeyframe).relative ? currentValue + value : value;
+                else
+                    currentValue = relative ? currentValue + value : value;
 
                 keyframes.Add(new Vector3Keyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
             }
@@ -729,10 +731,10 @@ namespace RTFunctions.Functions.Optimization.Level
         {
             List<IKeyframe<Vector2>> keyframes = new List<IKeyframe<Vector2>>(eventKeyframes.Count);
 
-            Vector2 currentValue = Vector2.zero;
+            var currentValue = Vector2.zero;
             foreach (EventKeyframe eventKeyframe in eventKeyframes)
             {
-                Vector2 value = new Vector2(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1]);
+                var value = new Vector2(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1]);
                 if (eventKeyframe.random != 0)
                 {
                     Vector2 random = ObjectManager.inst.RandomVector2Parser(eventKeyframe);
@@ -740,7 +742,10 @@ namespace RTFunctions.Functions.Optimization.Level
                     value.y = random.y;
                 }
 
-                currentValue = relative ? currentValue + value : value;
+                if (eventKeyframe is Data.EventKeyframe)
+                    currentValue = ((Data.EventKeyframe)eventKeyframe).relative ? currentValue + value : value;
+                else
+                    currentValue = relative ? currentValue + value : value;
 
                 keyframes.Add(new Vector2Keyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
             }
@@ -758,16 +763,19 @@ namespace RTFunctions.Functions.Optimization.Level
         {
             List<IKeyframe<float>> keyframes = new List<IKeyframe<float>>(eventKeyframes.Count);
 
-            float currentValue = 0.0f;
+            var currentValue = 0f;
             foreach (EventKeyframe eventKeyframe in eventKeyframes)
             {
-                float value = eventKeyframe.eventValues[0];
+                var value = eventKeyframe.eventValues[0];
                 if (eventKeyframe.random != 0)
                 {
                     value = ObjectManager.inst.RandomFloatParser(eventKeyframe);
                 }
 
-                currentValue = relative ? currentValue + value : value;
+                if (eventKeyframe is Data.EventKeyframe)
+                    currentValue = ((Data.EventKeyframe)eventKeyframe).relative ? currentValue + value : value;
+                else
+                    currentValue = relative ? currentValue + value : value;
 
                 keyframes.Add(new FloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
             }
@@ -794,7 +802,10 @@ namespace RTFunctions.Functions.Optimization.Level
                     value = ObjectManager.inst.RandomFloatParser(eventKeyframe);
                 }
 
-                currentValue = relative ? currentValue + value : value;
+                if (eventKeyframe is Data.EventKeyframe)
+                    currentValue = ((Data.EventKeyframe)eventKeyframe).relative ? currentValue + value : value;
+                else
+                    currentValue = relative ? currentValue + value : value;
 
                 keyframes.Add(new FloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
             }

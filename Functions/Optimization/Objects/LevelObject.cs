@@ -11,21 +11,32 @@ namespace RTFunctions.Functions.Optimization.Objects
 {
     public class LevelObject : Exists, ILevelObject
     {
-        public float StartTime { get; }
-        public float KillTime { get; }
+        public float StartTime { get; set; }
+        public float KillTime { get; set; }
 
         public string ID { get; }
-        readonly Sequence<Color> colorSequence;
-        readonly Sequence<float> opacitySequence;
-        readonly Sequence<float> hueSequence;
-        readonly Sequence<float> satSequence;
-        readonly Sequence<float> valSequence;
+        Sequence<Color> colorSequence;
+        Sequence<float> opacitySequence;
+        Sequence<float> hueSequence;
+        Sequence<float> satSequence;
+        Sequence<float> valSequence;
 
-        readonly float depth;
+        public float depth;
         public List<LevelParentObject> parentObjects;
         public readonly VisualObject visualObject;
 
         public readonly List<Transform> transformChain;
+
+        bool ParentTransformAdditive => true;
+
+        public void SetSequences(Sequence<Color> colorSequence, Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence)
+        {
+            this.colorSequence = colorSequence;
+            this.opacitySequence = opacitySequence;
+            this.hueSequence = hueSequence;
+            this.satSequence = satSequence;
+            this.valSequence = valSequence;
+        }
 
         public LevelObject(string _id, float startTime, float killTime, Sequence<Color> colorSequence, float depth, List<LevelParentObject> parentObjects, VisualObject visualObject, Sequence<float> _os, Sequence<float> _hs, Sequence<float> _ss, Sequence<float> _vs)
         {
@@ -70,7 +81,7 @@ namespace RTFunctions.Functions.Optimization.Objects
         public void SetActive(bool active)
         {
             if (parentObjects.Count > 0)
-                parentObjects[parentObjects.Count - 1].GameObject.SetActive(active);
+                parentObjects[parentObjects.Count - 1].GameObject?.SetActive(active);
         }
 
         public static Color ChangeColorHSV(Color color, float hue, float sat, float val)
@@ -182,9 +193,18 @@ namespace RTFunctions.Functions.Optimization.Objects
                 }
 
                 // Cache parent values to use for next parent
-                positionOffset = parentObject.ParentOffsetPosition;
-                scaleOffset = parentObject.ParentOffsetScale;
-                rotationOffset = parentObject.ParentOffsetRotation;
+                //if (ParentTransformAdditive)
+                //{
+                //    positionOffset += parentObject.ParentOffsetPosition;
+                //    scaleOffset += parentObject.ParentOffsetScale;
+                //    rotationOffset += parentObject.ParentOffsetRotation;
+                //}
+                //else
+                //{
+                    positionOffset = parentObject.ParentOffsetPosition;
+                    scaleOffset = parentObject.ParentOffsetScale;
+                    rotationOffset = parentObject.ParentOffsetRotation;
+                //}
 
                 animatePosition = parentObject.ParentAnimatePosition;
                 animateScale = parentObject.ParentAnimateScale;

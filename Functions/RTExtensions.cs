@@ -12,19 +12,22 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-using DG.Tweening;
-
 using LSFunctions;
 
 using RTFunctions.Enums;
+using RTFunctions.Functions.Animation;
+using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Optimization;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
+using EventKeyframe = DataManager.GameData.EventKeyframe;
+using Prefab = DataManager.GameData.Prefab;
+using PrefabObject = DataManager.GameData.PrefabObject;
+
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
 
 using Object = UnityEngine.Object;
 
@@ -151,6 +154,26 @@ namespace RTFunctions.Functions
 			}
 			result = null;
 			return false;
+		}
+
+		public static List<Transform> ChildList(this Transform transform)
+        {
+			var list = new List<Transform>();
+			foreach (var obj in transform)
+				list.Add((Transform)obj);
+			return list;
+		}
+
+		public static void DeleteChildren(this Transform tf, bool instant = false) => LSHelpers.DeleteChildren(tf, instant);
+
+		public static GameObject Duplicate(this GameObject gameObject, Transform parent)
+		{
+			var copy = Object.Instantiate(gameObject);
+			copy.transform.SetParent(parent);
+			copy.transform.localPosition = gameObject.transform.localPosition;
+			copy.transform.localScale = gameObject.transform.localScale;
+
+			return copy;
 		}
 
 		#endregion
@@ -373,11 +396,76 @@ namespace RTFunctions.Functions
 			return prefabs[_s].options[_so];
 		}
 
-		#endregion
+		public static Prefab GetPrefab(this PrefabObject prefabObject) => DataManager.inst.gameData.prefabs.Find(x => x.ID == prefabObject.prefabID);
 
-		#region Catalyst
-		
-		[Obsolete("Editor Catalyst is fully implemented with RTFunctions, no need to use this.")]
+		public static List<T> Clone<T>(this List<T> list)
+        {
+			var array = new T[list.Count];
+			list.CopyTo(array);
+			return array.ToList();
+        }
+
+		public static T[] Copy<T>(this T[] ts)
+        {
+			var array = new T[ts.Length];
+			for (int i = 0; i < ts.Length; i++)
+				array[i] = ts[i];
+			return array;
+        }
+
+        public static float Interpolate(this BeatmapObject beatmapObject, int type, int value)
+        {
+            var time = AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime;
+
+            var nextKFIndex = beatmapObject.events[type].FindIndex(x => x.eventTime > time);
+
+            if (nextKFIndex >= 0)
+            {
+                var prevKFIndex = nextKFIndex - 1;
+                if (prevKFIndex < 0)
+                    prevKFIndex = 0;
+
+                var nextKF = beatmapObject.events[type][nextKFIndex];
+                var prevKF = beatmapObject.events[type][prevKFIndex];
+
+                var next = nextKF.eventValues[value];
+                var prev = prevKF.eventValues[value];
+
+                if (float.IsNaN(prev))
+                    prev = 0f;
+
+                if (float.IsNaN(next))
+                    next = 0f;
+
+                var x = RTMath.Lerp(prev, next, Ease.GetEaseFunction(nextKF.curveType.Name)(RTMath.InverseLerp(prevKF.eventTime, nextKF.eventTime, time)));
+
+                if (prevKFIndex == nextKFIndex)
+                    x = next;
+
+                if (float.IsNaN(x) || float.IsInfinity(x))
+                    x = next;
+
+                return x;
+            }
+            else
+            {
+                var x = beatmapObject.events[type][beatmapObject.events[type].Count - 1].eventValues[value];
+
+                if (float.IsNaN(x))
+                    x = 0f;
+
+                if (float.IsNaN(x) || float.IsInfinity(x))
+                    x = beatmapObject.events[type][beatmapObject.events[type].Count - 1].eventValues[value];
+
+                return x;
+            }
+        }
+
+        #endregion
+
+        #region Catalyst
+
+        [Obsolete("Editor Catalyst is fully implemented with RTFunctions, no need to use this.")]
 		public static object GetILevelObject(this BeatmapObject _beatmapObject) => null;
 
 		#endregion
@@ -497,6 +585,15 @@ namespace RTFunctions.Functions
 			return false;
         }
 
+        #endregion
+
+        #region Data Extensions
+
+		public static byte[] ToBytes(this string str) => Encoding.ASCII.GetBytes(str);
+		public static string ToString(this byte[] bytes) => Encoding.ASCII.GetString(bytes);
+
+		public static bool Has<T>(this List<T> ts, Predicate<T> predicate) => ts.Find(predicate) != null;
+
 		#endregion
 
 		#region Misc
@@ -535,6 +632,14 @@ namespace RTFunctions.Functions
 			i.m_PersistentCalls.m_Calls.Clear();
 			i.RemoveAllListeners();
 		}
+
+		public static void ClearAll(this InputField.SubmitEvent s)
+        {
+			s.m_Calls.m_ExecutingCalls.Clear();
+			s.m_Calls.m_PersistentCalls.Clear();
+			s.m_PersistentCalls.m_Calls.Clear();
+			s.RemoveAllListeners();
+        }
 		
 		public static void ClearAll(this Toggle.ToggleEvent i)
         {
@@ -543,6 +648,35 @@ namespace RTFunctions.Functions
 			i.m_PersistentCalls.m_Calls.Clear();
 			i.RemoveAllListeners();
 		}
+
+		public static void ClearAll(this Dropdown.DropdownEvent d)
+        {
+			d.m_Calls.m_ExecutingCalls.Clear();
+			d.m_Calls.m_PersistentCalls.Clear();
+			d.m_PersistentCalls.m_Calls.Clear();
+			d.RemoveAllListeners();
+        }
+
+		public static void NewValueChangedListener(this InputField i, string value, UnityAction<string> unityAction)
+        {
+			i.onValueChanged.ClearAll();
+			i.text = value;
+			i.onValueChanged.AddListener(unityAction);
+        }
+		
+		public static void NewValueChangedListener(this Toggle i, bool value, UnityAction<bool> unityAction)
+        {
+			i.onValueChanged.ClearAll();
+			i.isOn = value;
+			i.onValueChanged.AddListener(unityAction);
+        }
+		
+		public static void NewValueChangedListener(this Dropdown d, int value, UnityAction<int> unityAction)
+        {
+			d.onValueChanged.ClearAll();
+			d.value = value;
+			d.onValueChanged.AddListener(unityAction);
+        }
 
 		public static Component ReplaceComponent(this Component component, Component newComponent)
         {

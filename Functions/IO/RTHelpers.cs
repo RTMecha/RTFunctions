@@ -16,7 +16,7 @@ namespace RTFunctions.Functions.IO
     public static class RTHelpers
 	{
 		public static float perspectiveZoom = 1f;
-		public static string levelVersion = FunctionsPlugin.VersionNumber;
+		public static string levelVersion = FunctionsPlugin.VersionNumber.ToString();
 
         public static float screenScale;
 		public static float screenScaleInverse;
@@ -30,6 +30,11 @@ namespace RTFunctions.Functions.IO
 					beatmapTheme = EventEditor.inst.previewTheme;
 				return beatmapTheme;
 			}
+        }
+
+		public static void TestRun()
+        {
+			new TaskRunner().Run(TestRun);
         }
 
         public static float getPitch()

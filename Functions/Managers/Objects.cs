@@ -10,16 +10,18 @@ using UnityEngine;
 using TMPro;
 
 using RTFunctions.Functions.Components;
+using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Optimization;
 
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
 using EventKeyframe = DataManager.GameData.EventKeyframe;
 
-using OGBeatmapObject = DataManager.GameData.BeatmapObject;
-using OGPrefab = DataManager.GameData.Prefab;
-using OGPrefabObject = DataManager.GameData.PrefabObject;
-using OGBackground = DataManager.GameData.BackgroundObject;
+using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using BasePrefab = DataManager.GameData.Prefab;
+using BasePrefabObject = DataManager.GameData.PrefabObject;
+using BaseBackground = DataManager.GameData.BackgroundObject;
+using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 
 namespace RTFunctions.Functions.Managers
 {
@@ -9898,134 +9900,110 @@ namespace RTFunctions.Functions.Managers
 
         public static Dictionary<string, PrefabObject> prefabObjects = new Dictionary<string, PrefabObject>();
 
-        public static List<OGBeatmapObject> beatmapObjects = new List<OGBeatmapObject>();
+        public static List<BaseBeatmapObject> beatmapObjects = new List<BaseBeatmapObject>();
 
-        public class BeatmapObject
+        //public class BeatmapObject
+        //{
+        //    public BeatmapObject(OGBeatmapObject bo)
+        //    {
+        //        this.bo = bo;
+        //    }
+
+        //    public OGBeatmapObject bo;
+
+        //    public List<object> modifiers = new List<object>();
+        //}
+
+        public static void Test()
         {
-            public BeatmapObject(OGBeatmapObject bo)
-            {
-                this.bo = bo;
-            }
-
-            public OGBeatmapObject bo;
-
-            public List<object> modifiers = new List<object>();
+            DataManager.inst.gameData.beatmapObjects.Add(new BeatmapObject());
         }
 
-        public class BackgroundObject : Exists
-        {
-            public BackgroundObject(OGBackground bg)
-            {
-                this.bg = bg;
-                shape = Shapes3D[0];
-            }
+        //public class BackgroundObject : Exists
+        //{
+        //    public BackgroundObject(BaseBackground bg)
+        //    {
+        //        this.bg = bg;
+        //        shape = Shapes3D[0];
+        //    }
 
-            public static BackgroundObject DeepCopy(BackgroundObject og)
-            {
-                var bg = new BackgroundObject(og.bg);
-                bg.depth = og.depth;
-                bg.shape = og.shape;
-                bg.zscale = og.zscale;
-                bg.rotation = og.rotation;
+        //    public static BackgroundObject DeepCopy(BackgroundObject og)
+        //    {
+        //        var bg = new BackgroundObject(og.bg);
+        //        bg.depth = og.depth;
+        //        bg.shape = og.shape;
+        //        bg.zscale = og.zscale;
+        //        bg.rotation = og.rotation;
 
-                bg.reactiveCol = og.reactiveCol;
-                bg.reactiveColSample = og.reactiveColSample;
-                bg.reactiveColIntensity = og.reactiveColIntensity;
-                bg.reactivePosSamples = og.reactivePosSamples;
-                bg.reactivePosIntensity = og.reactivePosIntensity;
-                bg.reactiveRotSample = og.reactiveRotSample;
-                bg.reactiveRotIntensity = og.reactiveRotIntensity;
-                bg.reactiveScaSamples = og.reactiveScaSamples;
-                bg.reactiveScaIntensity = og.reactiveScaIntensity;
-                bg.reactiveZIntensity = og.reactiveZIntensity;
-                bg.reactiveZSample = og.reactiveZSample;
-                return bg;
-            }
+        //        bg.reactiveCol = og.reactiveCol;
+        //        bg.reactiveColSample = og.reactiveColSample;
+        //        bg.reactiveColIntensity = og.reactiveColIntensity;
+        //        bg.reactivePosSamples = og.reactivePosSamples;
+        //        bg.reactivePosIntensity = og.reactivePosIntensity;
+        //        bg.reactiveRotSample = og.reactiveRotSample;
+        //        bg.reactiveRotIntensity = og.reactiveRotIntensity;
+        //        bg.reactiveScaSamples = og.reactiveScaSamples;
+        //        bg.reactiveScaIntensity = og.reactiveScaIntensity;
+        //        bg.reactiveZIntensity = og.reactiveZIntensity;
+        //        bg.reactiveZSample = og.reactiveZSample;
+        //        return bg;
+        //    }
 
-            public void SetShape(int shape)
-            {
-                this.shape = Shape.DeepCopy(Shapes3D[shape]);
-                foreach (var gameObject in gameObjects)
-                {
-                    if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
-                        meshFilter.mesh = this.shape.mesh;
-                }
-            }
+        //    public void SetShape(int shape)
+        //    {
+        //        this.shape = Shape.DeepCopy(Shapes3D[shape]);
+        //        foreach (var gameObject in gameObjects)
+        //        {
+        //            if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
+        //                meshFilter.mesh = this.shape.mesh;
+        //        }
+        //    }
             
-            public void SetShape(int shape, int shapeOption)
-            {
-                this.shape = Shape.DeepCopy(GetShape3D(shape, shapeOption));
-                foreach (var gameObject in gameObjects)
-                {
-                    if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
-                        meshFilter.mesh = this.shape.mesh;
-                }
-            }
+        //    public void SetShape(int shape, int shapeOption)
+        //    {
+        //        this.shape = Shape.DeepCopy(GetShape3D(shape, shapeOption));
+        //        foreach (var gameObject in gameObjects)
+        //        {
+        //            if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
+        //                meshFilter.mesh = this.shape.mesh;
+        //        }
+        //    }
 
-            public OGBackground bg;
+        //    public BaseBackground bg;
 
-            public GameObject BaseObject => gameObjects[0];
+        //    public GameObject BaseObject => gameObjects[0];
 
-            public List<GameObject> gameObjects = new List<GameObject>();
-            public List<Transform> transforms = new List<Transform>();
-            public List<Renderer> renderers = new List<Renderer>();
+        //    public List<GameObject> gameObjects = new List<GameObject>();
+        //    public List<Transform> transforms = new List<Transform>();
+        //    public List<Renderer> renderers = new List<Renderer>();
 
-            public Vector2Int reactivePosSamples;
-            public Vector2Int reactiveScaSamples;
-            public int reactiveRotSample;
-            public int reactiveColSample;
-            public int reactiveCol;
+        //    public Vector2Int reactivePosSamples;
+        //    public Vector2Int reactiveScaSamples;
+        //    public int reactiveRotSample;
+        //    public int reactiveColSample;
+        //    public int reactiveCol;
 
-            public Vector2 reactivePosIntensity;
-            public Vector2 reactiveScaIntensity;
-            public float reactiveRotIntensity;
-            public float reactiveColIntensity;
+        //    public Vector2 reactivePosIntensity;
+        //    public Vector2 reactiveScaIntensity;
+        //    public float reactiveRotIntensity;
+        //    public float reactiveColIntensity;
 
-            public Vector2 rotation = Vector2.zero;
-            public Shape shape;
-            public float zscale = 10f;
-            public int depth = 9;
-            int fadeColor;
-            public int FadeColor
-            {
-                get => Mathf.Clamp(fadeColor, 0, 8);
-                set => fadeColor = Mathf.Clamp(value, 0, 8);
-            }
+        //    public Vector2 rotation = Vector2.zero;
+        //    public Shape shape;
+        //    public float zscale = 10f;
+        //    public int depth = 9;
+        //    int fadeColor;
+        //    public int FadeColor
+        //    {
+        //        get => Mathf.Clamp(fadeColor, 0, 8);
+        //        set => fadeColor = Mathf.Clamp(value, 0, 8);
+        //    }
 
-            public bool reactiveIncludesZ;
-            public float reactiveZIntensity;
-            public int reactiveZSample;
-        }
+        //    public bool reactiveIncludesZ;
+        //    public float reactiveZIntensity;
+        //    public int reactiveZSample;
+        //}
 
-        public class PrefabObject : Exists
-        {
-            public PrefabObject(OGPrefabObject prefabObject)
-            {
-                this.prefabObject = prefabObject;
-            }
-
-            public OGPrefabObject prefabObject;
-            public Dictionary<string, object> modifiers = new Dictionary<string, object>();
-            public float speed = 1f;
-        }
-
-        public class Prefab : Exists
-        {
-            public Prefab(OGPrefab prefab)
-            {
-                this.prefab = prefab;
-            }
-
-            public static Prefab DeepCopy(Prefab og) => new Prefab(og.prefab)
-            {
-                prefab = og.prefab,
-                modifiers = og.modifiers,
-            };
-
-            public OGPrefab prefab;
-
-            public List<OGBeatmapObject> objects = new List<OGBeatmapObject>();
-            public Dictionary<string, object> modifiers = new Dictionary<string, object>();
-        }
+        
     }
 }
