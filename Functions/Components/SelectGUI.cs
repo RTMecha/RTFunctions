@@ -9,7 +9,7 @@ using UnityEngine.EventSystems;
 
 using LSFunctions;
 
-namespace EditorManagement.Functions.Components
+namespace RTFunctions.Functions.Components
 {
     public class SelectGUI : MonoBehaviour, IEventSystemHandler, IPointerDownHandler, IPointerUpHandler
     {
@@ -26,7 +26,7 @@ namespace EditorManagement.Functions.Components
 
         public void OnPointerUp(PointerEventData eventData)
         {
-            if (DragGUI && !OverrideDrag)
+            if (DragGUI || OverrideDrag)
             {
                 AudioManager.inst.PlaySound("blip");
                 target.localScale = new Vector3(1f, 1f, 1f);
@@ -36,7 +36,7 @@ namespace EditorManagement.Functions.Components
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (DragGUI && !OverrideDrag)
+            if (DragGUI || OverrideDrag)
             {
                 if (!Input.GetMouseButtonDown(2))
                 {

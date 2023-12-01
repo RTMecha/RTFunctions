@@ -25,6 +25,19 @@ namespace RTFunctions.Functions.Managers
                 _image.sprite = ArcadeManager.inst.defaultImage;
             }, _textureFormat));
         }
+        
+        public static Sprite GetSprite(string _path, TextureFormat _textureFormat = TextureFormat.ARGB32)
+        {
+            Sprite result = null;
+            inst.StartCoroutine(GetSprite(_path, Vector2.zero, delegate (Sprite sprite)
+            {
+                result = sprite;
+            }, delegate (string onError)
+            {
+                result = ArcadeManager.inst.defaultImage;
+            }, _textureFormat));
+            return result;
+        }
 
         public static IEnumerator GetSprite(string _path, Vector2 _limits, Action<Sprite> callback, Action<string> onError, TextureFormat _textureFormat = TextureFormat.ARGB32)
         {

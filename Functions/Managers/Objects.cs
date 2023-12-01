@@ -29,7 +29,7 @@ namespace RTFunctions.Functions.Managers
     {
         public static Objects inst;
 
-        public bool active = false;
+        public static Dictionary<string, Sprite> shapeSprites = new Dictionary<string, Sprite>();
 
         void Awake() => inst = this;
 
@@ -9892,118 +9892,5 @@ namespace RTFunctions.Functions.Managers
 
         public static Shape GetShape(int shape, int shapeOption) => Shapes.Find(x => x.Type == shape && x.Option == shapeOption);
         public static Shape GetShape3D(int shape, int shapeOption) => Shapes3D.Find(x => x.Type == shape && x.Option == shapeOption);
-
-        public static List<BackgroundObject> backgroundObjects = new List<BackgroundObject>();
-
-        public static List<Prefab> prefabs = new List<Prefab>();
-        public static List<Prefab> externalPrefabs = new List<Prefab>();
-
-        public static Dictionary<string, PrefabObject> prefabObjects = new Dictionary<string, PrefabObject>();
-
-        public static List<BaseBeatmapObject> beatmapObjects = new List<BaseBeatmapObject>();
-
-        //public class BeatmapObject
-        //{
-        //    public BeatmapObject(OGBeatmapObject bo)
-        //    {
-        //        this.bo = bo;
-        //    }
-
-        //    public OGBeatmapObject bo;
-
-        //    public List<object> modifiers = new List<object>();
-        //}
-
-        public static void Test()
-        {
-            DataManager.inst.gameData.beatmapObjects.Add(new BeatmapObject());
-        }
-
-        //public class BackgroundObject : Exists
-        //{
-        //    public BackgroundObject(BaseBackground bg)
-        //    {
-        //        this.bg = bg;
-        //        shape = Shapes3D[0];
-        //    }
-
-        //    public static BackgroundObject DeepCopy(BackgroundObject og)
-        //    {
-        //        var bg = new BackgroundObject(og.bg);
-        //        bg.depth = og.depth;
-        //        bg.shape = og.shape;
-        //        bg.zscale = og.zscale;
-        //        bg.rotation = og.rotation;
-
-        //        bg.reactiveCol = og.reactiveCol;
-        //        bg.reactiveColSample = og.reactiveColSample;
-        //        bg.reactiveColIntensity = og.reactiveColIntensity;
-        //        bg.reactivePosSamples = og.reactivePosSamples;
-        //        bg.reactivePosIntensity = og.reactivePosIntensity;
-        //        bg.reactiveRotSample = og.reactiveRotSample;
-        //        bg.reactiveRotIntensity = og.reactiveRotIntensity;
-        //        bg.reactiveScaSamples = og.reactiveScaSamples;
-        //        bg.reactiveScaIntensity = og.reactiveScaIntensity;
-        //        bg.reactiveZIntensity = og.reactiveZIntensity;
-        //        bg.reactiveZSample = og.reactiveZSample;
-        //        return bg;
-        //    }
-
-        //    public void SetShape(int shape)
-        //    {
-        //        this.shape = Shape.DeepCopy(Shapes3D[shape]);
-        //        foreach (var gameObject in gameObjects)
-        //        {
-        //            if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
-        //                meshFilter.mesh = this.shape.mesh;
-        //        }
-        //    }
-            
-        //    public void SetShape(int shape, int shapeOption)
-        //    {
-        //        this.shape = Shape.DeepCopy(GetShape3D(shape, shapeOption));
-        //        foreach (var gameObject in gameObjects)
-        //        {
-        //            if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
-        //                meshFilter.mesh = this.shape.mesh;
-        //        }
-        //    }
-
-        //    public BaseBackground bg;
-
-        //    public GameObject BaseObject => gameObjects[0];
-
-        //    public List<GameObject> gameObjects = new List<GameObject>();
-        //    public List<Transform> transforms = new List<Transform>();
-        //    public List<Renderer> renderers = new List<Renderer>();
-
-        //    public Vector2Int reactivePosSamples;
-        //    public Vector2Int reactiveScaSamples;
-        //    public int reactiveRotSample;
-        //    public int reactiveColSample;
-        //    public int reactiveCol;
-
-        //    public Vector2 reactivePosIntensity;
-        //    public Vector2 reactiveScaIntensity;
-        //    public float reactiveRotIntensity;
-        //    public float reactiveColIntensity;
-
-        //    public Vector2 rotation = Vector2.zero;
-        //    public Shape shape;
-        //    public float zscale = 10f;
-        //    public int depth = 9;
-        //    int fadeColor;
-        //    public int FadeColor
-        //    {
-        //        get => Mathf.Clamp(fadeColor, 0, 8);
-        //        set => fadeColor = Mathf.Clamp(value, 0, 8);
-        //    }
-
-        //    public bool reactiveIncludesZ;
-        //    public float reactiveZIntensity;
-        //    public int reactiveZSample;
-        //}
-
-        
     }
 }

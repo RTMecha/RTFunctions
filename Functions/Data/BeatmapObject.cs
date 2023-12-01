@@ -164,6 +164,8 @@ namespace RTFunctions.Functions.Data
 
             public object Result { get; set; }
 
+			public bool hasChanged;
+
 			#region Methods
 
 			public static Modifier DeepCopy(Modifier orig)
@@ -202,6 +204,25 @@ namespace RTFunctions.Functions.Data
 				return modifier;
             }
 
+			public JSONNode ToJSON()
+            {
+				var jn = JSON.Parse("{}");
+
+				jn["type"] = (int)type;
+
+				if (not)
+					jn["not"] = not.ToString();
+
+				for (int j = 0; j < commands.Count; j++)
+					jn["commands"][j] = commands[j];
+
+				jn["value"] = value;
+
+				jn["const"] = constant.ToString();
+
+				return jn;
+			}
+
 			#endregion
 		}
 
@@ -234,7 +255,10 @@ namespace RTFunctions.Functions.Data
             text = orig.text,
             LDM = orig.LDM,
             modifiers = orig.modifiers.Clone(),
-            integerVariable = copyVariables ? orig.integerVariable : 0,
+			events = orig.events.Clone(),
+			parentType = orig.parentType,
+			parentOffsets = orig.parentOffsets,
+			integerVariable = copyVariables ? orig.integerVariable : 0,
             floatVariable = copyVariables ? orig.floatVariable : 0f,
             stringVariable = copyVariables ? orig.stringVariable : ""
         };
@@ -256,15 +280,12 @@ namespace RTFunctions.Functions.Data
 					var eventKeyframe = new EventKeyframe();
 					var kfjn = jn["events"]["pos"][i];
 
-					if (!string.IsNullOrEmpty(kfjn["id"]))
-						eventKeyframe.id = kfjn["id"];
+					eventKeyframe.id = !string.IsNullOrEmpty(kfjn["id"]) ? kfjn["id"] : LSText.randomNumString(8);
 
 					eventKeyframe.eventTime = kfjn["t"].AsFloat;
 
-					var curveType = DataManager.inst.AnimationList[0];
 					if (kfjn["ct"] != null)
-						curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-					eventKeyframe.curveType = curveType;
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
 
 					try
 					{
@@ -279,30 +300,12 @@ namespace RTFunctions.Functions.Data
 					{
 						eventKeyframe.SetEventValues(new float[]
 						{
+							// If all values end up as zero, then we definitely know Z axis didn't load for whatever reason.
 							0f,
 							0f,
 							0f
 						});
 					}
-
-					//if (!string.IsNullOrEmpty(kfjn["z"]))
-					//{
-					//	eventKeyframe.SetEventValues(new float[]
-					//	{
-					//		kfjn["x"].AsFloat,
-					//		kfjn["y"].AsFloat,
-					//		kfjn["z"].AsFloat
-					//	});
-					//}
-					//else
-					//{
-					//	eventKeyframe.SetEventValues(new float[]
-					//	{
-					//		kfjn["x"].AsFloat,
-					//		kfjn["y"].AsFloat,
-					//		0f
-					//	});
-					//}
 
 					eventKeyframe.random = kfjn["r"].AsInt;
 					eventKeyframe.SetEventRandomValues(new float[]
@@ -312,10 +315,7 @@ namespace RTFunctions.Functions.Data
 							kfjn["rz"].AsFloat
 					});
 
-					if (!string.IsNullOrEmpty(kfjn["rel"]))
-						eventKeyframe.relative = kfjn["rel"].AsBool;
-					else
-						eventKeyframe.relative = false;
+					eventKeyframe.relative = !string.IsNullOrEmpty(kfjn["rel"]) && kfjn["rel"].AsBool;
 
 					eventKeyframe.active = false;
 					events[0].Add(eventKeyframe);
@@ -327,15 +327,12 @@ namespace RTFunctions.Functions.Data
 					var eventKeyframe = new EventKeyframe();
 					var kfjn = jn["events"]["sca"][j];
 
-					if (!string.IsNullOrEmpty(kfjn["id"]))
-						eventKeyframe.id = kfjn["id"];
+					eventKeyframe.id = !string.IsNullOrEmpty(kfjn["id"]) ? kfjn["id"] : LSText.randomNumString(8);
 
 					eventKeyframe.eventTime = kfjn["t"].AsFloat;
 
-					var curveType = DataManager.inst.AnimationList[0];
 					if (kfjn["ct"] != null)
-						curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-					eventKeyframe.curveType = curveType;
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
 
 					eventKeyframe.SetEventValues(new float[]
 					{
@@ -351,10 +348,7 @@ namespace RTFunctions.Functions.Data
 						kfjn["rz"].AsFloat
 					});
 
-					if (!string.IsNullOrEmpty(kfjn["rel"]))
-						eventKeyframe.relative = kfjn["rel"].AsBool;
-					else
-						eventKeyframe.relative = false;
+					eventKeyframe.relative = !string.IsNullOrEmpty(kfjn["rel"]) && kfjn["rel"].AsBool;
 
 					eventKeyframe.active = false;
 					events[1].Add(eventKeyframe);
@@ -366,12 +360,12 @@ namespace RTFunctions.Functions.Data
 					var eventKeyframe = new EventKeyframe();
 					var kfjn = jn["events"]["rot"][k];
 
+					eventKeyframe.id = !string.IsNullOrEmpty(kfjn["id"]) ? kfjn["id"] : LSText.randomNumString(8);
+
 					eventKeyframe.eventTime = kfjn["t"].AsFloat;
 
-					var curveType = DataManager.inst.AnimationList[0];
 					if (kfjn["ct"] != null)
-						curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-					eventKeyframe.curveType = curveType;
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
 
 					eventKeyframe.SetEventValues(new float[]
 					{
@@ -386,10 +380,7 @@ namespace RTFunctions.Functions.Data
 						kfjn["rz"].AsFloat
 					});
 
-					if (!string.IsNullOrEmpty(kfjn["rel"]))
-						eventKeyframe.relative = kfjn["rel"].AsBool;
-					else
-						eventKeyframe.relative = true;
+					eventKeyframe.relative = !string.IsNullOrEmpty(kfjn["rel"]) && kfjn["rel"].AsBool;
 
 					eventKeyframe.active = false;
 					events[2].Add(eventKeyframe);
@@ -401,12 +392,12 @@ namespace RTFunctions.Functions.Data
 					var eventKeyframe = new EventKeyframe();
 					var kfjn = jn["events"]["col"][l];
 
+					eventKeyframe.id = !string.IsNullOrEmpty(kfjn["id"]) ? kfjn["id"] : LSText.randomNumString(8);
+
 					eventKeyframe.eventTime = kfjn["t"].AsFloat;
 
-					var curveType = DataManager.inst.AnimationList[0];
 					if (kfjn["ct"] != null)
-						curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-					eventKeyframe.curveType = curveType;
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
 
 					eventKeyframe.SetEventValues(new float[]
 					{
@@ -417,55 +408,20 @@ namespace RTFunctions.Functions.Data
 						kfjn["y2"].AsFloat,
 					});
 					
-					//if (!string.IsNullOrEmpty(kfjn["y"]) && !string.IsNullOrEmpty(kfjn["z"]))
-					//{
-					//	eventKeyframe.SetEventValues(new float[]
-					//	{
-					//		kfjn["x"].AsFloat,
-					//		kfjn["y"].AsFloat,
-					//		kfjn["z"].AsFloat,
-					//		kfjn["x2"].AsFloat,
-					//		kfjn["y2"].AsFloat,
-					//	});
-					//}
-					//else if (!string.IsNullOrEmpty(kfjn["y"]))
-					//{
-					//	eventKeyframe.SetEventValues(new float[]
-					//	{
-					//		kfjn["x"].AsFloat,
-					//		kfjn["y"].AsFloat,
-					//		0f,
-					//		0f,
-					//		0f
-					//	});
-					//}
-					//else
-					//{
-					//	eventKeyframe.SetEventValues(new float[]
-					//	{
-					//		kfjn["x"].AsFloat,
-					//		0f,
-					//		0f,
-					//		0f,
-					//		0f
-					//	});
-					//}
-
 					eventKeyframe.random = kfjn["r"].AsInt;
 					eventKeyframe.SetEventRandomValues(new float[]
 					{
 							kfjn["rx"].AsFloat
 					});
+
+					eventKeyframe.active = false;
 					events[3].Add(eventKeyframe);
 				}
 			}
 
 			beatmapObject.events = events;
 
-			if (jn["id"] != null)
-				beatmapObject.id = jn["id"];
-			else
-				beatmapObject.id = LSText.randomString(16);
+			beatmapObject.id = jn["id"] != null ? jn["id"] : LSText.randomString(16);
 
 			if (jn["piid"] != null)
 				beatmapObject.prefabInstanceID = jn["piid"];
@@ -478,8 +434,6 @@ namespace RTFunctions.Functions.Data
 
 			if (jn["pt"] != null)
 			{
-				//string pt = jn["pt"];
-				//AccessTools.Field(typeof(BeatmapObject), "parentType").SetValue(beatmapObject, pt);
 				beatmapObject.parentType = jn["pt"];
 			}
 
@@ -488,12 +442,9 @@ namespace RTFunctions.Functions.Data
 				beatmapObject.parentOffsets = new List<float>(from n in jn["po"].AsArray.Children
 															  select n.AsFloat).ToList();
 			}
-			//	AccessTools.Field(typeof(BeatmapObject), "parentOffsets").SetValue(beatmapObject, new List<float>(from n in jn["po"].AsArray.Children
-			//																									  select n.AsFloat).ToList());
 
 			if (jn["d"] != null)
 				beatmapObject.depth = jn["d"].AsInt;
-				//AccessTools.Field(typeof(BeatmapObject), "depth").SetValue(beatmapObject, jn["d"].AsInt);
 
 			if (jn["empty"] != null)
 				beatmapObject.objectType = jn["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal;
@@ -622,22 +573,7 @@ namespace RTFunctions.Functions.Data
 				jn["events"]["col"][i] = ((EventKeyframe)events[3][i]).ToJSON();
 
 			for (int i = 0; i < modifiers.Count; i++)
-			{
-				var modifier = modifiers[i];
-
-				jn["modifiers"][i]["type"] = (int)modifier.type;
-
-				if (modifier.not)
-					jn["modifiers"][i]["not"] = modifier.not.ToString();
-
-					var commands = modifier.commands;
-				for (int j = 0; j < commands.Count; j++)
-					jn["modifiers"][i]["commands"][j] = commands[j];
-
-				jn["modifiers"][i]["value"] = modifier.value;
-
-				jn["modifiers"][i]["const"] = modifier.constant.ToString();
-			}
+				jn["modifiers"][i] = modifiers[i].ToJSON();
 
 			return jn;
 		}

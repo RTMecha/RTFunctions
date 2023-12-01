@@ -63,7 +63,7 @@ namespace RTFunctions.Functions.Data
             random = eventKeyframe.random
         };
 
-        public static EventKeyframe Parse(JSONNode jn)
+        public static EventKeyframe Parse(JSONNode jn, int valueCount)
         {
             var eventKeyframe = new EventKeyframe();
 
@@ -79,8 +79,13 @@ namespace RTFunctions.Functions.Data
                 if (jn[axis[i]] != null)
                     eventValues.Add(jn[axis[i]].AsFloat);
 
-            eventKeyframe.SetEventValues(eventValues.ToArray());
+            while (eventValues.Count < valueCount)
+                eventValues.Add(0f);
 
+            while (eventValues.Count > valueCount)
+                eventValues.RemoveAt(eventValues.Count - 1);
+
+            eventKeyframe.SetEventValues(eventValues.ToArray());
 
             var eventRandomValues = new List<float>();
             for (int i = 0; i < raxis.Length; i++)

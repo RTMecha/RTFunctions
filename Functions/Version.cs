@@ -11,47 +11,50 @@ namespace RTFunctions.Functions
 {
     public struct Version
     {
-        public Version(int major, int minor, int patch, string iteration)
+        public Version(int major, int minor, int patch, string iteration, string buildDate)
         {
             Major = major;
             Minor = minor;
             Patch = patch;
             Iteration = iteration;
 
-            BuildDate = DateTime.Now.ToString("G");
+            //BuildDate = DateTime.Now.ToString("G");
+            BuildDate = buildDate;
         }
 
-        public Version(int major, int minor, int patch)
+        public Version(int major, int minor, int patch, string buildDate)
         {
             Major = major;
             Minor = minor;
             Patch = patch;
             Iteration = "";
 
-            BuildDate = DateTime.Now.ToString("G");
+            BuildDate = buildDate;
         }
 
-        public Version(string ver)
+        public Version(string ver, string buildDate)
         {
-            var list = ver.Split('.').ToList();
+            this = Parse(ver);
 
-            if (list.Count < 0)
-                throw new Exception("String must be correct format!");
+            //var list = ver.Split('.').ToList();
 
-            var major = int.Parse(list[0]);
-            var minor = int.Parse(list[1]);
-            var patch = int.Parse(list[2][0].ToString());
+            //if (list.Count < 0)
+            //    throw new Exception("String must be correct format!");
+
+            //var major = int.Parse(list[0]);
+            //var minor = int.Parse(list[1]);
+            //var patch = int.Parse(list[2][0].ToString());
             
-            Major = major;
-            Minor = minor;
-            Patch = patch;
+            //Major = major;
+            //Minor = minor;
+            //Patch = patch;
 
-            if (list[2].Length > 1)
-                Iteration = list[2][1].ToString();
-            else
-                Iteration = "";
+            //if (list[2].Length > 1)
+            //    Iteration = list[2][1].ToString();
+            //else
+            //    Iteration = "";
 
-            BuildDate = DateTime.Now.ToString("G");
+            BuildDate = buildDate;
         }
 
         public int Major { get; set; }
@@ -121,6 +124,26 @@ namespace RTFunctions.Functions
             Patch = other.Patch,
             Iteration = other.Iteration
         };
+
+        public static Version Parse(string ver)
+        {
+            var list = ver.Split('.').ToList();
+
+            if (list.Count < 0)
+                throw new Exception("String must be correct format!");
+
+            var major = int.Parse(list[0]);
+            var minor = int.Parse(list[1]);
+            var patch = int.Parse(list[2][0].ToString());
+
+            string iteration;
+            if (list[2].Length > 1)
+                iteration = list[2][1].ToString();
+            else
+                iteration = "";
+
+            return new Version(major, minor, patch, iteration);
+        }
 
         #region Operators
 

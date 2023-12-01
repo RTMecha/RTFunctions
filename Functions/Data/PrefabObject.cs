@@ -233,5 +233,20 @@ namespace RTFunctions.Functions.Data
         }
 
         #endregion
+
+        #region Operators
+
+        public static implicit operator bool(PrefabObject exists) => exists != null;
+
+        //public static bool operator ==(BeatmapObject a, BeatmapObject b) => a && b && a.id == b.id;
+        //public static bool operator !=(BeatmapObject a, BeatmapObject b) => !a || !b || a && b && a.id != b.id;
+
+        public override bool Equals(object obj) => obj is PrefabObject && this == (PrefabObject)obj;
+
+        public override string ToString() => ID;
+
+        public override int GetHashCode() => base.GetHashCode();
+
+        #endregion
     }
 }

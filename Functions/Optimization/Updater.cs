@@ -301,7 +301,7 @@ namespace RTFunctions.Functions.Optimization
             }
         }
 
-        public static void UpdatePrefab(PrefabObject prefabObject, bool reinsert)
+        public static void UpdatePrefab(PrefabObject prefabObject, bool reinsert = true)
         {
             if (DataManager.inst.gameData.beatmapObjects.FindAll(x => x.prefabInstanceID == prefabObject.ID).Count < 0 && reinsert)
                 ObjectManager.inst.AddPrefabToLevel(prefabObject);

@@ -89,7 +89,7 @@ namespace RTFunctions.Functions.IO
             "if",
             "try",
             "catch",
-            "finaly",
+            "finally",
             "for",
             "foreach",
         };
@@ -258,12 +258,67 @@ namespace RTFunctions.Functions.IO
             yield break;
         }
 
+        public static string ConvertREPLTest(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            var lines = input.GetLines();
+
+            string result = "";
+
+            foreach (var line in lines)
+            {
+                string a = line;
+
+                var split = line.Split(new string[] { "//" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                string first = split[0];
+
+                for (int i = 0; i < DefaultTypes.Count; i++)
+                    first = first.Replace(DefaultTypes[i], $"<color=#{REPLColors["DefaultType"]}>{DefaultTypes[i]}</color>");
+
+                for (int i = 0; i < ExtraFuncs.Count; i++)
+                {
+                    var length = ExtraFuncs[i].Length;
+                    var spaceless = first.Replace(" ", "");
+
+                    if (spaceless.Length >= length && spaceless.Substring(0, length) == ExtraFuncs[i])
+                        first = first.Replace(ExtraFuncs[i], $"<color=#{REPLColors["ExtraFunc"]}>{ExtraFuncs[i]}</color>");
+                }
+
+                var regexString = new Regex("\"(.*?)\"");
+                var matchString = regexString.Match(first);
+                if (matchString.Success)
+                {
+                    first = first.Replace($"\"{matchString.Groups[1]}\"", $"<color=#{REPLColors["String"]}>\"{matchString.Groups[1].ToString().Replace($"<color=#{REPLColors["DefaultType"]}>", "").Replace($"<color=#{REPLColors["ExtraFunc"]}>", "").Replace($"<color=#{REPLColors["Type"]}>", "").Replace($"<color=#{REPLColors["Method"]}>", "").Replace("</color>", "")}\"</color>");
+                }
+
+                //var dots = first.Split(new string[] { "." }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                //string d = "";
+
+                //for (int i = 0; i < dots.Count; i++)
+                //{
+                //    if (Types.Contains(dots[i]))
+                //        d += dots[i];
+                //}
+
+                if (split.Count > 1)
+                {
+                    a = first + "//" + $"<color=#{REPLColors["Comment"]}>{split[1]}";
+                }
+
+                result += a + Environment.NewLine;
+            }
+
+            return result;
+        }
+
         public static string ConvertREPL(string input)
         {
             if (string.IsNullOrEmpty(input))
                 return input;
 
-            //var lines = LSText.GetLines(input, 97);
             var lines = GetLines(input, 200);
             string result = "";
             foreach (var line in lines)

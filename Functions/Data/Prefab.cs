@@ -93,10 +93,10 @@ namespace RTFunctions.Functions.Data
 
         #region Methods
 
-        public static Prefab DeepCopy(Prefab og) => new Prefab()
+        public static Prefab DeepCopy(Prefab og, bool newID = true) => new Prefab()
         {
             description = og.description,
-            ID = og.ID,
+            ID = newID ? LSText.randomString(16) : og.ID,
             MainObjectID = og.MainObjectID,
             Name = og.Name,
             objects = og.objects.Clone(),

@@ -32,11 +32,8 @@ namespace RTFunctions.Functions.IO
                 signalEvent.WaitOne();
 
                 IsBusy = true;
-                if (currentAction != null)
-                {
-                    currentAction.Invoke();
-                    currentAction = null;
-                }
+                currentAction?.Invoke();
+                currentAction = null;
                 IsBusy = false;
             }
         }

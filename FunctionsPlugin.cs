@@ -42,7 +42,10 @@ namespace RTFunctions
 
 		//Updates:
 
-		public static Version VersionNumber => new Version(PluginInfo.PLUGIN_VERSION);
+		public static string BepInExPluginsPath => "BepInEx/plugins/";
+		public static string BepInExAssetsPath => $"{BepInExPluginsPath}Assets/";
+
+		public static Version VersionNumber => new Version(PluginInfo.PLUGIN_VERSION, "25/11/2023 10:03 PM");
 
 		public static FunctionsPlugin inst;
 		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
@@ -53,7 +56,7 @@ namespace RTFunctions
         public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
 		public static ConfigEntry<KeyCode> OpenPAPersistentFolder { get; set; }
 
-		private static ConfigEntry<bool> DebugsOn { get; set; }
+		public static ConfigEntry<bool> DebugsOn { get; set; }
 		public static ConfigEntry<bool> IncreasedClipPlanes { get; set; }
 		private static ConfigEntry<string> DisplayName { get; set; }
 
@@ -64,6 +67,9 @@ namespace RTFunctions
 		public static ConfigEntry<bool> BGReactiveLerp { get; set; }
 
 		public static ConfigEntry<bool> LDM { get; set; }
+
+		public static ConfigEntry<bool> ShowLogPopup { get; set; }
+		public static ConfigEntry<int> LogPopupCap { get; set; }
 
         #endregion
 
@@ -311,8 +317,11 @@ namespace RTFunctions
 		{
 			inst = this;
 
-			DebugsOn = Config.Bind("Debugging", "Enabled", false, "If disabled, turns all Unity debug logs off. Might boost performance.");
+			DebugsOn = Config.Bind("Debugging", "Enabled", true, "If disabled, turns all Unity debug logs off. Might boost performance.");
 			NotifyREPL = Config.Bind("Debugging", "Notify REPL", false, "If in editor, code ran will have their results be notified.");
+			ShowLogPopup = Config.Bind("Debugging", "Log Popup", true, "");
+			LogPopupCap = Config.Bind("Debugging", "Log Popup Cap", 50, "");
+
 			IncreasedClipPlanes = Config.Bind("Game", "Camera Clip Planes", true, "Increases the clip panes to a very high amount, allowing for object render depth to go really high or really low.");
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
 			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F3, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
@@ -345,6 +354,7 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(ObjectManagerPatch));
 				harmony.PatchAll(typeof(SaveManagerPatch));
 				harmony.PatchAll(typeof(BackgroundManagerPatch));
+				harmony.PatchAll(typeof(DebugPatcher));
 
 				Patcher.PatchPropertySetter(typeof(DataManager.GameData.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
 					typeof(FunctionsPlugin), "DepthSetterPrefix", null);
@@ -487,6 +497,8 @@ namespace RTFunctions
 				if (Input.GetKeyDown(KeyCode.I))
 					Debug.LogFormat("{0}Objects alive: {1}", className, DataManager.inst.gameData.beatmapObjects.FindAll(x => x.TimeWithinLifespan()).Count);
 			}
+
+			RTLogger.Update();
 		}
 
         #region Patchers

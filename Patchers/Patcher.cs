@@ -308,6 +308,49 @@ namespace RTFunctions.Patchers
             }
         }
 
+        public static void CreatePatch(Action method, PatchType patchType, Delegate action) => CreatePatch(method.Method, patchType, action);
+        public static void CreatePatch<T>(Action<T> method, PatchType patchType, Delegate action) => CreatePatch(method.Method, patchType, action);
+        public static void CreatePatch<T, T1>(Action<T, T1> method, PatchType patchType, Delegate action) => CreatePatch(method.Method, patchType, action);
+        public static void CreatePatch<T, T1, T2>(Action<T, T1, T2> method, PatchType patchType, Delegate action) => CreatePatch(method.Method, patchType, action);
+        public static void CreatePatch<T, T1, T2, T3>(Action<T, T1, T2, T3> method, PatchType patchType, Delegate action) => CreatePatch(method.Method, patchType, action);
+
+        public static void CreatePatch(Action method, PatchType patchType, PrefixMethod prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T>(Action<T> method, PatchType patchType, PrefixMethod prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1>(Action<T, T1> method, PatchType patchType, PrefixMethod prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2>(Action<T, T1, T2> method, PatchType patchType, PrefixMethod prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2, T3>(Action<T, T1, T2, T3> method, PatchType patchType, PrefixMethod prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+
+        public static void CreatePatch<P>(Action method, PatchType patchType, PrefixMethod<P> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<P, P1>(Action method, PatchType patchType, PrefixMethod<P, P1> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<P, P1, P2>(Action method, PatchType patchType, PrefixMethod<P, P1, P2> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<P, P1, P2, P3>(Action method, PatchType patchType, PrefixMethod<P, P1, P2, P3> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        
+        public static void CreatePatch<T, P>(Action<T> method, PatchType patchType, PrefixMethod<P> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, P, P1>(Action<T> method, PatchType patchType, PrefixMethod<P, P1> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, P, P1, P2>(Action<T> method, PatchType patchType, PrefixMethod<P, P1, P2> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, P, P1, P2, P3>(Action<T> method, PatchType patchType, PrefixMethod<P, P1, P2, P3> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        
+        public static void CreatePatch<T, T1, P>(Action<T, T1> method, PatchType patchType, PrefixMethod<P> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, P, P1>(Action<T, T1> method, PatchType patchType, PrefixMethod<P, P1> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, P, P1, P2>(Action<T, T1> method, PatchType patchType, PrefixMethod<P, P1, P2> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, P, P1, P2, P3>(Action<T, T1> method, PatchType patchType, PrefixMethod<P, P1, P2, P3> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        
+        public static void CreatePatch<T, T1, T2, P>(Action<T, T1, T2> method, PatchType patchType, PrefixMethod<P> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2, P, P1>(Action<T, T1, T2> method, PatchType patchType, PrefixMethod<P, P1> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2, P, P1, P2>(Action<T, T1, T2> method, PatchType patchType, PrefixMethod<P, P1, P2> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2, P, P1, P2, P3>(Action<T, T1, T2> method, PatchType patchType, PrefixMethod<P, P1, P2, P3> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        
+        public static void CreatePatch<T, T1, T2, T3, P>(Action<T, T1, T2, T3> method, PatchType patchType, PrefixMethod<P> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2, T3, P, P1>(Action<T, T1, T2, T3> method, PatchType patchType, PrefixMethod<P, P1> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2, T3, P, P1, P2>(Action<T, T1, T2, T3> method, PatchType patchType, PrefixMethod<P, P1, P2> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2, T3, P, P1, P2, P3>(Action<T, T1, T2, T3> method, PatchType patchType, PrefixMethod<P, P1, P2, P3> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        
+        public static void CreatePatch<T>(Action<T> method, PatchType patchType, PrefixMethod<T> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1>(Action<T, T1> method, PatchType patchType, PrefixMethod<T, T1> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2>(Action<T, T1, T2> method, PatchType patchType, PrefixMethod<T, T1, T2> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2, T3>(Action<T, T1, T2, T3> method, PatchType patchType, PrefixMethod<T, T1, T2, T3> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+        public static void CreatePatch<T, T1, T2, T3, T4>(Action<T, T1, T2, T3, T4> method, PatchType patchType, PrefixMethod<T, T1, T2, T3, T4> prefixMethod) => CreatePatch(method.Method, patchType, prefixMethod.Method);
+
         public static void CreatePatch(Delegate method, PatchType patchType, Delegate action) => CreatePatch(method.Method, patchType, action);
 
         public static void CreatePatch(MethodBase method, PatchType patchType, Delegate action) => CreatePatch(method, patchType, action.Method);

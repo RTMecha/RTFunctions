@@ -203,9 +203,9 @@ namespace RTFunctions.Functions.Data
 			var pos = new Vector2(jn["pos"]["x"].AsFloat, jn["pos"]["y"].AsFloat);
 			var scale = new Vector2(jn["size"]["x"].AsFloat, jn["size"]["y"].AsFloat);
 
-			var asFloat = jn["rot"].AsFloat;
-			var asInt = jn["color"].AsInt;
-			var asInt2 = jn["layer"].AsInt;
+			var rot = jn["rot"].AsFloat;
+			var color = jn["color"].AsInt;
+			var layer = jn["layer"].AsFloat;
 
 			var reactive = false;
 			if (jn["r_set"] != null)
@@ -310,9 +310,9 @@ namespace RTFunctions.Functions.Data
 				text = text,
 				pos = pos,
 				scale = scale,
-				rot = asFloat,
-				color = asInt,
-				layer = asInt2,
+				rot = rot,
+				color = color,
+				zPosition = layer,
 				reactive = reactive,
 				reactiveType = reactiveType,
 				reactiveScale = reactiveScale,

@@ -32,6 +32,10 @@ namespace RTFunctions.Functions.IO
 			}
         }
 
+		public static bool InEditor => EditorManager.inst;
+		public static bool InGame => GameManager.inst;
+		public static bool InMenu => ArcadeManager.inst.ic;
+
 		public static void TestRun()
         {
 			new TaskRunner().Run(TestRun);

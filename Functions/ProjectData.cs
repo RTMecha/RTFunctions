@@ -159,19 +159,6 @@ namespace RTFunctions.Functions
             public override string ToString() => name;
         }
 
-		public class GameData
-        {
-			public List<BaseBeatmapObject> beatmapObjects = new List<BaseBeatmapObject>();
-			public List<BaseBackgroundObject> backgroundObjects = new List<BaseBackgroundObject>();
-			public Dictionary<string, BaseBeatmapTheme> beatmapThemes = new Dictionary<string, BaseBeatmapTheme>();
-			public List<List<BaseEventKeyframe>> events = new List<List<BaseEventKeyframe>>();
-			public List<BaseMarker> markers = new List<BaseMarker>();
-			public List<BaseCheckpoint> checkpoints = new List<BaseCheckpoint>();
-
-			public List<BasePrefab> prefabs = new List<BasePrefab>();
-			public List<BasePrefabObject> prefabObjects = new List<BasePrefabObject>();
-        }
-
 		public class MetaData
         {
 
@@ -197,6 +184,16 @@ namespace RTFunctions.Functions
                 sb.AppendLine("  <library_geometries>");
                 sb.AppendLine("    <geometry id=\"Beatmap-mesh\" name=\"Beatmap\">");
                 sb.AppendLine("      <mesh>");
+
+            }
+
+			public static void ConvertToLS(JSONNode jn)
+            {
+
+            }
+
+			public static void ConvertToVG(JSONNode jn)
+            {
 
             }
         }
@@ -257,13 +254,13 @@ namespace RTFunctions.Functions
 
 				if (addFirstMarkers)
 					for (int i = 0; i < jn["markers"].Count; i++)
-						gameData.markers.Add(Reader.ParseMarker(jn["markers"][i]));
+						gameData.beatmapData.markers.Add(Reader.ParseMarker(jn["markers"][i]));
 				
 				if (addSecondMarkers)
 					for (int i = 0; i < jn32["markers"].Count; i++)
-						gameData.markers.Add(Reader.ParseMarker(jn32["markers"][i]));
+						gameData.beatmapData.markers.Add(Reader.ParseMarker(jn32["markers"][i]));
 
-				gameData.markers = gameData.markers.OrderBy(x => x.time).ToList();
+				gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
 
                 #endregion
 
@@ -271,17 +268,17 @@ namespace RTFunctions.Functions
 
 				if (addFirstCheckpoints)
 					for (int i = 0; i < jn["checkpoints"].Count; i++)
-						gameData.checkpoints.Add(Reader.ParseCheckpoint(jn["checkpoints"][i]));
+						gameData.beatmapData.checkpoints.Add(Reader.ParseCheckpoint(jn["checkpoints"][i]));
 
 				if (addSecondCheckpoints)
 					for (int i = 0; i < jn32["checkpoints"].Count; i++)
 					{
 						var checkpoint = Reader.ParseCheckpoint(jn32["checkpoints"][i]);
-						if (gameData.checkpoints.Find(x => x.time == checkpoint.time) == null)
-							gameData.checkpoints.Add(checkpoint);
+						if (gameData.beatmapData.checkpoints.Find(x => x.time == checkpoint.time) == null)
+							gameData.beatmapData.checkpoints.Add(checkpoint);
 					}
 
-				gameData.checkpoints = gameData.checkpoints.OrderBy(x => x.time).ToList();
+				gameData.beatmapData.checkpoints = gameData.beatmapData.checkpoints.OrderBy(x => x.time).ToList();
 
                 #endregion
 
@@ -325,11 +322,11 @@ namespace RTFunctions.Functions
 
                 for (int i = 0; i < jn["themes"].Count; i++)
 					if (!gameData.beatmapThemes.ContainsKey(jn["themes"][i]["id"]))
-						gameData.beatmapThemes.Add(jn["themes"][i]["id"], Reader.ParseBeatmapTheme(jn["themes"][i]));
+						gameData.beatmapThemes.Add(jn["themes"][i]["id"], Reader.ParseBeatmapTheme(jn["themes"][i], Reader.FileType.LS));
 
 				for (int i = 0; i < jn32["themes"].Count; i++)
 					if (!gameData.beatmapThemes.ContainsKey(jn32["themes"][i]["id"]))
-						gameData.beatmapThemes.Add(jn32["themes"][i]["id"], Reader.ParseBeatmapTheme(jn32["themes"][i]));
+						gameData.beatmapThemes.Add(jn32["themes"][i]["id"], Reader.ParseBeatmapTheme(jn32["themes"][i], Reader.FileType.LS));
 
                 #endregion
 
@@ -370,7 +367,7 @@ namespace RTFunctions.Functions
 
                 #region Events
 
-                gameData.events = new List<List<BaseEventKeyframe>>();
+                gameData.eventObjects.allEvents = new List<List<BaseEventKeyframe>>();
 
 				var l = Reader.ParseEventkeyframes(jn["events"]);
 				var l32 = Reader.ParseEventkeyframes(jn32["events"]);
@@ -380,7 +377,7 @@ namespace RTFunctions.Functions
 					if (!prioritizeFirstEvents)
 						l[i].RemoveAt(0);
 
-					gameData.events.Add(l[i]);
+					gameData.eventObjects.allEvents.Add(l[i]);
 				}
 
 				for (int i = 0; i < l32.Count; i++)
@@ -388,7 +385,7 @@ namespace RTFunctions.Functions
 					if (prioritizeFirstEvents)
 						l32[i].RemoveAt(0);
 
-					gameData.events[i].AddRange(l32[i]);
+					gameData.eventObjects.allEvents[i].AddRange(l32[i]);
 				}
 
                 //foreach (var kflist in gameData.eventObjects.allEvents)
@@ -427,15 +424,12 @@ namespace RTFunctions.Functions
 
 				for (int k = 0; k < jn["er"].Count; k++)
 				{
-					ev[k] = jn["er"].AsFloat;
+					er[k] = jn["er"].AsFloat;
 				}
 
-				keyframe.eventRandomValues = ev;
+				keyframe.eventRandomValues = er;
 
-				if (jn["t"] != null)
-					keyframe.eventTime = jn["t"].AsFloat;
-				else
-					keyframe.eventTime = 0f;
+				keyframe.eventTime = jn["t"] != null ? jn["t"].AsFloat : 0f;
 
 				if (jn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(jn["ct"]))
 					keyframe.curveType = DataManager.inst.AnimationListDictionaryStr[jn["ct"]];
@@ -443,892 +437,230 @@ namespace RTFunctions.Functions
 				return keyframe;
 			}
 
+			public static BeatmapTheme ParseBeatmapTheme(JSONNode jn, FileType fileType) => fileType == FileType.LS ? BeatmapTheme.Parse(jn) : ParseVGBeatmapTheme(jn);
+
+			public static BeatmapTheme ParseVGBeatmapTheme(JSONNode jn)
+            {
+				var beatmapTheme = new BeatmapTheme();
+
+				beatmapTheme.id = jn["id"] != null ? jn["id"] : LSText.randomNumString(6);
+				beatmapTheme.name = jn["name"] != null ? jn["name"] : "name your themes!";
+
+				beatmapTheme.playerColors = BeatmapTheme.SetColors(jn["pla"], 4, "Uh oh, something went wrong with converting VG to LS!");
+				beatmapTheme.objectColors = BeatmapTheme.SetColors(jn["obj"], 18, "Uh oh, something went wrong with converting VG to LS!");
+				beatmapTheme.effectColors = BeatmapTheme.SetColors(jn["fx"], 18, "Uh oh, something went wrong with converting VG to LS!");
+				beatmapTheme.backgroundColors = BeatmapTheme.SetColors(jn["fx"], 18, "Uh oh, something went wrong with converting VG to LS!");
+
+				beatmapTheme.backgroundColor = jn["base_bg"] != null ? LSColors.HexToColor(jn["base_bg"]) : LSColors.gray100;
+				beatmapTheme.guiColor = jn["base_gui"] != null ? LSColors.HexToColor(jn["base_gui"]) : LSColors.gray800;
+				beatmapTheme.guiAccentColor = jn["base_gui_accent"] != null ? LSColors.HexToColor(jn["base_gui_accent"]) : LSColors.gray800;
+
+				return beatmapTheme;
+            }
+
+			public static Prefab ParseVGPrefab(JSONNode jn)
+            {
+				var prefab = new Prefab();
+
+				return prefab;
+            }
+
+			public static BeatmapObject ParseVGBeatmapObject(JSONNode jn)
+            {
+				var beatmapObject = new BeatmapObject();
+
+				return beatmapObject;
+            }
+
 			public static List<List<BaseEventKeyframe>> ParseEventkeyframes(JSONNode jn, bool orderTime = false)
 			{
 				var allEvents = new List<List<BaseEventKeyframe>>();
 
 				allEvents.Add(new List<BaseEventKeyframe>());
 				for (int i = 0; i < jn["pos"].Count; i++)
+					allEvents[0].Add(EventKeyframe.Parse(jn["pos"][i], 2));
+
+				allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["zoom"].Count; i++)
+					allEvents[1].Add(EventKeyframe.Parse(jn["zoom"][i], 1));
+
+				allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["rot"].Count; i++)
+					allEvents[2].Add(EventKeyframe.Parse(jn["rot"][i], 1));
+
+				allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["shake"].Count; i++)
 				{
-					BaseEventKeyframe eventKeyframe = new BaseEventKeyframe();
-					JSONNode jsonnode = jn["pos"][i];
-					eventKeyframe.eventTime = jsonnode["t"].AsFloat;
-					eventKeyframe.SetEventValues(new float[]
+					var eventKeyframe = EventKeyframe.Parse(jn["shake"][i], 3);
+					if (string.IsNullOrEmpty(jn["shake"][i]["y"]) || string.IsNullOrEmpty(jn["shake"][i]["z"]))
 					{
-					jsonnode["x"].AsFloat,
-					jsonnode["y"].AsFloat
-					});
-					eventKeyframe.random = jsonnode["r"].AsInt;
-					DataManager.LSAnimation curveType = DataManager.inst.AnimationList[0];
-					if (jsonnode["ct"] != null)
-					{
-						curveType = DataManager.inst.AnimationListDictionaryStr[jsonnode["ct"]];
-						eventKeyframe.curveType = curveType;
+						eventKeyframe.SetEventValues(new float[]
+						{
+							jn["shake"][i]["x"].AsFloat,
+							1f,
+							1f,
+						});
 					}
-					eventKeyframe.SetEventRandomValues(new float[]
-					{
-					jsonnode["rx"].AsFloat,
-					jsonnode["ry"].AsFloat
-					});
-					eventKeyframe.active = false;
-					allEvents[0].Add(eventKeyframe);
+					allEvents[3].Add(eventKeyframe);
 				}
 
 				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int j = 0; j < jn["zoom"].Count; j++)
+				for (int i = 0; i < jn["theme"].Count; i++)
+					allEvents[4].Add(EventKeyframe.Parse(jn["theme"][i], 1));
+
+				allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["chroma"].Count; i++)
+					allEvents[5].Add(EventKeyframe.Parse(jn["chroma"][i], 1));
+
+				allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["bloom"].Count; i++)
 				{
-					BaseEventKeyframe eventKeyframe2 = new BaseEventKeyframe();
-					JSONNode jsonnode2 = jn["zoom"][j];
-					eventKeyframe2.eventTime = jsonnode2["t"].AsFloat;
-					eventKeyframe2.SetEventValues(new float[]
+					var eventKeyframe = EventKeyframe.Parse(jn["bloom"][i], 5);
+					if (string.IsNullOrEmpty(jn["bloom"][i]["y"]))
 					{
-					jsonnode2["x"].AsFloat
-					});
-					eventKeyframe2.random = jsonnode2["r"].AsInt;
-					DataManager.LSAnimation curveType2 = DataManager.inst.AnimationList[0];
-					if (jsonnode2["ct"] != null)
-					{
-						curveType2 = DataManager.inst.AnimationListDictionaryStr[jsonnode2["ct"]];
-						eventKeyframe2.curveType = curveType2;
+						eventKeyframe.SetEventValues(new float[]
+						{
+							jn["bloom"][i]["x"].AsFloat,
+							7f,
+							1f,
+							0f,
+							18f
+						});
 					}
-					eventKeyframe2.SetEventRandomValues(new float[]
-					{
-					jsonnode2["rx"].AsFloat
-					});
-					eventKeyframe2.active = false;
-					allEvents[1].Add(eventKeyframe2);
+					allEvents[6].Add(eventKeyframe);
 				}
 
 				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int k = 0; k < jn["rot"].Count; k++)
+				for (int i = 0; i < jn["vignette"].Count; i++)
 				{
-					BaseEventKeyframe eventKeyframe3 = new BaseEventKeyframe();
-					JSONNode jsonnode3 = jn["rot"][k];
-					eventKeyframe3.eventTime = jsonnode3["t"].AsFloat;
-					eventKeyframe3.SetEventValues(new float[]
+					var eventKeyframe = EventKeyframe.Parse(jn["vignette"][i], 7);
+					if (string.IsNullOrEmpty(jn["vignette"][i]["x3"]))
 					{
-					jsonnode3["x"].AsFloat
-					});
-					eventKeyframe3.random = jsonnode3["r"].AsInt;
-					DataManager.LSAnimation curveType3 = DataManager.inst.AnimationList[0];
-					if (jsonnode3["ct"] != null)
-					{
-						curveType3 = DataManager.inst.AnimationListDictionaryStr[jsonnode3["ct"]];
-						eventKeyframe3.curveType = curveType3;
+						eventKeyframe.SetEventValues(new float[]
+						{
+							jn["vignette"][i]["x"].AsFloat,
+							jn["vignette"][i]["y"].AsFloat,
+							jn["vignette"][i]["z"].AsFloat,
+							jn["vignette"][i]["x2"].AsFloat,
+							jn["vignette"][i]["y2"].AsFloat,
+							jn["vignette"][i]["z2"].AsFloat,
+							18f
+						});
 					}
-					eventKeyframe3.SetEventRandomValues(new float[]
-					{
-					jsonnode3["rx"].AsFloat
-					});
-					eventKeyframe3.active = false;
-					allEvents[2].Add(eventKeyframe3);
+					allEvents[7].Add(eventKeyframe);
 				}
 
 				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int l = 0; l < jn["shake"].Count; l++)
+				for (int i = 0; i < jn["lens"].Count; i++)
 				{
-					BaseEventKeyframe eventKeyframe4 = new BaseEventKeyframe();
-					JSONNode jsonnode4 = jn["shake"][l];
-					eventKeyframe4.eventTime = jsonnode4["t"].AsFloat;
-					if (!string.IsNullOrEmpty(jsonnode4["z"]))
+					var eventKeyframe = EventKeyframe.Parse(jn["lens"][i], 6);
+					if (string.IsNullOrEmpty(jn["lens"][i]["y"]))
 					{
-						eventKeyframe4.SetEventValues(new float[]
+						eventKeyframe.SetEventValues(new float[]
 						{
-						jsonnode4["x"].AsFloat,
-						jsonnode4["y"].AsFloat,
-						jsonnode4["z"].AsFloat
+							jn["lens"][i]["x"].AsFloat,
+							0f,
+							0f,
+							1f,
+							1f,
+							1f
 						});
 					}
-					else
-					{
-						eventKeyframe4.SetEventValues(new float[]
-						{
-						jsonnode4["x"].AsFloat,
-						1f,
-						1f
-						});
-					}
-					eventKeyframe4.random = jsonnode4["r"].AsInt;
-					DataManager.LSAnimation curveType4 = DataManager.inst.AnimationList[0];
-					if (jsonnode4["ct"] != null)
-					{
-						curveType4 = DataManager.inst.AnimationListDictionaryStr[jsonnode4["ct"]];
-						eventKeyframe4.curveType = curveType4;
-					}
-					eventKeyframe4.SetEventRandomValues(new float[]
-					{
-					jsonnode4["rx"].AsFloat
-					});
-					eventKeyframe4.active = false;
-					allEvents[3].Add(eventKeyframe4);
+					allEvents[8].Add(eventKeyframe);
 				}
 
 				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int m = 0; m < jn["theme"].Count; m++)
-				{
-					BaseEventKeyframe eventKeyframe5 = new BaseEventKeyframe();
-					JSONNode jsonnode5 = jn["theme"][m];
-					eventKeyframe5.eventTime = jsonnode5["t"].AsFloat;
-					eventKeyframe5.SetEventValues(new float[]
-					{
-					jsonnode5["x"].AsFloat
-					});
-					eventKeyframe5.random = jsonnode5["r"].AsInt;
-					DataManager.LSAnimation curveType5 = DataManager.inst.AnimationList[0];
-					if (jsonnode5["ct"] != null)
-					{
-						curveType5 = DataManager.inst.AnimationListDictionaryStr[jsonnode5["ct"]];
-						eventKeyframe5.curveType = curveType5;
-					}
-					eventKeyframe5.SetEventRandomValues(new float[]
-					{
-					jsonnode5["rx"].AsFloat
-					});
-					eventKeyframe5.active = false;
-					allEvents[4].Add(eventKeyframe5);
-				}
+				for (int i = 0; i < jn["grain"].Count; i++)
+					allEvents[9].Add(EventKeyframe.Parse(jn["grain"][i], 3));
 
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int n = 0; n < jn["chroma"].Count; n++)
-				{
-					BaseEventKeyframe eventKeyframe6 = new BaseEventKeyframe();
-					JSONNode jsonnode6 = jn["chroma"][n];
-					eventKeyframe6.eventTime = jsonnode6["t"].AsFloat;
-					eventKeyframe6.SetEventValues(new float[]
-					{
-					jsonnode6["x"].AsFloat
-					});
-					eventKeyframe6.random = jsonnode6["r"].AsInt;
-					DataManager.LSAnimation curveType6 = DataManager.inst.AnimationList[0];
-					if (jsonnode6["ct"] != null)
-					{
-						curveType6 = DataManager.inst.AnimationListDictionaryStr[jsonnode6["ct"]];
-						eventKeyframe6.curveType = curveType6;
-					}
-					eventKeyframe6.SetEventRandomValues(new float[]
-					{
-					jsonnode6["rx"].AsFloat
-					});
-					eventKeyframe6.active = false;
-					allEvents[5].Add(eventKeyframe6);
-				}
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int num = 0; num < jn["bloom"].Count; num++)
-				{
-					BaseEventKeyframe eventKeyframe7 = new BaseEventKeyframe();
-					JSONNode jsonnode7 = jn["bloom"][num];
-					eventKeyframe7.eventTime = jsonnode7["t"].AsFloat;
-					if (!string.IsNullOrEmpty(jsonnode7["y"]))
-					{
-						eventKeyframe7.SetEventValues(new float[]
-						{
-						jsonnode7["x"].AsFloat,
-						jsonnode7["y"].AsFloat,
-						jsonnode7["z"].AsFloat,
-						jsonnode7["x2"].AsFloat,
-						jsonnode7["y2"].AsFloat,
-						});
-					}
-					else
-					{
-						eventKeyframe7.SetEventValues(new float[]
-						{
-						jsonnode7["x"].AsFloat,
-						7f,
-						1f,
-						0f,
-						18f
-						});
-					}
-					eventKeyframe7.random = jsonnode7["r"].AsInt;
-					DataManager.LSAnimation curveType7 = DataManager.inst.AnimationList[0];
-					if (jsonnode7["ct"] != null)
-					{
-						curveType7 = DataManager.inst.AnimationListDictionaryStr[jsonnode7["ct"]];
-						eventKeyframe7.curveType = curveType7;
-					}
-					eventKeyframe7.SetEventRandomValues(new float[]
-					{
-					jsonnode7["rx"].AsFloat
-					});
-					eventKeyframe7.active = false;
-					allEvents[6].Add(eventKeyframe7);
-				}
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int num2 = 0; num2 < jn["vignette"].Count; num2++)
-				{
-					BaseEventKeyframe eventKeyframe8 = new BaseEventKeyframe();
-					JSONNode jsonnode8 = jn["vignette"][num2];
-					eventKeyframe8.eventTime = jsonnode8["t"].AsFloat;
-					if (!string.IsNullOrEmpty(jsonnode8["x3"]))
-					{
-						eventKeyframe8.SetEventValues(new float[]
-						{
-						jsonnode8["x"].AsFloat,
-						jsonnode8["y"].AsFloat,
-						jsonnode8["z"].AsFloat,
-						jsonnode8["x2"].AsFloat,
-						jsonnode8["y2"].AsFloat,
-						jsonnode8["z2"].AsFloat,
-						jsonnode8["x3"].AsFloat
-						});
-					}
-					else
-					{
-						eventKeyframe8.SetEventValues(new float[]
-						{
-						jsonnode8["x"].AsFloat,
-						jsonnode8["y"].AsFloat,
-						jsonnode8["z"].AsFloat,
-						jsonnode8["x2"].AsFloat,
-						jsonnode8["y2"].AsFloat,
-						jsonnode8["z2"].AsFloat,
-						18f
-						});
-					}
-					eventKeyframe8.random = jsonnode8["r"].AsInt;
-					DataManager.LSAnimation curveType8 = DataManager.inst.AnimationList[0];
-					if (jsonnode8["ct"] != null)
-					{
-						curveType8 = DataManager.inst.AnimationListDictionaryStr[jsonnode8["ct"]];
-						eventKeyframe8.curveType = curveType8;
-					}
-					eventKeyframe8.SetEventRandomValues(new float[]
-					{
-					jsonnode8["rx"].AsFloat,
-					jsonnode8["ry"].AsFloat,
-					jsonnode8["value_random_z"].AsFloat,
-					jsonnode8["value_random_x2"].AsFloat,
-					jsonnode8["value_random_y2"].AsFloat,
-					jsonnode8["value_random_z2"].AsFloat
-					});
-					eventKeyframe8.active = false;
-					allEvents[7].Add(eventKeyframe8);
-				}
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int num3 = 0; num3 < jn["lens"].Count; num3++)
-				{
-					BaseEventKeyframe eventKeyframe9 = new BaseEventKeyframe();
-					JSONNode jsonnode9 = jn["lens"][num3];
-					eventKeyframe9.eventTime = jsonnode9["t"].AsFloat;
-					if (!string.IsNullOrEmpty(jsonnode9["y"]))
-					{
-						eventKeyframe9.SetEventValues(new float[]
-						{
-						jsonnode9["x"].AsFloat,
-						jsonnode9["y"].AsFloat,
-						jsonnode9["z"].AsFloat,
-						jsonnode9["x2"].AsFloat,
-						jsonnode9["y2"].AsFloat,
-						jsonnode9["z2"].AsFloat,
-						});
-					}
-					else
-					{
-						eventKeyframe9.SetEventValues(new float[]
-						{
-						jsonnode9["x"].AsFloat,
-						0f,
-						0f,
-						1f,
-						1f,
-						1f,
-						});
-					}
-					eventKeyframe9.random = jsonnode9["r"].AsInt;
-					DataManager.LSAnimation curveType9 = DataManager.inst.AnimationList[0];
-					if (jsonnode9["ct"] != null)
-					{
-						curveType9 = DataManager.inst.AnimationListDictionaryStr[jsonnode9["ct"]];
-						eventKeyframe9.curveType = curveType9;
-					}
-					eventKeyframe9.SetEventRandomValues(new float[]
-					{
-					jsonnode9["rx"].AsFloat,
-					jsonnode9["ry"].AsFloat,
-					jsonnode9["value_random_z"].AsFloat
-					});
-					eventKeyframe9.active = false;
-					allEvents[8].Add(eventKeyframe9);
-				}
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int num4 = 0; num4 < jn["grain"].Count; num4++)
-				{
-					BaseEventKeyframe eventKeyframe10 = new BaseEventKeyframe();
-					JSONNode jsonnode10 = jn["grain"][num4];
-					eventKeyframe10.eventTime = jsonnode10["t"].AsFloat;
-					eventKeyframe10.SetEventValues(new float[]
-					{
-					jsonnode10["x"].AsFloat,
-					jsonnode10["y"].AsFloat,
-					jsonnode10["z"].AsFloat
-					});
-					eventKeyframe10.random = jsonnode10["r"].AsInt;
-					DataManager.LSAnimation curveType10 = DataManager.inst.AnimationList[0];
-					if (jsonnode10["ct"] != null)
-					{
-						curveType10 = DataManager.inst.AnimationListDictionaryStr[jsonnode10["ct"]];
-						eventKeyframe10.curveType = curveType10;
-					}
-					eventKeyframe10.SetEventRandomValues(new float[]
-					{
-					jsonnode10["rx"].AsFloat,
-					jsonnode10["ry"].AsFloat,
-					jsonnode10["value_random_z"].AsFloat
-					});
-					eventKeyframe10.active = false;
-					allEvents[9].Add(eventKeyframe10);
-				}
-
-				if (jn["cg"] != null)
+				if (jn["cg"] != null && ModCompatibility.mods.ContainsKey("EventsCore"))
 				{
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["cg"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["cg"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat,
-						jsonnode11["z"].AsFloat,
-						jsonnode11["x2"].AsFloat,
-						jsonnode11["y2"].AsFloat,
-						jsonnode11["z2"].AsFloat,
-						jsonnode11["x3"].AsFloat,
-						jsonnode11["y3"].AsFloat,
-						jsonnode11["z3"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat,
-						jsonnode11["value_random_z"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[10].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["cg"].Count; i++)
+						allEvents[10].Add(EventKeyframe.Parse(jn["cg"][i], 9));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["rip"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["rip"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat,
-						jsonnode11["z"].AsFloat,
-						jsonnode11["x2"].AsFloat,
-						jsonnode11["y2"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[11].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["rip"].Count; i++)
+						allEvents[11].Add(EventKeyframe.Parse(jn["rip"][i], 5));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["rb"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["rb"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[12].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["rb"].Count; i++)
+						allEvents[12].Add(EventKeyframe.Parse(jn["rb"][i], 2));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["cs"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["cs"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[13].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["cs"].Count; i++)
+						allEvents[13].Add(EventKeyframe.Parse(jn["cs"][i], 1));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["offset"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["offset"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[14].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["offset"].Count; i++)
+						allEvents[14].Add(EventKeyframe.Parse(jn["offset"][i], 2));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["grd"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["grd"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat,
-						jsonnode11["z"].AsFloat,
-						jsonnode11["x2"].AsFloat,
-						jsonnode11["y2"].AsFloat,
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[15].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["grd"].Count; i++)
+						allEvents[15].Add(EventKeyframe.Parse(jn["grd"][i], 5));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["dbv"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["dbv"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[16].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["dbv"].Count; i++)
+						allEvents[16].Add(EventKeyframe.Parse(jn["grd"][i], 1));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["scan"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["scan"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat,
-						jsonnode11["z"].AsFloat,
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[17].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["scan"].Count; i++)
+						allEvents[17].Add(EventKeyframe.Parse(jn["scan"][i], 3));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["blur"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["blur"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[18].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["blur"].Count; i++)
+						allEvents[18].Add(EventKeyframe.Parse(jn["blur"][i], 2));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["pixel"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["pixel"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[19].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["pixel"].Count; i++)
+						allEvents[19].Add(EventKeyframe.Parse(jn["pixel"][i], 1));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["bg"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["bg"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[20].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["bg"].Count; i++)
+						allEvents[20].Add(EventKeyframe.Parse(jn["bg"][i], 1));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
 					if (jn["invert"] != null)
+						for (int i = 0; i < jn["invert"].Count; i++)
+                            allEvents[21].Add(EventKeyframe.Parse(jn["invert"][i], 1));
+
+					allEvents.Add(new List<BaseEventKeyframe>());
+					for (int i = 0; i < jn["timeline"].Count; i++)
+						allEvents[22].Add(EventKeyframe.Parse(jn["timeline"][i], 7));
+
+					allEvents.Add(new List<BaseEventKeyframe>());
+					for (int i = 0; i < jn["player"].Count; i++)
+						allEvents[23].Add(EventKeyframe.Parse(jn["player"][i], 4));
+
+					allEvents.Add(new List<BaseEventKeyframe>());
+					for (int i = 0; i < jn["follow_player"].Count; i++)
 					{
-						for (int num4 = 0; num4 < jn["invert"].Count; num4++)
+						var eventKeyframe = EventKeyframe.Parse(jn["follow_player"][i], 10);
+						if (string.IsNullOrEmpty(jn["follow_player"][i]["z2"]))
 						{
-							var eventKeyframe11 = new BaseEventKeyframe();
-							JSONNode jsonnode11 = jn["invert"][num4];
-							eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-							eventKeyframe11.SetEventValues(new float[]
+							eventKeyframe.SetEventValues(new float[]
 							{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat
+								jn["follow_player"][i]["x"].AsFloat,
+								jn["follow_player"][i]["y"].AsFloat,
+								jn["follow_player"][i]["z"].AsFloat,
+								jn["follow_player"][i]["x2"].AsFloat,
+								jn["follow_player"][i]["y2"].AsFloat,
+								9999f,
+								-9999f,
+								9999f,
+								-9999f,
+								1f
 							});
-							eventKeyframe11.random = jsonnode11["r"].AsInt;
-							DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-							if (jsonnode11["ct"] != null)
-							{
-								curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-								eventKeyframe11.curveType = curveType11;
-							}
-							eventKeyframe11.SetEventRandomValues(new float[]
-							{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-							});
-							eventKeyframe11.active = false;
-							allEvents[21].Add(eventKeyframe11);
 						}
+						allEvents[24].Add(eventKeyframe);
 					}
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["timeline"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["timeline"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat,
-						jsonnode11["z"].AsFloat,
-						jsonnode11["x2"].AsFloat,
-						jsonnode11["y2"].AsFloat,
-						jsonnode11["z2"].AsFloat,
-						jsonnode11["x3"].AsFloat,
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[22].Add(eventKeyframe11);
-					}
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["player"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["player"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat,
-						jsonnode11["z"].AsFloat,
-						jsonnode11["x2"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[23].Add(eventKeyframe11);
-					}
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["follow_player"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["follow_player"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						if (!string.IsNullOrEmpty(jsonnode11["z2"]))
-						{
-							eventKeyframe11.SetEventValues(new float[]
-							{
-							jsonnode11["x"].AsFloat,
-							jsonnode11["y"].AsFloat,
-							jsonnode11["z"].AsFloat,
-							jsonnode11["x2"].AsFloat,
-							jsonnode11["y2"].AsFloat,
-							jsonnode11["z2"].AsFloat,
-							jsonnode11["x3"].AsFloat,
-							jsonnode11["y3"].AsFloat,
-							jsonnode11["z3"].AsFloat,
-							jsonnode11["x4"].AsFloat,
-							});
-						}
-						else
-						{
-							eventKeyframe11.SetEventValues(new float[]
-							{
-							jsonnode11["x"].AsFloat,
-							jsonnode11["y"].AsFloat,
-							jsonnode11["z"].AsFloat,
-							jsonnode11["x2"].AsFloat,
-							jsonnode11["y2"].AsFloat,
-							9999f,
-							-9999f,
-							9999f,
-							-9999f,
-							1f
-							});
-						}
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[24].Add(eventKeyframe11);
-					}
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int num4 = 0; num4 < jn["audio"].Count; num4++)
-					{
-						BaseEventKeyframe eventKeyframe11 = new BaseEventKeyframe();
-						JSONNode jsonnode11 = jn["audio"][num4];
-						eventKeyframe11.eventTime = jsonnode11["t"].AsFloat;
-						eventKeyframe11.SetEventValues(new float[]
-						{
-						jsonnode11["x"].AsFloat,
-						jsonnode11["y"].AsFloat
-						});
-						eventKeyframe11.random = jsonnode11["r"].AsInt;
-						DataManager.LSAnimation curveType11 = DataManager.inst.AnimationList[0];
-						if (jsonnode11["ct"] != null)
-						{
-							curveType11 = DataManager.inst.AnimationListDictionaryStr[jsonnode11["ct"]];
-							eventKeyframe11.curveType = curveType11;
-						}
-						eventKeyframe11.SetEventRandomValues(new float[]
-						{
-						jsonnode11["rx"].AsFloat,
-						jsonnode11["ry"].AsFloat
-						});
-						eventKeyframe11.active = false;
-						allEvents[25].Add(eventKeyframe11);
-					}
+					for (int i = 0; i < jn["audio"].Count; i++)
+						allEvents[25].Add(EventKeyframe.Parse(jn["audio"][i], 2));
 				}
 
-				for (int type = 0; type < allEvents.Count; type++)
-				{
-					if (allEvents[type].Count < 1)
-					{
-						allEvents[type].Add(new BaseEventKeyframe
-						{
-							eventValues = new float[10],
-							eventTime = 0f
-						});
-						if (type == 11)
-						{
-							allEvents[type][0].eventValues[2] = 1f;
-						}
-						if (type == 12)
-						{
-							allEvents[type][0].eventValues[1] = 6f;
-						}
-						if (type == 15)
-						{
-							allEvents[type][0].eventValues[2] = 18f;
-							allEvents[type][0].eventValues[3] = 18f;
-						}
-						if (type == 18)
-						{
-							allEvents[type][0].eventValues[1] = 6f;
-						}
-						if (type == 20)
-						{
-							allEvents[type][0].eventValues[0] = 18f;
-						}
-						if (type == 21)
-						{
-							allEvents[type][0].eventValues[0] = 0f;
-						}
-						if (type == 22)
-						{
-							//-532?
-							allEvents[type][0].eventValues[2] = -342f;
-							allEvents[type][0].eventValues[3] = 1f;
-							allEvents[type][0].eventValues[4] = 1f;
-							allEvents[type][0].eventValues[6] = 18f;
-						}
-						if (type == 24)
-						{
-							allEvents[type][0].eventValues[3] = 0.5f;
-							allEvents[type][0].eventValues[5] = 9999f;
-							allEvents[type][0].eventValues[6] = -9999f;
-							allEvents[type][0].eventValues[7] = 9999f;
-							allEvents[type][0].eventValues[8] = -9999f;
-							allEvents[type][0].eventValues[9] = 1f;
-						}
-						if (type == 25)
-						{
-							allEvents[type][0].eventValues[0] = 1f;
-							allEvents[type][0].eventValues[1] = 1f;
-						}
-					}
-				}
+				ClampEventListValues(allEvents);
 
 				if (orderTime)
 					allEvents.ForEach(x => x = x.OrderBy(x => x.eventTime).ToList());
@@ -1336,165 +668,36 @@ namespace RTFunctions.Functions
 				return allEvents;
             }
 
-			public static BaseBeatmapTheme ParseBeatmapTheme(JSONNode jn)
+			public static void ClampEventListValues(List<List<BaseEventKeyframe>> eventKeyframes)
             {
-				BaseBeatmapTheme beatmapTheme = new BaseBeatmapTheme();
-				beatmapTheme.id = DataManager.inst.AllThemes.Count().ToString();
+				for (int type = 0; type < eventKeyframes.Count; type++)
+                {
+					if (eventKeyframes.Count < 1)
+						eventKeyframes[type].Add(EventKeyframe.DeepCopy((EventKeyframe)GameData.DefaultKeyframes[type]));
 
-				if (jn["id"] != null)
-					beatmapTheme.id = jn["id"];
-
-				beatmapTheme.name = "name your themes!";
-
-				if (jn["name"] != null)
-					beatmapTheme.name = jn["name"];
-
-				beatmapTheme.guiColor = LSColors.gray800;
-				if (jn["gui"] != null)
-					beatmapTheme.guiColor = LSColors.HexToColorAlpha(jn["gui"]);
-
-				beatmapTheme.backgroundColor = LSColors.gray100;
-				if (jn["bg"] != null)
-					beatmapTheme.backgroundColor = LSColors.HexToColor(jn["bg"]);
-				if (jn["players"] == null)
-				{
-					beatmapTheme.playerColors.Add(LSColors.HexToColorAlpha("E57373FF"));
-					beatmapTheme.playerColors.Add(LSColors.HexToColorAlpha("64B5F6FF"));
-					beatmapTheme.playerColors.Add(LSColors.HexToColorAlpha("81C784FF"));
-					beatmapTheme.playerColors.Add(LSColors.HexToColorAlpha("FFB74DFF"));
-				}
-				else
-				{
-					int num = 0;
-					foreach (KeyValuePair<string, JSONNode> keyValuePair in jn["players"].AsArray)
-					{
-						JSONNode hex = keyValuePair;
-						if (num < 4)
-						{
-							if (hex != null)
-							{
-								beatmapTheme.playerColors.Add(LSColors.HexToColorAlpha(hex));
-							}
-							else
-								beatmapTheme.playerColors.Add(LSColors.pink500);
-							++num;
-						}
-						else
-							break;
-					}
-					while (beatmapTheme.playerColors.Count < 4)
-						beatmapTheme.playerColors.Add(LSColors.pink500);
-				}
-				if (jn["objs"] == null)
-				{
-					beatmapTheme.objectColors.Add(LSColors.pink100);
-					beatmapTheme.objectColors.Add(LSColors.pink200);
-					beatmapTheme.objectColors.Add(LSColors.pink300);
-					beatmapTheme.objectColors.Add(LSColors.pink400);
-					beatmapTheme.objectColors.Add(LSColors.pink500);
-					beatmapTheme.objectColors.Add(LSColors.pink600);
-					beatmapTheme.objectColors.Add(LSColors.pink700);
-					beatmapTheme.objectColors.Add(LSColors.pink800);
-					beatmapTheme.objectColors.Add(LSColors.pink900);
-					beatmapTheme.objectColors.Add(LSColors.pink100);
-					beatmapTheme.objectColors.Add(LSColors.pink200);
-					beatmapTheme.objectColors.Add(LSColors.pink300);
-					beatmapTheme.objectColors.Add(LSColors.pink400);
-					beatmapTheme.objectColors.Add(LSColors.pink500);
-					beatmapTheme.objectColors.Add(LSColors.pink600);
-					beatmapTheme.objectColors.Add(LSColors.pink700);
-					beatmapTheme.objectColors.Add(LSColors.pink800);
-					beatmapTheme.objectColors.Add(LSColors.pink900);
-				}
-				else
-				{
-					int num = 0;
-					Color color = LSColors.pink500;
-					foreach (KeyValuePair<string, JSONNode> keyValuePair in jn["objs"].AsArray)
-					{
-						JSONNode hex = keyValuePair;
-						if (num < 18)
-						{
-							if (hex != null)
-							{
-								beatmapTheme.objectColors.Add(LSColors.HexToColorAlpha(hex));
-								color = LSColors.HexToColorAlpha(hex);
-							}
-							else
-							{
-								Debug.LogErrorFormat("{0}Some kind of object error at {1} in {2}.", FunctionsPlugin.className, num, beatmapTheme.name);
-								beatmapTheme.objectColors.Add(LSColors.pink500);
-							}
-							++num;
-						}
-						else
-							break;
-					}
-					while (beatmapTheme.objectColors.Count < 18)
-						beatmapTheme.objectColors.Add(color);
-				}
-				if (jn["bgs"] == null)
-				{
-					beatmapTheme.backgroundColors.Add(LSColors.gray100);
-					beatmapTheme.backgroundColors.Add(LSColors.gray200);
-					beatmapTheme.backgroundColors.Add(LSColors.gray300);
-					beatmapTheme.backgroundColors.Add(LSColors.gray400);
-					beatmapTheme.backgroundColors.Add(LSColors.gray500);
-					beatmapTheme.backgroundColors.Add(LSColors.gray600);
-					beatmapTheme.backgroundColors.Add(LSColors.gray700);
-					beatmapTheme.backgroundColors.Add(LSColors.gray800);
-					beatmapTheme.backgroundColors.Add(LSColors.gray900);
-				}
-				else
-				{
-					int num = 0;
-					Color color = LSColors.pink500;
-					foreach (KeyValuePair<string, JSONNode> keyValuePair in jn["bgs"].AsArray)
-					{
-						JSONNode hex = keyValuePair;
-						if (num < 9)
-						{
-							if (hex != null)
-							{
-								beatmapTheme.backgroundColors.Add(LSColors.HexToColor(hex));
-								color = LSColors.HexToColor(hex);
-							}
-							else
-								beatmapTheme.backgroundColors.Add(LSColors.pink500);
-							++num;
-						}
-						else
-							break;
-					}
-					while (beatmapTheme.backgroundColors.Count < 9)
-						beatmapTheme.backgroundColors.Add(color);
-				}
-
-				return beatmapTheme;
+					for (int index = 0; index < eventKeyframes[type].Count; index++)
+                    {
+						var array = (float[])eventKeyframes[type][index].eventValues.Clone();
+						if (array.Length != GameData.DefaultKeyframes[type].eventValues.Length)
+                        {
+							array = new float[GameData.DefaultKeyframes[type].eventValues.Length];
+							for (int i = 0; i < GameData.DefaultKeyframes[type].eventValues.Length; i++)
+								array[i] = i < array.Length ? eventKeyframes[type][index].eventValues[i] : GameData.DefaultKeyframes[type].eventValues[i];
+                        }
+                    }
+                }
             }
 
 			public static BaseMarker ParseMarker(JSONNode jn)
             {
 				bool active = jn["active"].AsBool;
 
-				string name = "Marker";
-				if (jn["name"] != null)
-				{
-					name = jn["name"];
-				}
+				string name = jn["name"] != null ? jn["name"] : "Marker";
 
-				string desc = "";
-				if (jn["desc"] != null)
-				{
-					desc = jn["desc"];
-				}
+				string desc = jn["desc"] != null ? jn["desc"] : "";
 				float time = jn["t"].AsFloat;
 
-				int color = 0;
-				if (jn["col"] != null)
-				{
-					color = jn["col"].AsInt;
-				}
+				int color = jn["col"] != null ? jn["col"].AsInt : 0;
 
 				return new BaseMarker(active, name, desc, color, time);
 			}
@@ -1513,23 +716,30 @@ namespace RTFunctions.Functions
 		public static class Writer
         {
 			public static Action onSave;
+			public static Action addedOnSave = delegate ()
+			{
+				// Empty delegate to add
+			};
 
 			public static IEnumerator SaveData(string _path, GameData _data)
 			{
 				Debug.Log("Saving Beatmap");
 				JSONNode jn = JSON.Parse("{}");
-				Debug.Log("Saving Editor Data");
+
+				Debug.Log($"{FunctionsPlugin.className}Saving Editor Data");
 				jn["ed"]["timeline_pos"] = "0";
-				Debug.Log("Saving Markers");
-				for (int i = 0; i < _data.markers.Count; i++)
+
+				Debug.Log($"{FunctionsPlugin.className}Saving Markers");
+				for (int i = 0; i < _data.beatmapData.markers.Count; i++)
 				{
 					jn["ed"]["markers"][i]["active"] = "True";
-					jn["ed"]["markers"][i]["name"] = _data.markers[i].name.ToString();
-					jn["ed"]["markers"][i]["desc"] = _data.markers[i].desc.ToString();
-					jn["ed"]["markers"][i]["col"] = _data.markers[i].color.ToString();
-					jn["ed"]["markers"][i]["t"] = _data.markers[i].time.ToString();
+					jn["ed"]["markers"][i]["name"] = _data.beatmapData.markers[i].name.ToString();
+					jn["ed"]["markers"][i]["desc"] = _data.beatmapData.markers[i].desc.ToString();
+					jn["ed"]["markers"][i]["col"] = _data.beatmapData.markers[i].color.ToString();
+					jn["ed"]["markers"][i]["t"] = _data.beatmapData.markers[i].time.ToString();
 				}
-				Debug.Log("Saving Object Prefabs");
+
+				Debug.Log($"{FunctionsPlugin.className}Saving Object Prefabs");
 				for (int i = 0; i < _data.prefabObjects.Count; i++)
 				{
 					var prefabObject = _data.prefabObjects[i];
@@ -1579,7 +789,8 @@ namespace RTFunctions.Functions
 						jn["prefab_objects"][i]["e"]["rot"]["rz"] = prefabObject.events[2].eventRandomValues[2].ToString();
 					}
 				}
-                Debug.Log("Saving Level Data");
+
+                Debug.Log($"{FunctionsPlugin.className}Saving Level Data");
                 {
                     jn["level_data"]["level_version"] = "4.1.16";
                     jn["level_data"]["background_color"] = "0";
@@ -1587,7 +798,7 @@ namespace RTFunctions.Functions
                     jn["level_data"]["show_intro"] = "False";
                     jn["level_data"]["bg_zoom"] = "1";
                 }
-                Debug.Log("Saving prefabs");
+                Debug.Log($"{FunctionsPlugin.className}Saving prefabs");
                 if (_data.prefabs != null)
                 {
                     for (int i = 0; i < _data.prefabs.Count; i++)
@@ -1595,7 +806,7 @@ namespace RTFunctions.Functions
                         jn["prefabs"][i] = DataManager.inst.GeneratePrefabJSON(_data.prefabs[i]);
                     }
                 }
-                Debug.Log("Saving themes");
+                Debug.Log($"Saving themes");
 				if (_data.beatmapThemes != null)
 				{
 					List<BaseBeatmapTheme> levelThemes = new List<BaseBeatmapTheme>();
@@ -1606,7 +817,7 @@ namespace RTFunctions.Functions
 
 						string id = beatmapTheme.id;
 
-						foreach (var keyframe in _data.events[4])
+						foreach (var keyframe in _data.eventObjects.allEvents[4])
 						{
 							var eventValue = keyframe.eventValues[0].ToString();
 
@@ -1647,16 +858,18 @@ namespace RTFunctions.Functions
 						}
 					}
 				}
-				Debug.Log("Saving Checkpoints");
-				for (int i = 0; i < _data.checkpoints.Count; i++)
+
+				Debug.Log($"{FunctionsPlugin.className}Saving Checkpoints");
+				for (int i = 0; i < _data.beatmapData.checkpoints.Count; i++)
 				{
 					jn["checkpoints"][i]["active"] = "False";
-					jn["checkpoints"][i]["name"] = _data.checkpoints[i].name;
-					jn["checkpoints"][i]["t"] = _data.checkpoints[i].time.ToString();
-					jn["checkpoints"][i]["pos"]["x"] = _data.checkpoints[i].pos.x.ToString();
-					jn["checkpoints"][i]["pos"]["y"] = _data.checkpoints[i].pos.y.ToString();
+					jn["checkpoints"][i]["name"] = _data.beatmapData.checkpoints[i].name;
+					jn["checkpoints"][i]["t"] = _data.beatmapData.checkpoints[i].time.ToString();
+					jn["checkpoints"][i]["pos"]["x"] = _data.beatmapData.checkpoints[i].pos.x.ToString();
+					jn["checkpoints"][i]["pos"]["y"] = _data.beatmapData.checkpoints[i].pos.y.ToString();
 				}
-				Debug.Log("Saving Beatmap Objects");
+
+				Debug.Log($"{FunctionsPlugin.className}Saving Beatmap Objects");
 				if (_data.beatmapObjects != null)
 				{
 					List<BaseBeatmapObject> list = _data.beatmapObjects.FindAll(x => !x.fromPrefab);
@@ -1832,10 +1045,10 @@ namespace RTFunctions.Functions
 					Debug.Log("skipping objects");
 					jn["beatmap_objects"] = new JSONArray();
 				}
-				Debug.Log("Saving Background Objects");
+
+				Debug.Log($"{FunctionsPlugin.className}Saving Background Objects");
 				for (int i = 0; i < _data.backgroundObjects.Count; i++)
 				{
-
 					try
 					{
 						var bg = (BackgroundObject)_data.backgroundObjects[i];
@@ -1849,7 +1062,7 @@ namespace RTFunctions.Functions
 						jn["bg_objects"][i]["size"]["y"] = bg.scale.y.ToString();
 						jn["bg_objects"][i]["rot"] = bg.rot.ToString();
 						jn["bg_objects"][i]["color"] = bg.color.ToString();
-						jn["bg_objects"][i]["layer"] = bg.layer.ToString();
+						jn["bg_objects"][i]["layer"] = bg.zPosition.ToString();
 						jn["bg_objects"][i]["fade"] = bg.drawFade.ToString();
 
 						if (bg.reactive)
@@ -1857,6 +1070,7 @@ namespace RTFunctions.Functions
 							jn["bg_objects"][i]["r_set"]["type"] = bg.reactiveType.ToString();
 							jn["bg_objects"][i]["r_set"]["scale"] = bg.reactiveScale.ToString();
 						}
+
 						jn["bg_objects"][i]["zscale"] = bg.zscale.ToString();
 						jn["bg_objects"][i]["depth"] = bg.depth.ToString();
 						jn["bg_objects"][i]["s"] = bg.shape.Type.ToString();
@@ -1865,28 +1079,26 @@ namespace RTFunctions.Functions
 						jn["bg_objects"][i]["r_offset"]["x"] = bg.rotation.x.ToString();
 						jn["bg_objects"][i]["r_offset"]["y"] = bg.rotation.y.ToString();
 
-						{
-							jn["bg_objects"][i]["rc"]["pos"]["i"]["x"] = bg.reactivePosIntensity.x.ToString();
-							jn["bg_objects"][i]["rc"]["pos"]["i"]["y"] = bg.reactivePosIntensity.y.ToString();
-							jn["bg_objects"][i]["rc"]["pos"]["s"]["x"] = bg.reactivePosSamples.x.ToString();
-							jn["bg_objects"][i]["rc"]["pos"]["s"]["y"] = bg.reactivePosSamples.y.ToString();
+						jn["bg_objects"][i]["rc"]["pos"]["i"]["x"] = bg.reactivePosIntensity.x.ToString();
+						jn["bg_objects"][i]["rc"]["pos"]["i"]["y"] = bg.reactivePosIntensity.y.ToString();
+						jn["bg_objects"][i]["rc"]["pos"]["s"]["x"] = bg.reactivePosSamples.x.ToString();
+						jn["bg_objects"][i]["rc"]["pos"]["s"]["y"] = bg.reactivePosSamples.y.ToString();
 
-							//jn["bg_objects"][i]["rc"]["z"]["active"] = bg.reactiveIncludesZ.ToString();
-							jn["bg_objects"][i]["rc"]["z"]["i"] = bg.reactiveZIntensity.ToString();
-							jn["bg_objects"][i]["rc"]["z"]["s"] = bg.reactiveZSample.ToString();
+						//jn["bg_objects"][i]["rc"]["z"]["active"] = bg.reactiveIncludesZ.ToString();
+						jn["bg_objects"][i]["rc"]["z"]["i"] = bg.reactiveZIntensity.ToString();
+						jn["bg_objects"][i]["rc"]["z"]["s"] = bg.reactiveZSample.ToString();
 
-							jn["bg_objects"][i]["rc"]["sca"]["i"]["x"] = bg.reactiveScaIntensity.x.ToString();
-							jn["bg_objects"][i]["rc"]["sca"]["i"]["y"] = bg.reactiveScaIntensity.y.ToString();
-							jn["bg_objects"][i]["rc"]["sca"]["s"]["x"] = bg.reactiveScaSamples.x.ToString();
-							jn["bg_objects"][i]["rc"]["sca"]["s"]["y"] = bg.reactiveScaSamples.y.ToString();
+						jn["bg_objects"][i]["rc"]["sca"]["i"]["x"] = bg.reactiveScaIntensity.x.ToString();
+						jn["bg_objects"][i]["rc"]["sca"]["i"]["y"] = bg.reactiveScaIntensity.y.ToString();
+						jn["bg_objects"][i]["rc"]["sca"]["s"]["x"] = bg.reactiveScaSamples.x.ToString();
+						jn["bg_objects"][i]["rc"]["sca"]["s"]["y"] = bg.reactiveScaSamples.y.ToString();
 
-							jn["bg_objects"][i]["rc"]["rot"]["i"] = bg.reactiveRotIntensity.ToString();
-							jn["bg_objects"][i]["rc"]["rot"]["s"] = bg.reactiveRotSample.ToString();
+						jn["bg_objects"][i]["rc"]["rot"]["i"] = bg.reactiveRotIntensity.ToString();
+						jn["bg_objects"][i]["rc"]["rot"]["s"] = bg.reactiveRotSample.ToString();
 
-							jn["bg_objects"][i]["rc"]["col"]["i"] = bg.reactiveColIntensity.ToString();
-							jn["bg_objects"][i]["rc"]["col"]["s"] = bg.reactiveColSample.ToString();
-							jn["bg_objects"][i]["rc"]["col"]["c"] = bg.reactiveCol.ToString();
-						}
+						jn["bg_objects"][i]["rc"]["col"]["i"] = bg.reactiveColIntensity.ToString();
+						jn["bg_objects"][i]["rc"]["col"]["s"] = bg.reactiveColSample.ToString();
+						jn["bg_objects"][i]["rc"]["col"]["c"] = bg.reactiveCol.ToString();
 					}
 					catch (Exception ex)
 					{
@@ -1894,534 +1106,20 @@ namespace RTFunctions.Functions
 					}
 
 				}
-				Debug.Log("Saving Event Objects");
+
+				Debug.Log($"{FunctionsPlugin.className}Saving Event Objects");
 				{
-					for (int i = 0; i < _data.events[0].Count(); i++)
-					{
-						jn["events"]["pos"][i]["t"] = _data.events[0][i].eventTime.ToString();
-						jn["events"]["pos"][i]["x"] = _data.events[0][i].eventValues[0].ToString();
-						jn["events"]["pos"][i]["y"] = _data.events[0][i].eventValues[1].ToString();
-						if (_data.events[0][i].curveType.Name != "Linear")
-						{
-							jn["events"]["pos"][i]["ct"] = _data.events[0][i].curveType.Name.ToString();
-						}
-						if (_data.events[0][i].random != 0)
-						{
-							jn["events"]["pos"][i]["r"] = _data.events[0][i].random.ToString();
-							jn["events"]["pos"][i]["rx"] = _data.events[0][i].eventRandomValues[0].ToString();
-							jn["events"]["pos"][i]["ry"] = _data.events[0][i].eventRandomValues[1].ToString();
-						}
-					}
-					for (int i = 0; i < _data.events[1].Count(); i++)
-					{
-						jn["events"]["zoom"][i]["t"] = _data.events[1][i].eventTime.ToString();
-						jn["events"]["zoom"][i]["x"] = _data.events[1][i].eventValues[0].ToString();
-						if (_data.events[1][i].curveType.Name != "Linear")
-						{
-							jn["events"]["zoom"][i]["ct"] = _data.events[1][i].curveType.Name.ToString();
-						}
-						if (_data.events[1][i].random != 0)
-						{
-							jn["events"]["zoom"][i]["r"] = _data.events[1][i].random.ToString();
-							jn["events"]["zoom"][i]["rx"] = _data.events[1][i].eventRandomValues[0].ToString();
-						}
-					}
-					for (int i = 0; i < _data.events[2].Count(); i++)
-					{
-						jn["events"]["rot"][i]["t"] = _data.events[2][i].eventTime.ToString();
-						jn["events"]["rot"][i]["x"] = _data.events[2][i].eventValues[0].ToString();
-						if (_data.events[2][i].curveType.Name != "Linear")
-						{
-							jn["events"]["rot"][i]["ct"] = _data.events[2][i].curveType.Name.ToString();
-						}
-						if (_data.events[2][i].random != 0)
-						{
-							jn["events"]["rot"][i]["r"] = _data.events[2][i].random.ToString();
-							jn["events"]["rot"][i]["rx"] = _data.events[2][i].eventRandomValues[0].ToString();
-						}
-					}
-					for (int i = 0; i < _data.events[3].Count(); i++)
-					{
-						jn["events"]["shake"][i]["t"] = _data.events[3][i].eventTime.ToString();
-						jn["events"]["shake"][i]["x"] = _data.events[3][i].eventValues[0].ToString();
-						if (_data.events[3][i].eventValues.Length > 1)
-							jn["events"]["shake"][i]["y"] = _data.events[3][i].eventValues[1].ToString();
-						if (_data.events[3][i].eventValues.Length > 2)
-							jn["events"]["shake"][i]["z"] = _data.events[3][i].eventValues[2].ToString();
-
-						if (_data.events[3][i].curveType.Name != "Linear")
-						{
-							jn["events"]["shake"][i]["ct"] = _data.events[3][i].curveType.Name.ToString();
-						}
-						if (_data.events[3][i].random != 0)
-						{
-							jn["events"]["shake"][i]["r"] = _data.events[3][i].random.ToString();
-							jn["events"]["shake"][i]["rx"] = _data.events[3][i].eventRandomValues[0].ToString();
-							jn["events"]["shake"][i]["ry"] = _data.events[3][i].eventRandomValues[1].ToString();
-						}
-					}
-					for (int i = 0; i < _data.events[4].Count(); i++)
-					{
-						jn["events"]["theme"][i]["t"] = _data.events[4][i].eventTime.ToString();
-						jn["events"]["theme"][i]["x"] = _data.events[4][i].eventValues[0].ToString();
-						if (_data.events[4][i].curveType.Name != "Linear")
-						{
-							jn["events"]["theme"][i]["ct"] = _data.events[4][i].curveType.Name.ToString();
-						}
-						if (_data.events[4][i].random != 0)
-						{
-							jn["events"]["theme"][i]["r"] = _data.events[4][i].random.ToString();
-							jn["events"]["theme"][i]["rx"] = _data.events[4][i].eventRandomValues[0].ToString();
-						}
-					}
-					for (int i = 0; i < _data.events[5].Count(); i++)
-					{
-						jn["events"]["chroma"][i]["t"] = _data.events[5][i].eventTime.ToString();
-						jn["events"]["chroma"][i]["x"] = _data.events[5][i].eventValues[0].ToString();
-						if (_data.events[5][i].curveType.Name != "Linear")
-						{
-							jn["events"]["chroma"][i]["ct"] = _data.events[5][i].curveType.Name.ToString();
-						}
-						if (_data.events[5][i].random != 0)
-						{
-							jn["events"]["chroma"][i]["r"] = _data.events[5][i].random.ToString();
-							jn["events"]["chroma"][i]["rx"] = _data.events[5][i].eventRandomValues[0].ToString();
-						}
-					}
-					for (int i = 0; i < _data.events[6].Count(); i++)
-					{
-						jn["events"]["bloom"][i]["t"] = _data.events[6][i].eventTime.ToString();
-						jn["events"]["bloom"][i]["x"] = _data.events[6][i].eventValues[0].ToString();
-						if (_data.events[6][i].eventValues.Length > 1)
-							jn["events"]["bloom"][i]["y"] = _data.events[6][i].eventValues[1].ToString();
-						if (_data.events[6][i].eventValues.Length > 2)
-							jn["events"]["bloom"][i]["z"] = _data.events[6][i].eventValues[2].ToString();
-						if (_data.events[6][i].eventValues.Length > 3)
-							jn["events"]["bloom"][i]["x2"] = _data.events[6][i].eventValues[3].ToString();
-						if (_data.events[6][i].eventValues.Length > 4)
-							jn["events"]["bloom"][i]["y2"] = _data.events[6][i].eventValues[4].ToString();
-
-						if (_data.events[6][i].curveType.Name != "Linear")
-						{
-							jn["events"]["bloom"][i]["ct"] = _data.events[6][i].curveType.Name.ToString();
-						}
-						if (_data.events[6][i].random != 0)
-						{
-							jn["events"]["bloom"][i]["r"] = _data.events[6][i].random.ToString();
-							jn["events"]["bloom"][i]["rx"] = _data.events[6][i].eventRandomValues[0].ToString();
-						}
-					}
-					for (int i = 0; i < _data.events[7].Count(); i++)
-					{
-						jn["events"]["vignette"][i]["t"] = _data.events[7][i].eventTime.ToString();
-						jn["events"]["vignette"][i]["x"] = _data.events[7][i].eventValues[0].ToString();
-						jn["events"]["vignette"][i]["y"] = _data.events[7][i].eventValues[1].ToString();
-						jn["events"]["vignette"][i]["z"] = _data.events[7][i].eventValues[2].ToString();
-						jn["events"]["vignette"][i]["x2"] = _data.events[7][i].eventValues[3].ToString();
-						jn["events"]["vignette"][i]["y2"] = _data.events[7][i].eventValues[4].ToString();
-						jn["events"]["vignette"][i]["z2"] = _data.events[7][i].eventValues[5].ToString();
-						if (_data.events[7][i].eventValues.Length > 6)
-							jn["events"]["vignette"][i]["x3"] = _data.events[7][i].eventValues[6].ToString();
-
-						if (_data.events[7][i].curveType.Name != "Linear")
-						{
-							jn["events"]["vignette"][i]["ct"] = _data.events[7][i].curveType.Name.ToString();
-						}
-						if (_data.events[7][i].random != 0)
-						{
-							jn["events"]["vignette"][i]["r"] = _data.events[7][i].random.ToString();
-							jn["events"]["vignette"][i]["rx"] = _data.events[7][i].eventRandomValues[0].ToString();
-							jn["events"]["vignette"][i]["ry"] = _data.events[7][i].eventRandomValues[1].ToString();
-							jn["events"]["vignette"][i]["value_random_z"] = _data.events[7][i].eventRandomValues[2].ToString();
-							jn["events"]["vignette"][i]["value_random_x2"] = _data.events[7][i].eventRandomValues[3].ToString();
-							jn["events"]["vignette"][i]["value_random_y2"] = _data.events[7][i].eventRandomValues[4].ToString();
-							jn["events"]["vignette"][i]["value_random_z2"] = _data.events[7][i].eventRandomValues[5].ToString();
-						}
-					}
-					for (int i = 0; i < _data.events[8].Count(); i++)
-					{
-						jn["events"]["lens"][i]["t"] = _data.events[8][i].eventTime.ToString();
-						jn["events"]["lens"][i]["x"] = _data.events[8][i].eventValues[0].ToString();
-						if (_data.events[8][i].eventValues.Length > 1)
-							jn["events"]["lens"][i]["y"] = _data.events[8][i].eventValues[1].ToString();
-						if (_data.events[8][i].eventValues.Length > 2)
-							jn["events"]["lens"][i]["z"] = _data.events[8][i].eventValues[2].ToString();
-						if (_data.events[8][i].eventValues.Length > 3)
-							jn["events"]["lens"][i]["x2"] = _data.events[8][i].eventValues[3].ToString();
-						if (_data.events[8][i].eventValues.Length > 4)
-							jn["events"]["lens"][i]["y2"] = _data.events[8][i].eventValues[4].ToString();
-						if (_data.events[8][i].eventValues.Length > 5)
-							jn["events"]["lens"][i]["z2"] = _data.events[8][i].eventValues[5].ToString();
-
-						if (_data.events[8][i].curveType.Name != "Linear")
-						{
-							jn["events"]["lens"][i]["ct"] = _data.events[8][i].curveType.Name.ToString();
-						}
-						if (_data.events[8][i].random != 0)
-						{
-							jn["events"]["lens"][i]["r"] = _data.events[8][i].random.ToString();
-							jn["events"]["lens"][i]["rx"] = _data.events[8][i].eventRandomValues[0].ToString();
-						}
-					}
-					for (int i = 0; i < _data.events[9].Count(); i++)
-					{
-						jn["events"]["grain"][i]["t"] = _data.events[9][i].eventTime.ToString();
-						jn["events"]["grain"][i]["x"] = _data.events[9][i].eventValues[0].ToString();
-						jn["events"]["grain"][i]["y"] = _data.events[9][i].eventValues[1].ToString();
-						jn["events"]["grain"][i]["z"] = _data.events[9][i].eventValues[2].ToString();
-						if (_data.events[9][i].curveType.Name != "Linear")
-						{
-							jn["events"]["grain"][i]["ct"] = _data.events[9][i].curveType.Name.ToString();
-						}
-						if (_data.events[9][i].random != 0)
-						{
-							jn["events"]["grain"][i]["r"] = _data.events[9][i].random.ToString();
-							jn["events"]["grain"][i]["rx"] = _data.events[9][i].eventRandomValues[0].ToString();
-							jn["events"]["grain"][i]["ry"] = _data.events[9][i].eventRandomValues[1].ToString();
-							jn["events"]["grain"][i]["value_random_z"] = _data.events[9][i].eventRandomValues[2].ToString();
-						}
-					}
-					if (_data.events.Count > 10)
-					{
-						for (int i = 0; i < _data.events[10].Count(); i++)
-						{
-							jn["events"]["cg"][i]["t"] = _data.events[10][i].eventTime.ToString();
-							jn["events"]["cg"][i]["x"] = _data.events[10][i].eventValues[0].ToString();
-							jn["events"]["cg"][i]["y"] = _data.events[10][i].eventValues[1].ToString();
-							jn["events"]["cg"][i]["z"] = _data.events[10][i].eventValues[2].ToString();
-							jn["events"]["cg"][i]["x2"] = _data.events[10][i].eventValues[3].ToString();
-							jn["events"]["cg"][i]["y2"] = _data.events[10][i].eventValues[4].ToString();
-							jn["events"]["cg"][i]["z2"] = _data.events[10][i].eventValues[5].ToString();
-							jn["events"]["cg"][i]["x3"] = _data.events[10][i].eventValues[6].ToString();
-							jn["events"]["cg"][i]["y3"] = _data.events[10][i].eventValues[7].ToString();
-							jn["events"]["cg"][i]["z3"] = _data.events[10][i].eventValues[8].ToString();
-							if (_data.events[10][i].curveType.Name != "Linear")
-							{
-								jn["events"]["cg"][i]["ct"] = _data.events[10][i].curveType.Name.ToString();
-							}
-							if (_data.events[10][i].random != 0)
-							{
-								jn["events"]["cg"][i]["r"] = _data.events[10][i].random.ToString();
-								jn["events"]["cg"][i]["rx"] = _data.events[10][i].eventRandomValues[0].ToString();
-								jn["events"]["cg"][i]["ry"] = _data.events[10][i].eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 11)
-					{
-						for (int i = 0; i < _data.events[11].Count(); i++)
-						{
-							jn["events"]["rip"][i]["t"] = _data.events[11][i].eventTime.ToString();
-							jn["events"]["rip"][i]["x"] = _data.events[11][i].eventValues[0].ToString();
-							jn["events"]["rip"][i]["y"] = _data.events[11][i].eventValues[1].ToString();
-							jn["events"]["rip"][i]["z"] = _data.events[11][i].eventValues[2].ToString();
-							jn["events"]["rip"][i]["x2"] = _data.events[11][i].eventValues[3].ToString();
-							jn["events"]["rip"][i]["y2"] = _data.events[11][i].eventValues[4].ToString();
-							if (_data.events[11][i].curveType.Name != "Linear")
-							{
-								jn["events"]["rip"][i]["ct"] = _data.events[11][i].curveType.Name.ToString();
-							}
-							if (_data.events[11][i].random != 0)
-							{
-								jn["events"]["rip"][i]["r"] = _data.events[11][i].random.ToString();
-								jn["events"]["rip"][i]["rx"] = _data.events[11][i].eventRandomValues[0].ToString();
-								jn["events"]["rip"][i]["ry"] = _data.events[11][i].eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 12)
-					{
-						for (int i = 0; i < _data.events[12].Count(); i++)
-						{
-							jn["events"]["rb"][i]["t"] = _data.events[12][i].eventTime.ToString();
-							jn["events"]["rb"][i]["x"] = _data.events[12][i].eventValues[0].ToString();
-							jn["events"]["rb"][i]["y"] = _data.events[12][i].eventValues[1].ToString();
-							if (_data.events[12][i].curveType.Name != "Linear")
-							{
-								jn["events"]["rb"][i]["ct"] = _data.events[12][i].curveType.Name.ToString();
-							}
-							if (_data.events[12][i].random != 0)
-							{
-								jn["events"]["rb"][i]["r"] = _data.events[12][i].random.ToString();
-								jn["events"]["rb"][i]["rx"] = _data.events[12][i].eventRandomValues[0].ToString();
-								jn["events"]["rb"][i]["ry"] = _data.events[12][i].eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 13)
-					{
-						for (int i = 0; i < _data.events[13].Count(); i++)
-						{
-							jn["events"]["cs"][i]["t"] = _data.events[13][i].eventTime.ToString();
-							jn["events"]["cs"][i]["x"] = _data.events[13][i].eventValues[0].ToString();
-							jn["events"]["cs"][i]["y"] = _data.events[13][i].eventValues[1].ToString();
-							if (_data.events[13][i].curveType.Name != "Linear")
-							{
-								jn["events"]["cs"][i]["ct"] = _data.events[13][i].curveType.Name.ToString();
-							}
-							if (_data.events[13][i].random != 0)
-							{
-								jn["events"]["cs"][i]["r"] = _data.events[13][i].random.ToString();
-								jn["events"]["cs"][i]["rx"] = _data.events[13][i].eventRandomValues[0].ToString();
-								jn["events"]["cs"][i]["ry"] = _data.events[13][i].eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 14)
-					{
-						for (int i = 0; i < _data.events[14].Count(); i++)
-						{
-							jn["events"]["offset"][i]["t"] = _data.events[14][i].eventTime.ToString();
-							jn["events"]["offset"][i]["x"] = _data.events[14][i].eventValues[0].ToString();
-							jn["events"]["offset"][i]["y"] = _data.events[14][i].eventValues[1].ToString();
-							if (_data.events[14][i].curveType.Name != "Linear")
-							{
-								jn["events"]["offset"][i]["ct"] = _data.events[14][i].curveType.Name.ToString();
-							}
-							if (_data.events[14][i].random != 0)
-							{
-								jn["events"]["offset"][i]["r"] = _data.events[14][i].random.ToString();
-								jn["events"]["offset"][i]["rx"] = _data.events[14][i].eventRandomValues[0].ToString();
-								jn["events"]["offset"][i]["ry"] = _data.events[14][i].eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 15)
-					{
-						for (int i = 0; i < _data.events[15].Count(); i++)
-						{
-							jn["events"]["grd"][i]["t"] = _data.events[15][i].eventTime.ToString();
-							jn["events"]["grd"][i]["x"] = _data.events[15][i].eventValues[0].ToString();
-							jn["events"]["grd"][i]["y"] = _data.events[15][i].eventValues[1].ToString();
-							jn["events"]["grd"][i]["z"] = _data.events[15][i].eventValues[2].ToString();
-							jn["events"]["grd"][i]["x2"] = _data.events[15][i].eventValues[3].ToString();
-							jn["events"]["grd"][i]["y2"] = _data.events[15][i].eventValues[4].ToString();
-							if (_data.events[15][i].curveType.Name != "Linear")
-							{
-								jn["events"]["grd"][i]["ct"] = _data.events[15][i].curveType.Name.ToString();
-							}
-							if (_data.events[15][i].random != 0)
-							{
-								jn["events"]["grd"][i]["r"] = _data.events[15][i].random.ToString();
-								jn["events"]["grd"][i]["rx"] = _data.events[15][i].eventRandomValues[0].ToString();
-								jn["events"]["grd"][i]["ry"] = _data.events[15][i].eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 16)
-					{
-						for (int i = 0; i < _data.events[16].Count(); i++)
-						{
-							jn["events"]["dbv"][i]["t"] = _data.events[16][i].eventTime.ToString();
-							jn["events"]["dbv"][i]["x"] = _data.events[16][i].eventValues[0].ToString();
-							if (_data.events[16][i].curveType.Name != "Linear")
-							{
-								jn["events"]["dbv"][i]["ct"] = _data.events[16][i].curveType.Name.ToString();
-							}
-							if (_data.events[16][i].random != 0)
-							{
-								jn["events"]["dbv"][i]["r"] = _data.events[16][i].random.ToString();
-								jn["events"]["dbv"][i]["rx"] = _data.events[16][i].eventRandomValues[0].ToString();
-								jn["events"]["dbv"][i]["ry"] = _data.events[16][i].eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 17)
-					{
-						for (int i = 0; i < _data.events[17].Count(); i++)
-						{
-							jn["events"]["scan"][i]["t"] = _data.events[17][i].eventTime.ToString();
-							jn["events"]["scan"][i]["x"] = _data.events[17][i].eventValues[0].ToString();
-							jn["events"]["scan"][i]["y"] = _data.events[17][i].eventValues[1].ToString();
-							jn["events"]["scan"][i]["z"] = _data.events[17][i].eventValues[2].ToString();
-							if (_data.events[17][i].curveType.Name != "Linear")
-							{
-								jn["events"]["scan"][i]["ct"] = _data.events[17][i].curveType.Name.ToString();
-							}
-							if (_data.events[17][i].random != 0)
-							{
-								jn["events"]["scan"][i]["r"] = _data.events[17][i].random.ToString();
-								jn["events"]["scan"][i]["rx"] = _data.events[17][i].eventRandomValues[0].ToString();
-								jn["events"]["scan"][i]["ry"] = _data.events[17][i].eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 18)
-					{
-						for (int i = 0; i < _data.events[18].Count(); i++)
-						{
-							jn["events"]["blur"][i]["t"] = _data.events[18][i].eventTime.ToString();
-							jn["events"]["blur"][i]["x"] = _data.events[18][i].eventValues[0].ToString();
-							jn["events"]["blur"][i]["y"] = _data.events[18][i].eventValues[1].ToString();
-							if (_data.events[18][i].curveType.Name != "Linear")
-							{
-								jn["events"]["blur"][i]["ct"] = _data.events[18][i].curveType.Name.ToString();
-							}
-							if (_data.events[18][i].random != 0)
-							{
-								jn["events"]["blur"][i]["r"] = _data.events[18][i].random.ToString();
-								jn["events"]["blur"][i]["rx"] = _data.events[18][i].eventRandomValues[0].ToString();
-								jn["events"]["blur"][i]["ry"] = _data.events[18][i].eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 19)
-					{
-						for (int i = 0; i < _data.events[19].Count(); i++)
-						{
-							var eventKeyframe = _data.events[19][i];
-							jn["events"]["pixel"][i]["t"] = eventKeyframe.eventTime.ToString();
-							jn["events"]["pixel"][i]["x"] = eventKeyframe.eventValues[0].ToString();
-							if (eventKeyframe.curveType.Name != "Linear")
-							{
-								jn["events"]["pixel"][i]["ct"] = eventKeyframe.curveType.Name.ToString();
-							}
-							if (eventKeyframe.random != 0)
-							{
-								jn["events"]["pixel"][i]["r"] = eventKeyframe.random.ToString();
-								jn["events"]["pixel"][i]["rx"] = eventKeyframe.eventRandomValues[0].ToString();
-								jn["events"]["pixel"][i]["ry"] = eventKeyframe.eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 20)
-					{
-						for (int i = 0; i < _data.events[20].Count(); i++)
-						{
-							var eventKeyframe = _data.events[20][i];
-							jn["events"]["bg"][i]["t"] = eventKeyframe.eventTime.ToString();
-							jn["events"]["bg"][i]["x"] = eventKeyframe.eventValues[0].ToString();
-							if (eventKeyframe.curveType.Name != "Linear")
-							{
-								jn["events"]["bg"][i]["ct"] = eventKeyframe.curveType.Name.ToString();
-							}
-							if (eventKeyframe.random != 0)
-							{
-								jn["events"]["bg"][i]["r"] = eventKeyframe.random.ToString();
-								jn["events"]["bg"][i]["rx"] = eventKeyframe.eventRandomValues[0].ToString();
-								jn["events"]["bg"][i]["ry"] = eventKeyframe.eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 21)
-					{
-						for (int i = 0; i < _data.events[21].Count(); i++)
-						{
-							var eventKeyframe = _data.events[21][i];
-							jn["events"]["invert"][i]["t"] = eventKeyframe.eventTime.ToString();
-							jn["events"]["invert"][i]["x"] = eventKeyframe.eventValues[0].ToString();
-							jn["events"]["invert"][i]["y"] = eventKeyframe.eventValues[1].ToString();
-							if (eventKeyframe.curveType.Name != "Linear")
-							{
-								jn["events"]["invert"][i]["ct"] = eventKeyframe.curveType.Name.ToString();
-							}
-							if (eventKeyframe.random != 0)
-							{
-								jn["events"]["invert"][i]["r"] = eventKeyframe.random.ToString();
-								jn["events"]["invert"][i]["rx"] = eventKeyframe.eventRandomValues[0].ToString();
-								jn["events"]["invert"][i]["ry"] = eventKeyframe.eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 22)
-					{
-						for (int i = 0; i < _data.events[22].Count(); i++)
-						{
-							var eventKeyframe = _data.events[22][i];
-							jn["events"]["timeline"][i]["t"] = eventKeyframe.eventTime.ToString();
-							jn["events"]["timeline"][i]["x"] = eventKeyframe.eventValues[0].ToString();
-							jn["events"]["timeline"][i]["y"] = eventKeyframe.eventValues[1].ToString();
-							jn["events"]["timeline"][i]["z"] = eventKeyframe.eventValues[2].ToString();
-							jn["events"]["timeline"][i]["x2"] = eventKeyframe.eventValues[3].ToString();
-							jn["events"]["timeline"][i]["y2"] = eventKeyframe.eventValues[4].ToString();
-							jn["events"]["timeline"][i]["z2"] = eventKeyframe.eventValues[5].ToString();
-							jn["events"]["timeline"][i]["x3"] = eventKeyframe.eventValues[6].ToString();
-							if (eventKeyframe.curveType.Name != "Linear")
-							{
-								jn["events"]["timeline"][i]["ct"] = eventKeyframe.curveType.Name.ToString();
-							}
-							if (eventKeyframe.random != 0)
-							{
-								jn["events"]["timeline"][i]["r"] = eventKeyframe.random.ToString();
-								jn["events"]["timeline"][i]["rx"] = eventKeyframe.eventRandomValues[0].ToString();
-								jn["events"]["timeline"][i]["ry"] = eventKeyframe.eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 23)
-					{
-						for (int i = 0; i < _data.events[23].Count(); i++)
-						{
-							var eventKeyframe = _data.events[23][i];
-							jn["events"]["player"][i]["t"] = eventKeyframe.eventTime.ToString();
-							jn["events"]["player"][i]["x"] = eventKeyframe.eventValues[0].ToString();
-							jn["events"]["player"][i]["y"] = eventKeyframe.eventValues[1].ToString();
-							jn["events"]["player"][i]["z"] = eventKeyframe.eventValues[2].ToString();
-							jn["events"]["player"][i]["x2"] = eventKeyframe.eventValues[3].ToString();
-							if (eventKeyframe.curveType.Name != "Linear")
-							{
-								jn["events"]["player"][i]["ct"] = eventKeyframe.curveType.Name.ToString();
-							}
-							if (eventKeyframe.random != 0)
-							{
-								jn["events"]["player"][i]["r"] = eventKeyframe.random.ToString();
-								jn["events"]["player"][i]["rx"] = eventKeyframe.eventRandomValues[0].ToString();
-								jn["events"]["player"][i]["ry"] = eventKeyframe.eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 24)
-					{
-						for (int i = 0; i < _data.events[24].Count(); i++)
-						{
-							var eventKeyframe = _data.events[24][i];
-							jn["events"]["follow_player"][i]["t"] = eventKeyframe.eventTime.ToString();
-							jn["events"]["follow_player"][i]["x"] = eventKeyframe.eventValues[0].ToString();
-							jn["events"]["follow_player"][i]["y"] = eventKeyframe.eventValues[1].ToString();
-							jn["events"]["follow_player"][i]["z"] = eventKeyframe.eventValues[2].ToString();
-							jn["events"]["follow_player"][i]["x2"] = eventKeyframe.eventValues[3].ToString();
-							jn["events"]["follow_player"][i]["y2"] = eventKeyframe.eventValues[4].ToString();
-							jn["events"]["follow_player"][i]["z2"] = eventKeyframe.eventValues[5].ToString();
-							jn["events"]["follow_player"][i]["x3"] = eventKeyframe.eventValues[6].ToString();
-							jn["events"]["follow_player"][i]["y3"] = eventKeyframe.eventValues[7].ToString();
-							jn["events"]["follow_player"][i]["z3"] = eventKeyframe.eventValues[8].ToString();
-							jn["events"]["follow_player"][i]["x4"] = eventKeyframe.eventValues[9].ToString();
-							if (eventKeyframe.curveType.Name != "Linear")
-							{
-								jn["events"]["follow_player"][i]["ct"] = eventKeyframe.curveType.Name.ToString();
-							}
-							if (eventKeyframe.random != 0)
-							{
-								jn["events"]["follow_player"][i]["r"] = eventKeyframe.random.ToString();
-								jn["events"]["follow_player"][i]["rx"] = eventKeyframe.eventRandomValues[0].ToString();
-								jn["events"]["follow_player"][i]["ry"] = eventKeyframe.eventRandomValues[1].ToString();
-							}
-						}
-					}
-					if (_data.events.Count > 25)
-					{
-						for (int i = 0; i < _data.events[25].Count(); i++)
-						{
-							var eventKeyframe = _data.events[25][i];
-							jn["events"]["audio"][i]["t"] = eventKeyframe.eventTime.ToString();
-							jn["events"]["audio"][i]["x"] = eventKeyframe.eventValues[0].ToString();
-							jn["events"]["audio"][i]["y"] = eventKeyframe.eventValues[1].ToString();
-							if (eventKeyframe.curveType.Name != "Linear")
-							{
-								jn["events"]["audio"][i]["ct"] = eventKeyframe.curveType.Name.ToString();
-							}
-							if (eventKeyframe.random != 0)
-							{
-								jn["events"]["audio"][i]["r"] = eventKeyframe.random.ToString();
-								jn["events"]["audio"][i]["rx"] = eventKeyframe.eventRandomValues[0].ToString();
-								jn["events"]["audio"][i]["ry"] = eventKeyframe.eventRandomValues[1].ToString();
-							}
-						}
-					}
+					for (int i = 0; i < _data.eventObjects.allEvents.Count; i++)
+                    {
+						for (int j = 0; j < _data.eventObjects.allEvents[i].Count; j++)
+                        {
+							if (GameData.EventTypes.Length > i)
+								jn["events"][GameData.EventTypes[i]][i] = ((EventKeyframe)_data.eventObjects.allEvents[i][j]).ToJSON();
+                        }
+                    }
 				}
 
-				Debug.Log($"{FunctionsPlugin.className}Saving Entire Beatmap");
-				Debug.LogFormat("{0}Path: {1}", FunctionsPlugin.className, _path);
+				Debug.Log($"{FunctionsPlugin.className}Saving Entire Beatmap to {_path}");
 				RTFile.WriteToFile(_path, jn.ToString());
 
                 onSave?.Invoke();

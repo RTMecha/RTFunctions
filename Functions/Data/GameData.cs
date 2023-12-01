@@ -9,6 +9,7 @@ using LSFunctions;
 
 using RTFunctions.Functions;
 using RTFunctions.Functions.IO;
+using RTFunctions.Functions.Managers;
 
 using BaseGameData = DataManager.GameData;
 
@@ -22,6 +23,7 @@ using BasePrefab = DataManager.GameData.Prefab;
 using BasePrefabObject = DataManager.GameData.PrefabObject;
 using BaseBackground = DataManager.GameData.BackgroundObject;
 using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
+using BaseBeatmapTheme = DataManager.BeatmapTheme;
 
 namespace RTFunctions.Functions.Data
 {
@@ -32,7 +34,7 @@ namespace RTFunctions.Functions.Data
 
 		}
 
-		public Dictionary<string, DataManager.BeatmapTheme> beatmapThemes = new Dictionary<string, DataManager.BeatmapTheme>();
+		public Dictionary<string, BaseBeatmapTheme> beatmapThemes = new Dictionary<string, BaseBeatmapTheme>();
 
         #region Methods
 
@@ -72,7 +74,7 @@ namespace RTFunctions.Functions.Data
 																			time = checkpoint.time
 																		}).ToList());
 			beatmapData.markers = new List<BeatmapData.Marker>((from marker in orig.beatmapData.markers
-																select new DataManager.GameData.BeatmapData.Marker
+																select new BeatmapData.Marker
 																{
 																	active = false,
 																	time = marker.time,
@@ -82,9 +84,9 @@ namespace RTFunctions.Functions.Data
 																}).ToList());
 			gameData.beatmapData = beatmapData;
 			gameData.beatmapObjects = new List<BaseBeatmapObject>((from obj in orig.beatmapObjects
-																   select RTFunctions.Functions.Data.BeatmapObject.DeepCopy((RTFunctions.Functions.Data.BeatmapObject)obj)).ToList());
+																   select RTFunctions.Functions.Data.BeatmapObject.DeepCopy((Data.BeatmapObject)obj)).ToList());
 			gameData.backgroundObjects = new List<BaseBackgroundObject>((from obj in orig.backgroundObjects
-																		 select RTFunctions.Functions.Data.BackgroundObject.DeepCopy((RTFunctions.Functions.Data.BackgroundObject)obj)).ToList());
+																		 select RTFunctions.Functions.Data.BackgroundObject.DeepCopy((Data.BackgroundObject)obj)).ToList());
 			gameData.eventObjects = EventObjects.DeepCopy(orig.eventObjects);
 			return gameData;
 		}
@@ -92,8 +94,74 @@ namespace RTFunctions.Functions.Data
 		public static GameData Parse(JSONNode jn)
 		{
 			var gameData = new GameData();
+
+			#region Markers
+
+			for (int i = 0; i < jn["markers"].Count; i++)
+				gameData.beatmapData.markers.Add(ProjectData.Reader.ParseMarker(jn["markers"][i]));
+
+			gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
+
+			#endregion
+
+			#region Checkpoints
+
+			for (int i = 0; i < jn["checkpoints"].Count; i++)
+				gameData.beatmapData.checkpoints.Add(ProjectData.Reader.ParseCheckpoint(jn["checkpoints"][i]));
+
+			gameData.beatmapData.checkpoints = gameData.beatmapData.checkpoints.OrderBy(x => x.time).ToList();
+
+			#endregion
+
+			#region Prefabs
+
+			for (int i = 0; i < jn["prefabs"].Count; i++)
+			{
+				var prefab = Data.Prefab.Parse(jn["prefabs"][i]);
+				if (gameData.prefabs.Find(x => x.ID == prefab.ID) == null)
+					gameData.prefabs.Add(prefab);
+			}
+
+			#endregion
+
+			#region PrefabObjects
+
+			for (int i = 0; i < jn["prefab_objects"].Count; i++)
+			{
+				var prefab = Data.PrefabObject.Parse(jn["prefab_objects"][i]);
+				if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
+					gameData.prefabObjects.Add(prefab);
+			}
+
+			#endregion
+
+			#region Themes
+
+			for (int i = 0; i < jn["themes"].Count; i++)
+				if (!gameData.beatmapThemes.ContainsKey(jn["themes"][i]["id"]))
+					gameData.beatmapThemes.Add(jn["themes"][i]["id"], ProjectData.Reader.ParseBeatmapTheme(jn["themes"][i], ProjectData.Reader.FileType.LS));
+
+			#endregion
+
+			#region Objects
+
 			for (int i = 0; i < jn["beatmap_objects"].Count; i++)
 				gameData.beatmapObjects.Add(Data.BeatmapObject.Parse(jn["beatmap_objects"][i]));
+
+			#endregion
+
+			#region Backgrounds
+
+			for (int i = 0; i < jn["bg_objects"].Count; i++)
+				gameData.backgroundObjects.Add(Data.BackgroundObject.Parse(jn["bg_objects"][i]));
+
+			#endregion
+
+			#region Events
+
+			gameData.eventObjects.allEvents = ProjectData.Reader.ParseEventkeyframes(jn["events"], true);
+
+			#endregion
 
 			return gameData;
 		}
@@ -127,11 +195,11 @@ namespace RTFunctions.Functions.Data
 				jn["prefabs"][i] = ((Data.Prefab)prefabs[i]).ToJSON();
 			if (DataManager.inst.CustomBeatmapThemes != null)
 			{
-				List<DataManager.BeatmapTheme> levelThemes = new List<DataManager.BeatmapTheme>();
+				var levelThemes = new List<BaseBeatmapTheme>();
 
-				for (int i = 0; i < DataManager.inst.CustomBeatmapThemes.Count; i++)
+				for (int i = 0; i < beatmapThemes.Count; i++)
 				{
-					var beatmapTheme = DataManager.inst.CustomBeatmapThemes[i];
+					var beatmapTheme = beatmapThemes.ElementAt(i).Value;
 
 					string id = beatmapTheme.id;
 
@@ -140,56 +208,17 @@ namespace RTFunctions.Functions.Data
 						var eventValue = keyframe.eventValues[0].ToString();
 
 						if (int.TryParse(id, out int num) && (int)keyframe.eventValues[0] == num && levelThemes.Find(x => int.TryParse(x.id, out int xid) && xid == (int)keyframe.eventValues[0]) == null)
-						//if (int.TryParse(id, out int num) && (int)keyframe.eventValues[0] == num && levelThemes.Find(x => x.IDToInt() == (int)keyframe.eventValues[0]) == null)
 						{
 							levelThemes.Add(beatmapTheme);
 						}
-
-						//if (eventValue.Length == 4 && id.Length == 6)
-						//{
-						//    eventValue = "00" + eventValue;
-						//}
-						//if (eventValue.Length == 5 && id.Length == 6)
-						//{
-						//    eventValue = "0" + eventValue;
-						//}
-						//if (beatmapTheme.id == eventValue && levelThemes.Find(x => x.id == eventValue) == null)
-						//{
-						//    levelThemes.Add(beatmapTheme);
-						//}
-
-						//if (beatmapTheme.id == eventValue && !savedBeatmapThemes.ContainsKey(id))
-						//    savedBeatmapThemes.Add(id, beatmapTheme);
 					}
 				}
 
 				for (int i = 0; i < levelThemes.Count; i++)
 				{
-					jn["themes"][i]["id"] = levelThemes[i].id;
-					jn["themes"][i]["name"] = levelThemes[i].name;
-					if (SaveOpacityToThemes)
-						jn["themes"][i]["gui"] = RTHelpers.ColorToHex(levelThemes[i].guiColor);
-					else
-						jn["themes"][i]["gui"] = LSColors.ColorToHex(levelThemes[i].guiColor);
-					jn["themes"][i]["bg"] = LSColors.ColorToHex(levelThemes[i].backgroundColor);
-					for (int j = 0; j < levelThemes[i].playerColors.Count; j++)
-					{
-						if (SaveOpacityToThemes)
-							jn["themes"][i]["players"][j] = RTHelpers.ColorToHex(levelThemes[i].playerColors[j]);
-						else
-							jn["themes"][i]["players"][j] = LSColors.ColorToHex(levelThemes[i].playerColors[j]);
-					}
-					for (int j = 0; j < levelThemes[i].objectColors.Count; j++)
-					{
-						if (SaveOpacityToThemes)
-							jn["themes"][i]["objs"][j] = RTHelpers.ColorToHex(levelThemes[i].objectColors[j]);
-						else
-							jn["themes"][i]["objs"][j] = LSColors.ColorToHex(levelThemes[i].objectColors[j]);
-					}
-					for (int j = 0; j < levelThemes[i].backgroundColors.Count; j++)
-					{
-						jn["themes"][i]["bgs"][j] = LSColors.ColorToHex(levelThemes[i].backgroundColors[j]);
-					}
+					var beatmapTheme = (BeatmapTheme)levelThemes[i];
+
+					jn["themes"][i] = beatmapTheme.ToJSON();
 				}
 			}
 
@@ -222,9 +251,265 @@ namespace RTFunctions.Functions.Data
 			"pos",
 			"zoom",
 			"rot",
+			"shake",
+			"theme",
+			"chroma",
+			"chroma",
+			"bloom",
+			"vignette",
+			"lens",
+			"grain",
+			"cg",
+			"rip",
+			"rb",
+			"cs",
+			"offset",
+			"grd",
+			"dbv",
+			"scan",
+			"blur",
+			"pixel",
+			"bg",
+			"invert",
+			"timeline",
+			"player",
+			"follow_player",
+			"audio",
+		};
+		
+		public static List<BaseEventKeyframe> DefaultKeyframes = new List<BaseEventKeyframe>
+		{
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[2],
+				id = LSText.randomNumString(8),
+			}, // Move
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1],
+				id = LSText.randomNumString(8),
+			}, // Zoom
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1],
+				id = LSText.randomNumString(8),
+			}, // Rotate
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[3]
+                {
+					0f,
+					1f,
+					1f
+                },
+				id = LSText.randomNumString(8),
+			}, // Shake
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1],
+				id = LSText.randomNumString(8),
+			}, // Theme
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1],
+				id = LSText.randomNumString(8),
+			}, // Chroma
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[5]
+				{
+					0f,
+					7f,
+					1f,
+					0f,
+					18f
+				},
+				id = LSText.randomNumString(8),
+			}, // Bloom
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[7]
+                {
+					0f,
+					0f,
+					0f,
+					0f,
+					0f,
+					0f,
+					18f,
+                },
+				id = LSText.randomNumString(8),
+			}, // Vignette
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[6]
+                {
+					0f,
+					0f,
+					0f,
+					1f,
+					1f,
+					1f
+                },
+				id = LSText.randomNumString(8),
+			}, // Lens
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[3],
+				id = LSText.randomNumString(8),
+			}, // Grain
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[9],
+				id = LSText.randomNumString(8),
+			}, // ColorGrading
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[5]
+                {
+					0f,
+					0f,
+					1f,
+					0f,
+					0f
+                },
+				id = LSText.randomNumString(8),
+			}, // Ripples
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[2]
+                {
+					0f,
+					6f
+                },
+				id = LSText.randomNumString(8),
+			}, // RadialBlur
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1],
+				id = LSText.randomNumString(8),
+			}, // ColorSplit
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[2],
+				id = LSText.randomNumString(8),
+			}, // Offset
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[5]
+                {
+					0f,
+					0f,
+					18f,
+					18f,
+					0f,
+                },
+				id = LSText.randomNumString(8),
+			}, // Gradient
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1],
+				id = LSText.randomNumString(8),
+			}, // DoubleVision
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[3],
+				id = LSText.randomNumString(8),
+			}, // ScanLines
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[2],
+				id = LSText.randomNumString(8),
+			}, // Blur
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1],
+				id = LSText.randomNumString(8),
+			}, // Pixelize
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1] { 18f },
+				id = LSText.randomNumString(8),
+			}, // BG
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1],
+				id = LSText.randomNumString(8),
+			}, // Invert
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[7]
+                {
+					0f,
+					0f,
+					-342f,
+					1f,
+					1f,
+					0f,
+					18f
+				},
+				id = LSText.randomNumString(8),
+			}, // Timeline
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[4],
+				id = LSText.randomNumString(8),
+			}, // Player
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[10]
+                {
+					0f,
+					0f,
+					0f,
+					0.5f,
+					0f,
+					9999f,
+					-9999f,
+					9999f,
+					-9999f,
+					1f,
+                },
+				id = LSText.randomNumString(8),
+			}, // Follow Player
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[2]
+                {
+					1f,
+					1f
+                },
+				id = LSText.randomNumString(8),
+			}, // Audio
 		};
 
-		public static bool SaveOpacityToThemes { get; set; } = false;
+        public static bool SaveOpacityToThemes { get; set; } = false;
 
 		public List<Data.BeatmapObject> BeatmapObjects
         {

@@ -176,6 +176,35 @@ namespace RTFunctions.Functions
 			return copy;
 		}
 
+		public static GameObject Duplicate(this GameObject gameObject, Transform parent, string name)
+        {
+			var copy = gameObject.Duplicate(parent);
+			copy.name = name;
+			return copy;
+        }
+
+		public static void GetComponentAndPerformAction<T>(this GameObject gameObject, Action<T> action)
+        {
+			if (gameObject.TryGetComponent(out T result))
+				action(result);
+        }
+		
+		public static void GetComponentAndPerformAction<T>(this Transform transform, Action<T> action)
+        {
+			if (transform.gameObject.TryGetComponent(out T result))
+				action(result);
+        }
+
+		public static void GetComponentsAndPerformActions(this GameObject gameObject, Type[] types, Action<Component>[] actions)
+        {
+			for (int i = 0; i < types.Length; i++)
+            {
+				var comp = gameObject.GetComponent(types[i]);
+				if (comp)
+					actions[i]?.Invoke(comp);
+            }
+        }
+
 		#endregion
 
 		#region Data
@@ -594,6 +623,27 @@ namespace RTFunctions.Functions
 
 		public static bool Has<T>(this List<T> ts, Predicate<T> predicate) => ts.Find(predicate) != null;
 
+		public static Dictionary<TKey, TValue> ToDictionary<T, TKey, TValue>(this List<T> ts, Func<T, TKey> key, Func<T, TValue> value)
+        {
+			var dictionary = new Dictionary<TKey, TValue>();
+
+			var keys = ts.Select(key).ToList();
+			var values = ts.Select(value).ToList();
+
+			for (int i = 0; i < keys.Count; i++)
+				if (!dictionary.ContainsKey(keys[i]))
+					dictionary.Add(keys[i], values[i]);
+
+			return dictionary;
+        }
+
+		static void Test()
+        {
+			DataManager.inst.gameData.beatmapObjects.ToDictionary(x => x.id, x => x);
+        }
+
+		public static List<string> GetLines(this string str) => str.Split(new string[] { "\n", "\n\r", "\r" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
 		#endregion
 
 		#region Misc
@@ -655,6 +705,12 @@ namespace RTFunctions.Functions
 			d.m_Calls.m_PersistentCalls.Clear();
 			d.m_PersistentCalls.m_Calls.Clear();
 			d.RemoveAllListeners();
+        }
+
+		public static void NewOnClickListener(this Button b, UnityAction unityAction)
+        {
+			b.onClick.ClearAll();
+			b.onClick.AddListener(unityAction);
         }
 
 		public static void NewValueChangedListener(this InputField i, string value, UnityAction<string> unityAction)
