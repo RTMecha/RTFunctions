@@ -27,83 +27,92 @@ using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 
 namespace RTFunctions.Functions.Data
 {
-    public class BeatmapObject : BaseBeatmapObject
-    {
-        public BeatmapObject()
-        {
+	public class BeatmapObject : BaseBeatmapObject
+	{
+		public BeatmapObject()
+		{
 
-        }
+		}
 
 		public BeatmapObject(bool active, float startTime, string name, int shape, string text, List<List<BaseEventKeyframe>> eventKeyframes) : base(active, startTime, name, shape, text, eventKeyframes)
-        {
+		{
 
-        }
+		}
 
 		public BeatmapObject(float startTime) : base(startTime)
-        {
-			
-        }
+		{
 
-        public BeatmapObject(BaseBeatmapObject beatmapObject)
-        {
-            id = beatmapObject.id;
-            parent = beatmapObject.parent;
-            name = beatmapObject.name;
-            active = beatmapObject.active;
-            autoKillOffset = beatmapObject.autoKillOffset;
-            autoKillType = beatmapObject.autoKillType;
-            Depth = beatmapObject.Depth;
-            editorData = new EditorData();
-            editorData.Bin = beatmapObject.editorData.Bin;
-            editorData.Layer = beatmapObject.editorData.Layer;
-            editorData.collapse = beatmapObject.editorData.collapse;
-            editorData.locked = beatmapObject.editorData.locked;
-            fromPrefab = beatmapObject.fromPrefab;
-            objectType = beatmapObject.objectType;
-            origin = beatmapObject.origin;
-            prefabID = beatmapObject.prefabID;
-            prefabInstanceID = beatmapObject.prefabInstanceID;
-            shape = beatmapObject.shape;
-            shapeOption = beatmapObject.shapeOption;
-            StartTime = beatmapObject.StartTime;
-            text = beatmapObject.text;
+		}
+
+		public BeatmapObject(BaseBeatmapObject beatmapObject)
+		{
+			id = beatmapObject.id;
+			parent = beatmapObject.parent;
+			name = beatmapObject.name;
+			active = beatmapObject.active;
+			autoKillOffset = beatmapObject.autoKillOffset;
+			autoKillType = beatmapObject.autoKillType;
+			Depth = beatmapObject.Depth;
+			editorData = new EditorData();
+			editorData.Bin = beatmapObject.editorData.Bin;
+			editorData.Layer = beatmapObject.editorData.Layer;
+			editorData.collapse = beatmapObject.editorData.collapse;
+			editorData.locked = beatmapObject.editorData.locked;
+			fromPrefab = beatmapObject.fromPrefab;
+			objectType = beatmapObject.objectType;
+			origin = beatmapObject.origin;
+			prefabID = beatmapObject.prefabID;
+			prefabInstanceID = beatmapObject.prefabInstanceID;
+			shape = beatmapObject.shape;
+			shapeOption = beatmapObject.shapeOption;
+			StartTime = beatmapObject.StartTime;
+			text = beatmapObject.text;
 
 			events = beatmapObject.events.Clone();
 		}
 
-        public BeatmapObject(BaseBeatmapObject beatmapObject, bool ldm, List<Modifier> modifiers)
-        {
-            id = beatmapObject.id;
-            parent = beatmapObject.parent;
-            name = beatmapObject.name;
-            active = beatmapObject.active;
-            autoKillOffset = beatmapObject.autoKillOffset;
-            autoKillType = beatmapObject.autoKillType;
-            Depth = beatmapObject.Depth;
-            editorData = new EditorData();
-            editorData.Bin = beatmapObject.editorData.Bin;
-            editorData.Layer = beatmapObject.editorData.Layer;
-            editorData.collapse = beatmapObject.editorData.collapse;
-            editorData.locked = beatmapObject.editorData.locked;
-            fromPrefab = beatmapObject.fromPrefab;
-            objectType = beatmapObject.objectType;
-            origin = beatmapObject.origin;
-            prefabID = beatmapObject.prefabID;
-            prefabInstanceID = beatmapObject.prefabInstanceID;
-            shape = beatmapObject.shape;
-            shapeOption = beatmapObject.shapeOption;
-            StartTime = beatmapObject.StartTime;
-            text = beatmapObject.text;
+		public BeatmapObject(BaseBeatmapObject beatmapObject, bool ldm, List<Modifier> modifiers)
+		{
+			id = beatmapObject.id;
+			parent = beatmapObject.parent;
+			name = beatmapObject.name;
+			active = beatmapObject.active;
+			autoKillOffset = beatmapObject.autoKillOffset;
+			autoKillType = beatmapObject.autoKillType;
+			Depth = beatmapObject.Depth;
+			editorData = new EditorData();
+			editorData.Bin = beatmapObject.editorData.Bin;
+			editorData.Layer = beatmapObject.editorData.Layer;
+			editorData.collapse = beatmapObject.editorData.collapse;
+			editorData.locked = beatmapObject.editorData.locked;
+			fromPrefab = beatmapObject.fromPrefab;
+			objectType = beatmapObject.objectType;
+			origin = beatmapObject.origin;
+			prefabID = beatmapObject.prefabID;
+			prefabInstanceID = beatmapObject.prefabInstanceID;
+			shape = beatmapObject.shape;
+			shapeOption = beatmapObject.shapeOption;
+			StartTime = beatmapObject.StartTime;
+			text = beatmapObject.text;
 
-            var evs = new List<BaseEventKeyframe>[beatmapObject.events.Count];
-            beatmapObject.events.CopyTo(evs);
-            events = evs.ToList();
+			var evs = new List<BaseEventKeyframe>[beatmapObject.events.Count];
+			beatmapObject.events.CopyTo(evs);
+			events = evs.ToList();
 
-            LDM = ldm;
-            this.modifiers = modifiers;
-        }
+			LDM = ldm;
+			this.modifiers = modifiers;
+		}
 
-        public bool LDM { get; set; }
+		public bool LDM { get; set; }
+
+		public float[] parallaxSettings = new float[3]
+		{
+			1f,
+			1f,
+			1f
+		};
+
+		public string parentAdditive = "000";
 
         public List<Modifier> modifiers = new List<Modifier>();
         public List<Component> components = new List<Component>();
@@ -265,7 +274,7 @@ namespace RTFunctions.Functions.Data
 
         public static BeatmapObject Parse(JSONNode jn)
 		{
-			BeatmapObject beatmapObject = new BeatmapObject();
+			var beatmapObject = new BeatmapObject();
 
 			var events = new List<List<BaseEventKeyframe>>();
 			events.Add(new List<BaseEventKeyframe>());
@@ -380,7 +389,8 @@ namespace RTFunctions.Functions.Data
 						kfjn["rz"].AsFloat
 					});
 
-					eventKeyframe.relative = !string.IsNullOrEmpty(kfjn["rel"]) && kfjn["rel"].AsBool;
+					RTFunctions.Functions.IO.RTFile.WriteToFile(IO.RTFile.ApplicationDirectory + "something.txt", "Relative is null: " + string.IsNullOrEmpty(kfjn["rel"]));
+					eventKeyframe.relative = string.IsNullOrEmpty(kfjn["rel"]) || kfjn["rel"].AsBool;
 
 					eventKeyframe.active = false;
 					events[2].Add(eventKeyframe);
@@ -433,15 +443,25 @@ namespace RTFunctions.Functions.Data
 				beatmapObject.parent = jn["p"];
 
 			if (jn["pt"] != null)
-			{
 				beatmapObject.parentType = jn["pt"];
-			}
 
 			if (jn["po"] != null)
 			{
 				beatmapObject.parentOffsets = new List<float>(from n in jn["po"].AsArray.Children
 															  select n.AsFloat).ToList();
 			}
+
+			if (jn["ps"] != null)
+            {
+				for (int i = 0; i < beatmapObject.parallaxSettings.Length; i++)
+                {
+					if (jn["ps"].Count > i && jn["ps"][i] != null)
+						beatmapObject.parallaxSettings[i] = jn["ps"][i].AsFloat;
+                }
+            }
+
+			if (jn["pa"] != null)
+				beatmapObject.parentAdditive = jn["pa"];
 
 			if (jn["d"] != null)
 				beatmapObject.depth = jn["d"].AsInt;
@@ -518,8 +538,8 @@ namespace RTFunctions.Functions.Data
 			if (!string.IsNullOrEmpty(prefabInstanceID))
 				jn["piid"] = prefabInstanceID;
 
-			if (GetParentType().ToString() != "101")
-				jn["pt"] = GetParentType().ToString();
+			if (GetParentType() != "101")
+				jn["pt"] = GetParentType();
 
 			if (getParentOffsets().FindIndex(x => x != 0f) != -1)
 			{
@@ -531,9 +551,21 @@ namespace RTFunctions.Functions.Data
 				}
 			}
 
+			if (parallaxSettings.ToList().FindIndex(x => x != 1f) != -1)
+            {
+				for (int i = 0; i < parallaxSettings.Length; i++)
+					jn["ps"][i] = parallaxSettings[i].ToString();
+            }
+
+			if (parentAdditive != "111")
+				jn["pa"] = parentAdditive;
+
 			jn["p"] = parent.ToString();
 
 			jn["d"] = Depth.ToString();
+
+			if (LDM)
+				jn["ldm"] = LDM.ToString();
 
 			jn["st"] = StartTime.ToString();
 
@@ -585,7 +617,7 @@ namespace RTFunctions.Functions.Data
         public static implicit operator bool(BeatmapObject exists) => exists != null;
 
         //public static bool operator ==(BeatmapObject a, BeatmapObject b) => a && b && a.id == b.id;
-        //public static bool operator !=(BeatmapObject a, BeatmapObject b) => !a || !b || a && b && a.id != b.id;
+        //public static bool operator !=(BeatmapObject a, BeatmapObject b) => a == null || b == null || a.id != b.id;
 
         public override bool Equals(object obj) => obj is BeatmapObject && this == (BeatmapObject)obj;
 
