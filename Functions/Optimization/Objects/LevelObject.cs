@@ -27,8 +27,6 @@ namespace RTFunctions.Functions.Optimization.Objects
 
         public readonly List<Transform> transformChain;
 
-        bool ParentTransformAdditive => true;
-
         public void SetSequences(Sequence<Color> colorSequence, Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence)
         {
             this.colorSequence = colorSequence;
@@ -157,58 +155,61 @@ namespace RTFunctions.Functions.Optimization.Objects
             bool animateScale = true;
             bool animateRotation = true;
 
-            foreach (LevelParentObject parentObject in parentObjects)
+            float positionParallax = 1f;
+            float scaleParallax = 1f;
+            float rotationParallax = 1f;
+
+            foreach (var parentObject in parentObjects)
             {
                 // If last parent is position parented, animate position
                 if (animatePosition)
                 {
                     if (parentObject.Position3DSequence != null)
                     {
-                        Vector3 value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - positionOffset);
+                        var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - positionOffset);
                         float z = depth * 0.0005f;
                         float calc = value.z / 10f;
                         z = z + calc;
-                        parentObject.Transform.localPosition = new Vector3(value.x, value.y, z);
+                        parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, z);
                     }
                     else
                     {
                         Vector2 value = parentObject.PositionSequence.Interpolate(time - parentObject.TimeOffset - positionOffset);
-                        parentObject.Transform.localPosition = new Vector3(value.x, value.y, depth * 0.0005f);
+                        parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, depth * 0.0005f);
                     }
                 }
 
                 // If last parent is scale parented, animate scale
                 if (animateScale)
                 {
-                    Vector2 value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - scaleOffset);
-                    parentObject.Transform.localScale = new Vector3(value.x, value.y, 1.0f);
+                    var value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - scaleOffset);
+                    parentObject.Transform.localScale = new Vector3(value.x * scaleParallax, value.y * scaleParallax, 1.0f);
                 }
 
                 // If last parent is rotation parented, animate rotation
                 if (animateRotation)
                 {
                     parentObject.Transform.localRotation = Quaternion.AngleAxis(
-                        parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - rotationOffset),
+                        parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - rotationOffset) * rotationParallax,
                         Vector3.forward);
                 }
 
                 // Cache parent values to use for next parent
-                //if (ParentTransformAdditive)
-                //{
-                //    positionOffset += parentObject.ParentOffsetPosition;
-                //    scaleOffset += parentObject.ParentOffsetScale;
-                //    rotationOffset += parentObject.ParentOffsetRotation;
-                //}
-                //else
-                //{
-                    positionOffset = parentObject.ParentOffsetPosition;
-                    scaleOffset = parentObject.ParentOffsetScale;
-                    rotationOffset = parentObject.ParentOffsetRotation;
-                //}
+                positionOffset = parentObject.ParentAdditivePosition ? positionOffset + parentObject.ParentOffsetPosition : parentObject.ParentOffsetPosition;
+                scaleOffset = parentObject.ParentAdditiveScale ? scaleOffset + parentObject.ParentOffsetScale : parentObject.ParentOffsetScale;
+                rotationOffset = parentObject.ParentAdditiveRotation ? rotationOffset + parentObject.ParentOffsetRotation : parentObject.ParentOffsetRotation;
 
                 animatePosition = parentObject.ParentAnimatePosition;
                 animateScale = parentObject.ParentAnimateScale;
                 animateRotation = parentObject.ParentAnimateRotation;
+
+                //positionParallax = parentObject.ParentAdditivePosition ? positionParallax + parentObject.ParentParallaxPosition : parentObject.ParentParallaxPosition;
+                //scaleParallax = parentObject.ParentAdditiveScale ? scaleParallax + parentObject.ParentParallaxScale : parentObject.ParentParallaxScale;
+                //rotationParallax = parentObject.ParentAdditiveRotation ? rotationParallax + parentObject.ParentParallaxRotation : parentObject.ParentParallaxRotation;
+
+                positionParallax = parentObject.ParentParallaxPosition;
+                scaleParallax = parentObject.ParentParallaxScale;
+                rotationParallax = parentObject.ParentParallaxRotation;
             }
         }
     }
