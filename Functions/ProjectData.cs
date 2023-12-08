@@ -690,16 +690,23 @@ namespace RTFunctions.Functions
 
 			public static BaseMarker ParseMarker(JSONNode jn)
             {
-				bool active = jn["active"].AsBool;
+                try
+				{
+					bool active = jn["active"].AsBool;
 
-				string name = jn["name"] != null ? jn["name"] : "Marker";
+					string name = jn["name"] != null ? jn["name"] : "Marker";
 
-				string desc = jn["desc"] != null ? jn["desc"] : "";
-				float time = jn["t"].AsFloat;
+					string desc = jn["desc"] != null ? jn["desc"] : "";
+					float time = jn["t"].AsFloat;
 
-				int color = jn["col"] != null ? jn["col"].AsInt : 0;
+					int color = jn["col"] != null ? jn["col"].AsInt : 0;
 
-				return new BaseMarker(active, name, desc, color, time);
+					return new BaseMarker(active, name, desc, color, time);
+				}
+                catch
+                {
+					return new BaseMarker(true, "Marker", "", 0, 0f);
+                }
 			}
 
 			public static BaseCheckpoint ParseCheckpoint(JSONNode jn)
@@ -742,56 +749,12 @@ namespace RTFunctions.Functions
 				Debug.Log($"{FunctionsPlugin.className}Saving Object Prefabs");
 				for (int i = 0; i < _data.prefabObjects.Count; i++)
 				{
-					var prefabObject = _data.prefabObjects[i];
-
-					jn["prefab_objects"][i]["id"] = prefabObject.ID.ToString();
-					jn["prefab_objects"][i]["pid"] = prefabObject.prefabID.ToString();
-					jn["prefab_objects"][i]["st"] = prefabObject.StartTime.ToString();
-
-					if (prefabObject.RepeatCount > 0)
-						jn["prefab_objects"][i]["rc"] = prefabObject.RepeatCount.ToString();
-					if (prefabObject.RepeatOffsetTime > 0f)
-						jn["prefab_objects"][i]["ro"] = prefabObject.RepeatOffsetTime.ToString();
-
-					if (prefabObject.editorData.locked)
-					{
-						jn["prefab_objects"][i]["ed"]["locked"] = prefabObject.editorData.locked.ToString();
-					}
-					if (prefabObject.editorData.collapse)
-					{
-						jn["prefab_objects"][i]["ed"]["shrink"] = prefabObject.editorData.collapse.ToString();
-					}
-					jn["prefab_objects"][i]["ed"]["layer"] = prefabObject.editorData.Layer.ToString();
-					jn["prefab_objects"][i]["ed"]["bin"] = prefabObject.editorData.Bin.ToString();
-					jn["prefab_objects"][i]["e"]["pos"]["x"] = prefabObject.events[0].eventValues[0].ToString();
-					jn["prefab_objects"][i]["e"]["pos"]["y"] = prefabObject.events[0].eventValues[1].ToString();
-					if (prefabObject.events[0].random != 0)
-					{
-						jn["prefab_objects"][i]["e"]["pos"]["r"] = prefabObject.events[0].random.ToString();
-						jn["prefab_objects"][i]["e"]["pos"]["rx"] = prefabObject.events[0].eventRandomValues[0].ToString();
-						jn["prefab_objects"][i]["e"]["pos"]["ry"] = prefabObject.events[0].eventRandomValues[1].ToString();
-						jn["prefab_objects"][i]["e"]["pos"]["rz"] = prefabObject.events[0].eventRandomValues[2].ToString();
-					}
-					jn["prefab_objects"][i]["e"]["sca"]["x"] = prefabObject.events[1].eventValues[0].ToString();
-					jn["prefab_objects"][i]["e"]["sca"]["y"] = prefabObject.events[1].eventValues[1].ToString();
-					if (prefabObject.events[1].random != 0)
-					{
-						jn["prefab_objects"][i]["e"]["sca"]["r"] = prefabObject.events[1].random.ToString();
-						jn["prefab_objects"][i]["e"]["sca"]["rx"] = prefabObject.events[1].eventRandomValues[0].ToString();
-						jn["prefab_objects"][i]["e"]["sca"]["ry"] = prefabObject.events[1].eventRandomValues[1].ToString();
-						jn["prefab_objects"][i]["e"]["sca"]["rz"] = prefabObject.events[1].eventRandomValues[2].ToString();
-					}
-					jn["prefab_objects"][i]["e"]["rot"]["x"] = prefabObject.events[2].eventValues[0].ToString();
-					if (prefabObject.events[1].random != 0)
-					{
-						jn["prefab_objects"][i]["e"]["rot"]["r"] = prefabObject.events[2].random.ToString();
-						jn["prefab_objects"][i]["e"]["rot"]["rx"] = prefabObject.events[2].eventRandomValues[0].ToString();
-						jn["prefab_objects"][i]["e"]["rot"]["rz"] = prefabObject.events[2].eventRandomValues[2].ToString();
-					}
+					jn["prefab_objects"][i] = ((PrefabObject)_data.prefabObjects[i]).ToJSON();
 				}
 
                 Debug.Log($"{FunctionsPlugin.className}Saving Level Data");
                 {
+					jn["level_data"]["mod_version"] = FunctionsPlugin.CurrentVersion.ToString();
                     jn["level_data"]["level_version"] = "4.1.16";
                     jn["level_data"]["background_color"] = "0";
                     jn["level_data"]["follow_player"] = "False";
@@ -803,13 +766,13 @@ namespace RTFunctions.Functions
                 {
                     for (int i = 0; i < _data.prefabs.Count; i++)
                     {
-                        jn["prefabs"][i] = DataManager.inst.GeneratePrefabJSON(_data.prefabs[i]);
-                    }
+						jn["prefabs"][i] = ((Prefab)_data.prefabs[i]).ToJSON();
+					}
                 }
                 Debug.Log($"Saving themes");
 				if (_data.beatmapThemes != null)
 				{
-					List<BaseBeatmapTheme> levelThemes = new List<BaseBeatmapTheme>();
+					var levelThemes = new List<BaseBeatmapTheme>();
 
 					for (int i = 0; i < _data.beatmapThemes.Count; i++)
 					{
@@ -831,31 +794,32 @@ namespace RTFunctions.Functions
 					for (int i = 0; i < levelThemes.Count; i++)
 					{
 						Debug.LogFormat("{0}Saving " + levelThemes[i].id + " - " + levelThemes[i].name + " to level!", FunctionsPlugin.className);
-						jn["themes"][i]["id"] = levelThemes[i].id;
-						jn["themes"][i]["name"] = levelThemes[i].name;
-						//if (ConfigEntries.SaveOpacityToThemes.Value)
-							jn["themes"][i]["gui"] = RTHelpers.ColorToHex(levelThemes[i].guiColor);
-						//else
-						//	jn["themes"][i]["gui"] = LSColors.ColorToHex(levelThemes[i].guiColor);
-						jn["themes"][i]["bg"] = LSColors.ColorToHex(levelThemes[i].backgroundColor);
-						for (int j = 0; j < levelThemes[i].playerColors.Count; j++)
-						{
-							//if (ConfigEntries.SaveOpacityToThemes.Value)
-								jn["themes"][i]["players"][j] = RTHelpers.ColorToHex(levelThemes[i].playerColors[j]);
-							//else
-							//	jn["themes"][i]["players"][j] = LSColors.ColorToHex(levelThemes[i].playerColors[j]);
-						}
-						for (int j = 0; j < levelThemes[i].objectColors.Count; j++)
-						{
-							//if (ConfigEntries.SaveOpacityToThemes.Value)
-								jn["themes"][i]["objs"][j] = RTHelpers.ColorToHex(levelThemes[i].objectColors[j]);
-							//else
-							//	jn["themes"][i]["objs"][j] = LSColors.ColorToHex(levelThemes[i].objectColors[j]);
-						}
-						for (int j = 0; j < levelThemes[i].backgroundColors.Count; j++)
-						{
-							jn["themes"][i]["bgs"][j] = LSColors.ColorToHex(levelThemes[i].backgroundColors[j]);
-						}
+						jn["themes"][i] = ((BeatmapTheme)levelThemes[i]).ToJSON();
+						//jn["themes"][i]["id"] = levelThemes[i].id;
+						//jn["themes"][i]["name"] = levelThemes[i].name;
+						////if (ConfigEntries.SaveOpacityToThemes.Value)
+						//	jn["themes"][i]["gui"] = RTHelpers.ColorToHex(levelThemes[i].guiColor);
+						////else
+						////	jn["themes"][i]["gui"] = LSColors.ColorToHex(levelThemes[i].guiColor);
+						//jn["themes"][i]["bg"] = LSColors.ColorToHex(levelThemes[i].backgroundColor);
+						//for (int j = 0; j < levelThemes[i].playerColors.Count; j++)
+						//{
+						//	//if (ConfigEntries.SaveOpacityToThemes.Value)
+						//		jn["themes"][i]["players"][j] = RTHelpers.ColorToHex(levelThemes[i].playerColors[j]);
+						//	//else
+						//	//	jn["themes"][i]["players"][j] = LSColors.ColorToHex(levelThemes[i].playerColors[j]);
+						//}
+						//for (int j = 0; j < levelThemes[i].objectColors.Count; j++)
+						//{
+						//	//if (ConfigEntries.SaveOpacityToThemes.Value)
+						//		jn["themes"][i]["objs"][j] = RTHelpers.ColorToHex(levelThemes[i].objectColors[j]);
+						//	//else
+						//	//	jn["themes"][i]["objs"][j] = LSColors.ColorToHex(levelThemes[i].objectColors[j]);
+						//}
+						//for (int j = 0; j < levelThemes[i].backgroundColors.Count; j++)
+						//{
+						//	jn["themes"][i]["bgs"][j] = LSColors.ColorToHex(levelThemes[i].backgroundColors[j]);
+						//}
 					}
 				}
 
@@ -875,170 +839,9 @@ namespace RTFunctions.Functions
 					List<BaseBeatmapObject> list = _data.beatmapObjects.FindAll(x => !x.fromPrefab);
 					jn["beatmap_objects"] = new JSONArray();
 					for (int i = 0; i < list.Count; i++)
-					{
-						if (list[i] != null && list[i].events != null && !list[i].fromPrefab)
-						{
-							var bo = list[i];
-
-							jn["beatmap_objects"][i]["id"] = bo.id;
-							if (!string.IsNullOrEmpty(list[i].prefabID))
-							{
-								jn["beatmap_objects"][i]["pid"] = bo.prefabID;
-							}
-							if (!string.IsNullOrEmpty(bo.prefabInstanceID))
-							{
-								jn["beatmap_objects"][i]["piid"] = bo.prefabInstanceID;
-							}
-							if (bo.GetParentType().ToString() != "101")
-							{
-								jn["beatmap_objects"][i]["pt"] = bo.GetParentType().ToString();
-							}
-							if (bo.getParentOffsets().FindIndex((float x) => x != 0f) != -1)
-							{
-								int num4 = 0;
-								foreach (float num5 in bo.getParentOffsets())
-								{
-									jn["beatmap_objects"][i]["po"][num4] = num5.ToString();
-									num4++;
-								}
-							}
-							jn["beatmap_objects"][i]["p"] = bo.parent.ToString();
-							jn["beatmap_objects"][i]["d"] = bo.Depth.ToString();
-							jn["beatmap_objects"][i]["st"] = bo.StartTime.ToString();
-							if (!string.IsNullOrEmpty(bo.name))
-							{
-								jn["beatmap_objects"][i]["name"] = bo.name;
-							}
-							jn["beatmap_objects"][i]["ot"] = (int)bo.objectType;
-							jn["beatmap_objects"][i]["akt"] = (int)bo.autoKillType;
-							jn["beatmap_objects"][i]["ako"] = bo.autoKillOffset;
-							if (bo.shape != 0)
-							{
-								jn["beatmap_objects"][i]["shape"] = bo.shape.ToString();
-							}
-							if (bo.shapeOption != 0)
-							{
-								jn["beatmap_objects"][i]["so"] = bo.shapeOption.ToString();
-							}
-							if (!string.IsNullOrEmpty(bo.text))
-							{
-								jn["beatmap_objects"][i]["text"] = bo.text;
-							}
-							jn["beatmap_objects"][i]["o"]["x"] = bo.origin.x.ToString();
-							jn["beatmap_objects"][i]["o"]["y"] = bo.origin.y.ToString();
-							if (bo.editorData.locked)
-							{
-								jn["beatmap_objects"][i]["ed"]["locked"] = bo.editorData.locked.ToString();
-							}
-							if (bo.editorData.collapse)
-							{
-								jn["beatmap_objects"][i]["ed"]["shrink"] = bo.editorData.collapse.ToString();
-							}
-							jn["beatmap_objects"][i]["ed"]["bin"] = bo.editorData.Bin.ToString();
-							jn["beatmap_objects"][i]["ed"]["layer"] = bo.editorData.Layer.ToString();
-							jn["beatmap_objects"][i]["events"]["pos"] = new JSONArray();
-							for (int j = 0; j < bo.events[0].Count; j++)
-							{
-								jn["beatmap_objects"][i]["events"]["pos"][j]["t"] = bo.events[0][j].eventTime.ToString();
-								jn["beatmap_objects"][i]["events"]["pos"][j]["x"] = bo.events[0][j].eventValues[0].ToString();
-								jn["beatmap_objects"][i]["events"]["pos"][j]["y"] = bo.events[0][j].eventValues[1].ToString();
-
-								//Position Z
-								if (bo.events[0][j].eventValues.Length > 2)
-								{
-									jn["beatmap_objects"][i]["events"]["pos"][j]["z"] = bo.events[0][j].eventValues[2].ToString();
-								}
-
-								if (bo.events[0][j].curveType.Name != "Linear")
-								{
-									jn["beatmap_objects"][i]["events"]["pos"][j]["ct"] = bo.events[0][j].curveType.Name.ToString();
-								}
-								if (bo.events[0][j].random != 0)
-								{
-									jn["beatmap_objects"][i]["events"]["pos"][j]["r"] = bo.events[0][j].random.ToString();
-									jn["beatmap_objects"][i]["events"]["pos"][j]["rx"] = bo.events[0][j].eventRandomValues[0].ToString();
-									jn["beatmap_objects"][i]["events"]["pos"][j]["ry"] = bo.events[0][j].eventRandomValues[1].ToString();
-									jn["beatmap_objects"][i]["events"]["pos"][j]["rz"] = bo.events[0][j].eventRandomValues[2].ToString();
-								}
-							}
-							jn["beatmap_objects"][i]["events"]["sca"] = new JSONArray();
-							for (int j = 0; j < bo.events[1].Count; j++)
-							{
-								jn["beatmap_objects"][i]["events"]["sca"][j]["t"] = bo.events[1][j].eventTime.ToString();
-								jn["beatmap_objects"][i]["events"]["sca"][j]["x"] = bo.events[1][j].eventValues[0].ToString();
-								jn["beatmap_objects"][i]["events"]["sca"][j]["y"] = bo.events[1][j].eventValues[1].ToString();
-								if (bo.events[1][j].curveType.Name != "Linear")
-								{
-									jn["beatmap_objects"][i]["events"]["sca"][j]["ct"] = bo.events[1][j].curveType.Name.ToString();
-								}
-								if (bo.events[1][j].random != 0)
-								{
-									jn["beatmap_objects"][i]["events"]["sca"][j]["r"] = bo.events[1][j].random.ToString();
-									jn["beatmap_objects"][i]["events"]["sca"][j]["rx"] = bo.events[1][j].eventRandomValues[0].ToString();
-									jn["beatmap_objects"][i]["events"]["sca"][j]["ry"] = bo.events[1][j].eventRandomValues[1].ToString();
-									jn["beatmap_objects"][i]["events"]["sca"][j]["rz"] = bo.events[1][j].eventRandomValues[2].ToString();
-								}
-							}
-							jn["beatmap_objects"][i]["events"]["rot"] = new JSONArray();
-							for (int j = 0; j < bo.events[2].Count; j++)
-							{
-								jn["beatmap_objects"][i]["events"]["rot"][j]["t"] = bo.events[2][j].eventTime.ToString();
-								jn["beatmap_objects"][i]["events"]["rot"][j]["x"] = bo.events[2][j].eventValues[0].ToString();
-								if (bo.events[2][j].curveType.Name != "Linear")
-								{
-									jn["beatmap_objects"][i]["events"]["rot"][j]["ct"] = bo.events[2][j].curveType.Name.ToString();
-								}
-								if (bo.events[2][j].random != 0)
-								{
-									jn["beatmap_objects"][i]["events"]["rot"][j]["r"] = bo.events[2][j].random.ToString();
-									jn["beatmap_objects"][i]["events"]["rot"][j]["rx"] = bo.events[2][j].eventRandomValues[0].ToString();
-									jn["beatmap_objects"][i]["events"]["rot"][j]["rz"] = bo.events[2][j].eventRandomValues[2].ToString();
-								}
-							}
-							jn["beatmap_objects"][i]["events"]["col"] = new JSONArray();
-							for (int j = 0; j < bo.events[3].Count; j++)
-							{
-								jn["beatmap_objects"][i]["events"]["col"][j]["t"] = bo.events[3][j].eventTime.ToString();
-								jn["beatmap_objects"][i]["events"]["col"][j]["x"] = bo.events[3][j].eventValues[0].ToString();
-								jn["beatmap_objects"][i]["events"]["col"][j]["y"] = bo.events[3][j].eventValues[1].ToString();
-								jn["beatmap_objects"][i]["events"]["col"][j]["z"] = bo.events[3][j].eventValues[2].ToString();
-								jn["beatmap_objects"][i]["events"]["col"][j]["x2"] = bo.events[3][j].eventValues[3].ToString();
-								jn["beatmap_objects"][i]["events"]["col"][j]["y2"] = bo.events[3][j].eventValues[4].ToString();
-
-								if (bo.events[3][j].curveType.Name != "Linear")
-								{
-									jn["beatmap_objects"][i]["events"]["col"][j]["ct"] = bo.events[3][j].curveType.Name.ToString();
-								}
-								if (bo.events[3][j].random != 0)
-								{
-									jn["beatmap_objects"][i]["events"]["col"][j]["r"] = bo.events[3][j].random.ToString();
-									jn["beatmap_objects"][i]["events"]["col"][j]["rx"] = bo.events[3][j].eventRandomValues[0].ToString();
-								}
-							}
-
-							for (int j = 0; j < ((BeatmapObject)_data.beatmapObjects[i]).modifiers.Count; j++)
-							{
-								var modifier = ((BeatmapObject)_data.beatmapObjects[i]).modifiers[j];
-
-								jn["beatmap_objects"][i]["modifiers"][j]["type"] = (int)modifier.type;
-
-								if (modifier.not)
-									jn["beatmap_objects"][i]["modifiers"][j]["not"] = modifier.not.ToString();
-
-								{
-									var commands = modifier.commands;
-									for (int k = 0; k < commands.Count; k++)
-									{
-										jn["beatmap_objects"][i]["modifiers"][j]["commands"][k] = commands[k];
-									}
-								}
-
-								jn["beatmap_objects"][i]["modifiers"][j]["value"] = modifier.value;
-
-								jn["beatmap_objects"][i]["modifiers"][j]["const"] = modifier.constant.ToString();
-							}
-						}
-					}
+                    {
+						jn["beatmap_objects"][i] = ((BeatmapObject)list[i]).ToJSON();
+                    }
 				}
 				else
 				{
@@ -1049,62 +852,7 @@ namespace RTFunctions.Functions
 				Debug.Log($"{FunctionsPlugin.className}Saving Background Objects");
 				for (int i = 0; i < _data.backgroundObjects.Count; i++)
 				{
-					try
-					{
-						var bg = (BackgroundObject)_data.backgroundObjects[i];
-
-						jn["bg_objects"][i]["active"] = bg.active.ToString();
-						jn["bg_objects"][i]["name"] = bg.name.ToString();
-						jn["bg_objects"][i]["kind"] = bg.kind.ToString();
-						jn["bg_objects"][i]["pos"]["x"] = bg.pos.x.ToString();
-						jn["bg_objects"][i]["pos"]["y"] = bg.pos.y.ToString();
-						jn["bg_objects"][i]["size"]["x"] = bg.scale.x.ToString();
-						jn["bg_objects"][i]["size"]["y"] = bg.scale.y.ToString();
-						jn["bg_objects"][i]["rot"] = bg.rot.ToString();
-						jn["bg_objects"][i]["color"] = bg.color.ToString();
-						jn["bg_objects"][i]["layer"] = bg.zPosition.ToString();
-						jn["bg_objects"][i]["fade"] = bg.drawFade.ToString();
-
-						if (bg.reactive)
-						{
-							jn["bg_objects"][i]["r_set"]["type"] = bg.reactiveType.ToString();
-							jn["bg_objects"][i]["r_set"]["scale"] = bg.reactiveScale.ToString();
-						}
-
-						jn["bg_objects"][i]["zscale"] = bg.zscale.ToString();
-						jn["bg_objects"][i]["depth"] = bg.depth.ToString();
-						jn["bg_objects"][i]["s"] = bg.shape.Type.ToString();
-						jn["bg_objects"][i]["so"] = bg.shape.Option.ToString();
-						jn["bg_objects"][i]["color_fade"] = bg.FadeColor.ToString();
-						jn["bg_objects"][i]["r_offset"]["x"] = bg.rotation.x.ToString();
-						jn["bg_objects"][i]["r_offset"]["y"] = bg.rotation.y.ToString();
-
-						jn["bg_objects"][i]["rc"]["pos"]["i"]["x"] = bg.reactivePosIntensity.x.ToString();
-						jn["bg_objects"][i]["rc"]["pos"]["i"]["y"] = bg.reactivePosIntensity.y.ToString();
-						jn["bg_objects"][i]["rc"]["pos"]["s"]["x"] = bg.reactivePosSamples.x.ToString();
-						jn["bg_objects"][i]["rc"]["pos"]["s"]["y"] = bg.reactivePosSamples.y.ToString();
-
-						//jn["bg_objects"][i]["rc"]["z"]["active"] = bg.reactiveIncludesZ.ToString();
-						jn["bg_objects"][i]["rc"]["z"]["i"] = bg.reactiveZIntensity.ToString();
-						jn["bg_objects"][i]["rc"]["z"]["s"] = bg.reactiveZSample.ToString();
-
-						jn["bg_objects"][i]["rc"]["sca"]["i"]["x"] = bg.reactiveScaIntensity.x.ToString();
-						jn["bg_objects"][i]["rc"]["sca"]["i"]["y"] = bg.reactiveScaIntensity.y.ToString();
-						jn["bg_objects"][i]["rc"]["sca"]["s"]["x"] = bg.reactiveScaSamples.x.ToString();
-						jn["bg_objects"][i]["rc"]["sca"]["s"]["y"] = bg.reactiveScaSamples.y.ToString();
-
-						jn["bg_objects"][i]["rc"]["rot"]["i"] = bg.reactiveRotIntensity.ToString();
-						jn["bg_objects"][i]["rc"]["rot"]["s"] = bg.reactiveRotSample.ToString();
-
-						jn["bg_objects"][i]["rc"]["col"]["i"] = bg.reactiveColIntensity.ToString();
-						jn["bg_objects"][i]["rc"]["col"]["s"] = bg.reactiveColSample.ToString();
-						jn["bg_objects"][i]["rc"]["col"]["c"] = bg.reactiveCol.ToString();
-					}
-					catch (Exception ex)
-					{
-						Debug.Log($"{FunctionsPlugin.className}BG Mod error!\nMESSAGE: {ex.Message}\nSTACKTRACE: {ex.StackTrace}");
-					}
-
+					jn["bg_objects"][i] = ((BackgroundObject)_data.backgroundObjects[i]).ToJSON();
 				}
 
 				Debug.Log($"{FunctionsPlugin.className}Saving Event Objects");

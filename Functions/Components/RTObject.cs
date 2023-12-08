@@ -6,6 +6,7 @@ using LSFunctions;
 
 using RTFunctions.Functions;
 using RTFunctions.Functions.IO;
+using RTFunctions.Functions.Managers;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
 
@@ -17,9 +18,9 @@ namespace RTFunctions.Functions.Components
 		public bool tipEnabled;
 		public string id;
 
-		private BeatmapObject beatmapObject;
+		BeatmapObject beatmapObject;
 
-		private Renderer renderer;
+		Renderer renderer;
 
 		public Color highlightColor;
 		public Color highlightDoubleColor;
@@ -27,7 +28,7 @@ namespace RTFunctions.Functions.Components
 		public float layerOpacity = 0.5f;
 		public bool showObjectsOnlyOnLayer;
 
-		private void Awake()
+		void Awake()
         {
 			if (EditorManager.inst == null)
 				Destroy(this);
@@ -53,9 +54,15 @@ namespace RTFunctions.Functions.Components
 		public void OnMouseDown()
         {
 			if (EditorManager.inst != null && EditorManager.inst.isEditing && DataManager.inst.gameData.beatmapObjects.Count > 0 && !string.IsNullOrEmpty(id) && !LSHelpers.IsUsingInputField() && !EventSystem.current.IsPointerOverGameObject())
-            {
-				ObjEditor.inst.SetCurrentObj(new ObjEditor.ObjectSelection(ObjEditor.ObjectSelection.SelectionType.Object, id));
-				ObjEditor.inst.RenderTimelineObjects();
+			{
+				if (ModCompatibility.mods.ContainsKey("EditorManagement"))
+				{
+					var mod = ModCompatibility.mods["EditorManagement"];
+					if (mod.Methods.ContainsKey("SetCurrentObject") && !Input.GetKey(KeyCode.LeftShift))
+						mod.Methods["SetCurrentObject"].DynamicInvoke(new TimelineObject(beatmapObject), true);
+					if (mod.Methods.ContainsKey("AddSelectedObject") && Input.GetKey(KeyCode.LeftShift))
+						mod.Methods["AddSelectedObject"].DynamicInvoke(new TimelineObject(beatmapObject));
+				}
             }
         }
 
@@ -66,10 +73,10 @@ namespace RTFunctions.Functions.Components
             if (tipEnabled && EditorManager.inst != null)
 			{
 				DataManager.Language enumTmp = DataManager.inst.GetCurrentLanguageEnum();
-				int num = tooltipLanguages.FindIndex((HoverTooltip.Tooltip x) => x.language == enumTmp);
+				int num = tooltipLanguages.FindIndex(x => x.language == enumTmp);
 				if (num != -1)
 				{
-					HoverTooltip.Tooltip tooltip = tooltipLanguages[num];
+					var tooltip = tooltipLanguages[num];
 					EditorManager.inst.SetTooltip(tooltip.keys, tooltip.desc, tooltip.hint);
 					return;
 				}
@@ -100,28 +107,17 @@ namespace RTFunctions.Functions.Components
 
 			if (EditorManager.inst != null && EditorManager.inst.isEditing && highlightObjects && selected && renderer != null && renderer.material.HasProperty("_Color"))
 			{
-				if (Input.GetKey(KeyCode.LeftShift))
-				{
-					Color colorHover = new Color(highlightDoubleColor.r, highlightDoubleColor.g, highlightDoubleColor.b);
+				var color = Input.GetKey(KeyCode.LeftShift) ? new Color(
+					renderer.material.color.r > 0.9f ? -highlightDoubleColor.r : highlightDoubleColor.r,
+					renderer.material.color.g > 0.9f ? -highlightDoubleColor.g : highlightDoubleColor.g,
+					renderer.material.color.b > 0.9f ? -highlightDoubleColor.b : highlightDoubleColor.b,
+					0f) : new Color(
+					renderer.material.color.r > 0.9f ? -highlightColor.r : highlightColor.r,
+					renderer.material.color.g > 0.9f ? -highlightColor.g : highlightColor.g,
+					renderer.material.color.b > 0.9f ? -highlightColor.b : highlightColor.b,
+					0f);
 
-					if (renderer.material.color.r > 0.9f && renderer.material.color.g > 0.9f && renderer.material.color.b > 0.9f)
-					{
-						colorHover = new Color(-highlightDoubleColor.r, -highlightDoubleColor.g, -highlightDoubleColor.b);
-					}
-
-					renderer.material.color += new Color(colorHover.r, colorHover.g, colorHover.b, 0f);
-				}
-				else
-				{
-					Color colorHover = new Color(highlightColor.r, highlightColor.g, highlightColor.b);
-
-					if (renderer.material.color.r > 0.95f && renderer.material.color.g > 0.95f && renderer.material.color.b > 0.95f)
-					{
-						colorHover = new Color(-highlightColor.r, -highlightColor.g, -highlightColor.b);
-					}
-
-					renderer.material.color += new Color(colorHover.r, colorHover.g, colorHover.b, 0f);
-				}
+				renderer.material.color += color;
 			}
 
 			if (EditorManager.inst != null && EditorManager.inst.showHelp && beatmapObject != null)

@@ -95,15 +95,22 @@ namespace RTFunctions.Functions.Data
 		{
 			var gameData = new GameData();
 
+			gameData.beatmapData = LevelBeatmapData.Parse(jn);
+
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Markers...");
 			#region Markers
 
-			for (int i = 0; i < jn["markers"].Count; i++)
-				gameData.beatmapData.markers.Add(ProjectData.Reader.ParseMarker(jn["markers"][i]));
+			//if (gameData.beatmapData.markers == null)
+			//	gameData.beatmapData.markers = new List<BeatmapData.Marker>();
+
+			//for (int i = 0; i < jn["ed"]["markers"].Count; i++)
+			//	gameData.beatmapData.markers.Add(ProjectData.Reader.ParseMarker(jn["ed"]["markers"][i]));
 
 			gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
 
 			#endregion
 
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Checkpoints...");
 			#region Checkpoints
 
 			for (int i = 0; i < jn["checkpoints"].Count; i++)
@@ -113,6 +120,7 @@ namespace RTFunctions.Functions.Data
 
 			#endregion
 
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Prefabs...");
 			#region Prefabs
 
 			for (int i = 0; i < jn["prefabs"].Count; i++)
@@ -124,6 +132,7 @@ namespace RTFunctions.Functions.Data
 
 			#endregion
 
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing PrefabObjects...");
 			#region PrefabObjects
 
 			for (int i = 0; i < jn["prefab_objects"].Count; i++)
@@ -135,14 +144,19 @@ namespace RTFunctions.Functions.Data
 
 			#endregion
 
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BeatmapThemes...");
 			#region Themes
+
+			foreach (var theme in DataManager.inst.BeatmapThemes)
+				gameData.beatmapThemes.Add(theme.id, theme);
 
 			for (int i = 0; i < jn["themes"].Count; i++)
 				if (!gameData.beatmapThemes.ContainsKey(jn["themes"][i]["id"]))
-					gameData.beatmapThemes.Add(jn["themes"][i]["id"], ProjectData.Reader.ParseBeatmapTheme(jn["themes"][i], ProjectData.Reader.FileType.LS));
+					gameData.beatmapThemes.Add(jn["themes"][i]["id"], BeatmapTheme.Parse(jn["themes"][i]));
 
 			#endregion
 
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BeatmapObjects...");
 			#region Objects
 
 			for (int i = 0; i < jn["beatmap_objects"].Count; i++)
@@ -150,6 +164,7 @@ namespace RTFunctions.Functions.Data
 
 			#endregion
 
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BackgroundObjects...");
 			#region Backgrounds
 
 			for (int i = 0; i < jn["bg_objects"].Count; i++)
@@ -157,6 +172,7 @@ namespace RTFunctions.Functions.Data
 
 			#endregion
 
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Events...");
 			#region Events
 
 			gameData.eventObjects.allEvents = ProjectData.Reader.ParseEventkeyframes(jn["events"], true);
@@ -288,7 +304,8 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[1],
+				eventValues = new float[1]
+				{ 20f },
 				id = LSText.randomNumString(8),
 			}, // Zoom
 			new Data.EventKeyframe

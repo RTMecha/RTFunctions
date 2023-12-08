@@ -39,7 +39,7 @@ namespace RTFunctions.Patchers
 
             var objects = new GameObject("Objects");
             objects.transform.SetParent(systemManager.transform);
-            objects.AddComponent<Objects>();
+            objects.AddComponent<ShapeManager>();
 
             var uiManager = new GameObject("UIManager");
             uiManager.transform.SetParent(systemManager.transform);
@@ -63,6 +63,7 @@ namespace RTFunctions.Patchers
             AnimationManager.Init();
             RTLogger.Init();
 
+            // Test to see if this is even necessary. If not, then feel free to remove this.
             EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
             EnumPatcher.AddEnumValue<DataManager.GameData.BackgroundObject.ReactiveType>("CUSTOM");
 
@@ -178,6 +179,24 @@ namespace RTFunctions.Patchers
                 }
             }
 
+            for (int i = 0; i < __instance.BeatmapThemes.Count; i++)
+            {
+                var beatmapTheme = __instance.BeatmapThemes[i];
+                __instance.BeatmapThemes[i] = new Functions.Data.BeatmapTheme
+                {
+                    id = beatmapTheme.id,
+                    name = beatmapTheme.name,
+                    expanded = beatmapTheme.expanded,
+                    backgroundColor = beatmapTheme.backgroundColor,
+                    guiAccentColor = beatmapTheme.guiColor,
+                    guiColor = beatmapTheme.guiColor,
+                    playerColors = beatmapTheme.playerColors,
+                    objectColors = beatmapTheme.objectColors,
+                    backgroundColors = beatmapTheme.backgroundColors,
+                    effectColors = beatmapTheme.objectColors,
+                };
+            }
+
             __instance.UpdateSettingString("versionNumber", "4.1.16");
 
             FunctionsPlugin.ParseProfile();
@@ -185,8 +204,9 @@ namespace RTFunctions.Patchers
 
         [HarmonyPatch("SaveData", typeof(string), typeof(DataManager.GameData))]
         [HarmonyPrefix]
-        private static bool DataSaver(DataManager __instance, ref IEnumerator __result, string __0, DataManager.GameData __1)
+        static bool SaveDataPrefix(DataManager __instance, ref IEnumerator __result, string __0, DataManager.GameData __1)
         {
+            Debug.Log($"{__instance.className}GameData is modded: {__1 is Functions.Data.GameData}");
             __result = ProjectData.Writer.SaveData(__0, (Functions.Data.GameData)__1);
             return false;
         }

@@ -20,6 +20,7 @@ namespace RTFunctions.Functions.IO
 
         public static GameObject loggerCanvas;
         public static Transform loggerContent;
+        public static CanvasScaler canvasScaler;
 
         public static void Init()
         {
@@ -47,9 +48,10 @@ namespace RTFunctions.Functions.IO
             canvas.scaleFactor = RTHelpers.screenScale;
             canvas.sortingOrder = 1000;
 
-            var canvasScaler = loggerCanvas.AddComponent<CanvasScaler>();
-            canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasScaler = loggerCanvas.AddComponent<CanvasScaler>();
+            canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
             canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
+            canvasScaler.scaleFactor = RTHelpers.screenScale;
 
             loggerCanvas.AddComponent<GraphicRaycaster>();
 
@@ -262,6 +264,8 @@ namespace RTFunctions.Functions.IO
 
             LSHelpers.DeleteChildren(loggerContent);
 
+            canvasScaler.scaleFactor = RTHelpers.screenScale;
+
             for (int i = 0; i < logs.Count; i++)
             {
                 var evenOdd = i % 2 == 0;
@@ -307,7 +311,7 @@ namespace RTFunctions.Functions.IO
 
         public static void AddLog(string log)
         {
-            if (!FunctionsPlugin.DebugsOn.Value)
+            if (!FunctionsPlugin.DebugsOn.Value || loggerCanvas == null || loggerContent == null)
                 return;
 
             while (logs.Count > LogsCap)

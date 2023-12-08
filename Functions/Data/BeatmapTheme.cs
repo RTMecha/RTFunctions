@@ -283,7 +283,49 @@ namespace RTFunctions.Functions.Data
 			backgroundColors.Add(LSColors.pink900);
 		}
 
-		
+		public void Lerp(BeatmapTheme _start, BeatmapTheme _end, float _val)
+		{
+			guiColor = Color.Lerp(_start.guiColor, _end.guiColor, _val);
+			guiAccentColor = Color.Lerp(_start.guiAccentColor, _end.guiAccentColor, _val);
+			backgroundColor = Color.Lerp(_start.backgroundColor, _end.backgroundColor, _val);
+			for (int i = 0; i < 4; i++)
+			{
+				if (_start.playerColors[i] != null && _end.playerColors[i] != null)
+				{
+					playerColors[i] = Color.Lerp(_start.GetPlayerColor(i), _end.GetPlayerColor(i), _val);
+				}
+			}
+
+			int maxObj = 9;
+			if (_start.objectColors.Count > 9 && _end.objectColors.Count > 9)
+			{
+				maxObj = 18;
+			}
+
+			for (int j = 0; j < maxObj; j++)
+			{
+				if (_start.objectColors[j] != null && _end.objectColors[j] != null)
+				{
+					objectColors[j] = Color.Lerp(_start.GetObjColor(j), _end.GetObjColor(j), _val);
+				}
+			}
+
+			for (int k = 0; k < 9; k++)
+			{
+				if (_start.backgroundColors[k] != null && _end.backgroundColors[k] != null)
+				{
+					backgroundColors[k] = Color.Lerp(_start.GetBGColor(k), _end.GetBGColor(k), _val);
+				}
+			}
+
+			for (int k = 0; k < 18; k++)
+			{
+				if (_start.effectColors[k] != null && _end.effectColors[k] != null)
+				{
+					effectColors[k] = Color.Lerp(_start.effectColors[k], _end.effectColors[k], _val);
+				}
+			}
+		}
 
 		#endregion
 

@@ -87,9 +87,9 @@ namespace RTFunctions.Patchers
 
 					beatmapObject.StartTime = __0.StartTime + prefab.Offset + (beatmapObject.StartTime + timeToAdd) * prefabObject.speed;
 
-                    beatmapObject.StartTime += timeToAdd;
-					beatmapObject.StartTime += __0.StartTime;
-					beatmapObject.StartTime += prefab.Offset;
+                    //beatmapObject.StartTime += timeToAdd;
+					//beatmapObject.StartTime += __0.StartTime;
+					//beatmapObject.StartTime += prefab.Offset;
 
 					beatmapObject.prefabID = __0.prefabID;
 
@@ -226,5 +226,7 @@ namespace RTFunctions.Patchers
 				}
 			}
 		}
+
+
 	}
 }

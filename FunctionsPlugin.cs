@@ -45,7 +45,7 @@ namespace RTFunctions
 		public static string BepInExPluginsPath => "BepInEx/plugins/";
 		public static string BepInExAssetsPath => $"{BepInExPluginsPath}Assets/";
 
-		public static Version VersionNumber => new Version(PluginInfo.PLUGIN_VERSION, "25/11/2023 10:03 PM");
+		public static Version CurrentVersion => new Version(PluginInfo.PLUGIN_VERSION, "25/11/2023 10:03 PM");
 
 		public static FunctionsPlugin inst;
 		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
@@ -356,8 +356,8 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(BackgroundManagerPatch));
 				harmony.PatchAll(typeof(DebugPatcher));
 
-				Patcher.PatchPropertySetter(typeof(DataManager.GameData.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
-					typeof(FunctionsPlugin), "DepthSetterPrefix", null);
+				//Patcher.PatchPropertySetter(typeof(DataManager.GameData.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
+				//	typeof(FunctionsPlugin), "DepthSetterPrefix", null);
 
 				//Patcher.PatchPropertySetter(typeof(Functions.Data.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
 				//	typeof(FunctionsPlugin), "DepthSetterPrefix", new Type[] { typeof(int), typeof(DataManager.GameData.BeatmapObject) });
@@ -513,7 +513,56 @@ namespace RTFunctions
 			//UnityEngine.Analytics.Analytics.deviceStatsEnabled = false;
 		}
 
-		[HarmonyPatch(typeof(SystemManager), "Update")]
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(object __0)
+        //{
+        //    RTLogger.AddLog(__0.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(LogType), typeof(object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(LogType __0, object __1)
+        //{
+        //    RTLogger.AddLog(__1.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(string), typeof(object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(string __0, object __1)
+        //{
+        //    RTLogger.AddLog(__1.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(string), typeof(object), typeof(UnityEngine.Object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(string __0, object __1, UnityEngine.Object __2)
+        //{
+        //    RTLogger.AddLog(__1.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(LogType), typeof(string), typeof(object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(LogType __0, string __1, object __2)
+        //{
+        //    RTLogger.AddLog(__2.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(string), typeof(object), typeof(UnityEngine.Object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(string __0, object __1, object __2)
+        //{
+        //    RTLogger.AddLog(__1.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(LogType), typeof(string), typeof(object), typeof(UnityEngine.Object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(LogType __0, string __1, object __2, UnityEngine.Object __3)
+        //{
+        //    RTLogger.AddLog(__2.ToString());
+        //}
+
+        [HarmonyPatch(typeof(SystemManager), "Update")]
 		[HarmonyPrefix]
 		static bool SystemManagerUpdatePrefix()
 		{
@@ -558,6 +607,28 @@ namespace RTFunctions
 		[HarmonyPrefix]
 		static void ObjEditorDeletePrefix(ObjEditor __instance, ObjEditor.ObjectSelection __0) => Updater.updateProcessor(__0, false);
 
+		[HarmonyPatch(typeof(EventManager), "updateTheme")]
+		[HarmonyPrefix]
+		static bool updateTheme(EventManager __instance, float _theme)
+		{
+			if (!ModCompatibility.mods.ContainsKey("EventsCore"))
+			{
+				var beatmapTheme = Functions.Data.BeatmapTheme.DeepCopy((Functions.Data.BeatmapTheme)GameManager.inst.LiveTheme);
+				((Functions.Data.BeatmapTheme)GameManager.inst.LiveTheme).Lerp((Functions.Data.BeatmapTheme)DataManager.inst.GetTheme(__instance.LastTheme),
+					(Functions.Data.BeatmapTheme)DataManager.inst.GetTheme(__instance.NewTheme), _theme);
+
+				if (beatmapTheme != GameManager.inst.LiveTheme)
+					GameManager.inst.UpdateTheme();
+			}
+			else
+				EventsCoreUpdateThemePrefix?.Invoke();
+
+			return false;
+		}
+
+		public static Action EventsCoreGameThemePrefix { get; set; }
+		public static Action EventsCoreUpdateThemePrefix { get; set; }
+
 		//[HarmonyPatch(typeof(InterfaceController), "Start")]
 		//[HarmonyPrefix]
 		//static void InterfaceControllerPrefix(InterfaceController __instance)
@@ -566,19 +637,19 @@ namespace RTFunctions
 		//		GameManagerPatch.EndInvoke();
 		//}
 
-		public static bool DepthSetterPrefix(int value, object __instance)
-		{
-			// Instance is not null
-			//Debug.Log($"{className}BeatmapObject Instance: {__instance}");
+		//public static bool DepthSetterPrefix(int value, object __instance)
+		//{
+		//	// Instance is not null
+		//	//Debug.Log($"{className}BeatmapObject Instance: {__instance}");
 
-			if (__instance is Functions.Data.BeatmapObject)
-				((Functions.Data.BeatmapObject)__instance).depth = value;
-			else
-				((DataManager.GameData.BeatmapObject)__instance).depth = value;
+		//	if (__instance is Functions.Data.BeatmapObject)
+		//		((Functions.Data.BeatmapObject)__instance).depth = value;
+		//	else
+		//		((DataManager.GameData.BeatmapObject)__instance).depth = value;
 
-			return false;
-		}
-		
+		//	return false;
+		//}
+
 		#endregion
 
 		public static void TakeScreenshot()

@@ -23,6 +23,7 @@ namespace RTFunctions.Functions.Data
 
             beatmapData.editorData = LevelEditorData.Parse(jn["ed"]);
 
+			beatmapData.markers = new List<Marker>();
 			beatmapData.markers.Clear();
 			for (int i = 0; i < jn["ed"]["markers"].Count; i++)
 			{

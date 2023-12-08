@@ -182,6 +182,14 @@ namespace RTFunctions.Functions
 			copy.name = name;
 			return copy;
         }
+		
+		public static GameObject Duplicate(this GameObject gameObject, Transform parent, string name, int index)
+        {
+			var copy = gameObject.Duplicate(parent);
+			copy.name = name;
+			copy.transform.SetSiblingIndex(index);
+			return copy;
+        }
 
 		public static void GetComponentAndPerformAction<T>(this GameObject gameObject, Action<T> action)
         {
@@ -440,6 +448,14 @@ namespace RTFunctions.Functions
 			for (int i = 0; i < ts.Length; i++)
 				array[i] = ts[i];
 			return array;
+        }
+
+		public static Dictionary<TKey, TValue> Clone<TKey, TValue>(this Dictionary<TKey, TValue> keyValuePairs)
+        {
+			var dictionary = new Dictionary<TKey, TValue>();
+			foreach (var d in keyValuePairs)
+				dictionary.Add(d.Key, d.Value);
+			return dictionary;
         }
 
         public static float Interpolate(this BeatmapObject beatmapObject, int type, int value)
@@ -706,6 +722,14 @@ namespace RTFunctions.Functions
 			d.m_PersistentCalls.m_Calls.Clear();
 			d.RemoveAllListeners();
         }
+		
+		public static void ClearAll(this Slider.SliderEvent s)
+        {
+			s.m_Calls.m_ExecutingCalls.Clear();
+			s.m_Calls.m_PersistentCalls.Clear();
+			s.m_PersistentCalls.m_Calls.Clear();
+			s.RemoveAllListeners();
+        }
 
 		public static void NewOnClickListener(this Button b, UnityAction unityAction)
         {
@@ -732,6 +756,13 @@ namespace RTFunctions.Functions
 			d.onValueChanged.ClearAll();
 			d.value = value;
 			d.onValueChanged.AddListener(unityAction);
+        }
+
+		public static void NewValueChangedListener(this Slider slider, float value, UnityAction<float> unityAction)
+        {
+			slider.onValueChanged.ClearAll();
+			slider.value = value;
+			slider.onValueChanged.AddListener(unityAction);
         }
 
 		public static Component ReplaceComponent(this Component component, Component newComponent)

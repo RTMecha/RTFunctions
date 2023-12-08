@@ -54,13 +54,14 @@ namespace RTFunctions.Functions.Data
 
         public static EventKeyframe DeepCopy(EventKeyframe eventKeyframe, bool newID = true) => new EventKeyframe
         {
-            id = newID ? LSFunctions.LSText.randomNumString(8) : eventKeyframe.id,
+            id = newID ? LSText.randomNumString(8) : eventKeyframe.id,
             active = eventKeyframe.active,
             curveType = eventKeyframe.curveType,
             eventRandomValues = eventKeyframe.eventRandomValues.ToList().Clone().ToArray(),
             eventTime = eventKeyframe.eventTime,
             eventValues = eventKeyframe.eventValues.ToList().Clone().ToArray(),
-            random = eventKeyframe.random
+            random = eventKeyframe.random,
+            relative = eventKeyframe.relative,
         };
 
         public static EventKeyframe Parse(JSONNode jn, int valueCount)

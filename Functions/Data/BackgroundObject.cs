@@ -27,7 +27,7 @@ namespace RTFunctions.Functions.Data
     {
         public BackgroundObject()
         {
-            shape = Objects.Shapes3D[0];
+            shape = ShapeManager.Shapes3D[0];
         }
 
 		public BackgroundObject(
@@ -83,12 +83,12 @@ namespace RTFunctions.Functions.Data
             scale = bg.scale;
             text = bg.text;
             
-            shape = Objects.Shapes3D[0];
+            shape = ShapeManager.Shapes3D[0];
         }
 
         public void SetShape(int shape)
         {
-            this.shape = Shape.DeepCopy(Objects.Shapes3D[shape]);
+            this.shape = Shape.DeepCopy(ShapeManager.Shapes3D[shape]);
             foreach (var gameObject in gameObjects)
             {
                 if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
@@ -98,7 +98,7 @@ namespace RTFunctions.Functions.Data
 
         public void SetShape(int shape, int shapeOption)
         {
-            this.shape = Shape.DeepCopy(Objects.GetShape3D(shape, shapeOption));
+            this.shape = Shape.DeepCopy(ShapeManager.GetShape3D(shape, shapeOption));
             foreach (var gameObject in gameObjects)
             {
                 if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
@@ -236,9 +236,9 @@ namespace RTFunctions.Functions.Data
 			if (jn["depth"] != null)
 				depth = jn["depth"].AsInt;
 
-			Shape shape = Objects.Shapes3D[0];
+			Shape shape = ShapeManager.Shapes3D[0];
 			if (jn["s"] != null && jn["so"] != null)
-				shape = Objects.GetShape3D(jn["s"].AsInt, jn["so"].AsInt);
+				shape = ShapeManager.GetShape3D(jn["s"].AsInt, jn["so"].AsInt);
 
 			Vector2 rotation = Vector2.zero;
 			if (jn["r_offset"] != null && jn["r_offset"]["x"] != null && jn["r_offset"]["y"] != null)

@@ -121,6 +121,12 @@ namespace RTFunctions.Functions.Data
         public float floatVariable;
         public string stringVariable = "";
 
+		public new int Depth
+        {
+			get => depth;
+			set => depth = value;
+        }
+
         public class Modifier
         {
             public Modifier()

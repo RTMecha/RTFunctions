@@ -47,7 +47,7 @@ namespace RTFunctions.Functions.Managers
 			JSONNode jn = JSON.Parse(_json);
 			if (!editor)
 			{
-				DataManager.inst.gameData.ParseThemeData(jn["themes"]);
+				DataManager.inst.StartCoroutine(ParseThemeData(jn["themes"]));
 			}
 
 			if (jn["mod"] != null)
