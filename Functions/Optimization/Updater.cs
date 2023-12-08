@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using RTFunctions.Patchers;
+using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization.Level;
 using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.Animation;
@@ -69,9 +70,7 @@ namespace RTFunctions.Functions.Optimization
 
             var objects = levelProcessor.level.objects;
             if (objects == null || objects.Count < 1)
-            {
                 return null;
-            }
 
             return objects.Find(x => x.ID == _beatmapObject.id);
         }
@@ -124,9 +123,7 @@ namespace RTFunctions.Functions.Optimization
         public static ILevelObject GetILevelObject(BeatmapObject _beatmapObject, List<ILevelObject> objects)
         {
             if (objects == null || objects.Count < 1)
-            {
                 return null;
-            }
 
             return objects.Find(x => x.ID == _beatmapObject.id);
         }
@@ -140,9 +137,7 @@ namespace RTFunctions.Functions.Optimization
         public static ILevelObject GetILevelObject(string id, List<ILevelObject> objects)
         {
             if (objects == null || objects.Count < 1)
-            {
                 return null;
-            }
 
             return objects.Find(x => x.ID == id);
         }
@@ -207,13 +202,13 @@ namespace RTFunctions.Functions.Optimization
         /// Updates a specific value.
         /// </summary>
         /// <param name="beatmapObject"></param>
-        /// <param name="type"></param>
-        /// <param name="value"></param>
-        public static void UpdateProcessor(BeatmapObject beatmapObject, string type)
+        /// <param name="context"></param>
+        /// <param name="value">The specific context to update under.</param>
+        public static void UpdateProcessor(BeatmapObject beatmapObject, string context)
         {
             if (TryGetObject(beatmapObject, out LevelObject levelObject))
             {
-                switch (type.ToLower().Replace(" ", "").Replace("_", ""))
+                switch (context.ToLower().Replace(" ", "").Replace("_", ""))
                 {
                     case "objecttype":
                         {
@@ -223,6 +218,7 @@ namespace RTFunctions.Functions.Optimization
                     case "starttime":
                         {
                             levelObject.StartTime = beatmapObject.StartTime;
+                            levelObject.KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
                             break;
                         } // StartTime
                     case "autokill":
@@ -237,7 +233,6 @@ namespace RTFunctions.Functions.Optimization
                         } // Parent
                     case "parentoffset":
                         {
-
                             if (levelProcessor && levelProcessor.converter != null)
                             {
                                 var converter = levelProcessor.converter;
@@ -266,7 +261,10 @@ namespace RTFunctions.Functions.Optimization
                         } // Origin
                     case "shape":
                         {
-                            UpdateProcessor(beatmapObject);
+                            //if (beatmapObject.shape == 4 || beatmapObject.shape == 6)
+                                UpdateProcessor(beatmapObject);
+                            //else if (ShapeManager.GetShape(beatmapObject.shape, beatmapObject.shapeOption).mesh != null)
+                            //    levelObject.visualObject.GameObject.GetComponent<MeshFilter>().mesh = ShapeManager.GetShape(beatmapObject.shape, beatmapObject.shapeOption).mesh;
                             break;
                         } // Shape
                     case "depth":
@@ -277,27 +275,16 @@ namespace RTFunctions.Functions.Optimization
                     case "keyframe":
                     case "keyframes":
                         {
-                            UpdateProcessor(beatmapObject, true, false);
-
-                            if (levelProcessor && levelProcessor.converter != null)
-                            {
-                                var converter = levelProcessor.converter;
-
-                                foreach (var levelParent in levelObject.parentObjects)
-                                {
-                                    if (converter.cachedSequences.ContainsKey(levelParent.ID))
-                                    {
-                                        var cachedSequences = converter.cachedSequences[levelParent.ID];
-                                        levelParent.Position3DSequence = cachedSequences.Position3DSequence;
-                                        levelParent.ScaleSequence = cachedSequences.ScaleSequence;
-                                        levelParent.RotationSequence = cachedSequences.RotationSequence;
-                                    }
-                                }
-                            }
+                            levelObject.KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
+                            FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject, levelProcessor.converter, true, true));
 
                             break;
                         }
                 }
+            }
+            else if (context.ToLower() == "keyframe" || context.ToLower() == "keyframes")
+            {
+                FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject, levelProcessor.converter, true, true));
             }
         }
 
@@ -312,27 +299,6 @@ namespace RTFunctions.Functions.Optimization
             }
         }
 
-        // Not used
-        //public static void updateProcessor(BeatmapObject _beatmapObject, bool reinsert = true)
-        //{
-        //    var levelProcessor = Instance.levelProcessor;
-        //    if (levelProcessor != null)
-        //    {
-        //        var level = Instance.levelProcessor.level;
-        //        var converter = Instance.levelProcessor.converter;
-        //        var engine = Instance.levelProcessor.engine;
-        //        var objectSpawner = engine.objectSpawner;
-
-        //        if (level != null && converter != null)
-        //        {
-        //            var objects = level.objects;
-
-        //            Instance.StartCoroutine(RecacheSequences(_beatmapObject, converter, reinsert));
-        //            Instance.StartCoroutine(updateObjects(_beatmapObject, level, objects, converter, objectSpawner, reinsert));
-        //        }
-        //    }
-        //}
-
         /// <summary>
         /// Recaches all the keyframe sequences related to the BeatmapObject.
         /// </summary>
@@ -340,7 +306,7 @@ namespace RTFunctions.Functions.Optimization
         /// <param name="converter"></param>
         /// <param name="reinsert"></param>
         /// <returns></returns>
-        public static IEnumerator RecacheSequences(BeatmapObject bm, ObjectConverter converter, bool reinsert = true)
+        public static IEnumerator RecacheSequences(BeatmapObject bm, ObjectConverter converter, bool reinsert = true, bool updateParents = false)
         {
             if (converter.cachedSequences.ContainsKey(bm.id))
             {
@@ -348,71 +314,30 @@ namespace RTFunctions.Functions.Optimization
                 converter.cachedSequences.Remove(bm.id);
             }
 
+            // Recursive recaching.
             foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
             {
                 if (beatmapObject.parent == bm.id)
-                {
-                    // Recursive recaching.
-                    FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject, converter));
-                }
+                    FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject, converter, reinsert, updateParents));
             }
 
             if (reinsert)
             {
-                ObjectConverter.CachedSequences collection = new ObjectConverter.CachedSequences();
-                // For the mods that add Z axis to position keyframes.
-                //if (bm.events[0][0].eventValues.Length > 2)
-                //{
-                    collection = new ObjectConverter.CachedSequences()
-                    {
-                        Position3DSequence = converter.GetVector3Sequence(bm.events[0], new Vector3Keyframe(0.0f, Vector3.zero, Ease.Linear)),
-                        ScaleSequence = converter.GetVector2Sequence(bm.events[1], new Vector2Keyframe(0.0f, Vector2.one, Ease.Linear)),
-                        RotationSequence = converter.GetFloatSequence(bm.events[2], new FloatKeyframe(0.0f, 0.0f, Ease.Linear), true)
-                    };
-                //}
-                // If array is regular length
-                //else
-                //{
-                //    Debug.Log($"{Updater.className}Position does not include Z axis so I know not to remove this recache.");
-                //    collection = new ObjectConverter.CachedSequences()
-                //    {
-                //        PositionSequence = converter.GetVector2Sequence(bm.events[0], new Vector2Keyframe(0.0f, Vector2.zero, Ease.Linear)),
-                //        ScaleSequence = converter.GetVector2Sequence(bm.events[1], new Vector2Keyframe(0.0f, Vector2.one, Ease.Linear)),
-                //        RotationSequence = converter.GetFloatSequence(bm.events[2], new FloatKeyframe(0.0f, 0.0f, Ease.Linear), true)
-                //    };
-                //}
+                yield return FunctionsPlugin.inst.StartCoroutine(converter.CacheSequence(bm));
 
-                // Empty objects don't need a color sequence, so it is not cached
-                if (bm.objectType != ObjectType.Empty)
+                if (updateParents && TryGetObject(bm, out LevelObject levelObject))
                 {
-                    // For mods with Opacity and HSV values.
-                    if (bm.events[3][0].eventValues.Length > 2)
+                    foreach (var levelParent in levelObject.parentObjects)
                     {
-                        collection.ColorSequence = converter.GetColorSequence(bm.events[3], new ThemeKeyframe(0.0f, 0, Ease.Linear));
-                        collection.OpacitySequence = converter.GetOpacitySequence(bm.events[3], 1, new FloatKeyframe(0.0f, 0, Ease.Linear));
-                        collection.HueSequence = converter.GetOpacitySequence(bm.events[3], 2, new FloatKeyframe(0.0f, 0, Ease.Linear));
-                        collection.SaturationSequence = converter.GetOpacitySequence(bm.events[3], 3, new FloatKeyframe(0.0f, 0, Ease.Linear));
-                        collection.ValueSequence = converter.GetOpacitySequence(bm.events[3], 4, new FloatKeyframe(0.0f, 0, Ease.Linear));
-                    }
-                    // For mods with Opacity.
-                    else if (bm.events[3][0].eventValues.Length > 1)
-                    {
-                        collection.ColorSequence = converter.GetColorSequence(bm.events[3], new ThemeKeyframe(0.0f, 0, Ease.Linear));
-                        collection.OpacitySequence = converter.GetOpacitySequence(bm.events[3], 1, new FloatKeyframe(0.0f, 0, Ease.Linear));
-                    }
-                    // If array is regular length.
-                    else
-                    {
-                        collection.ColorSequence = converter.GetColorSequence(bm.events[3], new ThemeKeyframe(0.0f, 0, Ease.Linear));
+                        if (converter.cachedSequences.ContainsKey(levelParent.ID))
+                        {
+                            var cachedSequences = converter.cachedSequences[levelParent.ID];
+                            levelParent.Position3DSequence = cachedSequences.Position3DSequence;
+                            levelParent.ScaleSequence = cachedSequences.ScaleSequence;
+                            levelParent.RotationSequence = cachedSequences.RotationSequence;
+                        }
                     }
                 }
-
-                converter.cachedSequences.Add(bm.id, collection);
-
-                //if (TryGetObject(bm, out LevelObject levelObject))
-                //{
-                //    levelObject.SetSequences(collection.ColorSequence, collection.OpacitySequence, collection.HueSequence, collection.SaturationSequence, collection.ValueSequence);
-                //}
             }
 
             yield break;
@@ -432,13 +357,11 @@ namespace RTFunctions.Functions.Optimization
         {
             string id = bm.id;
 
+            // Recursing updating.
             foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
             {
                 if (beatmapObject.parent == id)
-                {
-                    // Recursing updating.
                     FunctionsPlugin.inst.StartCoroutine(UpdateObjects(beatmapObject, level, objects, converter, objectSpawner));
-                }
             }
 
             // Get ILevelObject related to BeatmapObject.
