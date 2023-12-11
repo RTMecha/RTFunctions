@@ -83,15 +83,12 @@ namespace RTFunctions.Functions.Data
             prefabObject.StartTime = jn["st"].AsFloat;
 
             if (!string.IsNullOrEmpty(jn["rc"]))
-                prefabObject.RepeatCount = int.Parse(jn["rc"]);
+                prefabObject.RepeatCount = jn["rc"].AsInt;
 
             if (!string.IsNullOrEmpty(jn["ro"]))
-                prefabObject.RepeatOffsetTime = float.Parse(jn["ro"]);
+                prefabObject.RepeatOffsetTime = jn["ro"].AsFloat;
 
-            if (jn["id"] != null)
-                prefabObject.ID = jn["id"];
-            else
-                prefabObject.ID = LSText.randomString(16);
+            prefabObject.ID = jn["id"] != null ? jn["id"] : LSText.randomString(16);
 
             //if (jn["ed"]["locked"] != null)
             //    prefabObject.editorData.locked = jn["ed"]["locked"].AsBool;
@@ -102,7 +99,7 @@ namespace RTFunctions.Functions.Data
             //if (jn["ed"]["layer"] != null)
             //    prefabObject.editorData.Layer = jn["ed"]["layer"].AsInt;
 
-            jn["ed"] = ((ObjectEditorData)prefabObject.editorData).ToJSON();
+            prefabObject.editorData = ObjectEditorData.Parse(jn["ed"]);
 
             prefabObject.events.Clear();
 
@@ -111,13 +108,10 @@ namespace RTFunctions.Functions.Data
                 var kf = new EventKeyframe();
                 var jnpos = jn["e"][0]["pos"];
 
-                var x = float.Parse(jnpos["x"]);
-                var y = float.Parse(jnpos["y"]);
-
                 kf.SetEventValues(new float[]
                 {
-                    x,
-                    y
+                    jnpos["x"].AsFloat,
+                    jnpos["y"].AsFloat
                 });
                 kf.random = jnpos["r"].AsInt;
                 kf.SetEventRandomValues(new float[]
@@ -136,11 +130,11 @@ namespace RTFunctions.Functions.Data
             if (jn["e"][1]["sca"] != null)
             {
                 var kf = new EventKeyframe();
-                JSONNode jnsca = jn["e"][1]["sca"];
+                var jnsca = jn["e"][1]["sca"];
                 kf.SetEventValues(new float[]
                 {
-                    float.Parse(jnsca["x"]),
-                    float.Parse(jnsca["y"])
+                    jnsca["x"].AsFloat,
+                    jnsca["y"].AsFloat
                 });
                 kf.random = jnsca["r"].AsInt;
                 kf.SetEventRandomValues(new float[]
@@ -159,10 +153,10 @@ namespace RTFunctions.Functions.Data
             if (jn["e"][2]["rot"] != null)
             {
                 var kf = new EventKeyframe();
-                JSONNode jnrot = jn["e"][2]["rot"];
+                var jnrot = jn["e"][2]["rot"];
                 kf.SetEventValues(new float[]
                 {
-                    float.Parse(jnrot["x"])
+                    jnrot["x"].AsFloat
                 });
                 kf.random = jnrot["r"].AsInt;
                 kf.SetEventRandomValues(new float[]
