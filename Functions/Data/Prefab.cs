@@ -124,6 +124,7 @@ namespace RTFunctions.Functions.Data
                 Offset = jn["offset"].AsFloat,
                 objects = beatmapObjects,
                 prefabObjects = prefabObjects,
+                description = jn["desc"] == null ? "" : jn["desc"]
             };
         }
 
@@ -139,6 +140,8 @@ namespace RTFunctions.Functions.Data
 
             if (MainObjectID != null)
                 jn["main_obj_id"] = MainObjectID.ToString();
+
+            jn["desc"] = description;
 
             for (int i = 0; i < objects.Count; i++)
                 if (objects[i] != null)
