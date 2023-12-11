@@ -37,7 +37,7 @@ namespace RTFunctions.Patchers
             modCompatibility.transform.SetParent(systemManager.transform);
             modCompatibility.AddComponent<ModCompatibility>();
 
-            var objects = new GameObject("Objects");
+            var objects = new GameObject("ShapeManager");
             objects.transform.SetParent(systemManager.transform);
             objects.AddComponent<ShapeManager>();
 
@@ -53,10 +53,9 @@ namespace RTFunctions.Patchers
             spriteManager.transform.SetParent(systemManager.transform);
             spriteManager.AddComponent<RTSpriteManager>();
 
-            //var networkManager = new GameObject("NetworkManager");
-            //networkManager.transform.SetParent(systemManager.transform);
-            //networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkManager>();
-            //networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkEditorManager>();
+            var fontManager = new GameObject("FontManager");
+            fontManager.transform.SetParent(systemManager.transform);
+            fontManager.AddComponent<FontManager>();
 
             AlephNetworkManager.Init();
             RTCode.Init();
