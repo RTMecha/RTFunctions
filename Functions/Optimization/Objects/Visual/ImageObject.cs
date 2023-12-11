@@ -33,12 +33,7 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
             var regex = new System.Text.RegularExpressions.Regex(@"img\((.*?)\)");
             var match = regex.Match(text);
 
-            string imagePath;
-
-            if (match.Success)
-                imagePath = RTFile.ApplicationDirectory + RTFile.basePath + match.Groups[1].ToString();
-            else
-                imagePath = RTFile.ApplicationDirectory + RTFile.basePath + text;
+            string imagePath = match.Success ? RTFile.basePath + match.Groups[1].ToString() : RTFile.basePath + text;
 
             if (RTFile.FileExists(imagePath))
                 FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadImageTexture("file://" + imagePath, delegate (Texture2D x)
