@@ -11,8 +11,8 @@ namespace RTFunctions.Functions.Optimization.Objects
     {
         public IEnumerable<ILevelObject> ActiveObjects => activeObjects;
 
-        private readonly List<ILevelObject> activateList = new List<ILevelObject>();
-        private readonly List<ILevelObject> deactivateList = new List<ILevelObject>();
+        public readonly List<ILevelObject> activateList = new List<ILevelObject>();
+        public readonly List<ILevelObject> deactivateList = new List<ILevelObject>();
 
         private int activateIndex = 0;
         private int deactivateIndex = 0;
