@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 using UnityEngine;
 
-using TMPro;
+using SimpleJSON;
 
-using RTFunctions.Functions.Managers;
+using RTFunctions.Functions;
+using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers.Networking;
 
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
@@ -38,31 +39,24 @@ namespace RTFunctions.Functions.Data
             Color = color;
         }
 
-        static string[] iconLocations = new string[]
-        {
-
-        };
+        public int Index { get; set; }
 
         Sprite icon;
         public Sprite Icon
         {
-            get
-            {
-                try
-                {
-                    if (!icon)
-                        AlephNetworkManager.inst.StartCoroutine(AlephNetworkManager.DownloadImageTexture(iconLocations[DataManager.inst.PrefabTypes.FindIndex(x => x.Name == Name)], delegate (Texture2D texture2D)
-                        {
-                            icon = RTSpriteManager.CreateSprite(texture2D);
-                        }));
-                    return icon;
-                }
-                catch
-                {
-                    return null;
-                }
-            }
+            get => icon;
             set => icon = value;
+        }
+
+        public static PrefabType Parse(JSONNode jn) => new PrefabType(jn["name"], LSFunctions.LSColors.HexToColorAlpha(jn["color"]));
+        public JSONNode ToJSON()
+        {
+            var jn = JSON.Parse("{}");
+            jn["name"] = Name;
+            jn["color"] = RTHelpers.ColorToHex(Color);
+            jn["index"] = Index.ToString();
+
+            return jn;
         }
     }
 }
