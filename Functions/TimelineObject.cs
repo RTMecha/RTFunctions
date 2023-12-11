@@ -130,8 +130,6 @@ namespace RTFunctions.Functions
                     return (Data as BeatmapObject).editorData.Layer;
                 if (IsPrefabObject)
                     return (Data as PrefabObject).editorData.Layer;
-                if (IsEventKeyframe)
-                    return 5;
                 return -1;
             }
         }
