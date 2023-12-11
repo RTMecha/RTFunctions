@@ -731,7 +731,7 @@ namespace RTFunctions.Functions
 			public static IEnumerator SaveData(string _path, GameData _data)
 			{
 				Debug.Log("Saving Beatmap");
-				JSONNode jn = JSON.Parse("{}");
+				var jn = JSON.Parse("{}");
 
 				Debug.Log($"{FunctionsPlugin.className}Saving Editor Data");
 				jn["ed"]["timeline_pos"] = "0";
@@ -862,7 +862,10 @@ namespace RTFunctions.Functions
 						for (int j = 0; j < _data.eventObjects.allEvents[i].Count; j++)
                         {
 							if (GameData.EventTypes.Length > i)
-								jn["events"][GameData.EventTypes[i]][i] = ((EventKeyframe)_data.eventObjects.allEvents[i][j]).ToJSON();
+							{
+								//Debug.Log($"{FunctionsPlugin.className}Saving keyframe: {((EventKeyframe)_data.eventObjects.allEvents[i][j])}");
+								jn["events"][GameData.EventTypes[i]][j] = ((EventKeyframe)_data.eventObjects.allEvents[i][j]).ToJSON();
+							}
                         }
                     }
 				}
