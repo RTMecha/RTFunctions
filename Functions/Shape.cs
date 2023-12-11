@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 using SimpleJSON;
-
-using RTFunctions.Functions.Managers;
 
 namespace RTFunctions.Functions
 {
@@ -14,6 +13,24 @@ namespace RTFunctions.Functions
             this.type = type;
             this.option = option;
             mesh = null;
+            Icon = null;
+            SpecialProperty = Property.RegularObject;
+            EditorElement = null;
+            Toggle = null;
+            GameObject = null;
+        }
+
+        public Shape(string name, int type, int option, Mesh mesh, Sprite icon, Property property)
+        {
+            this.name = name;
+            this.type = type;
+            this.option = option;
+            this.mesh = mesh;
+            Icon = icon;
+            SpecialProperty = property;
+            EditorElement = null;
+            Toggle = null;
+            GameObject = null;
         }
 
         public string name;
@@ -22,6 +39,10 @@ namespace RTFunctions.Functions
         public int option;
 
         public Mesh mesh;
+        public Sprite Icon { get; set; }
+        public GameObject EditorElement { get; set; }
+        public Toggle Toggle { get; set; }
+        public GameObject GameObject { get; set; }
 
         public int Type
         {
@@ -34,6 +55,15 @@ namespace RTFunctions.Functions
             get => Mathf.Clamp(option, 0, maxShapes[Type]);
             set => option = Mathf.Clamp(value, 0, maxShapes[Type]);
         }
+
+        public enum Property
+        {
+            RegularObject,
+            TextObject,
+            ImageObject,
+        }
+
+        public Property SpecialProperty { get; set; }
 
         public int this[int index]
         {
