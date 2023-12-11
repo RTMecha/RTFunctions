@@ -395,7 +395,6 @@ namespace RTFunctions.Functions.Data
 						kfjn["rz"].AsFloat
 					});
 
-					RTFunctions.Functions.IO.RTFile.WriteToFile(IO.RTFile.ApplicationDirectory + "something.txt", "Relative is null: " + string.IsNullOrEmpty(kfjn["rel"]));
 					eventKeyframe.relative = string.IsNullOrEmpty(kfjn["rel"]) || kfjn["rel"].AsBool;
 
 					eventKeyframe.active = false;
