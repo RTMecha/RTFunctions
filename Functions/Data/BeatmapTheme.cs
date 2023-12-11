@@ -112,27 +112,7 @@ namespace RTFunctions.Functions.Data
 					LSColors.gray900,
 				};
 
-			beatmapTheme.effectColors = jn["fx"] != null ? SetColors(jn["fx"], 18) : new List<Color>
-            {
-				LSColors.pink100,
-				LSColors.pink200,
-				LSColors.pink300,
-				LSColors.pink400,
-				LSColors.pink500,
-				LSColors.pink600,
-				LSColors.pink700,
-				LSColors.pink800,
-				LSColors.pink900,
-				LSColors.pink100,
-				LSColors.pink200,
-				LSColors.pink300,
-				LSColors.pink400,
-				LSColors.pink500,
-				LSColors.pink600,
-				LSColors.pink700,
-				LSColors.pink800,
-				LSColors.pink900,
-			};
+			beatmapTheme.effectColors = jn["fx"] != null ? SetColors(jn["fx"], 18) : beatmapTheme.objectColors;
 
             return beatmapTheme;
 		}
