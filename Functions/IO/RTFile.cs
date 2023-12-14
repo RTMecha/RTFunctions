@@ -47,7 +47,7 @@ namespace RTFunctions.Functions.IO
 		public static string PersistentApplicationDirectory => Application.persistentDataPath;
 
 		//F:/PA_Builds/PA Launcher App/bin/Debug/net6.0-windows/4.1.16-BepInEx-5.4.21/beatmaps/story\CA - Ahead of the Curve [PAA3]\level.ogg
-		public static string basePath
+		public static string BasePath
 		{
 			get
 			{
@@ -57,7 +57,7 @@ namespace RTFunctions.Functions.IO
 				}
 				else
 				{
-					return SaveManager.inst.ArcadeQueue.AudioFileStr.Replace(ApplicationDirectory, "").Replace("\\", "/").Replace("/level.ogg", "/");
+					return SaveManager.inst.ArcadeQueue.AudioFileStr.Replace("\\", "/").Replace("/level.ogg", "/");
 				}
 			}
 		}
