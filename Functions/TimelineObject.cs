@@ -17,6 +17,10 @@ using BasePrefabObject = DataManager.GameData.PrefabObject;
 
 namespace RTFunctions.Functions
 {
+    public delegate TimelineObject TimelineObjectReturn<T>(T t);
+    public delegate TimelineObject TimelineObjectReturn<T, T1>(T t, T1 t1);
+    public delegate TimelineObject TimelineObjectReturn<T, T1, T2>(T t, T1 t1, T2 t2);
+
     public class TimelineObject : Exists
     {
         public TimelineObject(object data)
@@ -127,9 +131,9 @@ namespace RTFunctions.Functions
             get
             {
                 if (IsBeatmapObject)
-                    return (Data as BeatmapObject).editorData.Layer;
+                    return (Data as BeatmapObject).editorData.layer;
                 if (IsPrefabObject)
-                    return (Data as PrefabObject).editorData.Layer;
+                    return (Data as PrefabObject).editorData.layer;
                 return -1;
             }
         }
