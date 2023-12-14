@@ -12,6 +12,7 @@ using LSFunctions;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Managers;
+using RTFunctions.Functions;
 
 namespace RTFunctions.Patchers
 {
@@ -48,7 +49,27 @@ namespace RTFunctions.Patchers
                 playerColors = beatmapTheme.playerColors,
                 objectColors = beatmapTheme.objectColors,
                 backgroundColors = beatmapTheme.backgroundColors,
-                effectColors = beatmapTheme.objectColors,
+                effectColors = new List<Color>
+                {
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                    LSColors.pink500,
+                },
             };
         }
 
@@ -137,7 +158,7 @@ namespace RTFunctions.Patchers
                 }
             }
             else
-                FunctionsPlugin.EventsCoreGameThemePrefix?.Invoke();
+                FunctionsPlugin.EventsCoreGameThemePrefix?.Invoke(__instance);
 
             return false;
         }
