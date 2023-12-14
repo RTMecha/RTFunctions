@@ -59,7 +59,7 @@ namespace RTFunctions.Functions.Data
                 editorData = new ObjectEditorData
                 {
                     Bin = orig.editorData.Bin,
-                    Layer = orig.editorData.Layer,
+                    layer = orig.editorData.layer,
                     locked = orig.editorData.locked,
                     collapse = orig.editorData.collapse
                 }
@@ -193,7 +193,7 @@ namespace RTFunctions.Functions.Data
             if (editorData.collapse)
                 jn["ed"]["shrink"] = editorData.collapse.ToString();
 
-            jn["ed"]["layer"] = editorData.Layer.ToString();
+            jn["ed"]["layer"] = editorData.layer.ToString();
             jn["ed"]["bin"] = editorData.Bin.ToString();
 
             jn["e"]["pos"]["x"] = events[0].eventValues[0].ToString();
