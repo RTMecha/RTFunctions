@@ -28,14 +28,16 @@ namespace RTFunctions.Patchers
 			float scaleZ = backgroundObject.zscale;
 			int depth = backgroundObject.depth;
 
-			var gameObject = Instantiate(__instance.backgroundPrefab, new Vector3(__0.pos.x, __0.pos.y, 32f + backgroundObject.zPosition * 10f), Quaternion.identity);
+			var gameObject = Instantiate(__instance.backgroundPrefab, new Vector3(__0.pos.x, __0.pos.y, 32f + backgroundObject.layer * 10f), Quaternion.identity);
 			gameObject.name = __0.name;
 			gameObject.layer = 9;
 			gameObject.transform.SetParent(__instance.backgroundParent);
 			gameObject.transform.localScale = new Vector3(__0.scale.x, __0.scale.y, scaleZ);
 			gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, __0.rot));
 
-			gameObject.GetComponent<SelectBackgroundInEditor>().obj = __instance.backgroundObjects.Count;
+			// For now, removing selecting backgrounds.
+			Destroy(gameObject.GetComponent<SelectBackgroundInEditor>());
+			//gameObject.GetComponent<SelectBackgroundInEditor>().obj = __instance.backgroundObjects.Count;
 			__instance.backgroundObjects.Add(gameObject);
 
 				backgroundObject.gameObjects.Clear();
@@ -48,7 +50,7 @@ namespace RTFunctions.Patchers
 
 			if (__0.drawFade)
 			{
-				for (int i = 1; i < depth - backgroundObject.zPosition; i++)
+				for (int i = 1; i < depth - backgroundObject.layer; i++)
 				{
 					var gameObject2 = Instantiate(__instance.backgroundFadePrefab, Vector3.zero, Quaternion.identity);
 					gameObject2.name = $"{__0.name} Fade [{i}]";
@@ -96,22 +98,16 @@ namespace RTFunctions.Patchers
 					{
 						if (FunctionsPlugin.BGReactiveLerp.Value)
 						{
-							a = RTMath.Lerp(
-								beatmapTheme.GetBGColor(backgroundObject.color),
-								beatmapTheme.GetBGColor(backgroundObject.reactiveCol),
-								__instance.samples[Mathf.Clamp(backgroundObject.reactiveColSample, 0, __instance.samples.Length - 1)] *
-								backgroundObject.reactiveColIntensity);
+							a = RTMath.Lerp(beatmapTheme.GetBGColor(backgroundObject.color), beatmapTheme.GetBGColor(backgroundObject.reactiveCol), __instance.samples[Mathf.Clamp(backgroundObject.reactiveColSample, 0, __instance.samples.Length - 1)] * backgroundObject.reactiveColIntensity);
 						}
 						else
 						{
 							a = beatmapTheme.GetBGColor(backgroundObject.color);
-							a += beatmapTheme.GetBGColor(backgroundObject.reactiveCol) *
-								__instance.samples[Mathf.Clamp(backgroundObject.reactiveColSample, 0, __instance.samples.Length - 1)] *
-									backgroundObject.reactiveColIntensity;
+							a += beatmapTheme.GetBGColor(backgroundObject.reactiveCol) * __instance.samples[Mathf.Clamp(backgroundObject.reactiveColSample, 0, __instance.samples.Length - 1)] * backgroundObject.reactiveColIntensity;
 						}
 					}
 					else
-                    {
+					{
 						a = beatmapTheme.GetBGColor(backgroundObject.color);
 					}
 
@@ -119,14 +115,14 @@ namespace RTFunctions.Patchers
 
 					int i = 0;
 					foreach (var renderer in backgroundObject.renderers)
-                    {
+					{
 						if (i == 0)
-                        {
+						{
 							renderer.material.color = a;
-                        }
+						}
 						else
 						{
-							int layer = backgroundObject.depth - (int)(32f + backgroundObject.zPosition * 10f);
+							int layer = backgroundObject.depth - backgroundObject.layer;
 							float t = a.a / (float)layer * (float)i;
 							Color b = beatmapTheme.GetBGColor(backgroundObject.FadeColor);
 
@@ -144,7 +140,7 @@ namespace RTFunctions.Patchers
 						}
 
 						i++;
-                    }
+					}
 
 					if (backgroundObject.reactive)
                     {
@@ -183,7 +179,7 @@ namespace RTFunctions.Patchers
 							gameObject.transform.localPosition =
 								new Vector3(backgroundObject.pos.x + x * backgroundObject.reactivePosIntensity[0],
 								backgroundObject.pos.y + y * backgroundObject.reactivePosIntensity[1],
-								32f + backgroundObject.zPosition * 10f + z * backgroundObject.reactiveZIntensity);
+								32f + backgroundObject.layer * 10f + z * backgroundObject.reactiveZIntensity);
 							gameObject.transform.localScale =
 								new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, backgroundObject.zscale) +
 								new Vector3(backgroundObject.reactiveSize.x, backgroundObject.reactiveSize.y, 0f);
@@ -198,7 +194,7 @@ namespace RTFunctions.Patchers
 						if (__instance.backgroundObjects.Count > num)
 						{
 							var gameObject = __instance.backgroundObjects[num];
-							gameObject.transform.localPosition = new Vector3(backgroundObject.pos.x, backgroundObject.pos.y, 32f + backgroundObject.zPosition * 10f);
+							gameObject.transform.localPosition = new Vector3(backgroundObject.pos.x, backgroundObject.pos.y, 32f + backgroundObject.layer * 10f);
 							gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, backgroundObject.rot));
 							gameObject.transform.localScale = new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, backgroundObject.zscale);
 						}
