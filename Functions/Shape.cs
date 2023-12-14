@@ -133,7 +133,7 @@ namespace RTFunctions.Functions
             var triangles = new int[jn["tris"].Count];
             for (int i = 0; i < jn["tris"].Count; i++)
             {
-                triangles[i] = jn["tris"].AsInt;
+                triangles[i] = jn["tris"][i].AsInt;
             }
             shape.mesh.triangles = triangles;
 
