@@ -113,41 +113,41 @@ namespace RTFunctions.Functions.IO
             foreach (string use in DefaultUsing)
                 AddUsing(use);
 
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                foreach (var t in a.GetTypes())
-                {
-                    string str = t.ToString();
-                    if (!string.IsNullOrEmpty(str))
-                    {
-                        //if (str.Contains("."))
-                        //    str = str.Replace(str.Substring(0, str.LastIndexOf('.') + 1), "");
+            //foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+            //{
+            //    foreach (var t in a.GetTypes())
+            //    {
+            //        string str = t.ToString();
+            //        if (!string.IsNullOrEmpty(str))
+            //        {
+            //            //if (str.Contains("."))
+            //            //    str = str.Replace(str.Substring(0, str.LastIndexOf('.') + 1), "");
 
-                        if (!Methods.ContainsKey(str))
-                        {
-                            var list = new List<string>();
-                            foreach (var m in t.GetMethods())
-                            {
-                                var mstr = m.ToString();
-                                if (mstr.Contains(" "))
-                                    mstr = mstr.Replace(mstr.Substring(0, mstr.LastIndexOf(' ') + 1), "").Replace("[T]", "");
+            //            if (!Methods.ContainsKey(str))
+            //            {
+            //                var list = new List<string>();
+            //                foreach (var m in t.GetMethods())
+            //                {
+            //                    var mstr = m.ToString();
+            //                    if (mstr.Contains(" "))
+            //                        mstr = mstr.Replace(mstr.Substring(0, mstr.LastIndexOf(' ') + 1), "").Replace("[T]", "");
 
-                                var regex = new Regex(@"\((.*?)\)");
-                                var match = regex.Match(mstr);
-                                if (match.Success)
-                                    mstr = mstr.Replace($"({match.Groups[1]})", "");
+            //                    var regex = new Regex(@"\((.*?)\)");
+            //                    var match = regex.Match(mstr);
+            //                    if (match.Success)
+            //                        mstr = mstr.Replace($"({match.Groups[1]})", "");
 
-                                list.Add(mstr);
-                            }
-                            Methods.Add(str, list);
-                        }
+            //                    list.Add(mstr);
+            //                }
+            //                Methods.Add(str, list);
+            //            }
 
-                        Types.Add(str);
-                    }
-                }
-            }
+            //            Types.Add(str);
+            //        }
+            //    }
+            //}
 
-            Types = Types.OrderByDescending(x => x.Length).ToList();
+            //Types = Types.OrderByDescending(x => x.Length).ToList();
         }
 
         public static void Evaluate(string input)
@@ -271,7 +271,7 @@ namespace RTFunctions.Functions.IO
             {
                 string a = line;
 
-                var split = line.Split(new string[] { "//" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                var split = line.Split(new string[] { "//" }, StringSplitOptions.None).ToList();
 
                 string first = split[0];
 
