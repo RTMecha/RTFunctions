@@ -13,6 +13,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 using LSFunctions;
+using SimpleJSON;
 
 using RTFunctions.Enums;
 using RTFunctions.Functions.Animation;
@@ -660,11 +661,67 @@ namespace RTFunctions.Functions
 
 		public static List<string> GetLines(this string str) => str.Split(new string[] { "\n", "\n\r", "\r" }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
+        #endregion
+
+        #region JSON
+
+		public static JSONNode ToJSON(this Vector2 vector2)
+        {
+			var jn = JSON.Parse("{}");
+
+			jn["x"] = vector2.x.ToString();
+			jn["y"] = vector2.y.ToString();
+
+			return jn;
+        }
+		
+		public static JSONNode ToJSON(this Vector3 vector3)
+        {
+			var jn = JSON.Parse("{}");
+
+			jn["x"] = vector3.x.ToString();
+			jn["y"] = vector3.y.ToString();
+			jn["z"] = vector3.z.ToString();
+
+			return jn;
+        }
+		
+		public static JSONNode ToJSON(this Vector4 vector4)
+        {
+			var jn = JSON.Parse("{}");
+
+			jn["x"] = vector4.x.ToString();
+			jn["y"] = vector4.y.ToString();
+			jn["z"] = vector4.z.ToString();
+			jn["w"] = vector4.w.ToString();
+
+			return jn;
+        }
+
+		public static Vector2 AsVector2(this JSONNode jn) => new Vector2(jn["x"].AsFloat, jn["y"].AsFloat);
+
+		public static Vector3 AsVector3(this JSONNode jn) => new Vector3(jn["x"].AsFloat, jn["y"].AsFloat, jn["z"].AsFloat);
+
+		public static Vector3 AsVector4(this JSONNode jn) => new Vector4(jn["x"].AsFloat, jn["y"].AsFloat, jn["z"].AsFloat, jn["w"].AsFloat);
+
 		#endregion
 
 		#region Misc
 
-		public static EventKeyframe GetEventKeyframe(this List<List<EventKeyframe>> eventKeyframes, int type, int index) => eventKeyframes[RTMath.Clamp(type, 0, eventKeyframes.Count - 1)].GetEventKeyframe(index);
+		public static ColorBlock SetColorBlock(this ColorBlock cb, Color normal, Color highlighted, Color pressed, Color selected, Color disabled, float fade = 0.2f)
+		{
+			cb.normalColor = normal;
+			cb.highlightedColor = highlighted;
+			cb.pressedColor = pressed;
+			cb.selectedColor = selected;
+			cb.disabledColor = disabled;
+			cb.fadeDuration = fade;
+			return cb;
+		}
+
+		public static void Save(this Sprite sprite, string path) => SpriteManager.SaveSprite(sprite, path);
+
+        public static EventKeyframe GetEventKeyframe(this List<List<EventKeyframe>> eventKeyframes, int type, int index) => eventKeyframes[RTMath.Clamp(type, 0, eventKeyframes.Count - 1)].GetEventKeyframe(index);
 		public static EventKeyframe GetEventKeyframe(this List<EventKeyframe> eventKeyframes, int index) => eventKeyframes[RTMath.Clamp(index, 0, eventKeyframes.Count - 1)];
 
 		public static void SetColor(this Material material, Color color) => material.color = color;
