@@ -25,9 +25,20 @@ namespace RTFunctions.Functions.Managers
         public static FontManager inst;
         public static string className = "[<color=#A100FF>FontManager</color>] \n";
 
-        public static Dictionary<string, Font> allFonts = new Dictionary<string, Font>();
-        public static Dictionary<string, TMP_FontAsset> allFontAssets = new Dictionary<string, TMP_FontAsset>();
-        public static bool loadedFiles = false;
+        public Dictionary<string, Font> allFonts = new Dictionary<string, Font>();
+        public Dictionary<string, TMP_FontAsset> allFontAssets = new Dictionary<string, TMP_FontAsset>();
+        public bool loadedFiles = false;
+
+        public Font Inconsolata
+        {
+            get
+            {
+                if (allFonts.ContainsKey("Inconsolata Variable"))
+                    return allFonts["Inconsolata Variable"];
+                Debug.Log($"{className}Inconsolata Font doesn't exist for some reason.");
+                return Font.GetDefault();
+            }
+        }
 
         void Awake()
         {
@@ -444,10 +455,10 @@ namespace RTFunctions.Functions.Managers
                          where x.font.name == "Inconsolata-Regular"
                          select x).ToList();
 
+            var inconsolata = Inconsolata;
             foreach (var font in fonts)
             {
-                if (allFonts.ContainsKey("Inconsolata Variable"))
-                    font.font = allFonts["Inconsolata Variable"];
+                font.font = inconsolata;
             }
         }
 
