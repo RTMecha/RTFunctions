@@ -660,7 +660,7 @@ namespace RTFunctions.Functions
 						allEvents[25].Add(EventKeyframe.Parse(jn["audio"][i], 2));
 				}
 
-				ClampEventListValues(allEvents);
+				ClampEventListValues(allEvents, ModCompatibility.mods.ContainsKey("EventsCore") ? 26 : 10);
 
 				if (orderTime)
 					allEvents.ForEach(x => x = x.OrderBy(x => x.eventTime).ToList());
@@ -668,11 +668,15 @@ namespace RTFunctions.Functions
 				return allEvents;
             }
 
-			public static void ClampEventListValues(List<List<BaseEventKeyframe>> eventKeyframes)
+			public static void ClampEventListValues(List<List<BaseEventKeyframe>> eventKeyframes, int totalTypes)
             {
-				for (int type = 0; type < eventKeyframes.Count; type++)
+				for (int type = 0; type < totalTypes; type++)
                 {
-					if (eventKeyframes.Count < 1)
+					//Debug.Log($"{FunctionsPlugin.className}EventKeyframes Count: {eventKeyframes.Count}\nType: {type}");
+					if (eventKeyframes.Count < type + 1)
+						eventKeyframes.Add(new List<BaseEventKeyframe>());
+
+					if (eventKeyframes[type].Count < 1)
 						eventKeyframes[type].Add(EventKeyframe.DeepCopy((EventKeyframe)GameData.DefaultKeyframes[type]));
 
 					for (int index = 0; index < eventKeyframes[type].Count; index++)
@@ -682,8 +686,9 @@ namespace RTFunctions.Functions
                         {
 							array = new float[GameData.DefaultKeyframes[type].eventValues.Length];
 							for (int i = 0; i < GameData.DefaultKeyframes[type].eventValues.Length; i++)
-								array[i] = i < array.Length ? eventKeyframes[type][index].eventValues[i] : GameData.DefaultKeyframes[type].eventValues[i];
+								array[i] = i < eventKeyframes[type][index].eventValues.Length ? eventKeyframes[type][index].eventValues[i] : GameData.DefaultKeyframes[type].eventValues[i];
                         }
+						eventKeyframes[type][index].eventValues = array;
                     }
                 }
             }
