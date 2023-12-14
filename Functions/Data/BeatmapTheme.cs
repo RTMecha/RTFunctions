@@ -63,9 +63,9 @@ namespace RTFunctions.Functions.Data
 
 			beatmapTheme.name = jn["name"] != null ? jn["name"] : "name your themes!";
 
-			beatmapTheme.guiAccentColor = jn["gui_ex"] != null ? LSColors.HexToColorAlpha(jn["gui_ex"]) : LSColors.gray800;
-
 			beatmapTheme.guiColor = jn["gui"] != null ? LSColors.HexToColorAlpha(jn["gui"]) : LSColors.gray800;
+
+			beatmapTheme.guiAccentColor = jn["gui_ex"] != null ? LSColors.HexToColorAlpha(jn["gui_ex"]) : beatmapTheme.guiColor;
 
 			beatmapTheme.backgroundColor = jn["bg"] != null ? LSColors.HexToColor(jn["bg"]) : LSColors.gray100;
 
@@ -112,7 +112,7 @@ namespace RTFunctions.Functions.Data
 					LSColors.gray900,
 				};
 
-			beatmapTheme.effectColors = jn["fx"] != null ? SetColors(jn["fx"], 18) : beatmapTheme.objectColors;
+			beatmapTheme.effectColors = jn["fx"] != null ? SetColors(jn["fx"], 18) : beatmapTheme.objectColors.Clone();
 
             return beatmapTheme;
 		}
@@ -298,20 +298,24 @@ namespace RTFunctions.Functions.Data
 				}
 			}
 
-			for (int k = 0; k < 18; k++)
-			{
-				if (_start.effectColors[k] != null && _end.effectColors[k] != null)
-				{
-					effectColors[k] = Color.Lerp(_start.effectColors[k], _end.effectColors[k], _val);
-				}
-			}
-		}
+            for (int k = 0; k < 18; k++)
+            {
+                if (_start.effectColors[k] != null && _end.effectColors[k] != null)
+                {
+                    effectColors[k] = Color.Lerp(_start.GetFXColor(k), _end.GetFXColor(k), _val);
+                }
+            }
+        }
 
-		#endregion
+		public Color GetFXColor(int _val) => effectColors[Mathf.Clamp(_val, 0, effectColors.Count - 1)];
 
-		#region Operators
+		public override string ToString() => $"{id}: {name}";
 
-		public static implicit operator bool(BeatmapTheme exists) => exists != null;
+        #endregion
+
+        #region Operators
+
+        public static implicit operator bool(BeatmapTheme exists) => exists != null;
 
 		//public static bool operator ==(BeatmapTheme a, BeatmapTheme b) => a && b && a.id == b.id;
 
