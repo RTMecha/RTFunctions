@@ -19,7 +19,7 @@ using EventKeyframe = DataManager.GameData.EventKeyframe;
 using Object = UnityEngine.Object;
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 
-namespace RTFunctions.Functions.Optimization.Level
+namespace RTFunctions.Functions.Optimization.Objects
 {
     // WARNING: This class has side effects and will instantiate GameObjects
     // Converts GameData to LevelObjects to be used by the mod
@@ -409,11 +409,11 @@ namespace RTFunctions.Functions.Optimization.Level
 
                 try
                 {
-                    if (EditorManager.inst)
+                    if (EditorManager.inst && !beatmapObject.fromPrefab)
                     {
-                        if (visualObject.TryGetComponent(out RTObject obj))
+                        var obj = visualObject.AddComponent<RTObject>();
                         {
-                            obj.SetObject(beatmapObject.id);
+                            obj.SetObject((Data.BeatmapObject)beatmapObject);
 
                             if (ModCompatibility.sharedFunctions.ContainsKey("HighlightColor"))
                                 obj.highlightColor = (Color)ModCompatibility.sharedFunctions["HighlightColor"];
@@ -426,6 +426,8 @@ namespace RTFunctions.Functions.Optimization.Level
                             if (ModCompatibility.sharedFunctions.ContainsKey("ShowObjectsAlpha"))
                                 obj.layerOpacity = (float)ModCompatibility.sharedFunctions["ShowObjectsAlpha"];
                         }
+
+                        ((Data.BeatmapObject)beatmapObject).RTObject = obj;
 
                         if (visualObject.TryGetComponent(out SelectObjectInEditor selectObjectInEditor))
                             Object.Destroy(selectObjectInEditor);
