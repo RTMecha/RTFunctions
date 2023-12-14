@@ -39,7 +39,10 @@ namespace RTFunctions.Functions.Animation
 
 		public List<Animation> animations = new List<Animation>();
 
-        public class Animation
+		// I plan on making an animation library at some point. This will allow creators to reuse animations or play them with a Modifier as an Animation Object.
+		public static List<Animation> animationLibrary = new List<Animation>();
+
+		public class Animation
 		{
 			public Animation(string name)
 			{
@@ -51,7 +54,7 @@ namespace RTFunctions.Functions.Animation
 			public void ResetTime()
             {
                 time = 0f;
-                timeOffset = UnityTime.time;
+				timeOffset = useRealTime ? UnityTime.time : AudioManager.inst.CurrentAudioSource.time;
                 for (int i = 0; i < completed.Length; i++)
                     completed[i] = false;
             }
@@ -67,7 +70,7 @@ namespace RTFunctions.Functions.Animation
 
 			public void Update()
             {
-                Time = UnityTime.time - timeOffset;
+                Time = useRealTime ? UnityTime.time - timeOffset : AudioManager.inst.CurrentAudioSource.time - timeOffset;
 
 				if (floatAnimations == null || floatAnimations.Count < 1)
 					completed[0] = true;
@@ -162,6 +165,8 @@ namespace RTFunctions.Functions.Animation
 
 			public string id;
 			public string name;
+
+			public bool useRealTime = true;
 
 			float time;
             public float Time
