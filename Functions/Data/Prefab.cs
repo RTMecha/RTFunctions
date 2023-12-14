@@ -141,7 +141,7 @@ namespace RTFunctions.Functions.Data
             if (MainObjectID != null)
                 jn["main_obj_id"] = MainObjectID.ToString();
 
-            jn["desc"] = description;
+            jn["desc"] = description == null ? "" : description;
 
             for (int i = 0; i < objects.Count; i++)
                 if (objects[i] != null)
