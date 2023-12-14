@@ -270,7 +270,6 @@ namespace RTFunctions.Functions.Data
 			"shake",
 			"theme",
 			"chroma",
-			"chroma",
 			"bloom",
 			"vignette",
 			"lens",
@@ -493,7 +492,7 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[4],
+				eventValues = new float[5],
 				id = LSText.randomNumString(8),
 			}, // Player
 			new Data.EventKeyframe
