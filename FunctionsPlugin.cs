@@ -347,7 +347,7 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(FunctionsPlugin));
 				harmony.PatchAll(typeof(DataManagerPatch));
 				harmony.PatchAll(typeof(DataManagerGameDataPatch));
-				harmony.PatchAll(typeof(DataManagerBeatmapThemePatch));
+				//harmony.PatchAll(typeof(DataManagerBeatmapThemePatch));
 				harmony.PatchAll(typeof(DataManagerBeatmapObjectPatch));
 				harmony.PatchAll(typeof(DataManagerPrefabPatch));
 				harmony.PatchAll(typeof(GameManagerPatch));
@@ -374,7 +374,7 @@ namespace RTFunctions
 			{
 				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
-					string str = RTFile.basePath;
+					string str = RTFile.BasePath;
 					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
@@ -391,7 +391,7 @@ namespace RTFunctions
 			{
 				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
-					string str = RTFile.basePath;
+					string str = RTFile.BasePath;
 					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-unity-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
@@ -621,13 +621,13 @@ namespace RTFunctions
 					GameManager.inst.UpdateTheme();
 			}
 			else
-				EventsCoreUpdateThemePrefix?.Invoke();
+				EventsCoreUpdateThemePrefix?.Invoke(__instance, _theme);
 
 			return false;
 		}
 
-		public static Action EventsCoreGameThemePrefix { get; set; }
-		public static Action EventsCoreUpdateThemePrefix { get; set; }
+		public static Action<GameManager> EventsCoreGameThemePrefix { get; set; }
+		public static Action<EventManager, float> EventsCoreUpdateThemePrefix { get; set; }
 
 		//[HarmonyPatch(typeof(InterfaceController), "Start")]
 		//[HarmonyPrefix]
