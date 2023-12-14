@@ -29,19 +29,19 @@ namespace RTFunctions.Functions.Data
 {
 	public class BeatmapObject : BaseBeatmapObject
 	{
-		public BeatmapObject()
+		public BeatmapObject() : base()
 		{
-
+			editorData = new ObjectEditorData();
 		}
 
 		public BeatmapObject(bool active, float startTime, string name, int shape, string text, List<List<BaseEventKeyframe>> eventKeyframes) : base(active, startTime, name, shape, text, eventKeyframes)
 		{
-
+			editorData = new ObjectEditorData();
 		}
 
 		public BeatmapObject(float startTime) : base(startTime)
 		{
-
+			editorData = new ObjectEditorData();
 		}
 
 		public BeatmapObject(BaseBeatmapObject beatmapObject)
@@ -53,9 +53,9 @@ namespace RTFunctions.Functions.Data
 			autoKillOffset = beatmapObject.autoKillOffset;
 			autoKillType = beatmapObject.autoKillType;
 			Depth = beatmapObject.Depth;
-			editorData = new EditorData();
+			editorData = new ObjectEditorData();
 			editorData.Bin = beatmapObject.editorData.Bin;
-			editorData.Layer = beatmapObject.editorData.Layer;
+			editorData.layer = beatmapObject.editorData.layer;
 			editorData.collapse = beatmapObject.editorData.collapse;
 			editorData.locked = beatmapObject.editorData.locked;
 			fromPrefab = beatmapObject.fromPrefab;
@@ -80,9 +80,9 @@ namespace RTFunctions.Functions.Data
 			autoKillOffset = beatmapObject.autoKillOffset;
 			autoKillType = beatmapObject.autoKillType;
 			Depth = beatmapObject.Depth;
-			editorData = new EditorData();
+			editorData = new ObjectEditorData();
 			editorData.Bin = beatmapObject.editorData.Bin;
-			editorData.Layer = beatmapObject.editorData.Layer;
+			editorData.layer = beatmapObject.editorData.layer;
 			editorData.collapse = beatmapObject.editorData.collapse;
 			editorData.locked = beatmapObject.editorData.locked;
 			fromPrefab = beatmapObject.fromPrefab;
@@ -116,6 +116,10 @@ namespace RTFunctions.Functions.Data
 
         public List<Modifier> modifiers = new List<Modifier>();
         public List<Component> components = new List<Component>();
+
+		public ParticleSystem particleSystem;
+		public TrailRenderer trailRenderer;
+		public RTObject RTObject { get; set; }
 
         public int integerVariable;
         public float floatVariable;
@@ -255,7 +259,7 @@ namespace RTFunctions.Functions.Data
             editorData = new ObjectEditorData()
             {
                 Bin = orig.editorData.Bin,
-                Layer = orig.editorData.Layer,
+                layer = orig.editorData.layer,
                 collapse = orig.editorData.collapse,
                 locked = orig.editorData.locked
             },
@@ -269,7 +273,7 @@ namespace RTFunctions.Functions.Data
             StartTime = orig.StartTime,
             text = orig.text,
             LDM = orig.LDM,
-            modifiers = orig.modifiers.Clone(),
+            modifiers = orig.modifiers.Select(x => Modifier.DeepCopy(x)).ToList(),
 			events = orig.events.Clone(),
 			parentType = orig.parentType,
 			parentOffsets = orig.parentOffsets,
@@ -520,7 +524,7 @@ namespace RTFunctions.Functions.Data
 				beatmapObject.editorData.Bin = jn["ed"]["bin"].AsInt;
 
 			if (jn["ed"]["layer"] != null)
-				beatmapObject.editorData.Layer = jn["ed"]["layer"].AsInt;
+				beatmapObject.editorData.layer = Mathf.Clamp(jn["ed"]["layer"].AsInt, 0, int.MaxValue);
 
 			for (int i = 0; i < jn["modifiers"].Count; i++)
 			{
@@ -598,7 +602,7 @@ namespace RTFunctions.Functions.Data
 				jn["ed"]["shrink"] = editorData.collapse.ToString();
 
 			jn["ed"]["bin"] = editorData.Bin.ToString();
-			jn["ed"]["layer"] = editorData.Layer.ToString();
+			jn["ed"]["layer"] = editorData.layer.ToString();
 
 			for (int i = 0; i < events[0].Count; i++)
 				jn["events"]["pos"][i] = ((EventKeyframe)events[0][i]).ToJSON();
