@@ -40,6 +40,12 @@ namespace RTFunctions.Functions.Data
             this.locked = locked;
         }
 
+        public new int Layer
+        {
+            get => Mathf.Clamp(layer, 0, int.MaxValue);
+            set => layer = Mathf.Clamp(value, 0, int.MaxValue);
+        }
+
         #region Methods
 
         public static ObjectEditorData DeepCopy(ObjectEditorData orig) => new ObjectEditorData
