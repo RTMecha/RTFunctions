@@ -251,7 +251,7 @@ namespace RTFunctions.Functions.Optimization
                             if (levelProcessor && levelProcessor.engine && levelProcessor.engine.objectSpawner != null)
                             {
                                 var spawner = levelProcessor.engine.objectSpawner;
-                                
+
                                 if (spawner.activateList.Has(x => x.ID == beatmapObject.id))
                                 {
                                     spawner.activateList.Find(x => x.ID == beatmapObject.id).StartTime = beatmapObject.StartTime;
@@ -273,6 +273,9 @@ namespace RTFunctions.Functions.Optimization
 
                             levelObject.StartTime = beatmapObject.StartTime;
                             levelObject.KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
+
+                            //FunctionsPlugin.inst.StartCoroutine(UpdateSpawnerList(beatmapObject, levelProcessor.engine.objectSpawner));
+
                             break;
                         } // StartTime
                     case "autokilltype":
@@ -362,6 +365,32 @@ namespace RTFunctions.Functions.Optimization
                 UpdateProcessor(bm, reinsert: reinsert);
             }
         }
+
+        //public static IEnumerator UpdateSpawnerList(BeatmapObject beatmapObject, ObjectSpawner objectSpawner)
+        //{
+        //    foreach (var bm in DataManager.inst.gameData.beatmapObjects.Where(x => x.parent == beatmapObject.id))
+        //    {
+        //        FunctionsPlugin.inst.StartCoroutine(UpdateSpawnerList(bm, objectSpawner));
+        //    }
+
+        //    var level = levelProcessor.level;
+        //    var converter = levelProcessor.converter;
+        //    var engine = levelProcessor.engine;
+
+        //    if (level != null && converter != null)
+        //    {
+        //        var objects = level.objects;
+
+        //        var iLevelObject = GetILevelObject(beatmapObject.id, objects);
+        //        if (iLevelObject != null)
+        //        {
+        //            objectSpawner.RemoveObject(iLevelObject);
+        //            objectSpawner.InsertObject(iLevelObject);
+        //        }
+        //    }
+
+        //    yield break;
+        //}
 
         /// <summary>
         /// Recaches all the keyframe sequences related to the BeatmapObject.
