@@ -51,14 +51,27 @@ namespace RTFunctions.Patchers
 
             var spriteManager = new GameObject("SpriteManager");
             spriteManager.transform.SetParent(systemManager.transform);
-            spriteManager.AddComponent<RTSpriteManager>();
+            spriteManager.AddComponent<SpriteManager>();
 
             var fontManager = new GameObject("FontManager");
             fontManager.transform.SetParent(systemManager.transform);
             fontManager.AddComponent<FontManager>();
 
+            var assetManager = new GameObject("AssetManager");
+            assetManager.transform.SetParent(systemManager.transform);
+            assetManager.AddComponent<AssetManager>();
+
             AlephNetworkManager.Init();
-            RTCode.Init();
+
+            try
+            {
+                RTCode.Init();
+            }
+            catch
+            {
+
+            }
+
             AnimationManager.Init();
             RTLogger.Init();
 
@@ -192,7 +205,7 @@ namespace RTFunctions.Patchers
                     playerColors = beatmapTheme.playerColors,
                     objectColors = beatmapTheme.objectColors,
                     backgroundColors = beatmapTheme.backgroundColors,
-                    effectColors = beatmapTheme.objectColors,
+                    effectColors = beatmapTheme.objectColors.Clone(),
                 };
             }
 

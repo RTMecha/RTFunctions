@@ -121,7 +121,7 @@ namespace RTFunctions.Functions.IO
 
                 FunctionsPlugin.inst.StartCoroutine(Managers.Networking.AlephNetworkManager.DownloadImageTexture($"file://{RTFile.ApplicationDirectory}BepInEx/plugins/Assets/editor_gui_close.png", delegate (Texture2D texture2D)
                 {
-                    t4Im.sprite = RTSpriteManager.CreateSprite(texture2D);
+                    t4Im.sprite = SpriteManager.CreateSprite(texture2D);
                 }));
 
                 var t5 = UIManager.GenerateUIText("Title", t2RT);

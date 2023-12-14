@@ -33,12 +33,12 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
             var regex = new System.Text.RegularExpressions.Regex(@"img\((.*?)\)");
             var match = regex.Match(text);
 
-            string imagePath = match.Success ? RTFile.basePath + match.Groups[1].ToString() : RTFile.basePath + text;
+            string imagePath = match.Success ? RTFile.BasePath + match.Groups[1].ToString() : RTFile.BasePath + text;
 
             if (RTFile.FileExists(imagePath))
                 FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadImageTexture("file://" + imagePath, delegate (Texture2D x)
                 {
-                    ((SpriteRenderer)Renderer).sprite = RTSpriteManager.CreateSprite(x);
+                    ((SpriteRenderer)Renderer).sprite = SpriteManager.CreateSprite(x);
                     GameObject.transform.localPosition = local;
                     GameObject.transform.localPosition = local;
                     GameObject.transform.localPosition = local;
