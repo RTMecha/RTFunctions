@@ -27,44 +27,15 @@ namespace RTFunctions.Functions.Data
     {
         public BackgroundObject()
         {
-            shape = ShapeManager.Shapes3D[0];
+            try
+			{
+				shape = ShapeManager.inst.Shapes3D[0][0];
+			}
+            catch
+            {
+				shape = new Shape("", 0, 0, null, null, Shape.Property.RegularObject);
+            }
         }
-
-		public BackgroundObject(
-			bool _active,
-			string _name,
-			int _kind,
-			string _text,
-			Vector2 _pos,
-			Vector2 _scale,
-			float _rot,
-			int _color,
-			int _layer,
-			bool _reactive,
-			ReactiveType _reactiveType,
-			float _reactiveScale,
-			bool _drawFade) : base(_active, _name, _kind, _text, _pos, _scale, _rot, _color, _layer, _reactive, _reactiveType, _reactiveScale, _drawFade)
-        {
-			zPosition = _layer;
-		}
-		
-		public BackgroundObject(
-			bool _active,
-			string _name,
-			int _kind,
-			string _text,
-			Vector2 _pos,
-			Vector2 _scale,
-			float _rot,
-			int _color,
-			float _layer,
-			bool _reactive,
-			ReactiveType _reactiveType,
-			float _reactiveScale,
-			bool _drawFade) : base(_active, _name, _kind, _text, _pos, _scale, _rot, _color, (int)_layer, _reactive, _reactiveType, _reactiveScale, _drawFade)
-        {
-			zPosition = _layer;
-		}
 
         public BackgroundObject(BaseBackground bg)
         {
@@ -83,12 +54,12 @@ namespace RTFunctions.Functions.Data
             scale = bg.scale;
             text = bg.text;
             
-            shape = ShapeManager.Shapes3D[0];
+            shape = ShapeManager.inst.Shapes3D[0][0];
         }
 
         public void SetShape(int shape)
         {
-            this.shape = Shape.DeepCopy(ShapeManager.Shapes3D[shape]);
+            this.shape = Shape.DeepCopy(ShapeManager.inst.Shapes3D[shape][0]);
             foreach (var gameObject in gameObjects)
             {
                 if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
@@ -98,7 +69,7 @@ namespace RTFunctions.Functions.Data
 
         public void SetShape(int shape, int shapeOption)
         {
-            this.shape = Shape.DeepCopy(ShapeManager.GetShape3D(shape, shapeOption));
+            this.shape = Shape.DeepCopy(ShapeManager.inst.GetShape3D(shape, shapeOption));
             foreach (var gameObject in gameObjects)
             {
                 if (gameObject.TryGetComponent(out MeshFilter meshFilter) && this.shape.mesh)
@@ -127,7 +98,7 @@ namespace RTFunctions.Functions.Data
         public Shape shape;
         public float zscale = 10f;
         public int depth = 9;
-		public float zPosition;
+		//public float zPosition;
 
         int fadeColor;
         public int FadeColor
@@ -205,7 +176,7 @@ namespace RTFunctions.Functions.Data
 
 			var rot = jn["rot"].AsFloat;
 			var color = jn["color"].AsInt;
-			var layer = jn["layer"].AsFloat;
+			var layer = jn["layer"].AsInt;
 
 			var reactive = false;
 			if (jn["r_set"] != null)
@@ -236,9 +207,9 @@ namespace RTFunctions.Functions.Data
 			if (jn["depth"] != null)
 				depth = jn["depth"].AsInt;
 
-			Shape shape = ShapeManager.Shapes3D[0];
+			Shape shape = ShapeManager.inst.Shapes3D[0][0];
 			if (jn["s"] != null && jn["so"] != null)
-				shape = ShapeManager.GetShape3D(jn["s"].AsInt, jn["so"].AsInt);
+				shape = ShapeManager.inst.GetShape3D(jn["s"].AsInt, jn["so"].AsInt);
 
 			Vector2 rotation = Vector2.zero;
 			if (jn["r_offset"] != null && jn["r_offset"]["x"] != null && jn["r_offset"]["y"] != null)
@@ -312,7 +283,7 @@ namespace RTFunctions.Functions.Data
 				scale = scale,
 				rot = rot,
 				color = color,
-				zPosition = layer,
+				layer = layer,
 				reactive = reactive,
 				reactiveType = reactiveType,
 				reactiveScale = reactiveScale,
