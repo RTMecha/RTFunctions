@@ -17,6 +17,33 @@ namespace RTFunctions.Functions.Components
     public class RTObject : MonoBehaviour
     {
 		public bool CanDrag => ModCompatibility.sharedFunctions.ContainsKey("SelectedObjectCount") && ((int)ModCompatibility.sharedFunctions["SelectedObjectCount"]) < 2;
+		public static bool Enabled { get; set; }
+
+		public bool Selected
+		{
+			get
+			{
+                try
+				{
+					if (ModCompatibility.mods.ContainsKey("EditorManagement"))
+					{
+						var mod = ModCompatibility.mods["EditorManagement"];
+
+						if (mod.Methods.ContainsKey("GetTimelineObject"))
+						{
+							var timelineObject = (TimelineObject)mod.Methods["GetTimelineObject"].DynamicInvoke(beatmapObject);
+							return timelineObject.ID == beatmapObject.id && timelineObject.selected;
+						}
+					}
+				}
+                catch
+                {
+
+                }
+
+				return false;
+			}
+		}
 
 		public static bool TipEnabled { get; set; }
 		public string id;
@@ -33,11 +60,11 @@ namespace RTFunctions.Functions.Components
 
 		public bool hovered;
 
-		public Color highlightColor;
-		public Color highlightDoubleColor;
-		public bool highlightObjects;
-		public float layerOpacity = 0.5f;
-		public bool showObjectsOnlyOnLayer;
+		public static Color HighlightColor { get; set; }
+		public static Color HighlightDoubleColor { get; set; }
+		public static bool HighlightObjects { get; set; }
+		public static float LayerOpacity { get; set; }
+		public static bool ShowObjectsOnlyOnLayer { get; set; }
 
         #endregion
 
@@ -75,17 +102,24 @@ namespace RTFunctions.Functions.Components
 		public Action onMouseExit;
 		public Action onMouseDrag;
 
-        #endregion
+		#endregion
 
-        void Awake()
-        {
+		void Awake()
+		{
 			//if (EditorManager.inst == null)
 			//	Destroy(this);
 
 			if (GetComponent<Renderer>())
 				renderer = GetComponent<Renderer>();
+		}
 
-            {
+		public void GenerateDraggers()
+		{
+			if (!EditorManager.inst || !Selected)
+				return;
+
+			if (!rotator)
+			{
 				var rotator = ObjectManager.inst.objectPrefabs[1].options[4].transform.GetChild(0).gameObject.Duplicate(transform.parent, "Rotator");
 				Destroy(rotator.GetComponent<SelectObjectInEditor>());
 				rotator.tag = "Helper";
@@ -98,73 +132,33 @@ namespace RTFunctions.Functions.Components
 				this.rotator.refObject = this;
 
 				rotator.SetActive(false);
-            }
-
-            {
-                //var scalertop = ObjectManager.inst.objectPrefabs[3].options[0].transform.GetChild(0).gameObject.Duplicate(transform.parent);
-                //Destroy(scalertop.GetComponent<SelectObjectInEditor>());
-                //scalertop.tag = "Helper";
-                //scalertop.transform.localScale = new Vector3(2f, 2f, 1f);
-                //scalertop.GetComponent<Collider2D>().enabled = true;
-
-                //var scalertopRenderer = scalertop.GetComponent<Renderer>();
-                //scalertopRenderer.enabled = true;
-                //scalertopRenderer.material.color = new Color(0f, 1f, 0f);
-
-                //top = scalertop.AddComponent<RTScaler>();
-                //top.refObject = this;
-                //top.axis = Axis.PosY;
-
-                //var scalerleft = ObjectManager.inst.objectPrefabs[3].options[0].transform.GetChild(0).gameObject.Duplicate(transform.parent);
-                //Destroy(scalerleft.GetComponent<SelectObjectInEditor>());
-                //scalerleft.tag = "Helper";
-                //scalerleft.transform.localScale = new Vector3(2f, 2f, 1f);
-                //scalerleft.GetComponent<Collider2D>().enabled = true;
-
-                //var scalerleftRenderer = scalerleft.GetComponent<Renderer>();
-                //scalerleftRenderer.enabled = true;
-                //scalerleftRenderer.material.color = new Color(1f, 0f, 0f);
-
-                //left = scalerleft.AddComponent<RTScaler>();
-                //left.refObject = this;
-                //left.axis = Axis.PosX;
-
-                //var scalerbottom = ObjectManager.inst.objectPrefabs[3].options[0].transform.GetChild(0).gameObject.Duplicate(transform.parent);
-                //Destroy(scalerbottom.GetComponent<SelectObjectInEditor>());
-                //scalerbottom.tag = "Helper";
-                //scalerbottom.transform.localScale = new Vector3(2f, 2f, 1f);
-                //scalerbottom.GetComponent<Collider2D>().enabled = true;
-
-                //var scalerbottomRenderer = scalerbottom.GetComponent<Renderer>();
-                //scalerbottomRenderer.enabled = true;
-                //scalerbottomRenderer.material.color = new Color(0f, 1f, 0f);
-
-                //bottom = scalerbottom.AddComponent<RTScaler>();
-                //bottom.refObject = this;
-                //bottom.axis = Axis.NegY;
-
-                //var scalerright = ObjectManager.inst.objectPrefabs[3].options[0].transform.GetChild(0).gameObject.Duplicate(transform.parent);
-                //Destroy(scalerright.GetComponent<SelectObjectInEditor>());
-                //scalerright.tag = "Helper";
-                //scalerright.transform.localScale = new Vector3(2f, 2f, 1f);
-                //scalerright.GetComponent<Collider2D>().enabled = true;
-
-                //var scalerrightRenderer = scalerright.GetComponent<Renderer>();
-                //scalerrightRenderer.enabled = true;
-                //scalerrightRenderer.material.color = new Color(1f, 0f, 0f);
-
-                //right = scalerright.AddComponent<RTScaler>();
-                //right.refObject = this;
-                //right.axis = Axis.NegX;
-
-                top = CreateScaler(Axis.PosY, Color.green);
-				left = CreateScaler(Axis.PosX, Color.red);
-				bottom = CreateScaler(Axis.NegY, Color.green);
-				right = CreateScaler(Axis.NegX, Color.red);
 			}
 
-            emptyHandler = transform.parent.gameObject.AddComponent<EmptyActiveHandler>();
-			emptyHandler.refObject = this;
+			if (!top)
+			{
+				top = CreateScaler(Axis.PosY, Color.green);
+				top.gameObject.SetActive(false);
+			}
+			if (!left)
+			{
+				left = CreateScaler(Axis.PosX, Color.red);
+				left.gameObject.SetActive(false);
+			}
+			if (!bottom)
+			{
+				bottom = CreateScaler(Axis.NegY, Color.green);
+				bottom.gameObject.SetActive(false);
+			}
+			if (!right)
+			{
+				right = CreateScaler(Axis.NegX, Color.red);
+				right.gameObject.SetActive(false);
+			}
+			if (!emptyHandler)
+			{
+				emptyHandler = transform.parent.gameObject.AddComponent<EmptyActiveHandler>();
+				emptyHandler.refObject = this;
+			}
 		}
 
 		RTScaler CreateScaler(Axis axis, Color color)
@@ -188,8 +182,8 @@ namespace RTFunctions.Functions.Components
 		public void SetObject(BeatmapObject beatmapObject)
         {
 			id = beatmapObject.id;
+			beatmapObject.RTObject = this;
 			this.beatmapObject = beatmapObject;
-			emptyHandler.beatmapObject = beatmapObject;
 		}
 
 		void OnMouseUp()
@@ -204,7 +198,7 @@ namespace RTFunctions.Functions.Components
 		void OnMouseDown()
         {
 			onMouseDown?.Invoke();
-			if (EditorManager.inst != null && EditorManager.inst.isEditing && DataManager.inst.gameData.beatmapObjects.Count > 0 && !string.IsNullOrEmpty(id) && !LSHelpers.IsUsingInputField() && !EventSystem.current.IsPointerOverGameObject())
+			if (EditorManager.inst && EditorManager.inst.isEditing && DataManager.inst.gameData.beatmapObjects.Count > 0 && !string.IsNullOrEmpty(id) && !LSHelpers.IsUsingInputField() && !EventSystem.current.IsPointerOverGameObject())
 			{
 				startDragTime = Time.time;
 				if (ModCompatibility.mods.ContainsKey("EditorManagement"))
@@ -229,7 +223,7 @@ namespace RTFunctions.Functions.Components
 							mod.Methods["AddSelectedObject"].DynamicInvoke(timelineObject);
 					}
 				}
-            }
+			}
         }
 
         void OnMouseEnter()
@@ -266,7 +260,7 @@ namespace RTFunctions.Functions.Components
 			onMouseDrag?.Invoke();
 
 			dragTime = Time.time;
-			if (EditorManager.inst && EditorManager.inst.isEditing && dragTime > startDragTime + 0.1f && CanDrag)
+			if (EditorManager.inst && EditorManager.inst.isEditing && dragTime > startDragTime + 0.1f && CanDrag && Enabled)
             {
 				var vector = new Vector3(Input.mousePosition.x, Input.mousePosition.y, transform.localPosition.z);
 				var vector2 = Camera.main.ScreenToWorldPoint(vector);
@@ -352,24 +346,24 @@ namespace RTFunctions.Functions.Components
 		{
 			var m = 0f;
 
-			if (beatmapObject != null && showObjectsOnlyOnLayer && beatmapObject.editorData.layer != EditorManager.inst.layer)
-				m = -layerOpacity;
+			if (beatmapObject != null && ShowObjectsOnlyOnLayer && beatmapObject.editorData.layer != EditorManager.inst.layer)
+				m = -renderer.material.color.a + LayerOpacity;
 
 			if (EditorManager.inst != null && EditorManager.inst.isEditing && !hovered && renderer != null && renderer.material.HasProperty("_Color"))
             {
 				renderer.material.color += new Color(0f, 0f, 0f, m);
             }
 
-			if (EditorManager.inst != null && EditorManager.inst.isEditing && highlightObjects && hovered && renderer != null && renderer.material.HasProperty("_Color"))
+			if (EditorManager.inst != null && EditorManager.inst.isEditing && HighlightObjects && hovered && renderer != null && renderer.material.HasProperty("_Color"))
 			{
 				var color = Input.GetKey(KeyCode.LeftShift) ? new Color(
-					renderer.material.color.r > 0.9f ? -highlightDoubleColor.r : highlightDoubleColor.r,
-					renderer.material.color.g > 0.9f ? -highlightDoubleColor.g : highlightDoubleColor.g,
-					renderer.material.color.b > 0.9f ? -highlightDoubleColor.b : highlightDoubleColor.b,
+					renderer.material.color.r > 0.9f ? -HighlightDoubleColor.r : HighlightDoubleColor.r,
+					renderer.material.color.g > 0.9f ? -HighlightDoubleColor.g : HighlightDoubleColor.g,
+					renderer.material.color.b > 0.9f ? -HighlightDoubleColor.b : HighlightDoubleColor.b,
 					0f) : new Color(
-					renderer.material.color.r > 0.9f ? -highlightColor.r : highlightColor.r,
-					renderer.material.color.g > 0.9f ? -highlightColor.g : highlightColor.g,
-					renderer.material.color.b > 0.9f ? -highlightColor.b : highlightColor.b,
+					renderer.material.color.r > 0.9f ? -HighlightColor.r : HighlightColor.r,
+					renderer.material.color.g > 0.9f ? -HighlightColor.g : HighlightColor.g,
+					renderer.material.color.b > 0.9f ? -HighlightColor.b : HighlightColor.b,
 					0f);
 
 				renderer.material.color += color;
@@ -471,6 +465,22 @@ namespace RTFunctions.Functions.Components
 				if (dragging && mod.Methods.ContainsKey("RenderKeyframeDialog"))
 					mod.Methods["RenderKeyframeDialog"].DynamicInvoke(beatmapObject);
 			}
+
+			if (!EditorManager.inst || !Selected)
+            {
+				if (emptyHandler)
+					Destroy(emptyHandler);
+				if (rotator)
+					Destroy(rotator.gameObject);
+				if (top)
+					Destroy(top.gameObject);
+				if (left)
+					Destroy(left.gameObject);
+				if (bottom)
+					Destroy(bottom.gameObject);
+				if (right)
+					Destroy(right.gameObject);
+            }
 		}
 
         public List<HoverTooltip.Tooltip> tooltipLanguages = new List<HoverTooltip.Tooltip>();

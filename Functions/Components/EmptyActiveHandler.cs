@@ -12,39 +12,19 @@ namespace RTFunctions.Functions.Components
     public class EmptyActiveHandler : MonoBehaviour
     {
         public RTObject refObject;
-        public BeatmapObject beatmapObject;
 
 		void FixedUpdate()
         {
-			if (refObject && beatmapObject)
+			if (refObject && refObject.beatmapObject)
 			{
-				refObject.rotator.gameObject.SetActive(Selected && refObject.CanDrag);
-				refObject.top.gameObject.SetActive(Selected && refObject.CanDrag);
-				refObject.left.gameObject.SetActive(Selected && refObject.CanDrag);
-				refObject.bottom.gameObject.SetActive(Selected && refObject.CanDrag);
-				refObject.right.gameObject.SetActive(Selected && refObject.CanDrag);
+				refObject.rotator.gameObject.SetActive(refObject.Selected && RTObject.Enabled && refObject.CanDrag);
+				refObject.top.gameObject.SetActive(refObject.Selected && RTObject.Enabled && refObject.CanDrag);
+				refObject.left.gameObject.SetActive(refObject.Selected && RTObject.Enabled && refObject.CanDrag);
+				refObject.bottom.gameObject.SetActive(refObject.Selected && RTObject.Enabled && refObject.CanDrag);
+				refObject.right.gameObject.SetActive(refObject.Selected && RTObject.Enabled && refObject.CanDrag);
 
-				if (beatmapObject.objectType == DataManager.GameData.BeatmapObject.ObjectType.Empty)
-					refObject.gameObject.SetActive(Selected && refObject.CanDrag);
-			}
-		}
-
-		public bool Selected
-		{
-			get
-			{
-				if (ModCompatibility.mods.ContainsKey("EditorManagement"))
-				{
-					var mod = ModCompatibility.mods["EditorManagement"];
-
-					if (mod.Methods.ContainsKey("GetTimelineObject"))
-					{
-						var timelineObject = (TimelineObject)mod.Methods["GetTimelineObject"].DynamicInvoke(beatmapObject);
-						return timelineObject.ID == beatmapObject.id && timelineObject.selected;
-					}
-				}
-
-				return false;
+				if (refObject.beatmapObject.objectType == DataManager.GameData.BeatmapObject.ObjectType.Empty)
+					refObject.gameObject.SetActive(refObject.Selected && RTObject.Enabled && refObject.CanDrag);
 			}
 		}
 

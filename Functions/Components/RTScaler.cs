@@ -13,6 +13,7 @@ namespace RTFunctions.Functions.Components
     public class RTScaler : MonoBehaviour
     {
         public static float ScalerOffset { get; set; } = 6f;
+        public static float ScalerScale { get; set; } = 1.6f;
 
         public RTObject refObject;
 
@@ -45,6 +46,7 @@ namespace RTFunctions.Functions.Components
                     transform.localRotation = Quaternion.Euler(0f, 0f, -90f);
                     break;
             }
+            transform.localScale = new Vector3(ScalerScale, ScalerScale, 1f);
         }
 
         void FixedUpdate()
@@ -93,16 +95,16 @@ namespace RTFunctions.Functions.Components
                     {
                         float total = Vector2.Distance(finalVector, dragOffset);
 
-                        if (axis == RTObject.Axis.PosX && dragOffset.x - finalVector.x < 0f)
+                        if (axis == RTObject.Axis.PosX && dragOffset.x - finalVector.x > 0f)
                             total = -total;
                         
-                        if (axis == RTObject.Axis.PosY && dragOffset.y - finalVector.y < 0f)
+                        if (axis == RTObject.Axis.PosY && dragOffset.y - finalVector.y > 0f)
                             total = -total;
                         
-                        if (axis == RTObject.Axis.NegX && dragOffset.x - finalVector.x > 0f)
+                        if (axis == RTObject.Axis.NegX && dragOffset.x - finalVector.x < 0f)
                             total = -total;
                         
-                        if (axis == RTObject.Axis.NegY && dragOffset.y - finalVector.y > 0f)
+                        if (axis == RTObject.Axis.NegY && dragOffset.y - finalVector.y < 0f)
                             total = -total;
 
                         refObject.selectedKeyframe.eventValues[0] = dragKeyframeValues.x + total;
