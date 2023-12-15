@@ -161,7 +161,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             baseObject.transform.localScale = Vector3.one;
 
             var visualObject = baseObject.transform.GetChild(0).gameObject;
-            visualObject.transform.localPosition = new Vector3(beatmapObject.origin.x, beatmapObject.origin.y, beatmapObject.Depth * 0.1f);
+            visualObject.transform.localPosition = new Vector3(beatmapObject.origin.x, beatmapObject.origin.y, beatmapObject.depth * 0.1f);
             visualObject.name = "Visual [ " + beatmapObject.name + " ]";
 
             try
@@ -409,28 +409,11 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 try
                 {
-                    if (EditorManager.inst && !beatmapObject.fromPrefab)
+                    if (EditorManager.inst && !beatmapObject.fromPrefab && RTObject.Enabled)
                     {
                         var obj = visualObject.AddComponent<RTObject>();
-                        {
-                            obj.SetObject((Data.BeatmapObject)beatmapObject);
-
-                            if (ModCompatibility.sharedFunctions.ContainsKey("HighlightColor"))
-                                obj.highlightColor = (Color)ModCompatibility.sharedFunctions["HighlightColor"];
-                            if (ModCompatibility.sharedFunctions.ContainsKey("HighlightDoubleColor"))
-                                obj.highlightDoubleColor = (Color)ModCompatibility.sharedFunctions["HighlightDoubleColor"];
-                            if (ModCompatibility.sharedFunctions.ContainsKey("CanHightlightObjects"))
-                                obj.highlightObjects = (bool)ModCompatibility.sharedFunctions["CanHightlightObjects"];
-                            if (ModCompatibility.sharedFunctions.ContainsKey("ShowObjectsOnLayer"))
-                                obj.showObjectsOnlyOnLayer = (bool)ModCompatibility.sharedFunctions["ShowObjectsOnLayer"];
-                            if (ModCompatibility.sharedFunctions.ContainsKey("ShowObjectsAlpha"))
-                                obj.layerOpacity = (float)ModCompatibility.sharedFunctions["ShowObjectsAlpha"];
-                        }
-
+                        obj.SetObject((Data.BeatmapObject)beatmapObject);
                         ((Data.BeatmapObject)beatmapObject).RTObject = obj;
-
-                        if (visualObject.TryGetComponent(out SelectObjectInEditor selectObjectInEditor))
-                            Object.Destroy(selectObjectInEditor);
                     }
                 }
                 catch (Exception e)
@@ -443,11 +426,13 @@ namespace RTFunctions.Functions.Optimization.Objects
                     Debug.LogError(stringBuilder.ToString());
                 } // Editor
 
+                Object.Destroy(visualObject.GetComponent<SelectObjectInEditor>());
+
                 var levelObject = new LevelObject(beatmapObject.id,
                     beatmapObject.StartTime,
                     beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(_oldStyle: true),
                     cachedSequences[beatmapObject.id].ColorSequence,
-                    beatmapObject.Depth,
+                    beatmapObject.depth,
                     parentObjects,
                     visual,
                     cachedSequences[beatmapObject.id].OpacitySequence,
