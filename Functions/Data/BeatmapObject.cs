@@ -52,7 +52,7 @@ namespace RTFunctions.Functions.Data
 			active = beatmapObject.active;
 			autoKillOffset = beatmapObject.autoKillOffset;
 			autoKillType = beatmapObject.autoKillType;
-			Depth = beatmapObject.Depth;
+			depth = beatmapObject.depth;
 			editorData = new ObjectEditorData();
 			editorData.Bin = beatmapObject.editorData.Bin;
 			editorData.layer = beatmapObject.editorData.layer;
@@ -79,7 +79,7 @@ namespace RTFunctions.Functions.Data
 			active = beatmapObject.active;
 			autoKillOffset = beatmapObject.autoKillOffset;
 			autoKillType = beatmapObject.autoKillType;
-			Depth = beatmapObject.Depth;
+			depth = beatmapObject.depth;
 			editorData = new ObjectEditorData();
 			editorData.Bin = beatmapObject.editorData.Bin;
 			editorData.layer = beatmapObject.editorData.layer;
