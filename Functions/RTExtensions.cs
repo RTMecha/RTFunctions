@@ -15,7 +15,6 @@ using UnityEngine.EventSystems;
 using LSFunctions;
 using SimpleJSON;
 
-using RTFunctions.Enums;
 using RTFunctions.Functions.Animation;
 using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.Managers;

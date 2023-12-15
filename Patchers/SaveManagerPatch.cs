@@ -9,7 +9,6 @@ using HarmonyLib;
 using SimpleJSON;
 
 using RTFunctions.Functions.IO;
-using RTFunctions.Enums;
 
 namespace RTFunctions.Patchers
 {

@@ -24,7 +24,6 @@ using RTFunctions.Functions.Optimization;
 using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.IO;
 using RTFunctions.Patchers;
-using RTFunctions.Enums;
 
 using Application = UnityEngine.Application;
 using Screen = UnityEngine.Screen;

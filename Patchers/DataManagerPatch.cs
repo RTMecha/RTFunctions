@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,6 @@ using LSFunctions;
 using SimpleJSON;
 
 using RTFunctions.Functions;
-using RTFunctions.Enums;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Managers.Networking;
 using RTFunctions.Functions.Animation;
@@ -32,6 +32,8 @@ namespace RTFunctions.Patchers
         static void StartPostfix(DataManager __instance, ref Dictionary<string, int> ___languagesToIndex, ref Dictionary<int, string> ___indexToLangauge)
         {
             var systemManager = SystemManager.inst;
+
+            AlephNetworkManager.Init();
 
             var modCompatibility = new GameObject("ModCompatibility");
             modCompatibility.transform.SetParent(systemManager.transform);
@@ -61,28 +63,28 @@ namespace RTFunctions.Patchers
             assetManager.transform.SetParent(systemManager.transform);
             assetManager.AddComponent<AssetManager>();
 
-            AlephNetworkManager.Init();
+            //AlephNetworkManager.Init();
 
             try
             {
                 RTCode.Init();
             }
-            catch
+            catch (Exception ex)
             {
-
+                Debug.LogError($"RTCode Evaluator failed to initialize.\n{ex}");
             }
 
             AnimationManager.Init();
             RTLogger.Init();
 
             // Test to see if this is even necessary. If not, then feel free to remove this.
-            EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
-            EnumPatcher.AddEnumValue<DataManager.GameData.BackgroundObject.ReactiveType>("CUSTOM");
+            //EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
+            //EnumPatcher.AddEnumValue<DataManager.GameData.BackgroundObject.ReactiveType>("CUSTOM");
 
-            EnumPatcher.AddEnumValue<DataManager.Language>("japanese");
-            EnumPatcher.AddEnumValue<DataManager.Language>("thai");
-            EnumPatcher.AddEnumValue<DataManager.Language>("russian");
-            EnumPatcher.AddEnumValue<DataManager.Language>("pirate");
+            //EnumPatcher.AddEnumValue<DataManager.Language>("japanese");
+            //EnumPatcher.AddEnumValue<DataManager.Language>("thai");
+            //EnumPatcher.AddEnumValue<DataManager.Language>("russian");
+            //EnumPatcher.AddEnumValue<DataManager.Language>("pirate");
 
             ___languagesToIndex.Add("japanese", 2);
             ___languagesToIndex.Add("thai", 3);
@@ -94,37 +96,31 @@ namespace RTFunctions.Patchers
             ___indexToLangauge.Add(4, "russian");
             ___indexToLangauge.Add(5, "pirate");
 
-            if (__instance.difficulties.Count != 7)
+            __instance.difficulties = new List<DataManager.Difficulty>
             {
-                __instance.difficulties = new List<DataManager.Difficulty>
-                {
-                    new DataManager.Difficulty("Easy", LSColors.GetThemeColor("easy")),
-                    new DataManager.Difficulty("Normal", LSColors.GetThemeColor("normal")),
-                    new DataManager.Difficulty("Hard", LSColors.GetThemeColor("hard")),
-                    new DataManager.Difficulty("Expert", LSColors.GetThemeColor("expert")),
-                    new DataManager.Difficulty("Expert+", LSColors.GetThemeColor("expert+")),
-                    new DataManager.Difficulty("Master", new Color(0.25f, 0.01f, 0.01f)),
-                    new DataManager.Difficulty("Animation", LSColors.GetThemeColor("none"))
-                };
-            }
+                new DataManager.Difficulty("Easy", LSColors.GetThemeColor("easy")),
+                new DataManager.Difficulty("Normal", LSColors.GetThemeColor("normal")),
+                new DataManager.Difficulty("Hard", LSColors.GetThemeColor("hard")),
+                new DataManager.Difficulty("Expert", LSColors.GetThemeColor("expert")),
+                new DataManager.Difficulty("Expert+", LSColors.GetThemeColor("expert+")),
+                new DataManager.Difficulty("Master", new Color(0.25f, 0.01f, 0.01f)),
+                new DataManager.Difficulty("Animation", LSColors.GetThemeColor("none"))
+            };
 
-            if (__instance.linkTypes[3].name != "YouTube")
+            __instance.linkTypes = new List<DataManager.LinkType>
             {
-                __instance.linkTypes = new List<DataManager.LinkType>
-                {
-                    new DataManager.LinkType("Spotify", "https://open.spotify.com/artist/{0}"),
-                    new DataManager.LinkType("SoundCloud", "https://soundcloud.com/{0}"),
-                    new DataManager.LinkType("Bandcamp", "https://{0}.bandcamp.com"),
-                    new DataManager.LinkType("YouTube", "https://www.youtube.com/{0}"),
-                    new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/")
-                };
-            }
+                new DataManager.LinkType("Spotify", "https://open.spotify.com/artist/{0}"),
+                new DataManager.LinkType("SoundCloud", "https://soundcloud.com/{0}"),
+                new DataManager.LinkType("Bandcamp", "https://{0}.bandcamp.com"),
+                new DataManager.LinkType("YouTube", "https://www.youtube.com/c/{0}"),
+                new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/")
+            };
 
-            if (__instance.AnimationList[1].Animation.keys[1].m_Time != 0.9999f)
-            {
-                __instance.AnimationList[1].Animation.keys[1].m_Time = 0.9999f;
-                __instance.AnimationList[1].Animation.keys[1].m_Value = 0f;
-            }
+            //if (__instance.AnimationList[1].Animation.keys[1].m_Time != 0.9999f)
+            //{
+            //    __instance.AnimationList[1].Animation.keys[1].m_Time = 0.9999f;
+            //    __instance.AnimationList[1].Animation.keys[1].m_Value = 0f;
+            //}
 
             //Themes
             __instance.BeatmapThemes[0].name = "PA Machine";
