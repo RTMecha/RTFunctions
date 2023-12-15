@@ -10,6 +10,7 @@ using UnityEngine;
 using SimpleJSON;
 
 using RTFunctions.Functions.Components;
+using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Optimization;
 
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
@@ -112,7 +113,14 @@ namespace RTFunctions.Functions.Data
 				int steam_id = -1;
 				if (!string.IsNullOrEmpty(jn["creator"]["steam_id"]))
 					steam_id = jn["creator"]["steam_id"].AsInt;
-				var creator = new LevelCreator(steam_name, steam_id);
+				string creatorLink = "";
+				if (!string.IsNullOrEmpty(jn["creator"]["link"]))
+					creatorLink = jn["creator"]["link"];
+				int creatorLinkType = 0;
+				if (!string.IsNullOrEmpty(jn["creator"]["linkType"]))
+					creatorLinkType = jn["creator"]["linkType"].AsInt;
+
+				var creator = new LevelCreator(steam_name, steam_id, creatorLink, creatorLinkType);
 
 				string title = "Pyrolysis";
 				if (!string.IsNullOrEmpty(jn["song"]["title"]))
@@ -135,7 +143,22 @@ namespace RTFunctions.Functions.Data
 				float previewLength = 30f;
 				if (!string.IsNullOrEmpty(jn["song"]["preview_length"]))
 					previewLength = jn["song"]["preview_length"].AsFloat;
-				var song = new LevelSong(title, difficulty, description, bpm, time, previewStart, previewLength);
+
+				string[] tags;
+				if (jn["song"]["tags"] != null)
+				{
+					tags = new string[jn["song"]["tags"].Count];
+					for (int i = 0; i < jn["song"]["tags"].Count; i++)
+					{
+						tags[i] = jn["song"]["tags"][i];
+					}
+				}
+				else
+					tags = new string[]
+					{
+					};
+
+				var song = new LevelSong(title, difficulty, description, bpm, time, previewStart, previewLength, tags);
 
 				string gameVersion = ProjectArrhythmia.GameVersion.ToString();
 				if (!string.IsNullOrEmpty(jn["beatmap"]["game_version"]))
@@ -164,10 +187,11 @@ namespace RTFunctions.Functions.Data
 			catch
 			{
 				var artist2 = new LevelArtist("Corrupted", 0, "");
-				var creator2 = new LevelCreator(SteamWrapper.inst.user.displayName, SteamWrapper.inst.user.id);
-				var song2 = new LevelSong("Corrupt Metadata", 0, "", 140f, 100f, -1f, -1f);
-				var beatmap2 = new LevelBeatmap("", ProjectArrhythmia.GameVersion.ToString(), 0, -1);
+				var creator2 = new LevelCreator(SteamWrapper.inst.user.displayName, SteamWrapper.inst.user.id, "", 0);
+				var song2 = new LevelSong("Corrupt Metadata", 0, "", 140f, 100f, -1f, -1f, new string[] { "Corrupted" });
+				var beatmap2 = new LevelBeatmap("", "", ProjectArrhythmia.GameVersion.ToString(), 0, "-1");
 				result = new Metadata(artist2, creator2, song2, beatmap2);
+				Debug.LogError($"{DataManager.inst.className}Something went wrong with parsing metadata!");
 			}
 			return result;
 		}
@@ -233,13 +257,27 @@ namespace RTFunctions.Functions.Data
 
         }
 
-		public LevelCreator(string steam_name, int steam_id) : base(steam_name, steam_id)
+		public LevelCreator(string steam_name, int steam_id, string link, int linkType) : base(steam_name, steam_id)
         {
-
+			this.link = link;
+			this.linkType = linkType;
         }
 
-        public int linkType;
+		public string URL
+			=> linkType < 0 || linkType > creatorLinkTypes.Count - 1 || link.Contains("http://") || link.Contains("https://") ? null : string.Format(creatorLinkTypes[linkType].linkFormat, link);
+
+
+		public int linkType;
         public string link;
+
+		public static List<DataManager.LinkType> creatorLinkTypes = new List<DataManager.LinkType>
+		{
+			new DataManager.LinkType("Youtube", "https://www.youtube.com/c/{0}"),
+			new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/"),
+			new DataManager.LinkType("Discord", "https://discord.gg/{0}"),
+			new DataManager.LinkType("Patreon", "https://patreon.com/{0}"),
+			new DataManager.LinkType("Twitter", "https://twitter.com/{0}"),
+		};
     }
 
     public class LevelSong : BaseSong
@@ -249,9 +287,9 @@ namespace RTFunctions.Functions.Data
 
         }
 
-		public LevelSong(string title, int difficulty, string description, float BPM, float time, float previewStart, float previewLength) : base(title, difficulty, description, BPM, time, previewStart, previewLength)
+		public LevelSong(string title, int difficulty, string description, float BPM, float time, float previewStart, float previewLength, string[] tags) : base(title, difficulty, description, BPM, time, previewStart, previewLength)
         {
-
+			this.tags = tags;
         }
 
         public string[] tags;
@@ -284,5 +322,17 @@ namespace RTFunctions.Functions.Data
 
 		public string beatmap_id;
 		public string date_created;
+
+		public void RegisterMods()
+        {
+			foreach (var file in System.IO.Directory.GetFiles(RTFile.ApplicationDirectory + "BepInEx/plugins", "*.dll", System.IO.SearchOption.TopDirectoryOnly))
+            {
+				var name = file.Replace("\\", "/").Replace(RTFile.ApplicationDirectory + "BepInEx/plugins/", "");
+				if (name != "ConfigurationManager.dll" && name != "EditorManagement.dll" && name != "EditorOnStartup.dll")
+					requiredMods.Add(name);
+            }
+        }
+
+		public List<string> requiredMods = new List<string>();
     }
 }
