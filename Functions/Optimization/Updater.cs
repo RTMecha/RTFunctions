@@ -336,7 +336,7 @@ namespace RTFunctions.Functions.Optimization
                         }
                     case "depth":
                         {
-                            levelObject.depth = beatmapObject.Depth;
+                            levelObject.depth = beatmapObject.depth;
                             break;
                         } // Depth
                     case "keyframe":
