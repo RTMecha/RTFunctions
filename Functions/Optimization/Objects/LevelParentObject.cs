@@ -21,7 +21,16 @@ namespace RTFunctions.Functions.Optimization.Objects
         public float ParentOffsetScale { get; set; }
         public float ParentOffsetRotation { get; set; }
 
+        public bool ParentAdditivePosition { get; set; }
+        public bool ParentAdditiveScale { get; set; }
+        public bool ParentAdditiveRotation { get; set; }
+
+        public float ParentParallaxPosition { get; set; }
+        public float ParentParallaxScale { get; set; }
+        public float ParentParallaxRotation { get; set; }
+
         public GameObject GameObject { get; set; }
         public Transform Transform { get; set; }
+        public string ID { get; set; }
     }
 }

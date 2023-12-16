@@ -24,7 +24,6 @@ using RTFunctions.Functions.Optimization;
 using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.IO;
 using RTFunctions.Patchers;
-using RTFunctions.Enums;
 
 using Application = UnityEngine.Application;
 using Screen = UnityEngine.Screen;
@@ -33,7 +32,7 @@ using Version = RTFunctions.Functions.Version;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.6.2")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.7.0")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
@@ -42,7 +41,10 @@ namespace RTFunctions
 
 		//Updates:
 
-		public static Version VersionNumber => new Version(PluginInfo.PLUGIN_VERSION);
+		public static string BepInExPluginsPath => "BepInEx/plugins/";
+		public static string BepInExAssetsPath => $"{BepInExPluginsPath}Assets/";
+
+		public static Version CurrentVersion => new Version(PluginInfo.PLUGIN_VERSION, "25/11/2023 10:03 PM");
 
 		public static FunctionsPlugin inst;
 		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
@@ -53,7 +55,7 @@ namespace RTFunctions
         public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
 		public static ConfigEntry<KeyCode> OpenPAPersistentFolder { get; set; }
 
-		private static ConfigEntry<bool> DebugsOn { get; set; }
+		public static ConfigEntry<bool> DebugsOn { get; set; }
 		public static ConfigEntry<bool> IncreasedClipPlanes { get; set; }
 		private static ConfigEntry<string> DisplayName { get; set; }
 
@@ -62,6 +64,11 @@ namespace RTFunctions
 		public static ConfigEntry<bool> NotifyREPL { get; set; }
 
 		public static ConfigEntry<bool> BGReactiveLerp { get; set; }
+
+		public static ConfigEntry<bool> LDM { get; set; }
+
+		public static ConfigEntry<bool> ShowLogPopup { get; set; }
+		public static ConfigEntry<int> LogPopupCap { get; set; }
 
         #endregion
 
@@ -309,8 +316,11 @@ namespace RTFunctions
 		{
 			inst = this;
 
-			DebugsOn = Config.Bind("Debugging", "Enabled", false, "If disabled, turns all Unity debug logs off. Might boost performance.");
+			DebugsOn = Config.Bind("Debugging", "Enabled", true, "If disabled, turns all Unity debug logs off. Might boost performance.");
 			NotifyREPL = Config.Bind("Debugging", "Notify REPL", false, "If in editor, code ran will have their results be notified.");
+			ShowLogPopup = Config.Bind("Debugging", "Log Popup", true, "");
+			LogPopupCap = Config.Bind("Debugging", "Log Popup Cap", 50, "");
+
 			IncreasedClipPlanes = Config.Bind("Game", "Camera Clip Planes", true, "Increases the clip panes to a very high amount, allowing for object render depth to go really high or really low.");
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
 			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F3, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
@@ -323,6 +333,7 @@ namespace RTFunctions
 			Language = Config.Bind("Settings", "Language", Lang.english, "This is currently here for testing purposes. This version of the game has not been translated yet.");
 			ControllerRumble = Config.Bind("Settings", "Controller Vibrate", true, "If the controllers should vibrate or not.");
 			BGReactiveLerp = Config.Bind("Level Backgrounds", "Reactive Color Lerp", true, "If on, reactive color will lerp from base color to reactive color. Otherwise, the reactive color will be added to the base color.");
+			LDM = Config.Bind("Level", "Low Detail Mode", false, "If enabled, any objects with \"LDM\" on will not be rendered.");
 
 			displayName = DisplayName.Value;
 
@@ -335,16 +346,20 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(FunctionsPlugin));
 				harmony.PatchAll(typeof(DataManagerPatch));
 				harmony.PatchAll(typeof(DataManagerGameDataPatch));
-				harmony.PatchAll(typeof(DataManagerBeatmapThemePatch));
+				//harmony.PatchAll(typeof(DataManagerBeatmapThemePatch));
 				harmony.PatchAll(typeof(DataManagerBeatmapObjectPatch));
 				harmony.PatchAll(typeof(DataManagerPrefabPatch));
 				harmony.PatchAll(typeof(GameManagerPatch));
 				harmony.PatchAll(typeof(ObjectManagerPatch));
 				harmony.PatchAll(typeof(SaveManagerPatch));
 				harmony.PatchAll(typeof(BackgroundManagerPatch));
+				harmony.PatchAll(typeof(DebugPatcher));
 
-				Patcher.PatchPropertySetter(typeof(DataManager.GameData.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
-					typeof(FunctionsPlugin), "DepthSetterPrefix", BindingFlags.Public | BindingFlags.Static);
+				//Patcher.PatchPropertySetter(typeof(DataManager.GameData.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
+				//	typeof(FunctionsPlugin), "DepthSetterPrefix", null);
+
+				//Patcher.PatchPropertySetter(typeof(Functions.Data.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
+				//	typeof(FunctionsPlugin), "DepthSetterPrefix", new Type[] { typeof(int), typeof(DataManager.GameData.BeatmapObject) });
 			}
 
 			// Hooks
@@ -354,41 +369,43 @@ namespace RTFunctions
 				ObjectManagerPatch.LevelTick += Updater.OnLevelTick;
 			}
 
-			Logger.LogInfo($"Plugin RT Functions is loaded!");
-
 			System.Windows.Forms.Application.ApplicationExit += delegate (object sender, EventArgs e)
 			{
-				if (EditorManager.inst != null && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
+				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
-					string str = RTFile.basePath;
+					string str = RTFile.BasePath;
 					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
-					string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
-					if (RTFile.FileExists(lvl))
-						File.Copy(lvl, modBackup);
+					//string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
+					//if (RTFile.FileExists(lvl))
+					//	File.Copy(lvl, modBackup);
+
+					StartCoroutine(DataManager.inst.SaveData(modBackup));
 				}
 			};
 
 			Application.quitting += delegate ()
 			{
-				if (EditorManager.inst != null && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
+				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
-					string str = RTFile.basePath;
-					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-backup.lsb";
+					string str = RTFile.BasePath;
+					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-unity-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
-					string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
-					if (RTFile.FileExists(lvl))
-						File.Copy(lvl, modBackup);
+					//string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
+					//if (RTFile.FileExists(lvl))
+					//	File.Copy(lvl, modBackup);
+
+					StartCoroutine(DataManager.inst.SaveData(modBackup));
 				}
 			};
 
-			RTCode.Init();
-
 			//SequenceManager.Init();
+
+			Logger.LogInfo($"Plugin RT Functions is loaded!");
 		}
 
 		static void UpdateSettings(object sender, EventArgs e)
@@ -479,6 +496,8 @@ namespace RTFunctions
 				if (Input.GetKeyDown(KeyCode.I))
 					Debug.LogFormat("{0}Objects alive: {1}", className, DataManager.inst.gameData.beatmapObjects.FindAll(x => x.TimeWithinLifespan()).Count);
 			}
+
+			RTLogger.Update();
 		}
 
         #region Patchers
@@ -493,7 +512,56 @@ namespace RTFunctions
 			//UnityEngine.Analytics.Analytics.deviceStatsEnabled = false;
 		}
 
-		[HarmonyPatch(typeof(SystemManager), "Update")]
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(object __0)
+        //{
+        //    RTLogger.AddLog(__0.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(LogType), typeof(object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(LogType __0, object __1)
+        //{
+        //    RTLogger.AddLog(__1.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(string), typeof(object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(string __0, object __1)
+        //{
+        //    RTLogger.AddLog(__1.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(string), typeof(object), typeof(UnityEngine.Object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(string __0, object __1, UnityEngine.Object __2)
+        //{
+        //    RTLogger.AddLog(__1.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(LogType), typeof(string), typeof(object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(LogType __0, string __1, object __2)
+        //{
+        //    RTLogger.AddLog(__2.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(string), typeof(object), typeof(UnityEngine.Object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(string __0, object __1, object __2)
+        //{
+        //    RTLogger.AddLog(__1.ToString());
+        //}
+
+        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(LogType), typeof(string), typeof(object), typeof(UnityEngine.Object) })]
+        //[HarmonyPostfix]
+        //static void ILoggerLog(LogType __0, string __1, object __2, UnityEngine.Object __3)
+        //{
+        //    RTLogger.AddLog(__2.ToString());
+        //}
+
+        [HarmonyPatch(typeof(SystemManager), "Update")]
 		[HarmonyPrefix]
 		static bool SystemManagerUpdatePrefix()
 		{
@@ -538,6 +606,28 @@ namespace RTFunctions
 		[HarmonyPrefix]
 		static void ObjEditorDeletePrefix(ObjEditor __instance, ObjEditor.ObjectSelection __0) => Updater.updateProcessor(__0, false);
 
+		[HarmonyPatch(typeof(EventManager), "updateTheme")]
+		[HarmonyPrefix]
+		static bool updateTheme(EventManager __instance, float _theme)
+		{
+			if (!ModCompatibility.mods.ContainsKey("EventsCore"))
+			{
+				var beatmapTheme = Functions.Data.BeatmapTheme.DeepCopy((Functions.Data.BeatmapTheme)GameManager.inst.LiveTheme);
+				((Functions.Data.BeatmapTheme)GameManager.inst.LiveTheme).Lerp((Functions.Data.BeatmapTheme)DataManager.inst.GetTheme(__instance.LastTheme),
+					(Functions.Data.BeatmapTheme)DataManager.inst.GetTheme(__instance.NewTheme), _theme);
+
+				if (beatmapTheme != GameManager.inst.LiveTheme)
+					GameManager.inst.UpdateTheme();
+			}
+			else
+				EventsCoreUpdateThemePrefix?.Invoke(__instance, _theme);
+
+			return false;
+		}
+
+		public static Action<GameManager> EventsCoreGameThemePrefix { get; set; }
+		public static Action<EventManager, float> EventsCoreUpdateThemePrefix { get; set; }
+
 		//[HarmonyPatch(typeof(InterfaceController), "Start")]
 		//[HarmonyPrefix]
 		//static void InterfaceControllerPrefix(InterfaceController __instance)
@@ -546,12 +636,18 @@ namespace RTFunctions
 		//		GameManagerPatch.EndInvoke();
 		//}
 
-		public static bool DepthSetterPrefix(int value, DataManager.GameData.BeatmapObject __instance)
-		{
-			var field = __instance.GetType().GetField("depth", BindingFlags.NonPublic | BindingFlags.Instance);
-			field.SetValue(__instance, value);
-			return false;
-		}
+		//public static bool DepthSetterPrefix(int value, object __instance)
+		//{
+		//	// Instance is not null
+		//	//Debug.Log($"{className}BeatmapObject Instance: {__instance}");
+
+		//	if (__instance is Functions.Data.BeatmapObject)
+		//		((Functions.Data.BeatmapObject)__instance).depth = value;
+		//	else
+		//		((DataManager.GameData.BeatmapObject)__instance).depth = value;
+
+		//	return false;
+		//}
 
 		#endregion
 

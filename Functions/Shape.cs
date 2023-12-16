@@ -1,18 +1,36 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
-using RTFunctions.Functions.Managers;
+using SimpleJSON;
 
 namespace RTFunctions.Functions
 {
     public struct Shape
     {
-        public Shape(string name, int type, int option, bool includeTextImage = true)
+        public Shape(string name, int type, int option)
         {
             this.name = name;
             this.type = type;
             this.option = option;
-            this.includeTextImage = includeTextImage;
             mesh = null;
+            Icon = null;
+            SpecialProperty = Property.RegularObject;
+            EditorElement = null;
+            Toggle = null;
+            GameObject = null;
+        }
+
+        public Shape(string name, int type, int option, Mesh mesh, Sprite icon, Property property)
+        {
+            this.name = name;
+            this.type = type;
+            this.option = option;
+            this.mesh = mesh;
+            Icon = icon;
+            SpecialProperty = property;
+            EditorElement = null;
+            Toggle = null;
+            GameObject = null;
         }
 
         public string name;
@@ -20,21 +38,32 @@ namespace RTFunctions.Functions
         public int type;
         public int option;
 
-        public bool includeTextImage;
-
         public Mesh mesh;
+        public Sprite Icon { get; set; }
+        public GameObject EditorElement { get; set; }
+        public Toggle Toggle { get; set; }
+        public GameObject GameObject { get; set; }
 
         public int Type
         {
-            get => Mathf.Clamp(type, 0, HasCustomShapes ? includeTextImage ? maxShapes.Length - 1 : maxShapesTI.Length - 1 : includeTextImage ? maxShapesDefault.Length - 1 : maxShapesDefaultTI.Length - 1);
-            set => type = Mathf.Clamp(value, 0, HasCustomShapes ? includeTextImage ? maxShapes.Length - 1 : maxShapesTI.Length - 1 : includeTextImage ? maxShapesDefault.Length - 1 : maxShapesDefaultTI.Length - 1);
+            get => Mathf.Clamp(type, 0, maxShapes.Length - 1);
+            set => type = Mathf.Clamp(value, 0, maxShapes.Length - 1);
         }
 
         public int Option
         {
-            get => Mathf.Clamp(option, 0, HasCustomShapes ? includeTextImage ? maxShapes[Type] : maxShapesTI[Type] : includeTextImage ? maxShapesDefault[Type] : maxShapesDefaultTI[Type]);
-            set => option = Mathf.Clamp(value, 0, HasCustomShapes ? includeTextImage ? maxShapes[Type] : maxShapesTI[Type] : includeTextImage ? maxShapesDefault[Type] : maxShapesDefaultTI[Type]);
+            get => Mathf.Clamp(option, 0, maxShapes[Type]);
+            set => option = Mathf.Clamp(value, 0, maxShapes[Type]);
         }
+
+        public enum Property
+        {
+            RegularObject,
+            TextObject,
+            ImageObject,
+        }
+
+        public Property SpecialProperty { get; set; }
 
         public int this[int index]
         {
@@ -85,22 +114,42 @@ namespace RTFunctions.Functions
             name = orig.name,
             type = orig.type,
             option = orig.option,
-            includeTextImage = orig.includeTextImage,
             mesh = orig.mesh
+        };
+
+        public static Shape Parse(JSONNode jn)
+        {
+            var shape = new Shape(jn["name"], jn["s"].AsInt, jn["so"].AsInt);
+
+            shape.mesh = new Mesh();
+
+            var vertices = new Vector3[jn["verts"].Count];
+            for (int i = 0; i < jn["verts"].Count; i++)
+            {
+                vertices[i] = new Vector3(jn["verts"][i]["x"].AsFloat, jn["verts"][i]["y"].AsFloat, jn["verts"][i]["z"].AsFloat);
+            }
+            shape.mesh.vertices = vertices;
+
+            var triangles = new int[jn["tris"].Count];
+            for (int i = 0; i < jn["tris"].Count; i++)
+            {
+                triangles[i] = jn["tris"][i].AsInt;
+            }
+            shape.mesh.triangles = triangles;
+
+            return shape;
+        }
+
+        public Mesh CopyMesh() => new Mesh
+        {
+            vertices = mesh.vertices.Copy(),
+            triangles = mesh.triangles.Copy()
         };
 
         public void Clamp()
         {
-            if (includeTextImage)
-            {
-                type = Mathf.Clamp(type, 0, HasCustomShapes ? maxShapes.Length - 1 : maxShapesDefault.Length - 1);
-                option = Mathf.Clamp(option, 0, HasCustomShapes ? maxShapes[type] : maxShapesDefault[type]);
-            }
-            else
-            {
-                type = Mathf.Clamp(type, 0, HasCustomShapes ? maxShapesTI.Length - 1 : maxShapesDefaultTI.Length - 1);
-                option = Mathf.Clamp(option, 0, HasCustomShapes ? maxShapesTI[type] : maxShapesDefaultTI[type]);
-            }
+            type = Mathf.Clamp(type, 0, maxShapes.Length - 1);
+            option = Mathf.Clamp(option, 0, maxShapes[type]);
         }
 
         #endregion
@@ -132,64 +181,19 @@ namespace RTFunctions.Functions
 
         #region Global Properties
 
-        public static bool HasCustomShapes => ModCompatibility.shapesPlugin != null && ModCompatibility.shapesPluginInstance != null;
-
-        public int[] MaxShapes
-        {
-            get
-            {
-                if (HasCustomShapes && includeTextImage)
-                    return maxShapes;
-                else if (HasCustomShapes)
-                    return maxShapesTI;
-                else if (includeTextImage)
-                    return maxShapesDefault;
-                else
-                    return maxShapesDefaultTI;
-            }
-        }
-
-        static int[] maxShapesDefault = new int[]
-        {
-            2,
-            8,
-            3,
-            1,
-            0,
-            5
-        };
-        
-        static int[] maxShapesDefaultTI = new int[]
-        {
-            2,
-            8,
-            3,
-            1,
-            5
-        };
+        public static int[] MaxShapes => maxShapes;
 
         static int[] maxShapes = new int[]
         {
+            6,
+            17,
             5,
-            15,
-            4,
-            2,
-            0,
-            5,
-            0,
-            5,
-            22
-        };
-
-        static int[] maxShapesTI = new int[]
-        {
-            5,
-            15,
-            4,
-            2,
-            5,
-            5,
-            22
+            3,
+            1,
+            6,
+            1,
+            6,
+            23
         };
 
         #endregion

@@ -37,9 +37,28 @@ namespace RTFunctions.Functions.Animation
 			}
 		}
 
+		public void Play(Animation animation)
+        {
+			animations.Add(animation);
+			animation.Play();
+        }
+
+		public void RemoveName(string name)
+        {
+			animations.RemoveAll(x => x.name == name);
+        }
+
+		public void RemoveID(string id)
+        {
+			animations.RemoveAll(x => x.id == id);
+        }
+
 		public List<Animation> animations = new List<Animation>();
 
-        public class Animation
+		// I plan on making an animation library at some point. This will allow creators to reuse animations or play them with a Modifier as an Animation Object.
+		public static List<Animation> animationLibrary = new List<Animation>();
+
+		public class Animation
 		{
 			public Animation(string name)
 			{
@@ -51,7 +70,7 @@ namespace RTFunctions.Functions.Animation
 			public void ResetTime()
             {
                 time = 0f;
-                timeOffset = UnityTime.time;
+				timeOffset = useRealTime ? UnityTime.time : AudioManager.inst.CurrentAudioSource.time;
                 for (int i = 0; i < completed.Length; i++)
                     completed[i] = false;
             }
@@ -67,7 +86,7 @@ namespace RTFunctions.Functions.Animation
 
 			public void Update()
             {
-                Time = UnityTime.time - timeOffset;
+                Time = useRealTime ? UnityTime.time - timeOffset : AudioManager.inst.CurrentAudioSource.time - timeOffset;
 
 				if (floatAnimations == null || floatAnimations.Count < 1)
 					completed[0] = true;
@@ -78,9 +97,8 @@ namespace RTFunctions.Functions.Animation
 					if (anim.Length >= time)
 					{
 						anim.completed = false;
-						if (anim.action != null)
-							anim.action(anim.sequence.Interpolate(time));
-					}
+                        anim.action?.Invoke(anim.sequence.Interpolate(time));
+                    }
 					else if (!anim.completed)
 					{
 						anim.completed = true;
@@ -89,9 +107,7 @@ namespace RTFunctions.Functions.Animation
 				}
 
 				if (floatAnimations.All(x => x.completed) && !completed[0])
-				{
 					completed[0] = true;
-				}
 
 				if (vector2Animations == null || vector2Animations.Count < 1)
 					completed[1] = true;
@@ -102,9 +118,8 @@ namespace RTFunctions.Functions.Animation
 					if (anim.Length >= time)
 					{
 						anim.completed = false;
-						if (anim.action != null)
-							anim.action(anim.sequence.Interpolate(time));
-					}
+                        anim.action?.Invoke(anim.sequence.Interpolate(time));
+                    }
 					else if (!anim.completed)
 					{
 						anim.completed = true;
@@ -113,9 +128,7 @@ namespace RTFunctions.Functions.Animation
 				}
 
 				if (vector2Animations.All(x => x.completed) && !completed[1])
-				{
 					completed[1] = true;
-				}
 
 				if (vector3Animations == null || vector3Animations.Count < 1)
 					completed[2] = true;
@@ -126,9 +139,8 @@ namespace RTFunctions.Functions.Animation
 					if (anim.Length >= time)
 					{
 						anim.completed = false;
-						if (anim.action != null)
-							anim.action(anim.sequence.Interpolate(time));
-					}
+                        anim.action?.Invoke(anim.sequence.Interpolate(time));
+                    }
 					else if (!anim.completed)
 					{
 						anim.completed = true;
@@ -137,9 +149,7 @@ namespace RTFunctions.Functions.Animation
 				}
 
 				if (vector3Animations.All(x => x.completed) && !completed[2])
-				{
 					completed[2] = true;
-				}
 
 				if (colorAnimations == null || colorAnimations.Count < 1)
 					completed[3] = true;
@@ -150,9 +160,8 @@ namespace RTFunctions.Functions.Animation
 					if (anim.Length >= time)
 					{
 						anim.completed = false;
-						if (anim.action != null)
-							anim.action(anim.sequence.Interpolate(time));
-					}
+                        anim.action?.Invoke(anim.sequence.Interpolate(time));
+                    }
 					else if (!anim.completed)
 					{
 						anim.completed = true;
@@ -161,29 +170,25 @@ namespace RTFunctions.Functions.Animation
 				}
 
 				if (colorAnimations.All(x => x.completed) && !completed[3])
-				{
 					completed[3] = true;
-				}
 
 				if (completed.All(x => x == true) && playing)
 				{
 					playing = false;
-					if (onComplete != null)
-						onComplete();
+					onComplete?.Invoke();
 				}
 			}
 
 			public string id;
 			public string name;
 
+			public bool useRealTime = true;
+
 			float time;
             public float Time
             {
                 get => time;
-                private set
-                {
-                    time = value;
-                }
+                private set => time = value;
             }
 
             float timeOffset;
@@ -233,8 +238,7 @@ namespace RTFunctions.Functions.Animation
 						return;
 
 					completed = true;
-					if (onComplete != null)
-						onComplete();
+                    onComplete?.Invoke();
 				}
 
 				public float Length
@@ -243,8 +247,11 @@ namespace RTFunctions.Functions.Animation
 					{
 						float t = 0f;
 
-						var x = keyframes.OrderBy(x => x.Time).ToList();
-						t = x[x.Count - 1].Time;
+						if (keyframes.Count > 0)
+						{
+							var x = keyframes.OrderBy(x => x.Time).ToList();
+							t = x[x.Count - 1].Time;
+						}
 
 						return t;
 					}

@@ -1,9 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace RTFunctions.Enums
+namespace RTFunctions
 {
+    public enum DifficultyMode
+    {
+        ZenMode,
+        Normal,
+        Life,
+        Hit
+    }
+
     public enum Resolutions
     {
         p270,

@@ -17,20 +17,42 @@ using SimpleJSON;
 using DG.Tweening;
 using LSFunctions;
 
+using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 
-using BeatmapObject = DataManager.GameData.BeatmapObject;
+using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
+using BasePrefab = DataManager.GameData.Prefab;
+using BasePrefabObject = DataManager.GameData.PrefabObject;
+
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-
-using EventKeyframe = DataManager.GameData.EventKeyframe;
-using Prefab = DataManager.GameData.Prefab;
-using PrefabObject = DataManager.GameData.PrefabObject;
 
 namespace RTFunctions.Functions.Managers
 {
     public static class Parser
 	{
+		public static int TryParse(string input, int defaultValue)
+        {
+			if (int.TryParse(input, out int num))
+				return num;
+			return defaultValue;
+        }
+		
+		public static float TryParse(string input, float defaultValue)
+        {
+			if (float.TryParse(input, out float num))
+				return num;
+			return defaultValue;
+        }
+
+		public static bool TryParse(string input, bool defaultValue)
+        {
+			if (bool.TryParse(input, out bool result))
+				return result;
+			return defaultValue;
+        }
+
 		public static IEnumerator ParseRTFunctionsData(JSONNode _rt)
         {
 			if (!string.IsNullOrEmpty(_rt["v"]))
@@ -46,7 +68,7 @@ namespace RTFunctions.Functions.Managers
 			JSONNode jn = JSON.Parse(_json);
 			if (!editor)
 			{
-				DataManager.inst.gameData.ParseThemeData(jn["themes"]);
+				DataManager.inst.StartCoroutine(ParseThemeData(jn["themes"]));
 			}
 
 			if (jn["mod"] != null)
@@ -57,12 +79,12 @@ namespace RTFunctions.Functions.Managers
 			DataManager.inst.gameData.ParseEditorData(jn["ed"]);
 			ParseLevelData(jn["level_data"]);
 			DataManager.inst.gameData.ParseCheckpointData(jn["checkpoints"]);
-			ParsePrefabs(jn["prefabs"]);
-			ParsePrefabObjects(jn["prefab_objects"]);
-			DataManager.inst.StartCoroutine(ParseGameObjects(jn["beatmap_objects"]));
-			//DataManager.inst.gameData.ParseBackgroundObjects(jn["bg_objects"]);
+			DataManager.inst.StartCoroutine(ParsePrefabs(jn["prefabs"]));
+			DataManager.inst.StartCoroutine(ParsePrefabObjects(jn["prefab_objects"]));
+			DataManager.inst.StartCoroutine(ParseBeatmapObjects(jn["beatmap_objects"]));
 			DataManager.inst.StartCoroutine(ParseBackgroundObjects(jn["bg_objects"]));
 			DataManager.inst.StartCoroutine(ParseEventObjects(jn["events"]));
+
 			yield break;
 		}
 
@@ -181,473 +203,39 @@ namespace RTFunctions.Functions.Managers
 			yield break;
 		}
 
-		public static void ParsePrefabs(JSONNode _prefabs)
+		public static IEnumerator ParsePrefabs(JSONNode _prefabs)
 		{
 			if (DataManager.inst.gameData.prefabs == null)
-			{
-				DataManager.inst.gameData.prefabs = new List<Prefab>();
-			}
+				DataManager.inst.gameData.prefabs = new List<BasePrefab>();
 			DataManager.inst.gameData.prefabs.Clear();
 
 			for (int i = 0; i < _prefabs.Count; i++)
-			{
-				List<BeatmapObject> list = new List<BeatmapObject>();
-				for (int j = 0; j < _prefabs[i]["objects"].Count; j++)
-				{
-                    BeatmapObject beatmapObject = BeatmapObject.ParseGameObject(_prefabs[i]["objects"][j]);
-					if (beatmapObject != null)
-					{
-						list.Add(beatmapObject);
-					}
-				}
-				List<PrefabObject> list2 = new List<PrefabObject>();
-				for (int k = 0; k < _prefabs[i]["prefab_objects"].Count; k++)
-				{
-					list2.Add(DataManager.inst.gameData.ParsePrefabObject(_prefabs[i]["prefab_objects"][k]));
-				}
-				Prefab prefab = new Prefab(_prefabs[i]["name"], _prefabs[i]["type"].AsInt, _prefabs[i]["offset"].AsFloat, list, list2);
-				prefab.ID = _prefabs[i]["id"];
-				prefab.MainObjectID = _prefabs[i]["main_obj_id"];
-				DataManager.inst.gameData.prefabs.Add(prefab);
-
-				var modPrefab = new Objects.Prefab(prefab);
-				Objects.prefabs.Add(modPrefab);
-
-				for (int j = 0; j < _prefabs[i]["objects"].Count; j++)
-					DataManager.inst.StartCoroutine(ParsePrefabModifiers(_prefabs[i]["objects"][j], modPrefab));
-			}
-		}
-
-		public static IEnumerator ParsePrefabModifiers(JSONNode _objects, Objects.Prefab prefab)
-		{
-			if (_objects["modifiers"] != null)
-            {
-				var dictionary = ParseModifier(_objects);
-
-				prefab.modifiers.Add(_objects["id"], dictionary["modifiers"]);
-            }
+				DataManager.inst.gameData.prefabs.Add(Prefab.Parse(_prefabs[i]));
 
 			yield break;
 		}
 
-		public static void ParsePrefabObjects(JSONNode _prefabObjects)
+        public static IEnumerator ParsePrefabObjects(JSONNode jn)
 		{
 			if (DataManager.inst.gameData.prefabObjects == null)
-			{
-				DataManager.inst.gameData.prefabObjects = new List<PrefabObject>();
-			}
+				DataManager.inst.gameData.prefabObjects = new List<BasePrefabObject>();
 			DataManager.inst.gameData.prefabObjects.Clear();
-			for (int i = 0; i < _prefabObjects.Count; i++)
-			{
-				DataManager.inst.StartCoroutine(ParsePrefabObject(_prefabObjects[i], delegate (PrefabObject _po)
-				{
-					DataManager.inst.gameData.prefabObjects.Add(_po);
-				}));
-			}
-		}
 
-		public static IEnumerator ParsePrefabObject(JSONNode _prefabObject, Action<PrefabObject> action)
-		{
-			var prefabObject = new PrefabObject();
-			//prefabObject.ID = _prefabObject["id"];
-			prefabObject.prefabID = _prefabObject["pid"];
-			prefabObject.StartTime = _prefabObject["st"].AsFloat;
+			for (int i = 0; i < jn.Count; i++)
+				DataManager.inst.gameData.prefabObjects.Add(PrefabObject.Parse(jn[i]));
 
-			if (!string.IsNullOrEmpty(_prefabObject["rc"]))
-				prefabObject.RepeatCount = int.Parse(_prefabObject["rc"]);
-
-			if (!string.IsNullOrEmpty(_prefabObject["ro"]))
-				prefabObject.RepeatOffsetTime = float.Parse(_prefabObject["ro"]);
-
-			if (_prefabObject["id"] != null)
-			{
-				prefabObject.ID = _prefabObject["id"];
-			}
-			else
-			{
-				prefabObject.ID = LSText.randomString(16);
-			}
-			if (_prefabObject["ed"]["locked"] != null)
-			{
-				prefabObject.editorData.locked = _prefabObject["ed"]["locked"].AsBool;
-			}
-			if (_prefabObject["ed"]["shrink"] != null)
-			{
-				prefabObject.editorData.collapse = _prefabObject["ed"]["shrink"].AsBool;
-			}
-			if (_prefabObject["ed"]["bin"] != null)
-			{
-				prefabObject.editorData.Bin = _prefabObject["ed"]["bin"].AsInt;
-			}
-			if (_prefabObject["ed"]["layer"] != null)
-			{
-				prefabObject.editorData.Layer = _prefabObject["ed"]["layer"].AsInt;
-			}
-			if (_prefabObject["e"]["pos"] != null)
-			{
-                EventKeyframe eventKeyframe = new EventKeyframe();
-				JSONNode jsonnode = _prefabObject["e"]["pos"];
-				eventKeyframe.SetEventValues(new float[]
-				{
-					jsonnode["x"].AsFloat,
-					jsonnode["y"].AsFloat
-				});
-				eventKeyframe.random = jsonnode["r"].AsInt;
-				eventKeyframe.SetEventRandomValues(new float[]
-				{
-					jsonnode["rx"].AsFloat,
-					jsonnode["ry"].AsFloat,
-					jsonnode["rz"].AsFloat
-				});
-				eventKeyframe.active = false;
-				prefabObject.events[0] = eventKeyframe;
-			}
-			if (_prefabObject["e"]["sca"] != null)
-			{
-                EventKeyframe eventKeyframe2 = new EventKeyframe();
-				JSONNode jsonnode2 = _prefabObject["e"]["sca"];
-				eventKeyframe2.SetEventValues(new float[]
-				{
-					jsonnode2["x"].AsFloat,
-					jsonnode2["y"].AsFloat
-				});
-				eventKeyframe2.random = jsonnode2["r"].AsInt;
-				eventKeyframe2.SetEventRandomValues(new float[]
-				{
-					jsonnode2["rx"].AsFloat,
-					jsonnode2["ry"].AsFloat,
-					jsonnode2["rz"].AsFloat
-				});
-				eventKeyframe2.active = false;
-				prefabObject.events[1] = eventKeyframe2;
-			}
-			if (_prefabObject["e"]["rot"] != null)
-			{
-                EventKeyframe eventKeyframe3 = new EventKeyframe();
-				JSONNode jsonnode3 = _prefabObject["e"]["rot"];
-				eventKeyframe3.SetEventValues(new float[]
-				{
-					jsonnode3["x"].AsFloat
-				});
-				eventKeyframe3.random = jsonnode3["r"].AsInt;
-				eventKeyframe3.SetEventRandomValues(new float[]
-				{
-					jsonnode3["rx"].AsFloat,
-					0f,
-					jsonnode3["rz"].AsFloat
-				});
-				eventKeyframe3.active = false;
-				prefabObject.events[2] = eventKeyframe3;
-			}
-			action(prefabObject);
 			yield break;
 		}
 
-		public static IEnumerator ParseObject(JSONNode _object, Action<BeatmapObject> action)
-		{
-			int num = 0;
-			List<List<EventKeyframe>> list = new List<List<EventKeyframe>>();
-			list.Add(new List<EventKeyframe>());
-			list.Add(new List<EventKeyframe>());
-			list.Add(new List<EventKeyframe>());
-			list.Add(new List<EventKeyframe>());
-			if (_object["events"] != null)
-			{
-				for (int i = 0; i < _object["events"]["pos"].Count; i++)
-				{
-                    EventKeyframe eventKeyframe = new EventKeyframe();
-					JSONNode jsonnode = _object["events"]["pos"][i];
-					eventKeyframe.eventTime = jsonnode["t"].AsFloat;
-					if (!string.IsNullOrEmpty(jsonnode["z"]))
-					{
-						eventKeyframe.SetEventValues(new float[]
-						{
-							jsonnode["x"].AsFloat,
-							jsonnode["y"].AsFloat,
-							jsonnode["z"].AsFloat
-						});
-					}
-					else
-					{
-						eventKeyframe.SetEventValues(new float[]
-						{
-							jsonnode["x"].AsFloat,
-							jsonnode["y"].AsFloat,
-							0f
-						});
-					}
-					eventKeyframe.random = jsonnode["r"].AsInt;
-					DataManager.LSAnimation curveType = DataManager.inst.AnimationList[0];
-					if (jsonnode["ct"] != null)
-					{
-						curveType = DataManager.inst.AnimationListDictionaryStr[jsonnode["ct"]];
-						eventKeyframe.curveType = curveType;
-					}
-					eventKeyframe.SetEventRandomValues(new float[]
-					{
-							jsonnode["rx"].AsFloat,
-							jsonnode["ry"].AsFloat,
-							jsonnode["rz"].AsFloat
-					});
-					eventKeyframe.active = false;
-					list[0].Add(eventKeyframe);
-				}
-				for (int j = 0; j < _object["events"]["sca"].Count; j++)
-				{
-                    EventKeyframe eventKeyframe2 = new EventKeyframe();
-					JSONNode jsonnode2 = _object["events"]["sca"][j];
-					eventKeyframe2.eventTime = jsonnode2["t"].AsFloat;
-					eventKeyframe2.SetEventValues(new float[]
-					{
-							jsonnode2["x"].AsFloat,
-							jsonnode2["y"].AsFloat
-					});
-					eventKeyframe2.random = jsonnode2["r"].AsInt;
-					DataManager.LSAnimation curveType2 = DataManager.inst.AnimationList[0];
-					if (jsonnode2["ct"] != null)
-					{
-						curveType2 = DataManager.inst.AnimationListDictionaryStr[jsonnode2["ct"]];
-						eventKeyframe2.curveType = curveType2;
-					}
-					eventKeyframe2.SetEventRandomValues(new float[]
-					{
-							jsonnode2["rx"].AsFloat,
-							jsonnode2["ry"].AsFloat,
-							jsonnode2["rz"].AsFloat
-					});
-					list[1].Add(eventKeyframe2);
-				}
-				for (int k = 0; k < _object["events"]["rot"].Count; k++)
-				{
-                    EventKeyframe eventKeyframe3 = new EventKeyframe();
-					JSONNode jsonnode3 = _object["events"]["rot"][k];
-					eventKeyframe3.eventTime = jsonnode3["t"].AsFloat;
-					eventKeyframe3.SetEventValues(new float[]
-					{
-						jsonnode3["x"].AsFloat
-					});
-					eventKeyframe3.random = jsonnode3["r"].AsInt;
-					DataManager.LSAnimation curveType3 = DataManager.inst.AnimationList[0];
-					if (jsonnode3["ct"] != null)
-					{
-						curveType3 = DataManager.inst.AnimationListDictionaryStr[jsonnode3["ct"]];
-						eventKeyframe3.curveType = curveType3;
-					}
-					eventKeyframe3.SetEventRandomValues(new float[]
-					{
-							jsonnode3["rx"].AsFloat,
-							0f,
-							jsonnode3["rz"].AsFloat
-					});
-					list[2].Add(eventKeyframe3);
-				}
-				for (int l = 0; l < _object["events"]["col"].Count; l++)
-				{
-                    EventKeyframe eventKeyframe4 = new EventKeyframe();
-					JSONNode jsonnode4 = _object["events"]["col"][l];
-					eventKeyframe4.eventTime = jsonnode4["t"].AsFloat;
-					if (!string.IsNullOrEmpty(jsonnode4["y"]) && !string.IsNullOrEmpty(jsonnode4["z"]))
-					{
-						eventKeyframe4.SetEventValues(new float[]
-						{
-							jsonnode4["x"].AsFloat,
-							jsonnode4["y"].AsFloat,
-							jsonnode4["z"].AsFloat,
-							jsonnode4["x2"].AsFloat,
-							jsonnode4["y2"].AsFloat,
-						});
-					}
-					else if (!string.IsNullOrEmpty(jsonnode4["y"]))
-					{
-						eventKeyframe4.SetEventValues(new float[]
-						{
-							jsonnode4["x"].AsFloat,
-							jsonnode4["y"].AsFloat,
-							0f,
-							0f,
-							0f
-						});
-					}
-					else
-					{
-						eventKeyframe4.SetEventValues(new float[]
-						{
-							jsonnode4["x"].AsFloat,
-							0f,
-							0f,
-							0f,
-							0f
-						});
-					}
-					eventKeyframe4.random = jsonnode4["r"].AsInt;
-					DataManager.LSAnimation curveType4 = DataManager.inst.AnimationList[0];
-					if (jsonnode4["ct"] != null)
-					{
-						curveType4 = DataManager.inst.AnimationListDictionaryStr[jsonnode4["ct"]];
-						eventKeyframe4.curveType = curveType4;
-					}
-					eventKeyframe4.SetEventRandomValues(new float[]
-					{
-							jsonnode4["rx"].AsFloat
-					});
-					list[3].Add(eventKeyframe4);
-				}
-			}
-            BeatmapObject beatmapObject = new BeatmapObject();
-			if (_object["id"] != null)
-			{
-				beatmapObject.id = _object["id"];
-			}
-			else
-			{
-				num++;
-			}
-			if (_object["piid"] != null)
-			{
-				beatmapObject.prefabInstanceID = _object["piid"];
-			}
-			if (_object["pid"] != null)
-			{
-				beatmapObject.prefabID = _object["pid"];
-			}
-			if (_object["p"] != null)
-			{
-				beatmapObject.parent = _object["p"];
-			}
-			if (_object["pt"] != null)
-			{
-				string pt = _object["pt"];
-				AccessTools.Field(typeof(BeatmapObject), "parentType").SetValue(beatmapObject, pt);
-			}
-			if (_object["po"] != null)
-			{
-				AccessTools.Field(typeof(BeatmapObject), "parentOffsets").SetValue(beatmapObject, new List<float>(from n in _object["po"].AsArray.Children
-																																	   select n.AsFloat).ToList());
-			}
-			if (_object["d"] != null)
-			{
-				AccessTools.Field(typeof(BeatmapObject), "depth").SetValue(beatmapObject, _object["d"].AsInt);
-			}
-			else
-			{
-				num++;
-			}
-			if (_object["empty"] != null)
-			{
-				beatmapObject.objectType = (_object["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal);
-			}
-			else if (_object["h"] != null)
-			{
-				beatmapObject.objectType = (_object["h"].AsBool ? ObjectType.Helper : ObjectType.Normal);
-			}
-			else if (_object["ot"] != null)
-			{
-				beatmapObject.objectType = (ObjectType)_object["ot"].AsInt;
-			}
-			if (_object["st"] != null)
-			{
-				beatmapObject.StartTime = _object["st"].AsFloat;
-			}
-			else
-			{
-				num++;
-			}
-			if (_object["name"] != null)
-			{
-				beatmapObject.name = _object["name"];
-			}
-			if (_object["shape"] != null)
-			{
-				beatmapObject.shape = _object["shape"].AsInt;
-			}
-			if (_object["so"] != null)
-			{
-				beatmapObject.shapeOption = _object["so"].AsInt;
-			}
-			if (_object["text"] != null)
-			{
-				beatmapObject.text = _object["text"];
-			}
-			if (_object["ak"] != null)
-			{
-				beatmapObject.autoKillType = (_object["ak"].AsBool ? AutoKillType.LastKeyframe : AutoKillType.OldStyleNoAutokill);
-			}
-			else if (_object["akt"] != null)
-			{
-				beatmapObject.autoKillType = (AutoKillType)_object["akt"].AsInt;
-			}
-			if (_object["ako"] != null)
-			{
-				beatmapObject.autoKillOffset = _object["ako"].AsFloat;
-			}
-			if (_object["o"] != null)
-			{
-				beatmapObject.origin = new Vector2(_object["o"]["x"].AsFloat, _object["o"]["y"].AsFloat);
-			}
-			else
-			{
-				num++;
-			}
-			if (_object["ed"]["bin"] != null)
-			{
-				beatmapObject.editorData.locked = _object["ed"]["locked"].AsBool;
-			}
-			if (_object["ed"]["bin"] != null)
-			{
-				beatmapObject.editorData.collapse = _object["ed"]["shrink"].AsBool;
-			}
-			if (_object["ed"]["bin"] != null)
-			{
-				beatmapObject.editorData.Bin = _object["ed"]["bin"].AsInt;
-			}
-			if (_object["ed"]["layer"] != null)
-			{
-				beatmapObject.editorData.Layer = _object["ed"]["layer"].AsInt;
-			}
-			beatmapObject.events = list;
-			action(beatmapObject);
-			yield break;
-		}
-
-		public static IEnumerator ParseGameObjects(JSONNode _objects)
+		public static IEnumerator ParseBeatmapObjects(JSONNode jn)
 		{
 			if (DataManager.inst.gameData.beatmapObjects == null)
-			{
-				DataManager.inst.gameData.beatmapObjects = new List<BeatmapObject>();
-			}
+				DataManager.inst.gameData.beatmapObjects = new List<BaseBeatmapObject>();
 			DataManager.inst.gameData.beatmapObjects.Clear();
 
-			ModCompatibility.ClearModifierObjects();
+			for (int i = 0; i < jn.Count; i++)
+				DataManager.inst.gameData.beatmapObjects.Add(BeatmapObject.Parse(jn[i]));
 
-			int num = 0;
-			for (int i = 0; i < _objects.Count; i++)
-			{
-                BeatmapObject beatmapObject = null;
-				DataManager.inst.StartCoroutine(ParseObject(_objects[i], delegate (BeatmapObject beatmapObject1)
-				{
-					beatmapObject = beatmapObject1;
-				}));
-
-				if (beatmapObject != null)
-				{
-					DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
-					//updateObjects(beatmapObject);
-					if (EditorManager.inst != null)
-					{
-						ObjEditor.ObjectSelection objectSelection = new ObjEditor.ObjectSelection(ObjEditor.ObjectSelection.SelectionType.Object, i);
-						ObjEditor.inst.RenderTimelineObject(objectSelection);
-					}
-
-					ModCompatibility.AddModifierObject(beatmapObject);
-				}
-				else
-				{
-					num++;
-				}
-			}
-			ObjectManager.inst.updateObjects();
-
-			DataManager.inst.StartCoroutine(ParseModifiers(_objects));
 			yield break;
 		}
 
@@ -657,136 +245,16 @@ namespace RTFunctions.Functions.Managers
 				DataManager.inst.gameData.backgroundObjects = new List<DataManager.GameData.BackgroundObject>();
             DataManager.inst.gameData.backgroundObjects.Clear();
 
-			Objects.backgroundObjects.Clear();
-
             for (int i = 0; i < jn.Count; i++)
-			{
-				bool active = true;
-				if (jn[i]["active"] != null)
-					active = jn[i]["active"].AsBool;
+				DataManager.inst.gameData.backgroundObjects.Add(BackgroundObject.Parse(jn[i]));
 
-				string name;
-				if (jn[i]["name"] != null)
-					name = jn[i]["name"];
-				else
-					name = "Background";
-
-				int kind;
-				if (jn[i]["kind"] != null)
-					kind = jn[i]["kind"].AsInt;
-				else
-					kind = 1;
-
-				string text;
-				if (jn[i]["text"] != null)
-					text = jn[i]["text"];
-				else
-					text = "";
-
-				//Vector2[] array = new Vector2[4];
-				//for (int j = 0; j < array.Length; j++)
-				//{
-				//	if (_backgroundObjects[i]["points"][j]["x"] != null)
-				//	{
-				//		array[j] = new Vector2(_backgroundObjects[i]["points"][j]["x"].AsFloat, _backgroundObjects[i]["points"][j]["y"].AsFloat);
-				//	}
-				//}
-
-				Vector2 pos = new Vector2(jn[i]["pos"]["x"].AsFloat, jn[i]["pos"]["y"].AsFloat);
-				Vector2 scale = new Vector2(jn[i]["size"]["x"].AsFloat, jn[i]["size"]["y"].AsFloat);
-
-				float asFloat = jn[i]["rot"].AsFloat;
-				int asInt = jn[i]["color"].AsInt;
-				int asInt2 = jn[i]["layer"].AsInt;
-
-				bool reactive = false;
-				if (jn[i]["r_set"] != null)
-					reactive = true;
-
-				if (jn[i]["r_set"]["active"] != null)
-					reactive = jn[i]["r_set"]["active"].AsBool;
-
-				var reactiveType = DataManager.GameData.BackgroundObject.ReactiveType.LOW;
-				if (jn[i]["r_set"]["type"] != null)
-					reactiveType = (DataManager.GameData.BackgroundObject.ReactiveType)Enum.Parse(typeof(DataManager.GameData.BackgroundObject.ReactiveType), jn[i]["r_set"]["type"]);
-
-				float reactiveScale = 1f;
-				if (jn[i]["r_set"]["scale"] != null)
-					reactiveScale = jn[i]["r_set"]["scale"].AsFloat;
-
-				bool drawFade = true;
-				if (jn[i]["fade"] != null)
-					drawFade = jn[i]["fade"].AsBool;
-
-				var item = new DataManager.GameData.BackgroundObject(active, name, kind, text, pos, scale, asFloat, asInt, asInt2, reactive, reactiveType, reactiveScale, drawFade);
-				DataManager.inst.gameData.backgroundObjects.Add(item);
-
-				var bg = new Objects.BackgroundObject(item);
-				if (jn[i]["zscale"] != null)
-					bg.zscale = jn[i]["zscale"].AsFloat;
-
-				if (jn[i]["depth"] != null)
-					bg.depth = jn[i]["depth"].AsInt;
-
-				if (jn[i]["s"] != null && jn[i]["so"] != null)
-					bg.shape = Objects.GetShape3D(jn[i]["s"].AsInt, jn[i]["so"]);
-
-				if (jn[i]["r_offset"] != null && jn[i]["r_offset"]["x"] != null && jn[i]["r_offset"]["y"] != null)
-					bg.rotation = new Vector2(jn[i]["r_offset"]["x"].AsFloat, jn[i]["r_offset"]["y"].AsFloat);
-				if (jn[i]["color_fade"] != null)
-					bg.FadeColor = jn[i]["color_fade"].AsInt;
-
-				if (jn[i]["rc"] != null)
-				{
-                    try
-					{
-						if (jn[i]["rc"]["pos"] != null && jn[i]["rc"]["pos"]["i"] != null && jn[i]["rc"]["pos"]["i"]["x"] != null && jn[i]["rc"]["pos"]["i"]["y"] != null)
-							bg.reactivePosIntensity = new Vector2(jn[i]["rc"]["pos"]["i"]["x"].AsFloat, jn[i]["rc"]["pos"]["i"]["y"].AsFloat);
-						if (jn[i]["rc"]["pos"] != null && jn[i]["rc"]["pos"]["s"] != null && jn[i]["rc"]["pos"]["s"]["x"] != null && jn[i]["rc"]["pos"]["s"]["y"] != null)
-							bg.reactivePosSamples = new Vector2Int(jn[i]["rc"]["pos"]["s"]["x"].AsInt, jn[i]["rc"]["pos"]["s"]["y"].AsInt);
-
-						//if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["active"] != null)
-						//	bg.reactiveIncludesZ = jn[i]["rc"]["z"]["active"].AsBool;
-
-						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["z"]["i"] != null)
-							bg.reactiveZIntensity = jn[i]["rc"]["z"]["i"].AsFloat;
-						if (jn[i]["rc"]["z"] != null && jn[i]["rc"]["z"]["s"] != null)
-							bg.reactiveZSample = jn[i]["rc"]["z"]["s"].AsInt;
-
-						if (jn[i]["rc"]["sca"] != null && jn[i]["rc"]["sca"]["i"] != null && jn[i]["rc"]["sca"]["i"]["x"] != null && jn[i]["rc"]["sca"]["i"]["y"] != null)
-							bg.reactiveScaIntensity = new Vector2(jn[i]["rc"]["sca"]["i"]["x"].AsFloat, jn[i]["rc"]["sca"]["i"]["y"].AsFloat);
-						if (jn[i]["rc"]["sca"] != null && jn[i]["rc"]["sca"]["s"] != null && jn[i]["rc"]["sca"]["s"]["x"] != null && jn[i]["rc"]["sca"]["s"]["y"] != null)
-							bg.reactiveScaSamples = new Vector2Int(jn[i]["rc"]["sca"]["s"]["x"].AsInt, jn[i]["rc"]["sca"]["s"]["y"].AsInt);
-
-						if (jn[i]["rc"]["rot"] != null && jn[i]["rc"]["rot"]["i"] != null)
-							bg.reactiveRotIntensity = jn[i]["rc"]["rot"]["i"].AsFloat;
-						if (jn[i]["rc"]["rot"] != null && jn[i]["rc"]["rot"]["s"] != null)
-							bg.reactiveRotSample = jn[i]["rc"]["rot"]["s"].AsInt;
-
-						if (jn[i]["rc"]["col"] != null && jn[i]["rc"]["col"]["i"] != null)
-							bg.reactiveColIntensity = jn[i]["rc"]["col"]["i"].AsFloat;
-						if (jn[i]["rc"]["col"] != null && jn[i]["rc"]["col"]["s"] != null)
-							bg.reactiveColSample = jn[i]["rc"]["col"]["s"].AsInt;
-						if (jn[i]["rc"]["col"] != null && jn[i]["rc"]["col"]["c"] != null)
-							bg.reactiveCol = jn[i]["rc"]["col"]["c"].AsInt;
-					}
-                    catch (Exception ex)
-					{
-						UnityEngine.Debug.Log($"{FunctionsPlugin.className}Failed to load settings.\nEXCEPTION: {ex.Message}\nSTACKTRACE: {ex.StackTrace}");
-					}
-				}
-
-				Objects.backgroundObjects.Add(bg);
-			}
 			yield break;
 		}
 
 		public static IEnumerator ParseEventObjects(JSONNode _events)
 		{
 			if (DataManager.inst.gameData.eventObjects == null)
-			{
 				DataManager.inst.gameData.eventObjects = new DataManager.GameData.EventObjects();
-			}
 
 			var allEvents = DataManager.inst.gameData.eventObjects.allEvents;
 
@@ -1637,179 +1105,10 @@ namespace RTFunctions.Functions.Managers
 				}
 			}
 
+			allEvents.ForEach(x => x = x.OrderBy(y => y.eventTime).ToList());
+
 			EventManager.inst.updateEvents();
 			yield break;
 		}
-
-		public static IEnumerator ParseModifiers(JSONNode _objects)
-		{
-			if (ModCompatibility.objectModifiersPlugin != null)
-			{
-				var objectModifiersPlugin = ModCompatibility.objectModifiersPlugin;
-				for (int i = 0; i < _objects.Count; i++)
-				{
-					string id = _objects[i]["id"];
-
-					if (DataManager.inst.gameData.beatmapObjects.Find(x => x.id == id) != null)
-					{
-						var dictionaryList = new List<Dictionary<string, object>>();
-
-						for (int j = 0; j < _objects[i]["modifiers"].Count; j++)
-						{
-							var dictionary = new Dictionary<string, object>();
-
-							dictionary.Add("type", int.Parse(_objects[i]["modifiers"][j]["type"]));
-
-							if (!string.IsNullOrEmpty(_objects[i]["modifiers"][j]["not"]))
-							{
-								dictionary.Add("not", bool.Parse(_objects[i]["modifiers"][j]["not"]));
-							}
-							else
-							{
-								dictionary.Add("not", false);
-							}
-
-							var list = new List<string>();
-
-							for (int k = 0; k < _objects[i]["modifiers"][j]["commands"].Count; k++)
-							{
-								list.Add(_objects[i]["modifiers"][j]["commands"][k]);
-							}
-
-							dictionary.Add("commands", list);
-
-							dictionary.Add("constant", bool.Parse(_objects[i]["modifiers"][j]["const"]));
-
-							if (!string.IsNullOrEmpty(_objects[i]["modifiers"][j]["value"]))
-								dictionary.Add("value", (string)_objects[i]["modifiers"][j]["value"]);
-							else
-								dictionary.Add("value", "0");
-
-							dictionaryList.Add(dictionary);
-						}
-
-						var e = new Dictionary<string, object>();
-						e.Add("modifiers", dictionaryList);
-
-						objectModifiersPlugin.GetMethod("AddModifierObjectWithValues").Invoke(objectModifiersPlugin, new object[] { DataManager.inst.gameData.beatmapObjects.Find(x => x.id == id), e });
-					}
-				}
-			}
-
-			yield break;
-		}
-		
-		public static IEnumerator ParseModifiers(JSONNode _objects, List<BeatmapObject> _bms)
-		{
-			if (ModCompatibility.objectModifiersPlugin != null)
-			{
-				var objectModifiersPlugin = ModCompatibility.objectModifiersPlugin;
-				for (int i = 0; i < _objects.Count; i++)
-				{
-					string id = _objects[i]["id"];
-
-					if (_bms.Find(x => x.id == id) != null)
-					{
-						var dictionaryList = new List<Dictionary<string, object>>();
-
-						for (int j = 0; j < _objects[i]["modifiers"].Count; j++)
-						{
-							var dictionary = new Dictionary<string, object>();
-
-							dictionary.Add("type", int.Parse(_objects[i]["modifiers"][j]["type"]));
-
-							if (!string.IsNullOrEmpty(_objects[i]["modifiers"][j]["not"]))
-							{
-								dictionary.Add("not", bool.Parse(_objects[i]["modifiers"][j]["not"]));
-							}
-							else
-							{
-								dictionary.Add("not", false);
-							}
-
-							var list = new List<string>();
-
-							for (int k = 0; k < _objects[i]["modifiers"][j]["commands"].Count; k++)
-							{
-								list.Add(_objects[i]["modifiers"][j]["commands"][k]);
-							}
-
-							dictionary.Add("commands", list);
-
-							dictionary.Add("constant", bool.Parse(_objects[i]["modifiers"][j]["const"]));
-
-							if (!string.IsNullOrEmpty(_objects[i]["modifiers"][j]["value"]))
-								dictionary.Add("value", (string)_objects[i]["modifiers"][j]["value"]);
-							else
-								dictionary.Add("value", "a");
-
-							dictionaryList.Add(dictionary);
-						}
-
-						var e = new Dictionary<string, object>();
-						e.Add("modifiers", dictionaryList);
-
-						objectModifiersPlugin.GetMethod("AddModifierObjectWithValues").Invoke(objectModifiersPlugin, new object[] { _bms.Find(x => x.id == id), e });
-					}
-				}
-			}
-
-			yield break;
-		}
-
-		public static Dictionary<string, object> ParseModifier(JSONNode _object)
-		{
-			if (ModCompatibility.objectModifiersPlugin != null)
-			{
-				string id = _object["id"];
-
-				var dictionaryList = new List<Dictionary<string, object>>();
-
-				for (int j = 0; j < _object["modifiers"].Count; j++)
-				{
-					var dictionary = new Dictionary<string, object>();
-
-					dictionary.Add("type", int.Parse(_object["modifiers"][j]["type"]));
-
-					if (!string.IsNullOrEmpty(_object["modifiers"][j]["not"]))
-					{
-						dictionary.Add("not", bool.Parse(_object["modifiers"][j]["not"]));
-					}
-					else
-					{
-						dictionary.Add("not", false);
-					}
-
-					var list = new List<string>();
-
-					for (int k = 0; k < _object["modifiers"][j]["commands"].Count; k++)
-					{
-						list.Add(_object["modifiers"][j]["commands"][k]);
-					}
-
-					dictionary.Add("commands", list);
-
-					dictionary.Add("constant", bool.Parse(_object["modifiers"][j]["const"]));
-
-					if (!string.IsNullOrEmpty(_object["modifiers"][j]["value"]))
-						dictionary.Add("value", (string)_object["modifiers"][j]["value"]);
-					else
-						dictionary.Add("value", "0");
-
-					dictionaryList.Add(dictionary);
-				}
-
-				var e = new Dictionary<string, object>();
-				e.Add("modifiers", dictionaryList);
-
-				return e;
-			}
-			return null;
-		}
-
-		public static void PrefabToDAE(string path, Prefab prefab)
-        {
-
-        }
 	}
 }

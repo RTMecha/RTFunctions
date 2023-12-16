@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,9 +13,10 @@ using LSFunctions;
 using SimpleJSON;
 
 using RTFunctions.Functions;
-using RTFunctions.Enums;
 using RTFunctions.Functions.Managers;
+using RTFunctions.Functions.Managers.Networking;
 using RTFunctions.Functions.Animation;
+using RTFunctions.Functions.IO;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
 using Prefab = DataManager.GameData.Prefab;
@@ -30,13 +33,15 @@ namespace RTFunctions.Patchers
         {
             var systemManager = SystemManager.inst;
 
+            AlephNetworkManager.Init();
+
             var modCompatibility = new GameObject("ModCompatibility");
             modCompatibility.transform.SetParent(systemManager.transform);
             modCompatibility.AddComponent<ModCompatibility>();
 
-            var objects = new GameObject("Objects");
+            var objects = new GameObject("ShapeManager");
             objects.transform.SetParent(systemManager.transform);
-            objects.AddComponent<Objects>();
+            objects.AddComponent<ShapeManager>();
 
             var uiManager = new GameObject("UIManager");
             uiManager.transform.SetParent(systemManager.transform);
@@ -48,22 +53,38 @@ namespace RTFunctions.Patchers
 
             var spriteManager = new GameObject("SpriteManager");
             spriteManager.transform.SetParent(systemManager.transform);
-            spriteManager.AddComponent<RTSpriteManager>();
+            spriteManager.AddComponent<SpriteManager>();
 
-            var networkManager = new GameObject("NetworkManager");
-            networkManager.transform.SetParent(systemManager.transform);
-            networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkManager>();
-            networkManager.AddComponent<Functions.Managers.Networking.AlephNetworkEditorManager>();
+            var fontManager = new GameObject("FontManager");
+            fontManager.transform.SetParent(systemManager.transform);
+            fontManager.AddComponent<FontManager>();
+
+            var assetManager = new GameObject("AssetManager");
+            assetManager.transform.SetParent(systemManager.transform);
+            assetManager.AddComponent<AssetManager>();
+
+            //AlephNetworkManager.Init();
+
+            try
+            {
+                RTCode.Init();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"RTCode Evaluator failed to initialize.\n{ex}");
+            }
 
             AnimationManager.Init();
+            RTLogger.Init();
 
-            EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
-            EnumPatcher.AddEnumValue<DataManager.GameData.BackgroundObject.ReactiveType>("CUSTOM");
+            // Test to see if this is even necessary. If not, then feel free to remove this.
+            //EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
+            //EnumPatcher.AddEnumValue<DataManager.GameData.BackgroundObject.ReactiveType>("CUSTOM");
 
-            EnumPatcher.AddEnumValue<DataManager.Language>("japanese");
-            EnumPatcher.AddEnumValue<DataManager.Language>("thai");
-            EnumPatcher.AddEnumValue<DataManager.Language>("russian");
-            EnumPatcher.AddEnumValue<DataManager.Language>("pirate");
+            //EnumPatcher.AddEnumValue<DataManager.Language>("japanese");
+            //EnumPatcher.AddEnumValue<DataManager.Language>("thai");
+            //EnumPatcher.AddEnumValue<DataManager.Language>("russian");
+            //EnumPatcher.AddEnumValue<DataManager.Language>("pirate");
 
             ___languagesToIndex.Add("japanese", 2);
             ___languagesToIndex.Add("thai", 3);
@@ -75,37 +96,31 @@ namespace RTFunctions.Patchers
             ___indexToLangauge.Add(4, "russian");
             ___indexToLangauge.Add(5, "pirate");
 
-            if (__instance.difficulties.Count != 7)
+            __instance.difficulties = new List<DataManager.Difficulty>
             {
-                __instance.difficulties = new List<DataManager.Difficulty>
-                {
-                    new DataManager.Difficulty("Easy", LSColors.GetThemeColor("easy")),
-                    new DataManager.Difficulty("Normal", LSColors.GetThemeColor("normal")),
-                    new DataManager.Difficulty("Hard", LSColors.GetThemeColor("hard")),
-                    new DataManager.Difficulty("Expert", LSColors.GetThemeColor("expert")),
-                    new DataManager.Difficulty("Expert+", LSColors.GetThemeColor("expert+")),
-                    new DataManager.Difficulty("Master", new Color(0.25f, 0.01f, 0.01f)),
-                    new DataManager.Difficulty("Animation", LSColors.GetThemeColor("none"))
-                };
-            }
+                new DataManager.Difficulty("Easy", LSColors.GetThemeColor("easy")),
+                new DataManager.Difficulty("Normal", LSColors.GetThemeColor("normal")),
+                new DataManager.Difficulty("Hard", LSColors.GetThemeColor("hard")),
+                new DataManager.Difficulty("Expert", LSColors.GetThemeColor("expert")),
+                new DataManager.Difficulty("Expert+", LSColors.GetThemeColor("expert+")),
+                new DataManager.Difficulty("Master", new Color(0.25f, 0.01f, 0.01f)),
+                new DataManager.Difficulty("Animation", LSColors.GetThemeColor("none"))
+            };
 
-            if (__instance.linkTypes[3].name != "YouTube")
+            __instance.linkTypes = new List<DataManager.LinkType>
             {
-                __instance.linkTypes = new List<DataManager.LinkType>
-                {
-                    new DataManager.LinkType("Spotify", "https://open.spotify.com/artist/{0}"),
-                    new DataManager.LinkType("SoundCloud", "https://soundcloud.com/{0}"),
-                    new DataManager.LinkType("Bandcamp", "https://{0}.bandcamp.com"),
-                    new DataManager.LinkType("Youtube", "https://www.youtube.com/{0}"),
-                    new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/")
-                };
-            }
+                new DataManager.LinkType("Spotify", "https://open.spotify.com/artist/{0}"),
+                new DataManager.LinkType("SoundCloud", "https://soundcloud.com/{0}"),
+                new DataManager.LinkType("Bandcamp", "https://{0}.bandcamp.com"),
+                new DataManager.LinkType("YouTube", "https://www.youtube.com/c/{0}"),
+                new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/")
+            };
 
-            if (__instance.AnimationList[1].Animation.keys[1].m_Time != 0.9999f)
-            {
-                __instance.AnimationList[1].Animation.keys[1].m_Time = 0.9999f;
-                __instance.AnimationList[1].Animation.keys[1].m_Value = 0f;
-            }
+            //if (__instance.AnimationList[1].Animation.keys[1].m_Time != 0.9999f)
+            //{
+            //    __instance.AnimationList[1].Animation.keys[1].m_Time = 0.9999f;
+            //    __instance.AnimationList[1].Animation.keys[1].m_Value = 0f;
+            //}
 
             //Themes
             __instance.BeatmapThemes[0].name = "PA Machine";
@@ -172,280 +187,111 @@ namespace RTFunctions.Patchers
                 }
             }
 
+            for (int i = 0; i < __instance.BeatmapThemes.Count; i++)
+            {
+                var beatmapTheme = __instance.BeatmapThemes[i];
+                __instance.BeatmapThemes[i] = new Functions.Data.BeatmapTheme
+                {
+                    id = beatmapTheme.id,
+                    name = beatmapTheme.name,
+                    expanded = beatmapTheme.expanded,
+                    backgroundColor = beatmapTheme.backgroundColor,
+                    guiAccentColor = beatmapTheme.guiColor,
+                    guiColor = beatmapTheme.guiColor,
+                    playerColors = beatmapTheme.playerColors,
+                    objectColors = beatmapTheme.objectColors,
+                    backgroundColors = beatmapTheme.backgroundColors,
+                    effectColors = beatmapTheme.objectColors.Clone(),
+                };
+            }
+
             __instance.UpdateSettingString("versionNumber", "4.1.16");
 
             FunctionsPlugin.ParseProfile();
+        }
+
+        [HarmonyPatch("SaveData", typeof(string), typeof(DataManager.GameData))]
+        [HarmonyPrefix]
+        static bool SaveDataPrefix(DataManager __instance, ref IEnumerator __result, string __0, DataManager.GameData __1)
+        {
+            Debug.Log($"{__instance.className}GameData is modded: {__1 is Functions.Data.GameData}");
+            __result = ProjectData.Writer.SaveData(__0, (Functions.Data.GameData)__1);
+            return false;
+        }
+
+        [HarmonyPatch("SaveMetadata", typeof(string), typeof(DataManager.MetaData))]
+        [HarmonyPrefix]
+        static bool SaveMetadataPrefix(ref LSError __result, DataManager __instance, string __0, DataManager.MetaData __1)
+        {
+            var result = new LSError(false, "");
+            JSONNode jn;
+            try
+            {
+                if (__1 is Functions.Data.Metadata)
+                {
+                    jn = ((Functions.Data.Metadata)__1).ToJSON();
+
+                    Debug.Log($"{__instance.className}Saving Metadata Full");
+                    LSFile.WriteToFile(__0, jn.ToString());
+                }
+                else
+                {
+                    jn = JSON.Parse("{}");
+                    jn["artist"]["name"] = __1.artist.Name;
+                    jn["artist"]["link"] = __1.artist.Link;
+                    jn["artist"]["linkType"] = __1.artist.LinkType.ToString();
+                    jn["creator"]["steam_name"] = __1.creator.steam_name;
+                    jn["creator"]["steam_id"] = __1.creator.steam_id.ToString();
+                    jn["song"]["title"] = __1.song.title;
+                    jn["song"]["difficulty"] = __1.song.difficulty.ToString();
+                    jn["song"]["description"] = __1.song.description;
+                    jn["song"]["bpm"] = __1.song.BPM.ToString();
+                    jn["song"]["t"] = __1.song.time.ToString();
+                    jn["song"]["preview_start"] = __1.song.BPM.ToString();
+                    jn["song"]["preview_length"] = __1.song.time.ToString();
+                    jn["beatmap"]["date_edited"] = __1.beatmap.date_edited;
+                    jn["beatmap"]["version_number"] = __1.beatmap.version_number.ToString();
+                    jn["beatmap"]["game_version"] = __1.beatmap.game_version;
+                    jn["beatmap"]["workshop_id"] = __1.beatmap.workshop_id.ToString();
+
+                    Debug.Log($"{__instance.className}Saving Metadata");
+                    LSFile.WriteToFile(__0, jn.ToString());
+                }
+            }
+            catch (System.Exception)
+            {
+                jn = JSON.Parse("{}");
+                jn["artist"]["name"] = __1.artist.Name;
+                jn["artist"]["link"] = __1.artist.Link;
+                jn["artist"]["linkType"] = __1.artist.LinkType.ToString();
+                jn["creator"]["steam_name"] = __1.creator.steam_name;
+                jn["creator"]["steam_id"] = __1.creator.steam_id.ToString();
+                jn["song"]["title"] = __1.song.title;
+                jn["song"]["difficulty"] = __1.song.difficulty.ToString();
+                jn["song"]["description"] = __1.song.description;
+                jn["song"]["bpm"] = __1.song.BPM.ToString();
+                jn["song"]["t"] = __1.song.time.ToString();
+                jn["song"]["preview_start"] = __1.song.BPM.ToString();
+                jn["song"]["preview_length"] = __1.song.time.ToString();
+                jn["beatmap"]["date_edited"] = __1.beatmap.date_edited;
+                jn["beatmap"]["version_number"] = __1.beatmap.version_number.ToString();
+                jn["beatmap"]["game_version"] = __1.beatmap.game_version;
+                jn["beatmap"]["workshop_id"] = __1.beatmap.workshop_id.ToString();
+
+                Debug.Log($"{__instance.className}Saving Metadata");
+                LSFile.WriteToFile(__0, jn.ToString());
+            }
+
+            __result = result;
+
+            return false;
         }
 
         [HarmonyPatch("GeneratePrefabJSON")]
         [HarmonyPrefix]
         static bool GeneratePrefabJSON(ref JSONNode __result, Prefab __0)
         {
-            JSONNode jn = JSON.Parse("{}");
-            jn["name"] = __0.Name;
-            jn["type"] = __0.Type.ToString();
-
-            if (__0.ID != null)
-            {
-                jn["id"] = __0.ID.ToString();
-            }
-
-            if (__0.MainObjectID != null)
-            {
-                jn["main_obj_id"] = __0.MainObjectID.ToString();
-            }
-            jn["offset"] = __0.Offset.ToString();
-            for (int i = 0; i < __0.objects.Count; i++)
-            {
-                if (__0.objects[i] != null)
-                {
-                    jn["objects"][i]["id"] = __0.objects[i].id;
-                    jn["objects"][i]["pid"] = __0.objects[i].prefabID;
-                    jn["objects"][i]["piid"] = __0.objects[i].prefabInstanceID;
-
-                    if (__0.objects[i].GetParentType().ToString() != "101")
-                    {
-                        jn["objects"][i]["pt"] = __0.objects[i].GetParentType().ToString();
-                    }
-
-                    if (__0.objects[i].getParentOffsets().FindIndex(x => x != 0f) != -1)
-                    {
-                        int num = 0;
-                        foreach (float num2 in __0.objects[i].getParentOffsets())
-                        {
-                            jn["objects"][i]["po"][num] = num2.ToString();
-                            num++;
-                        }
-                    }
-
-                    jn["objects"][i]["p"] = __0.objects[i].parent.ToString();
-                    jn["objects"][i]["d"] = __0.objects[i].Depth.ToString();
-                    jn["objects"][i]["ot"] = (int)__0.objects[i].objectType;
-                    jn["objects"][i]["st"] = __0.objects[i].StartTime.ToString();
-
-                    if (!string.IsNullOrEmpty(__0.objects[i].text))
-                    {
-                        jn["objects"][i]["text"] = __0.objects[i].text;
-                    }
-
-                    jn["objects"][i]["name"] = __0.objects[i].name;
-
-                    if (__0.objects[i].shape != 0)
-                    {
-                        jn["objects"][i]["shape"] = __0.objects[i].shape.ToString();
-                    }
-
-                    jn["objects"][i]["akt"] = (int)__0.objects[i].autoKillType;
-                    jn["objects"][i]["ako"] = __0.objects[i].autoKillOffset;
-
-                    if (__0.objects[i].shapeOption != 0)
-                    {
-                        jn["objects"][i]["so"] = __0.objects[i].shapeOption.ToString();
-                    }
-
-                    if (__0.objects[i].editorData.locked)
-                    {
-                        jn["objects"][i]["ed"]["locked"] = __0.objects[i].editorData.locked.ToString();
-                    }
-
-                    if (__0.objects[i].editorData.collapse)
-                    {
-                        jn["objects"][i]["ed"]["shrink"] = __0.objects[i].editorData.collapse.ToString();
-                    }
-
-                    jn["objects"][i]["o"]["x"] = __0.objects[i].origin.x.ToString();
-                    jn["objects"][i]["o"]["y"] = __0.objects[i].origin.y.ToString();
-                    jn["objects"][i]["ed"]["bin"] = __0.objects[i].editorData.Bin.ToString();
-                    jn["objects"][i]["ed"]["layer"] = __0.objects[i].editorData.Layer.ToString();
-
-                    for (int j = 0; j < __0.objects[i].events[0].Count; j++)
-                    {
-                        jn["objects"][i]["events"]["pos"][j]["t"] = __0.objects[i].events[0][j].eventTime.ToString();
-                        jn["objects"][i]["events"]["pos"][j]["x"] = __0.objects[i].events[0][j].eventValues[0].ToString();
-                        jn["objects"][i]["events"]["pos"][j]["y"] = __0.objects[i].events[0][j].eventValues[1].ToString();
-
-                        if (__0.objects[i].events[0][j].eventValues.Length > 2)
-                        {
-                            jn["objects"][i]["events"]["pos"][j]["z"] = __0.objects[i].events[0][j].eventValues[2].ToString();
-                        }
-
-                        if (__0.objects[i].events[0][j].curveType.Name != DataManager.inst.AnimationList[0].Name)
-                        {
-                            jn["objects"][i]["events"]["pos"][j]["ct"] = __0.objects[i].events[0][j].curveType.Name.ToString();
-                        }
-
-                        if (__0.objects[i].events[0][j].random != 0)
-                        {
-                            jn["objects"][i]["events"]["pos"][j]["r"] = __0.objects[i].events[0][j].random.ToString();
-                            jn["objects"][i]["events"]["pos"][j]["rx"] = __0.objects[i].events[0][j].eventRandomValues[0].ToString();
-                            jn["objects"][i]["events"]["pos"][j]["ry"] = __0.objects[i].events[0][j].eventRandomValues[1].ToString();
-                            jn["objects"][i]["events"]["pos"][j]["rz"] = __0.objects[i].events[0][j].eventRandomValues[2].ToString();
-                        }
-                    }
-                    for (int j = 0; j < __0.objects[i].events[1].Count; j++)
-                    {
-                        jn["objects"][i]["events"]["sca"][j]["t"] = __0.objects[i].events[1][j].eventTime.ToString();
-                        jn["objects"][i]["events"]["sca"][j]["x"] = __0.objects[i].events[1][j].eventValues[0].ToString();
-                        jn["objects"][i]["events"]["sca"][j]["y"] = __0.objects[i].events[1][j].eventValues[1].ToString();
-
-                        if (__0.objects[i].events[1][j].curveType.Name != DataManager.inst.AnimationList[0].Name)
-                        {
-                            jn["objects"][i]["events"]["sca"][j]["ct"] = __0.objects[i].events[1][j].curveType.Name.ToString();
-                        }
-
-                        if (__0.objects[i].events[1][j].random != 0)
-                        {
-                            jn["objects"][i]["events"]["sca"][j]["r"] = __0.objects[i].events[1][j].random.ToString();
-                            jn["objects"][i]["events"]["sca"][j]["rx"] = __0.objects[i].events[1][j].eventRandomValues[0].ToString();
-                            jn["objects"][i]["events"]["sca"][j]["ry"] = __0.objects[i].events[1][j].eventRandomValues[1].ToString();
-                            jn["objects"][i]["events"]["sca"][j]["rz"] = __0.objects[i].events[1][j].eventRandomValues[2].ToString();
-                        }
-                    }
-                    for (int j = 0; j < __0.objects[i].events[2].Count; j++)
-                    {
-                        jn["objects"][i]["events"]["rot"][j]["t"] = __0.objects[i].events[2][j].eventTime.ToString();
-                        jn["objects"][i]["events"]["rot"][j]["x"] = __0.objects[i].events[2][j].eventValues[0].ToString();
-
-                        if (__0.objects[i].events[2][j].curveType.Name != DataManager.inst.AnimationList[0].Name)
-                        {
-                            jn["objects"][i]["events"]["rot"][j]["ct"] = __0.objects[i].events[2][j].curveType.Name.ToString();
-                        }
-
-                        if (__0.objects[i].events[2][j].random != 0)
-                        {
-                            jn["objects"][i]["events"]["rot"][j]["r"] = __0.objects[i].events[2][j].random.ToString();
-                            jn["objects"][i]["events"]["rot"][j]["rx"] = __0.objects[i].events[2][j].eventRandomValues[0].ToString();
-                            jn["objects"][i]["events"]["rot"][j]["rz"] = __0.objects[i].events[2][j].eventRandomValues[2].ToString();
-                        }
-                    }
-                    for (int j = 0; j < __0.objects[i].events[3].Count; j++)
-                    {
-                        jn["objects"][i]["events"]["col"][j]["t"] = __0.objects[i].events[3][j].eventTime.ToString();
-                        jn["objects"][i]["events"]["col"][j]["x"] = __0.objects[i].events[3][j].eventValues[0].ToString();
-                        if (__0.objects[i].events[3][j].eventValues.Length > 1)
-                        {
-                            jn["objects"][i]["events"]["col"][j]["y"] = __0.objects[i].events[3][j].eventValues[1].ToString();
-                        }
-                        if (__0.objects[i].events[3][j].eventValues.Length > 2)
-                        {
-                            jn["objects"][i]["events"]["col"][j]["z"] = __0.objects[i].events[3][j].eventValues[2].ToString();
-                            jn["objects"][i]["events"]["col"][j]["x2"] = __0.objects[i].events[3][j].eventValues[3].ToString();
-                            jn["objects"][i]["events"]["col"][j]["y2"] = __0.objects[i].events[3][j].eventValues[4].ToString();
-                        }
-
-                        if (__0.objects[i].events[3][j].curveType.Name != DataManager.inst.AnimationList[0].Name)
-                        {
-                            jn["objects"][i]["events"]["col"][j]["ct"] = __0.objects[i].events[3][j].curveType.Name.ToString();
-                        }
-
-                        if (__0.objects[i].events[3][j].random != 0)
-                        {
-                            jn["objects"][i]["events"]["col"][j]["r"] = __0.objects[i].events[3][j].random.ToString();
-                            jn["objects"][i]["events"]["col"][j]["rx"] = __0.objects[i].events[3][j].eventRandomValues[0].ToString();
-                        }
-                    }
-
-                    if (ModCompatibility.inst != null && ModCompatibility.objectModifiersPlugin != null)
-                    {
-                        var modifierObject = ModCompatibility.GetModifierObject(__0.objects[i]);
-
-                        if (modifierObject != null)
-                        {
-                            for (int j = 0; j < ModCompatibility.GetModifierCount(__0.objects[i]); j++)
-                            {
-                                var modifier = ModCompatibility.GetModifierIndex(__0.objects[i], j);
-
-                                var type = (int)modifier.GetType().GetField("type", BindingFlags.Public | BindingFlags.Instance).GetValue(modifier);
-
-                                List<string> commands = (List<string>)modifier.GetType().GetField("command", BindingFlags.Public | BindingFlags.Instance).GetValue(modifier);
-
-                                var value = (string)modifier.GetType().GetField("value", BindingFlags.Public | BindingFlags.Instance).GetValue(modifier);
-
-                                var constant = ((bool)modifier.GetType().GetField("constant", BindingFlags.Public | BindingFlags.Instance).GetValue(modifier)).ToString();
-
-                                if (commands.Count > 0 && !string.IsNullOrEmpty(commands[0]))
-                                {
-                                    //jn["objects"][i]["modifiers"][j] = new JSONArray();
-
-                                    jn["objects"][i]["modifiers"][j]["type"] = type;
-                                    if (type == 0)
-                                    {
-                                        jn["objects"][i]["modifiers"][j]["not"] = ((bool)modifier.GetType().GetField("not", BindingFlags.Public | BindingFlags.Instance).GetValue(modifier)).ToString();
-                                    }
-
-                                    for (int k = 0; k < commands.Count; k++)
-                                    {
-                                        if (!string.IsNullOrEmpty(commands[k]))
-                                            jn["objects"][i]["modifiers"][j]["commands"][k] = commands[k];
-                                    }
-
-                                    jn["objects"][i]["modifiers"][j]["value"] = value;
-
-                                    jn["objects"][i]["modifiers"][j]["const"] = constant;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            for (int i = 0; i < __0.prefabObjects.Count; i++)
-            {
-                if (__0.prefabObjects[i] != null)
-                {
-                    jn["prefab_objects"][i]["id"] = __0.prefabObjects[i].ID;
-                    jn["prefab_objects"][i]["pid"] = __0.prefabObjects[i].prefabID;
-                    jn["prefab_objects"][i]["st"] = __0.prefabObjects[i].StartTime.ToString();
-
-                    if (__0.prefabObjects[i].RepeatCount > 0)
-                        jn["prefab_objects"][i]["rc"] = __0.prefabObjects[i].RepeatCount.ToString();
-                    if (__0.prefabObjects[i].RepeatOffsetTime > 0f)
-                        jn["prefab_objects"][i]["ro"] = __0.prefabObjects[i].RepeatOffsetTime.ToString();
-
-                    jn["prefab_objects"][i]["ed"]["layer"] = __0.prefabObjects[i].editorData.Layer.ToString();
-                    jn["prefab_objects"][i]["ed"]["bin"] = __0.prefabObjects[i].editorData.Bin.ToString();
-
-                    if (__0.prefabObjects[i].editorData.locked)
-                    {
-                        jn["prefab_objects"][i]["ed"]["locked"] = __0.prefabObjects[i].editorData.locked.ToString();
-                    }
-                    if (__0.prefabObjects[i].editorData.collapse)
-                    {
-                        jn["prefab_objects"][i]["ed"]["shrink"] = __0.prefabObjects[i].editorData.collapse.ToString();
-                    }
-                    for (int j = 0; j < 3; j++)
-                    {
-                        string type = "";
-                        switch (j)
-                        {
-                            case 0:
-                                {
-                                    type = "pos";
-                                    break;
-                                }
-                            case 1:
-                                {
-                                    type = "sca";
-                                    break;
-                                }
-                            case 2:
-                                {
-                                    type = "rot";
-                                    break;
-                                }
-                        }
-
-                        if (type != "")
-                        {
-                            jn["prefab_objects"][i]["e"][j][type]["x"] = __0.prefabObjects[i].events[j].eventValues[0].ToString();
-                            if (j != 2)
-                            {
-                                jn["prefab_objects"][i]["e"][j][type]["y"] = __0.prefabObjects[i].events[j].eventValues[1].ToString();
-                            }
-                        }
-                    }
-                }
-            }
-            __result = jn;
+            __result = ((Functions.Data.Prefab)__0).ToJSON();
             return false;
         }
     }
@@ -672,7 +518,7 @@ namespace RTFunctions.Patchers
         [HarmonyPrefix]
         static bool DeepCopyPatch(ref BeatmapTheme __result, BeatmapTheme __0, bool __1 = false)
         {
-            BeatmapTheme themeCopy = new BeatmapTheme();
+            var themeCopy = new BeatmapTheme();
             themeCopy.name = __0.name;
             themeCopy.playerColors = new List<Color>((from cols in __0.playerColors
                                                       select new Color(cols.r, cols.g, cols.b, cols.a)).ToList());
@@ -721,13 +567,7 @@ namespace RTFunctions.Patchers
         [HarmonyPrefix]
         static bool ParseGameObjectPrefix(ref BeatmapObject __result, JSONNode __0)
         {
-            BeatmapObject beatmapObject = null;
-            DataManager.inst.StartCoroutine(Parser.ParseObject(__0, delegate (BeatmapObject _beatmapObject)
-            {
-                beatmapObject = _beatmapObject;
-            }));
-
-            __result = beatmapObject;
+            __result = Functions.Data.BeatmapObject.Parse(__0);
             return false;
         }
     }

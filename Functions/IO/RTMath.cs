@@ -200,5 +200,7 @@ namespace RTFunctions.Functions.IO
 		}
 
 		public static float InverseLerp(float x, float y, float t) => (t - x) / (y - x);
+
+		public static float Percentage(float t, float length) => t / length * 100f;
 	}
 }

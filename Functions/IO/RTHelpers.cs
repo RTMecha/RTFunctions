@@ -16,20 +16,29 @@ namespace RTFunctions.Functions.IO
     public static class RTHelpers
 	{
 		public static float perspectiveZoom = 1f;
-		public static string levelVersion = FunctionsPlugin.VersionNumber;
+		public static string levelVersion = FunctionsPlugin.CurrentVersion.ToString();
 
         public static float screenScale;
 		public static float screenScaleInverse;
 
-		public static BeatmapTheme BeatmapTheme
+		public static Data.BeatmapTheme BeatmapTheme
         {
 			get
             {
 				var beatmapTheme = GameManager.inst?.LiveTheme;
 				if (EditorManager.inst && EventEditor.inst.showTheme)
 					beatmapTheme = EventEditor.inst.previewTheme;
-				return beatmapTheme;
+				return (Data.BeatmapTheme)beatmapTheme;
 			}
+        }
+
+		public static bool InEditor => EditorManager.inst;
+		public static bool InGame => GameManager.inst;
+		public static bool InMenu => ArcadeManager.inst.ic;
+
+		public static void TestRun()
+        {
+			new TaskRunner().Run(TestRun);
         }
 
         public static float getPitch()
@@ -945,6 +954,8 @@ namespace RTFunctions.Functions.IO
 
 			return false;
 		}
+
+		public static bool SearchString(string a, string searchTerm) => a.ToLower().Contains(searchTerm.ToLower()) || string.IsNullOrEmpty(searchTerm);
 
 		#region Cipher Encryptions because heck it
 

@@ -6,8 +6,8 @@
 {
     public interface ILevelObject
     {
-        public float StartTime { get; }
-        public float KillTime { get; }
+        public float StartTime { get; set; }
+        public float KillTime { get; set; }
 
         public string ID { get; }
 

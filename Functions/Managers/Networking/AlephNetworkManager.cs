@@ -26,6 +26,7 @@ namespace RTFunctions.Functions.Managers.Networking
         {
             var gameObject = new GameObject("NetworkManager");
             gameObject.transform.SetParent(SystemManager.inst.transform);
+            gameObject.AddComponent<AlephNetworkManager>();
             gameObject.AddComponent<AlephNetworkEditorManager>();
         }
 
@@ -54,6 +55,43 @@ namespace RTFunctions.Functions.Managers.Networking
         //	var jn = JSON.Parse(json);
         //  Log(jn["base"]["name"]);
         //}));
+
+        public static IEnumerator DownloadClient(string path, string output)
+        {
+            using (var client = new WebClient())
+            {
+                client.DownloadFile(path, output);
+                while (client.IsBusy)
+                    yield return null;
+            }
+            yield break;
+        }
+
+        public static IEnumerator DownloadClient(string path, Action<byte[]> callback)
+        {
+            using (var client = new WebClient())
+            {
+                var bytes = client.DownloadData(path);
+                while (client.IsBusy)
+                    yield return null;
+
+                callback(bytes);
+            }
+            yield break;
+        }
+        
+        public static IEnumerator DownloadClient(string path, Action<string> callback)
+        {
+            using (var client = new WebClient())
+            {
+                var bytes = client.DownloadString(path);
+                while (client.IsBusy)
+                    yield return null;
+
+                callback(bytes);
+            }
+            yield break;
+        }
 
         public static IEnumerator DownloadBytes(string path, Action<byte[]> callback, Action<string> onError)
         {

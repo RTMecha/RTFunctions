@@ -24,6 +24,7 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
 
             if (Collider != null)
             {
+                Collider.enabled = true;
                 if (hasCollider)
                     Collider.tag = "Helper";
                 if (solid)

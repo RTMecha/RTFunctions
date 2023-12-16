@@ -11,21 +11,30 @@ namespace RTFunctions.Functions.Optimization.Objects
 {
     public class LevelObject : Exists, ILevelObject
     {
-        public float StartTime { get; }
-        public float KillTime { get; }
+        public float StartTime { get; set; }
+        public float KillTime { get; set; }
 
         public string ID { get; }
-        readonly Sequence<Color> colorSequence;
-        readonly Sequence<float> opacitySequence;
-        readonly Sequence<float> hueSequence;
-        readonly Sequence<float> satSequence;
-        readonly Sequence<float> valSequence;
+        Sequence<Color> colorSequence;
+        Sequence<float> opacitySequence;
+        Sequence<float> hueSequence;
+        Sequence<float> satSequence;
+        Sequence<float> valSequence;
 
-        readonly float depth;
+        public float depth;
         public List<LevelParentObject> parentObjects;
         public readonly VisualObject visualObject;
 
         public readonly List<Transform> transformChain;
+
+        public void SetSequences(Sequence<Color> colorSequence, Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence)
+        {
+            this.colorSequence = colorSequence;
+            this.opacitySequence = opacitySequence;
+            this.hueSequence = hueSequence;
+            this.satSequence = satSequence;
+            this.valSequence = valSequence;
+        }
 
         public LevelObject(string _id, float startTime, float killTime, Sequence<Color> colorSequence, float depth, List<LevelParentObject> parentObjects, VisualObject visualObject, Sequence<float> _os, Sequence<float> _hs, Sequence<float> _ss, Sequence<float> _vs)
         {
@@ -70,7 +79,7 @@ namespace RTFunctions.Functions.Optimization.Objects
         public void SetActive(bool active)
         {
             if (parentObjects.Count > 0)
-                parentObjects[parentObjects.Count - 1].GameObject.SetActive(active);
+                parentObjects[parentObjects.Count - 1].GameObject?.SetActive(active);
         }
 
         public static Color ChangeColorHSV(Color color, float hue, float sat, float val)
@@ -146,49 +155,61 @@ namespace RTFunctions.Functions.Optimization.Objects
             bool animateScale = true;
             bool animateRotation = true;
 
-            foreach (LevelParentObject parentObject in parentObjects)
+            float positionParallax = 1f;
+            float scaleParallax = 1f;
+            float rotationParallax = 1f;
+
+            foreach (var parentObject in parentObjects)
             {
                 // If last parent is position parented, animate position
                 if (animatePosition)
                 {
                     if (parentObject.Position3DSequence != null)
                     {
-                        Vector3 value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - positionOffset);
+                        var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - positionOffset);
                         float z = depth * 0.0005f;
                         float calc = value.z / 10f;
                         z = z + calc;
-                        parentObject.Transform.localPosition = new Vector3(value.x, value.y, z);
+                        parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, z);
                     }
                     else
                     {
                         Vector2 value = parentObject.PositionSequence.Interpolate(time - parentObject.TimeOffset - positionOffset);
-                        parentObject.Transform.localPosition = new Vector3(value.x, value.y, depth * 0.0005f);
+                        parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, depth * 0.0005f);
                     }
                 }
 
                 // If last parent is scale parented, animate scale
                 if (animateScale)
                 {
-                    Vector2 value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - scaleOffset);
-                    parentObject.Transform.localScale = new Vector3(value.x, value.y, 1.0f);
+                    var value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - scaleOffset);
+                    parentObject.Transform.localScale = new Vector3(value.x * scaleParallax, value.y * scaleParallax, 1.0f);
                 }
 
                 // If last parent is rotation parented, animate rotation
                 if (animateRotation)
                 {
                     parentObject.Transform.localRotation = Quaternion.AngleAxis(
-                        parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - rotationOffset),
+                        parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - rotationOffset) * rotationParallax,
                         Vector3.forward);
                 }
 
                 // Cache parent values to use for next parent
-                positionOffset = parentObject.ParentOffsetPosition;
-                scaleOffset = parentObject.ParentOffsetScale;
-                rotationOffset = parentObject.ParentOffsetRotation;
+                positionOffset = parentObject.ParentAdditivePosition ? positionOffset + parentObject.ParentOffsetPosition : parentObject.ParentOffsetPosition;
+                scaleOffset = parentObject.ParentAdditiveScale ? scaleOffset + parentObject.ParentOffsetScale : parentObject.ParentOffsetScale;
+                rotationOffset = parentObject.ParentAdditiveRotation ? rotationOffset + parentObject.ParentOffsetRotation : parentObject.ParentOffsetRotation;
 
                 animatePosition = parentObject.ParentAnimatePosition;
                 animateScale = parentObject.ParentAnimateScale;
                 animateRotation = parentObject.ParentAnimateRotation;
+
+                //positionParallax = parentObject.ParentAdditivePosition ? positionParallax + parentObject.ParentParallaxPosition : parentObject.ParentParallaxPosition;
+                //scaleParallax = parentObject.ParentAdditiveScale ? scaleParallax + parentObject.ParentParallaxScale : parentObject.ParentParallaxScale;
+                //rotationParallax = parentObject.ParentAdditiveRotation ? rotationParallax + parentObject.ParentParallaxRotation : parentObject.ParentParallaxRotation;
+
+                positionParallax = parentObject.ParentParallaxPosition;
+                scaleParallax = parentObject.ParentParallaxScale;
+                rotationParallax = parentObject.ParentParallaxRotation;
             }
         }
     }

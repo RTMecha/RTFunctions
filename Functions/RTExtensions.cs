@@ -12,19 +12,22 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-using DG.Tweening;
-
 using LSFunctions;
+using SimpleJSON;
 
-using RTFunctions.Enums;
+using RTFunctions.Functions.Animation;
+using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Optimization;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
+using EventKeyframe = DataManager.GameData.EventKeyframe;
+using Prefab = DataManager.GameData.Prefab;
+using PrefabObject = DataManager.GameData.PrefabObject;
+
 using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
 
 using Object = UnityEngine.Object;
 
@@ -152,6 +155,81 @@ namespace RTFunctions.Functions
 			result = null;
 			return false;
 		}
+
+		public static List<Transform> ChildList(this Transform transform)
+        {
+			var list = new List<Transform>();
+			foreach (var obj in transform)
+				list.Add((Transform)obj);
+			return list;
+		}
+
+		public static void DeleteChildren(this Transform tf, bool instant = false) => LSHelpers.DeleteChildren(tf, instant);
+
+		public static GameObject Duplicate(this GameObject gameObject, Transform parent)
+		{
+			var copy = Object.Instantiate(gameObject);
+			copy.transform.SetParent(parent);
+			copy.transform.localPosition = gameObject.transform.localPosition;
+			copy.transform.localScale = gameObject.transform.localScale;
+
+			return copy;
+		}
+
+		public static GameObject Duplicate(this GameObject gameObject, Transform parent, string name)
+        {
+			var copy = gameObject.Duplicate(parent);
+			copy.name = name;
+			return copy;
+        }
+		
+		public static GameObject Duplicate(this GameObject gameObject, Transform parent, string name, int index)
+        {
+			var copy = gameObject.Duplicate(parent);
+			copy.name = name;
+			copy.transform.SetSiblingIndex(index);
+			return copy;
+        }
+
+		public static void GetComponentAndPerformAction<T>(this GameObject gameObject, Action<T> action)
+        {
+			if (gameObject.TryGetComponent(out T result))
+				action(result);
+        }
+		
+		public static void GetComponentAndPerformAction<T>(this Transform transform, Action<T> action)
+        {
+			if (transform.gameObject.TryGetComponent(out T result))
+				action(result);
+        }
+
+		public static void GetComponentsAndPerformActions(this GameObject gameObject, Type[] types, Action<Component>[] actions)
+        {
+			for (int i = 0; i < types.Length; i++)
+            {
+				var comp = gameObject.GetComponent(types[i]);
+				if (comp)
+					actions[i]?.Invoke(comp);
+            }
+        }
+
+		public static RectTransform GetChildRT(this Transform transform, int index)
+        {
+			var child = transform.GetChild(index);
+			if (child is RectTransform)
+				return (RectTransform)child;
+			return null;
+        }
+
+		public static RectTransform FindRT(this Transform transform, string n)
+        {
+			var find = transform.Find(n);
+			if (find is RectTransform)
+				return (RectTransform)find;
+			return null;
+        }
+
+		public static RectTransform AsRT(this Transform transform) => (RectTransform)transform;
 
 		#endregion
 
@@ -373,11 +451,84 @@ namespace RTFunctions.Functions
 			return prefabs[_s].options[_so];
 		}
 
-		#endregion
+		public static Prefab GetPrefab(this PrefabObject prefabObject) => DataManager.inst.gameData.prefabs.Find(x => x.ID == prefabObject.prefabID);
 
-		#region Catalyst
-		
-		[Obsolete("Editor Catalyst is fully implemented with RTFunctions, no need to use this.")]
+		public static List<T> Clone<T>(this List<T> list)
+        {
+			var array = new T[list.Count];
+			list.CopyTo(array);
+			return array.ToList();
+        }
+
+		public static T[] Copy<T>(this T[] ts)
+        {
+			var array = new T[ts.Length];
+			for (int i = 0; i < ts.Length; i++)
+				array[i] = ts[i];
+			return array;
+        }
+
+		public static Dictionary<TKey, TValue> Clone<TKey, TValue>(this Dictionary<TKey, TValue> keyValuePairs)
+        {
+			var dictionary = new Dictionary<TKey, TValue>();
+			foreach (var d in keyValuePairs)
+				dictionary.Add(d.Key, d.Value);
+			return dictionary;
+        }
+
+        public static float Interpolate(this BeatmapObject beatmapObject, int type, int value)
+        {
+            var time = AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime;
+
+            var nextKFIndex = beatmapObject.events[type].FindIndex(x => x.eventTime > time);
+
+            if (nextKFIndex >= 0)
+            {
+                var prevKFIndex = nextKFIndex - 1;
+                if (prevKFIndex < 0)
+                    prevKFIndex = 0;
+
+                var nextKF = beatmapObject.events[type][nextKFIndex];
+                var prevKF = beatmapObject.events[type][prevKFIndex];
+
+                var next = nextKF.eventValues[value];
+                var prev = prevKF.eventValues[value];
+
+                if (float.IsNaN(prev))
+                    prev = 0f;
+
+                if (float.IsNaN(next))
+                    next = 0f;
+
+                var x = RTMath.Lerp(prev, next, Ease.GetEaseFunction(nextKF.curveType.Name)(RTMath.InverseLerp(prevKF.eventTime, nextKF.eventTime, time)));
+
+                if (prevKFIndex == nextKFIndex)
+                    x = next;
+
+                if (float.IsNaN(x) || float.IsInfinity(x))
+                    x = next;
+
+                return x;
+            }
+            else
+            {
+                var x = beatmapObject.events[type][beatmapObject.events[type].Count - 1].eventValues[value];
+
+                if (float.IsNaN(x))
+                    x = 0f;
+
+                if (float.IsNaN(x) || float.IsInfinity(x))
+                    x = beatmapObject.events[type][beatmapObject.events[type].Count - 1].eventValues[value];
+
+                return x;
+            }
+        }
+
+        #endregion
+
+        #region Catalyst
+
+        [Obsolete("Editor Catalyst is fully implemented with RTFunctions, no need to use this.")]
 		public static object GetILevelObject(this BeatmapObject _beatmapObject) => null;
 
 		#endregion
@@ -497,11 +648,97 @@ namespace RTFunctions.Functions
 			return false;
         }
 
+        #endregion
+
+        #region Data Extensions
+
+		public static byte[] ToBytes(this string str) => Encoding.ASCII.GetBytes(str);
+		public static string ToString(this byte[] bytes) => Encoding.ASCII.GetString(bytes);
+
+		public static bool Has<T>(this List<T> ts, Predicate<T> predicate) => ts.Find(predicate) != null;
+
+		public static Dictionary<TKey, TValue> ToDictionary<T, TKey, TValue>(this List<T> ts, Func<T, TKey> key, Func<T, TValue> value)
+        {
+			var dictionary = new Dictionary<TKey, TValue>();
+
+			var keys = ts.Select(key).ToList();
+			var values = ts.Select(value).ToList();
+
+			for (int i = 0; i < keys.Count; i++)
+				if (!dictionary.ContainsKey(keys[i]))
+					dictionary.Add(keys[i], values[i]);
+
+			return dictionary;
+        }
+
+		static void Test()
+        {
+			DataManager.inst.gameData.beatmapObjects.ToDictionary(x => x.id, x => x);
+        }
+
+		public static List<string> GetLines(this string str) => str.Split(new string[] { "\n", "\n\r", "\r" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+        #endregion
+
+        #region JSON
+
+		public static JSONNode ToJSON(this Vector2 vector2)
+        {
+			var jn = JSON.Parse("{}");
+
+			jn["x"] = vector2.x.ToString();
+			jn["y"] = vector2.y.ToString();
+
+			return jn;
+        }
+		
+		public static JSONNode ToJSON(this Vector3 vector3)
+        {
+			var jn = JSON.Parse("{}");
+
+			jn["x"] = vector3.x.ToString();
+			jn["y"] = vector3.y.ToString();
+			jn["z"] = vector3.z.ToString();
+
+			return jn;
+        }
+		
+		public static JSONNode ToJSON(this Vector4 vector4)
+        {
+			var jn = JSON.Parse("{}");
+
+			jn["x"] = vector4.x.ToString();
+			jn["y"] = vector4.y.ToString();
+			jn["z"] = vector4.z.ToString();
+			jn["w"] = vector4.w.ToString();
+
+			return jn;
+        }
+
+		public static Vector2 AsVector2(this JSONNode jn) => new Vector2(jn["x"].AsFloat, jn["y"].AsFloat);
+
+		public static Vector3 AsVector3(this JSONNode jn) => new Vector3(jn["x"].AsFloat, jn["y"].AsFloat, jn["z"].AsFloat);
+
+		public static Vector3 AsVector4(this JSONNode jn) => new Vector4(jn["x"].AsFloat, jn["y"].AsFloat, jn["z"].AsFloat, jn["w"].AsFloat);
+
 		#endregion
 
 		#region Misc
 
-		public static EventKeyframe GetEventKeyframe(this List<List<EventKeyframe>> eventKeyframes, int type, int index) => eventKeyframes[RTMath.Clamp(type, 0, eventKeyframes.Count - 1)].GetEventKeyframe(index);
+		public static ColorBlock SetColorBlock(this ColorBlock cb, Color normal, Color highlighted, Color pressed, Color selected, Color disabled, float fade = 0.2f)
+		{
+			cb.normalColor = normal;
+			cb.highlightedColor = highlighted;
+			cb.pressedColor = pressed;
+			cb.selectedColor = selected;
+			cb.disabledColor = disabled;
+			cb.fadeDuration = fade;
+			return cb;
+		}
+
+		public static void Save(this Sprite sprite, string path) => SpriteManager.SaveSprite(sprite, path);
+
+        public static EventKeyframe GetEventKeyframe(this List<List<EventKeyframe>> eventKeyframes, int type, int index) => eventKeyframes[RTMath.Clamp(type, 0, eventKeyframes.Count - 1)].GetEventKeyframe(index);
 		public static EventKeyframe GetEventKeyframe(this List<EventKeyframe> eventKeyframes, int index) => eventKeyframes[RTMath.Clamp(index, 0, eventKeyframes.Count - 1)];
 
 		public static void SetColor(this Material material, Color color) => material.color = color;
@@ -535,6 +772,14 @@ namespace RTFunctions.Functions
 			i.m_PersistentCalls.m_Calls.Clear();
 			i.RemoveAllListeners();
 		}
+
+		public static void ClearAll(this InputField.SubmitEvent s)
+        {
+			s.m_Calls.m_ExecutingCalls.Clear();
+			s.m_Calls.m_PersistentCalls.Clear();
+			s.m_PersistentCalls.m_Calls.Clear();
+			s.RemoveAllListeners();
+        }
 		
 		public static void ClearAll(this Toggle.ToggleEvent i)
         {
@@ -543,6 +788,56 @@ namespace RTFunctions.Functions
 			i.m_PersistentCalls.m_Calls.Clear();
 			i.RemoveAllListeners();
 		}
+
+		public static void ClearAll(this Dropdown.DropdownEvent d)
+        {
+			d.m_Calls.m_ExecutingCalls.Clear();
+			d.m_Calls.m_PersistentCalls.Clear();
+			d.m_PersistentCalls.m_Calls.Clear();
+			d.RemoveAllListeners();
+        }
+		
+		public static void ClearAll(this Slider.SliderEvent s)
+        {
+			s.m_Calls.m_ExecutingCalls.Clear();
+			s.m_Calls.m_PersistentCalls.Clear();
+			s.m_PersistentCalls.m_Calls.Clear();
+			s.RemoveAllListeners();
+        }
+
+		public static void NewOnClickListener(this Button b, UnityAction unityAction)
+        {
+			b.onClick.ClearAll();
+			b.onClick.AddListener(unityAction);
+        }
+
+		public static void NewValueChangedListener(this InputField i, string value, UnityAction<string> unityAction)
+        {
+			i.onValueChanged.ClearAll();
+			i.text = value;
+			i.onValueChanged.AddListener(unityAction);
+        }
+		
+		public static void NewValueChangedListener(this Toggle i, bool value, UnityAction<bool> unityAction)
+        {
+			i.onValueChanged.ClearAll();
+			i.isOn = value;
+			i.onValueChanged.AddListener(unityAction);
+        }
+		
+		public static void NewValueChangedListener(this Dropdown d, int value, UnityAction<int> unityAction)
+        {
+			d.onValueChanged.ClearAll();
+			d.value = value;
+			d.onValueChanged.AddListener(unityAction);
+        }
+
+		public static void NewValueChangedListener(this Slider slider, float value, UnityAction<float> unityAction)
+        {
+			slider.onValueChanged.ClearAll();
+			slider.value = value;
+			slider.onValueChanged.AddListener(unityAction);
+        }
 
 		public static Component ReplaceComponent(this Component component, Component newComponent)
         {

@@ -9,9 +9,9 @@ using RTFunctions.Functions.IO;
 
 namespace RTFunctions.Functions.Managers
 {
-    public class RTSpriteManager : MonoBehaviour
+    public class SpriteManager : MonoBehaviour
     {
-        public static RTSpriteManager inst;
+        public static SpriteManager inst;
 
         void Awake() => inst = this;
 
@@ -25,6 +25,19 @@ namespace RTFunctions.Functions.Managers
                 _image.sprite = ArcadeManager.inst.defaultImage;
             }, _textureFormat));
         }
+        
+        public static Sprite GetSprite(string _path, TextureFormat _textureFormat = TextureFormat.ARGB32)
+        {
+            Sprite result = null;
+            inst.StartCoroutine(GetSprite(_path, Vector2.zero, delegate (Sprite sprite)
+            {
+                result = sprite;
+            }, delegate (string onError)
+            {
+                result = ArcadeManager.inst.defaultImage;
+            }, _textureFormat));
+            return result;
+        }
 
         public static IEnumerator GetSprite(string _path, Vector2 _limits, Action<Sprite> callback, Action<string> onError, TextureFormat _textureFormat = TextureFormat.ARGB32)
         {
@@ -32,13 +45,15 @@ namespace RTFunctions.Functions.Managers
             {
                 if (((float)_texture.texture.width > _limits.x && _limits.x > 0f) || ((float)_texture.texture.height > _limits.y && _limits.y > 0f))
                 {
-                    onError(_path);
+                    if (onError != null)
+                        onError(_path);
                     return;
                 }
                 callback(_texture);
             }, delegate (string error)
             {
-                onError(_path);
+                if (onError != null)
+                    onError(_path);
             }, _textureFormat));
             yield break;
         }
@@ -47,7 +62,8 @@ namespace RTFunctions.Functions.Managers
         {
             if (!RTFile.FileExists(_filepath))
             {
-                onError(_filepath);
+                if (onError != null)
+                    onError(_filepath);
             }
             else
             {
@@ -100,7 +116,8 @@ namespace RTFunctions.Functions.Managers
         {
             if (!RTFile.FileExists(path) || textureSize.x <= 0 || textureSize.y <= 0)
             {
-                onError(path);
+                if (onError != null)
+                    onError(path);
             }
             else
             {
@@ -116,6 +133,43 @@ namespace RTFunctions.Functions.Managers
             }
             yield break;
         }
+
+        public static IEnumerator LoadImageFileBytes(byte[] bytes, Vector2Int textureSize, TextureFormat textureFormat = TextureFormat.RGBA32, bool mipChain = false, Action<Texture2D> callback = null, Action<string> onError = null)
+        {
+            if (bytes == null || bytes.Length < 1 || textureSize.x <= 0 || textureSize.y <= 0)
+            {
+                if (onError != null)
+                    onError("");
+            }
+            else
+            {
+                var texture2d = new Texture2D(textureSize.x, textureSize.y, textureFormat, mipChain);
+                texture2d.LoadImage(bytes);
+
+                texture2d.wrapMode = TextureWrapMode.Clamp;
+                texture2d.filterMode = FilterMode.Point;
+                texture2d.Apply();
+
+                callback(texture2d);
+            }
+
+            yield break;
+        }
+
+        public static Sprite LoadSprite(string path, TextureFormat textureFormat = TextureFormat.ARGB32, bool mipChain = false, TextureWrapMode textureWrapMode = TextureWrapMode.Clamp, FilterMode filterMode = FilterMode.Point)
+        {
+            var texture2d = new Texture2D(2, 2, textureFormat, mipChain);
+            var bytes = File.ReadAllBytes(path);
+            texture2d.LoadImage(bytes);
+
+            texture2d.wrapMode = textureWrapMode;
+            texture2d.filterMode = filterMode;
+            texture2d.Apply();
+
+            return CreateSprite(texture2d);
+        }
+
+        public static void SaveSprite(Sprite sprite, string path) => File.WriteAllBytes(path, sprite.texture.EncodeToPNG());
 
         public static Sprite CreateSprite(Texture2D texture2D) => Sprite.Create(texture2D, new Rect(0f, 0f, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f), 100f);
     }
