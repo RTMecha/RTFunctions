@@ -1,0 +1,6 @@
+Overide most of the original PA data, allowing me to add a ton of new features.
+Merge AdditionalFonts and CustomShapes into RTFunctions.
+Added relative keyframes.
+Added new parent settings.
+Added Low Detail Mode for objects.
+Tons of optimizations and bug fixes.
