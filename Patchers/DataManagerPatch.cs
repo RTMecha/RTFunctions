@@ -75,7 +75,6 @@ namespace RTFunctions.Patchers
             }
 
             AnimationManager.Init();
-            RTLogger.Init();
 
             // Test to see if this is even necessary. If not, then feel free to remove this.
             //EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");

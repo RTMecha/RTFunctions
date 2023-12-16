@@ -346,20 +346,12 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(FunctionsPlugin));
 				harmony.PatchAll(typeof(DataManagerPatch));
 				harmony.PatchAll(typeof(DataManagerGameDataPatch));
-				//harmony.PatchAll(typeof(DataManagerBeatmapThemePatch));
 				harmony.PatchAll(typeof(DataManagerBeatmapObjectPatch));
 				harmony.PatchAll(typeof(DataManagerPrefabPatch));
 				harmony.PatchAll(typeof(GameManagerPatch));
 				harmony.PatchAll(typeof(ObjectManagerPatch));
 				harmony.PatchAll(typeof(SaveManagerPatch));
 				harmony.PatchAll(typeof(BackgroundManagerPatch));
-				harmony.PatchAll(typeof(DebugPatcher));
-
-				//Patcher.PatchPropertySetter(typeof(DataManager.GameData.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
-				//	typeof(FunctionsPlugin), "DepthSetterPrefix", null);
-
-				//Patcher.PatchPropertySetter(typeof(Functions.Data.BeatmapObject), "Depth", BindingFlags.Public | BindingFlags.Instance, false,
-				//	typeof(FunctionsPlugin), "DepthSetterPrefix", new Type[] { typeof(int), typeof(DataManager.GameData.BeatmapObject) });
 			}
 
 			// Hooks
@@ -496,8 +488,6 @@ namespace RTFunctions
 				if (Input.GetKeyDown(KeyCode.I))
 					Debug.LogFormat("{0}Objects alive: {1}", className, DataManager.inst.gameData.beatmapObjects.FindAll(x => x.TimeWithinLifespan()).Count);
 			}
-
-			RTLogger.Update();
 		}
 
         #region Patchers
