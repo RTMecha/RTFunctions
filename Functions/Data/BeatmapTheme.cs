@@ -151,7 +151,7 @@ namespace RTFunctions.Functions.Data
 			for (int i = 0; i < jn.Count; i++)
 			{
 				var hex = jn[i];
-				lastColor = hex != null ? alpha ? LSColors.HexToColorAlpha(hex) : LSColors.HexToColor(hex) : LSColors.pink500;
+				lastColor = hex != null ? alpha && hex.ToString().Length == 8 ? LSColors.HexToColorAlpha(hex) : LSColors.HexToColor(hex) : LSColors.pink500;
 				if (hex == null && !string.IsNullOrEmpty(errorMsg))
 					Debug.LogError(errorMsg);
 
