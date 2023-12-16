@@ -32,7 +32,7 @@ using Version = RTFunctions.Functions.Version;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.6.2")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.7.0")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{

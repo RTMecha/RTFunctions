@@ -619,11 +619,19 @@ namespace RTFunctions.Functions.Data
 			return jn;
 		}
 
-        #endregion
-        
-        #region Operators
+		public void SetParentAdditive(int _index, bool _new)
+		{
+			StringBuilder stringBuilder = new StringBuilder(parentAdditive);
+			stringBuilder[_index] = (_new ? '1' : '0');
+			parentAdditive = stringBuilder.ToString();
+			Debug.Log("Set Parent Additive: " + parentAdditive);
+		}
 
-        public static implicit operator bool(BeatmapObject exists) => exists != null;
+		#endregion
+
+		#region Operators
+
+		public static implicit operator bool(BeatmapObject exists) => exists != null;
 
         //public static bool operator ==(BeatmapObject a, BeatmapObject b) => a && b && a.id == b.id;
         //public static bool operator !=(BeatmapObject a, BeatmapObject b) => a == null || b == null || a.id != b.id;

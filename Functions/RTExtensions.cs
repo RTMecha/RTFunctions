@@ -213,6 +213,24 @@ namespace RTFunctions.Functions
             }
         }
 
+		public static RectTransform GetChildRT(this Transform transform, int index)
+        {
+			var child = transform.GetChild(index);
+			if (child is RectTransform)
+				return (RectTransform)child;
+			return null;
+        }
+
+		public static RectTransform FindRT(this Transform transform, string n)
+        {
+			var find = transform.Find(n);
+			if (find is RectTransform)
+				return (RectTransform)find;
+			return null;
+        }
+
+		public static RectTransform AsRT(this Transform transform) => (RectTransform)transform;
+
 		#endregion
 
 		#region Data

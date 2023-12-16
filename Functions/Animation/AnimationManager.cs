@@ -37,6 +37,22 @@ namespace RTFunctions.Functions.Animation
 			}
 		}
 
+		public void Play(Animation animation)
+        {
+			animations.Add(animation);
+			animation.Play();
+        }
+
+		public void RemoveName(string name)
+        {
+			animations.RemoveAll(x => x.name == name);
+        }
+
+		public void RemoveID(string id)
+        {
+			animations.RemoveAll(x => x.id == id);
+        }
+
 		public List<Animation> animations = new List<Animation>();
 
 		// I plan on making an animation library at some point. This will allow creators to reuse animations or play them with a Modifier as an Animation Object.

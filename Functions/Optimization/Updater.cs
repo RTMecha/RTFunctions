@@ -252,27 +252,33 @@ namespace RTFunctions.Functions.Optimization
                             {
                                 var spawner = levelProcessor.engine.objectSpawner;
 
-                                if (spawner.activateList.Has(x => x.ID == beatmapObject.id))
-                                {
-                                    spawner.activateList.Find(x => x.ID == beatmapObject.id).StartTime = beatmapObject.StartTime;
-                                    spawner.activateList.Find(x => x.ID == beatmapObject.id).KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
-                                }
+                                levelObject.StartTime = beatmapObject.StartTime;
+                                levelObject.KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
 
-                                if (spawner.deactivateList.Has(x => x.ID == beatmapObject.id))
-                                {
-                                    spawner.deactivateList.Find(x => x.ID == beatmapObject.id).StartTime = beatmapObject.StartTime;
-                                    spawner.deactivateList.Find(x => x.ID == beatmapObject.id).KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
-                                }
+                                spawner.RemoveObject(levelObject);
+                                spawner.InsertObject(levelObject);
 
-                                // sort by start time
-                                spawner.activateList.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+                                if (!beatmapObject.TimeWithinLifespan())
+                                    levelObject.SetActive(false);
 
-                                // sort by kill time
-                                spawner.deactivateList.Sort((a, b) => a.KillTime.CompareTo(b.KillTime));
+                                //if (spawner.activateList.Has(x => x.ID == beatmapObject.id))
+                                //{
+                                //    spawner.activateList.Find(x => x.ID == beatmapObject.id).StartTime = beatmapObject.StartTime;
+                                //    spawner.activateList.Find(x => x.ID == beatmapObject.id).KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
+                                //}
+
+                                //if (spawner.deactivateList.Has(x => x.ID == beatmapObject.id))
+                                //{
+                                //    spawner.deactivateList.Find(x => x.ID == beatmapObject.id).StartTime = beatmapObject.StartTime;
+                                //    spawner.deactivateList.Find(x => x.ID == beatmapObject.id).KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
+                                //}
+
+                                //// sort by start time
+                                //spawner.activateList.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+
+                                //// sort by kill time
+                                //spawner.deactivateList.Sort((a, b) => a.KillTime.CompareTo(b.KillTime));
                             }
-
-                            levelObject.StartTime = beatmapObject.StartTime;
-                            levelObject.KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
 
                             //FunctionsPlugin.inst.StartCoroutine(UpdateSpawnerList(beatmapObject, levelProcessor.engine.objectSpawner));
 

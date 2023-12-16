@@ -944,6 +944,14 @@ namespace RTFunctions.Functions.Managers
             public static string PreciseToMinutes(float seconds, string format = "{0:00}") => string.Format(format, TimeSpan.FromSeconds(seconds).Minutes);
 
             public static string PreciseToHours(float seconds, string format = "{0:00}") => string.Format(format, TimeSpan.FromSeconds(seconds).Hours);
+
+            public static string SecondsToTime(float seconds)
+            {
+                var timeSpan = TimeSpan.FromSeconds(seconds);
+                return string.Format("{0:D0}:{1:D1}:{2:D2}", timeSpan.Hours, timeSpan.Minutes, timeSpan.Seconds);
+            }
+
+            public static string Percentage(float t, float length) => string.Format("{0:000}", ((int)RTMath.Percentage(t, length)).ToString());
         }
     }
 }

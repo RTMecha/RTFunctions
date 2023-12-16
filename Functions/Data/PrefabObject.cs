@@ -27,14 +27,24 @@ namespace RTFunctions.Functions.Data
 {
     public class PrefabObject : BasePrefabObject
     {
-        public PrefabObject()
+        public PrefabObject() : base()
         {
-
+            events = new List<DataManager.GameData.EventKeyframe>
+            {
+                new EventKeyframe(),
+                new EventKeyframe(),
+                new EventKeyframe()
+            };
         }
 
         public PrefabObject(string name, float startTime) : base(name, startTime)
         {
-
+            events = new List<DataManager.GameData.EventKeyframe>
+            {
+                new EventKeyframe(),
+                new EventKeyframe(),
+                new EventKeyframe()
+            };
         }
 
         public PrefabObject(BasePrefabObject prefabObject)
@@ -65,12 +75,13 @@ namespace RTFunctions.Functions.Data
                 }
             };
 
-            if (orig.events == null)
-                orig.events = new List<DataManager.GameData.EventKeyframe>();
-            orig.events.Clear();
+            if (prefabObject.events == null)
+                prefabObject.events = new List<DataManager.GameData.EventKeyframe>();
+            prefabObject.events.Clear();
 
-            foreach (var eventKeyframe in orig.events)
-                prefabObject.events.Add(EventKeyframe.DeepCopy((EventKeyframe)eventKeyframe, _newID));
+            if (orig.events != null)
+                foreach (var eventKeyframe in orig.events)
+                    prefabObject.events.Add(EventKeyframe.DeepCopy((EventKeyframe)eventKeyframe, _newID));
 
             return prefabObject;
         }
@@ -103,74 +114,86 @@ namespace RTFunctions.Functions.Data
 
             prefabObject.events.Clear();
 
-            if (jn["e"][0]["pos"] != null)
+            if (jn["e"] != null)
             {
-                var kf = new EventKeyframe();
-                var jnpos = jn["e"][0]["pos"];
+                if (jn["e"]["pos"] != null)
+                {
+                    var kf = new EventKeyframe();
+                    var jnpos = jn["e"]["pos"];
 
-                kf.SetEventValues(new float[]
+                    kf.SetEventValues(new float[]
+                    {
+                        jnpos["x"].AsFloat,
+                        jnpos["y"].AsFloat
+                    });
+                    kf.random = jnpos["r"].AsInt;
+                    kf.SetEventRandomValues(new float[]
+                    {
+                        jnpos["rx"].AsFloat,
+                        jnpos["ry"].AsFloat,
+                        jnpos["rz"].AsFloat
+                    });
+                    kf.active = false;
+                    prefabObject.events.Add(kf);
+                }
+                else
                 {
-                    jnpos["x"].AsFloat,
-                    jnpos["y"].AsFloat
-                });
-                kf.random = jnpos["r"].AsInt;
-                kf.SetEventRandomValues(new float[]
+                    prefabObject.events.Add(new EventKeyframe(new float[2] { 0f, 0f }, new float[2] { 0f, 0f }));
+                }
+                if (jn["e"]["sca"] != null)
                 {
-                    jnpos["rx"].AsFloat,
-                    jnpos["ry"].AsFloat,
-                    jnpos["rz"].AsFloat
-                });
-                kf.active = false;
-                prefabObject.events.Add(kf);
+                    var kf = new EventKeyframe();
+                    var jnsca = jn["e"]["sca"];
+                    kf.SetEventValues(new float[]
+                    {
+                        jnsca["x"].AsFloat,
+                        jnsca["y"].AsFloat
+                    });
+                    kf.random = jnsca["r"].AsInt;
+                    kf.SetEventRandomValues(new float[]
+                    {
+                        jnsca["rx"].AsFloat,
+                        jnsca["ry"].AsFloat,
+                        jnsca["rz"].AsFloat
+                    });
+                    kf.active = false;
+                    prefabObject.events.Add(kf);
+                }
+                else
+                {
+                    prefabObject.events.Add(new EventKeyframe(new float[2] { 1f, 1f }, new float[2] { 1f, 1f }));
+                }
+                if (jn["e"]["rot"] != null)
+                {
+                    var kf = new EventKeyframe();
+                    var jnrot = jn["e"]["rot"];
+                    kf.SetEventValues(new float[]
+                    {
+                        jnrot["x"].AsFloat
+                    });
+                    kf.random = jnrot["r"].AsInt;
+                    kf.SetEventRandomValues(new float[]
+                    {
+                        jnrot["rx"].AsFloat,
+                        0f,
+                        jnrot["rz"].AsFloat
+                    });
+                    kf.active = false;
+                    prefabObject.events.Add(kf);
+                }
+                else
+                {
+                    prefabObject.events.Add(new EventKeyframe(new float[1] { 0f }, new float[1] { 0f }));
+                }
             }
             else
             {
-                prefabObject.events.Add(new EventKeyframe(new float[2] { 0f, 0f }, new float[2] { 0f, 0f }));
-            }
-            if (jn["e"][1]["sca"] != null)
-            {
-                var kf = new EventKeyframe();
-                var jnsca = jn["e"][1]["sca"];
-                kf.SetEventValues(new float[]
+                prefabObject.events = new List<DataManager.GameData.EventKeyframe>()
                 {
-                    jnsca["x"].AsFloat,
-                    jnsca["y"].AsFloat
-                });
-                kf.random = jnsca["r"].AsInt;
-                kf.SetEventRandomValues(new float[]
-                {
-                    jnsca["rx"].AsFloat,
-                    jnsca["ry"].AsFloat,
-                    jnsca["rz"].AsFloat
-                });
-                kf.active = false;
-                prefabObject.events.Add(kf);
-            }
-            else
-            {
-                prefabObject.events.Add(new EventKeyframe(new float[2] { 1f, 1f }, new float[2] { 1f, 1f }));
-            }
-            if (jn["e"][2]["rot"] != null)
-            {
-                var kf = new EventKeyframe();
-                var jnrot = jn["e"][2]["rot"];
-                kf.SetEventValues(new float[]
-                {
-                    jnrot["x"].AsFloat
-                });
-                kf.random = jnrot["r"].AsInt;
-                kf.SetEventRandomValues(new float[]
-                {
-                    jnrot["rx"].AsFloat,
-                    0f,
-                    jnrot["rz"].AsFloat
-                });
-                kf.active = false;
-                prefabObject.events.Add(kf);
-            }
-            else
-            {
-                prefabObject.events.Add(new EventKeyframe(new float[1] { 0f }, new float[1] { 0f }));
+                    new EventKeyframe(new float[2] { 0f, 0f }, new float[2] { 0f, 0f }),
+                    new EventKeyframe(new float[2] { 1f, 1f }, new float[2] { 0f, 0f }),
+                    new EventKeyframe(new float[1] { 0f }, new float[1] { 0f }),
+                };
             }
             return prefabObject;
         }
