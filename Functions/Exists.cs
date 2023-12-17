@@ -1,4 +1,4 @@
-﻿namespace RTFunctions.Functions.Optimization
+﻿namespace RTFunctions.Functions
 {
     public class Exists
     {
