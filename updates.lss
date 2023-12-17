@@ -1,6 +1,12 @@
-Overide most of the original PA data, allowing me to add a ton of new features.
-Merge AdditionalFonts and CustomShapes into RTFunctions.
-Added relative keyframes.
-Added new parent settings.
-Added Low Detail Mode for objects.
-Tons of optimizations and bug fixes.
+1.7.1 > Removed custom log window since it caused a ton of slow down.
+1.7.1 > Fix for themes having pink colors where a hex color is 8 digits long.
+1.7.1 > Began working on a new level loading system that allows you to load an arcade level from anywhere at any point.
+1.7.1 > More code cleanup.
+1.7.1 > Added AntiAliasing to config.
+-
+1.7.0 > Overide most of the original PA data, allowing me to add a ton of new features.
+1.7.0 > Merge AdditionalFonts and CustomShapes into RTFunctions.
+1.7.0 > Added relative keyframes.
+1.7.0 > Added new parent settings.
+1.7.0 > Added Low Detail Mode for objects.
+1.7.0 > Tons of optimizations and bug fixes.
