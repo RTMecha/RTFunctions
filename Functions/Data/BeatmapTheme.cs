@@ -61,9 +61,9 @@ namespace RTFunctions.Functions.Data
 
 			beatmapTheme.name = jn["name"] != null ? jn["name"] : "name your themes!";
 
-			beatmapTheme.guiColor = jn["gui"] != null ? LSColors.HexToColorAlpha(jn["gui"]) : LSColors.gray800;
+			beatmapTheme.guiColor = jn["gui"] != null ? ((string)jn["gui"]).Length == 8 ? LSColors.HexToColorAlpha(jn["gui"]) : LSColors.HexToColor(jn["gui"]) : LSColors.gray800;
 
-			beatmapTheme.guiAccentColor = jn["gui_ex"] != null ? LSColors.HexToColorAlpha(jn["gui_ex"]) : beatmapTheme.guiColor;
+			beatmapTheme.guiAccentColor = jn["gui_ex"] != null ? ((string)jn["gui_ex"]).Length == 8 ? LSColors.HexToColorAlpha(jn["gui_ex"]) : LSColors.HexToColorAlpha(jn["gui_ex"]) : beatmapTheme.guiColor;
 
 			beatmapTheme.backgroundColor = jn["bg"] != null ? LSColors.HexToColor(jn["bg"]) : LSColors.gray100;
 
@@ -149,7 +149,7 @@ namespace RTFunctions.Functions.Data
 			for (int i = 0; i < jn.Count; i++)
 			{
 				var hex = jn[i];
-				lastColor = hex != null ? alpha && hex.ToString().Length == 8 ? LSColors.HexToColorAlpha(hex) : LSColors.HexToColor(hex) : LSColors.pink500;
+				lastColor = hex != null ? alpha && ((string)hex).Length == 8 ? LSColors.HexToColorAlpha(hex) : LSColors.HexToColor(hex) : LSColors.pink500;
 				if (hex == null && !string.IsNullOrEmpty(errorMsg))
 					Debug.LogError(errorMsg);
 
