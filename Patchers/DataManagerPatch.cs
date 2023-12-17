@@ -61,6 +61,10 @@ namespace RTFunctions.Patchers
             var assetManager = new GameObject("AssetManager");
             assetManager.transform.SetParent(systemManager.transform);
             assetManager.AddComponent<AssetManager>();
+            
+            var levelManager = new GameObject("LevelManager");
+            levelManager.transform.SetParent(systemManager.transform);
+            levelManager.AddComponent<LevelManager>();
 
             //AlephNetworkManager.Init();
 
