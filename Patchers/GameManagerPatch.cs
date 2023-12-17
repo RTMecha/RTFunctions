@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 
 using HarmonyLib;
 
@@ -22,19 +23,12 @@ namespace RTFunctions.Patchers
         public static event LevelEventHandler LevelStart;
         public static event LevelEventHandler LevelEnd;
 
-        [HarmonyPatch("PlayLevel")]
-        [HarmonyPostfix]
-        static void PlayLevelPostfix() => LevelStart?.Invoke();
-
-        public static void StartInvoke() => LevelStart?.Invoke();
-
-        public static void EndInvoke() => LevelEnd?.Invoke();
-
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
         static void StartPostfix()
         {
             FunctionsPlugin.SetCameraRenderDistance();
+            FunctionsPlugin.SetAntiAliasing();
             var beatmapTheme = GameManager.inst.LiveTheme;
             GameManager.inst.LiveTheme = new BeatmapTheme
             {
@@ -88,6 +82,25 @@ namespace RTFunctions.Patchers
             {
                 __instance.UnPause();
             }
+        }
+
+        [HarmonyPatch("PlayLevel")]
+        [HarmonyPostfix]
+        static void PlayLevelPostfix() => LevelStart?.Invoke();
+
+        public static void StartInvoke() => LevelStart?.Invoke();
+
+        public static void EndInvoke() => LevelEnd?.Invoke();
+
+        [HarmonyPatch("LoadLevelCurrent")]
+        [HarmonyPrefix]
+        static bool LoadLevelCurrentPrefix(GameManager __instance)
+        {
+            if (!LevelManager.LoadingFromHere && LevelManager.CurrentLevel)
+            {
+                __instance.StartCoroutine(LevelManager.Play(LevelManager.CurrentLevel));
+            }
+            return false;
         }
 
         [HarmonyPatch("getPitch")]
@@ -159,6 +172,27 @@ namespace RTFunctions.Patchers
                 FunctionsPlugin.EventsCoreGameThemePrefix?.Invoke(__instance);
 
             return false;
+        }
+
+        [HarmonyPatch("GoToNextLevelLoop")]
+        [HarmonyPrefix]
+        static bool GoToNextLevelLoopPrefix(GameManager __instance, ref IEnumerator __result)
+        {
+            __result = GoToNextLevelLoop(__instance);
+            return false;
+        }
+
+        static IEnumerator GoToNextLevelLoop(GameManager __instance)
+        {
+            if (AudioManager.inst.masterVol <= 0f)
+                SteamWrapper.inst.achievements.SetAchievement("NO_AUDIO");
+
+            __instance.gameState = GameManager.State.Finish;
+            Time.timeScale = 1f;
+            DG.Tweening.DOTween.Clear();
+            InputDataManager.inst.SetAllControllerRumble(0f);
+            LevelManager.OnLevelEnd?.Invoke();
+            yield break;
         }
     }
 }
