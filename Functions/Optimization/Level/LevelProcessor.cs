@@ -27,7 +27,7 @@ namespace RTFunctions.Functions.Optimization.Level
             Debug.Log($"{Updater.className}Loaded {level.Objects.Count} objects (original: {gameData.beatmapObjects.Count})");
         }
 
-        public void Update(float time) => engine.Update(time);
+        public void Update(float time) => engine?.Update(time);
 
         public void Dispose() => engine.Dispose();
     }
