@@ -82,88 +82,119 @@ namespace RTFunctions.Functions.Data
 			try
 			{
 				string name = "Artist Name";
-				if (!string.IsNullOrEmpty(jn["artist"]["name"]))
-					name = jn["artist"]["name"];
 				int linkType = 0;
-				if (!string.IsNullOrEmpty(jn["artist"]["linkType"]))
-					linkType = jn["artist"]["linkType"].AsInt;
-				string link = "kaixo";
-				if (!string.IsNullOrEmpty(jn["artist"]["link"]))
-					link = jn["artist"]["link"];
+				string link = "kaixomusic";
+				try
+				{
+					if (!string.IsNullOrEmpty(jn["artist"]["name"]))
+						name = jn["artist"]["name"];
+					if (!string.IsNullOrEmpty(jn["artist"]["linkType"]))
+						linkType = jn["artist"]["linkType"].AsInt;
+					if (!string.IsNullOrEmpty(jn["artist"]["link"]))
+						link = jn["artist"]["link"];
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"Artist Error: {ex}");
+				}
+
 				var artist = new LevelArtist(name, linkType, link);
 
 				string steam_name = "Mecha";
-				if (!string.IsNullOrEmpty(jn["creator"]["steam_name"]))
-					steam_name = jn["creator"]["steam_name"];
 				int steam_id = -1;
-				if (!string.IsNullOrEmpty(jn["creator"]["steam_id"]))
-					steam_id = jn["creator"]["steam_id"].AsInt;
 				string creatorLink = "";
-				if (!string.IsNullOrEmpty(jn["creator"]["link"]))
-					creatorLink = jn["creator"]["link"];
 				int creatorLinkType = 0;
-				if (!string.IsNullOrEmpty(jn["creator"]["linkType"]))
-					creatorLinkType = jn["creator"]["linkType"].AsInt;
+
+                try
+				{
+					if (!string.IsNullOrEmpty(jn["creator"]["steam_name"]))
+						steam_name = jn["creator"]["steam_name"];
+					if (!string.IsNullOrEmpty(jn["creator"]["steam_id"]))
+						steam_id = jn["creator"]["steam_id"].AsInt;
+					if (!string.IsNullOrEmpty(jn["creator"]["link"]))
+						creatorLink = jn["creator"]["link"];
+					if (!string.IsNullOrEmpty(jn["creator"]["linkType"]))
+						creatorLinkType = jn["creator"]["linkType"].AsInt;
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"Creator Error: {ex}");
+				}
 
 				var creator = new LevelCreator(steam_name, steam_id, creatorLink, creatorLinkType);
 
 				string title = "Pyrolysis";
-				if (!string.IsNullOrEmpty(jn["song"]["title"]))
-					title = jn["song"]["title"];
 				int difficulty = 2;
-				if (!string.IsNullOrEmpty(jn["song"]["difficulty"]))
-					difficulty = jn["song"]["difficulty"].AsInt;
 				string description = "This is the default description!";
-				if (!string.IsNullOrEmpty(jn["song"]["description"]))
-					description = jn["song"]["description"];
 				float bpm = 120f;
-				if (!string.IsNullOrEmpty(jn["song"]["bpm"]))
-					bpm = jn["song"]["bpm"].AsFloat;
 				float time = 60f;
-				if (!string.IsNullOrEmpty(jn["song"]["t"]))
-					time = jn["song"]["t"].AsFloat;
 				float previewStart = 0f;
-				if (!string.IsNullOrEmpty(jn["song"]["preview_start"]))
-					previewStart = jn["song"]["preview_start"].AsFloat;
 				float previewLength = 30f;
-				if (!string.IsNullOrEmpty(jn["song"]["preview_length"]))
-					previewLength = jn["song"]["preview_length"].AsFloat;
 
-				string[] tags;
-				if (jn["song"]["tags"] != null)
+				string[] tags = new string[]
 				{
-					tags = new string[jn["song"]["tags"].Count];
-					for (int i = 0; i < jn["song"]["tags"].Count; i++)
+				};
+
+				try
+				{
+					if (!string.IsNullOrEmpty(jn["song"]["title"]))
+						title = jn["song"]["title"];
+					if (!string.IsNullOrEmpty(jn["song"]["difficulty"]))
+						difficulty = jn["song"]["difficulty"].AsInt;
+					if (!string.IsNullOrEmpty(jn["song"]["description"]))
+						description = jn["song"]["description"];
+					if (!string.IsNullOrEmpty(jn["song"]["bpm"]))
+						bpm = jn["song"]["bpm"].AsFloat;
+					if (!string.IsNullOrEmpty(jn["song"]["t"]))
+						time = jn["song"]["t"].AsFloat;
+					if (!string.IsNullOrEmpty(jn["song"]["preview_start"]))
+						previewStart = jn["song"]["preview_start"].AsFloat;
+					if (!string.IsNullOrEmpty(jn["song"]["preview_length"]))
+						previewLength = jn["song"]["preview_length"].AsFloat;
+
+					if (jn["song"]["tags"] != null)
 					{
-						tags[i] = jn["song"]["tags"][i];
+						tags = new string[jn["song"]["tags"].Count];
+						for (int i = 0; i < jn["song"]["tags"].Count; i++)
+						{
+							tags[i] = jn["song"]["tags"][i];
+						}
 					}
 				}
-				else
-					tags = new string[]
-					{
-					};
+				catch (Exception ex)
+				{
+					Debug.LogError($"Song Error: {ex}");
+				}
+
 
 				var song = new LevelSong(title, difficulty, description, bpm, time, previewStart, previewLength, tags);
 
 				string gameVersion = ProjectArrhythmia.GameVersion.ToString();
-				if (!string.IsNullOrEmpty(jn["beatmap"]["game_version"]))
-					gameVersion = jn["beatmap"]["game_version"];
 				string dateEdited = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
-				if (!string.IsNullOrEmpty(jn["beatmap"]["date_edited"]))
-					dateEdited = jn["beatmap"]["date_edited"];
 				string dateCreated = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
-				if (!string.IsNullOrEmpty(jn["beatmap"]["date_created"]))
-					dateCreated = jn["beatmap"]["date_created"];
-				int num = 0;
-				if (!string.IsNullOrEmpty(jn["beatmap"]["version_number"]))
-					num = jn["beatmap"]["version_number"].AsInt;
 				int workshopID = -1;
-				if (!string.IsNullOrEmpty(jn["beatmap"]["workshop_id"]))
-					workshopID = jn["beatmap"]["workshop_id"].AsInt;
-
+				int num = 0;
 				string beatmapID = LSFunctions.LSText.randomString(16);
-				if (!string.IsNullOrEmpty(jn["beatmap"]["beatmap_id"]))
-					beatmapID = jn["beatmap"]["beatmap_id"];
+
+                try
+				{
+					if (!string.IsNullOrEmpty(jn["beatmap"]["game_version"]))
+						gameVersion = jn["beatmap"]["game_version"];
+					if (!string.IsNullOrEmpty(jn["beatmap"]["date_edited"]))
+						dateEdited = jn["beatmap"]["date_edited"];
+					if (!string.IsNullOrEmpty(jn["beatmap"]["date_created"]))
+						dateCreated = jn["beatmap"]["date_created"];
+					if (!string.IsNullOrEmpty(jn["beatmap"]["version_number"]))
+						num = jn["beatmap"]["version_number"].AsInt;
+					if (!string.IsNullOrEmpty(jn["beatmap"]["workshop_id"]))
+						workshopID = jn["beatmap"]["workshop_id"].AsInt;
+					if (!string.IsNullOrEmpty(jn["beatmap"]["beatmap_id"]))
+						beatmapID = jn["beatmap"]["beatmap_id"];
+				}
+                catch (Exception ex)
+				{
+					Debug.LogError($"Beatmap Error: {ex}");
+				}
 
 				var beatmap = new LevelBeatmap(dateEdited, dateCreated, gameVersion, num, workshopID.ToString());
 
