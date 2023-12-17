@@ -9,6 +9,7 @@ using HarmonyLib;
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Rendering.PostProcessing;
 
 using LSFunctions;
 using SimpleJSON;
@@ -84,12 +85,14 @@ namespace RTFunctions
 		public static ConfigEntry<bool> ShowLogPopup { get; set; }
 		public static ConfigEntry<int> LogPopupCap { get; set; }
 
-        #endregion
+		public static ConfigEntry<bool> AntiAliasing { get; set; }
+
+		#endregion
 
 		// PA Settings
-        #region Fullscreen
+		#region Fullscreen
 
-        public static ConfigEntry<bool> Fullscreen { get; set; }
+		public static ConfigEntry<bool> Fullscreen { get; set; }
 
 		static void SetFullscreen(bool value)
 		{
@@ -335,6 +338,7 @@ namespace RTFunctions
 			ShowLogPopup = Config.Bind("Debugging", "Log Popup", true, "");
 			LogPopupCap = Config.Bind("Debugging", "Log Popup Cap", 50, "");
 
+			AntiAliasing = Config.Bind("Game", "Anti-Aliasing", true, "If antialiasing is on or not.");
 			IncreasedClipPlanes = Config.Bind("Game", "Camera Clip Planes", true, "Increases the clip panes to a very high amount, allowing for object render depth to go really high or really low.");
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
 			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F3, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
@@ -366,6 +370,7 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(ObjectManagerPatch));
 				harmony.PatchAll(typeof(SaveManagerPatch));
 				harmony.PatchAll(typeof(BackgroundManagerPatch));
+				harmony.PatchAll(typeof(DiscordControllerPatch));
 			}
 
 			// Hooks
@@ -419,6 +424,7 @@ namespace RTFunctions
 			Debug.unityLogger.logEnabled = DebugsOn.Value;
 
 			SetCameraRenderDistance();
+			SetAntiAliasing();
 
 			//Display Name
 			{
@@ -868,6 +874,15 @@ namespace RTFunctions
 			var camera = Camera.main;
 			camera.farClipPlane = IncreasedClipPlanes.Value ? 100000 : 32f;
 			camera.nearClipPlane = IncreasedClipPlanes.Value ? -100000 : 0.1f;
+		}
+
+		public static void SetAntiAliasing()
+        {
+			if (GameManager.inst != null)
+			{
+				Camera.main.gameObject.GetComponent<PostProcessLayer>().antialiasingMode
+					= AntiAliasing.Value ? PostProcessLayer.Antialiasing.FastApproximateAntialiasing : PostProcessLayer.Antialiasing.None;
+			}
 		}
 
 		public static void SaveProfile()

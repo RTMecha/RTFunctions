@@ -44,6 +44,9 @@
       <HintPath>..\lib\mcs.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="Unity.Postprocessing.Runtime">
+      <HintPath>..\lib\Unity.Postprocessing.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\lib\Unity.TextMeshPro.dll</HintPath>
     </Reference>
