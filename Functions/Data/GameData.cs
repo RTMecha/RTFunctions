@@ -80,7 +80,7 @@ namespace RTFunctions.Functions.Data
 			return gameData;
 		}
 
-		public static GameData Parse(JSONNode jn)
+		public static GameData Parse(JSONNode jn, bool parseThemes = true)
 		{
 			var gameData = new GameData();
 
@@ -136,12 +136,44 @@ namespace RTFunctions.Functions.Data
 			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BeatmapThemes...");
 			#region Themes
 
-			foreach (var theme in DataManager.inst.BeatmapThemes)
-				gameData.beatmapThemes.Add(theme.id, theme);
+			if (parseThemes)
+			{
+				foreach (var theme in DataManager.inst.BeatmapThemes)
+					gameData.beatmapThemes.Add(theme.id, theme);
 
-			for (int i = 0; i < jn["themes"].Count; i++)
-				if (!gameData.beatmapThemes.ContainsKey(jn["themes"][i]["id"]))
-					gameData.beatmapThemes.Add(jn["themes"][i]["id"], BeatmapTheme.Parse(jn["themes"][i]));
+				DataManager.inst.CustomBeatmapThemes.Clear();
+				DataManager.inst.BeatmapThemeIndexToID.Clear();
+				DataManager.inst.BeatmapThemeIDToIndex.Clear();
+				for (int i = 0; i < jn["themes"].Count; i++)
+				{
+					var beatmapTheme = BeatmapTheme.Parse(jn["themes"][i]);
+
+					DataManager.inst.CustomBeatmapThemes.Add(beatmapTheme);
+					if (DataManager.inst.BeatmapThemeIDToIndex.ContainsKey(int.Parse(beatmapTheme.id)))
+					{
+						var list = DataManager.inst.CustomBeatmapThemes.Where(x => x.id == beatmapTheme.id).ToList();
+						var str = "";
+						for (int j = 0; j < list.Count; j++)
+						{
+							str += list[j].name;
+							if (i != list.Count - 1)
+								str += ", ";
+						}
+
+						if (EditorManager.inst != null)
+							EditorManager.inst.DisplayNotification($"Unable to Load theme [{beatmapTheme.name}] due to conflicting themes: {str}", 2f, EditorManager.NotificationType.Error);
+					}
+					else
+					{
+						DataManager.inst.BeatmapThemeIndexToID.Add(DataManager.inst.AllThemes.Count - 1, int.Parse(beatmapTheme.id));
+						DataManager.inst.BeatmapThemeIDToIndex.Add(int.Parse(beatmapTheme.id), DataManager.inst.AllThemes.Count - 1);
+					}
+
+					if (!gameData.beatmapThemes.ContainsKey(jn["themes"][i]["id"]))
+						gameData.beatmapThemes.Add(jn["themes"][i]["id"], beatmapTheme);
+				}
+
+			}
 
 			#endregion
 
