@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
-using RTFunctions.Functions.IO;
-
 using RTFunctions.Functions.Animation.Keyframe;
 
 namespace RTFunctions.Functions.Animation
@@ -54,7 +52,7 @@ namespace RTFunctions.Functions.Animation
         }
 
         // Binary search for the keyframe pair that contains the given time
-        private int Search(float time)
+        int Search(float time)
         {
             int low = 0;
             int high = keyframes.Length - 1;
@@ -82,7 +80,7 @@ namespace RTFunctions.Functions.Animation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private T ResultFromSingleKeyframe(IKeyframe<T> keyframe)
+        T ResultFromSingleKeyframe(IKeyframe<T> keyframe)
         {
             return keyframe.Interpolate(keyframe, 0.0f);
         }

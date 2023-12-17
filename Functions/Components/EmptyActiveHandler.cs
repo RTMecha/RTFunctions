@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
-
-using RTFunctions.Functions.Data;
-using RTFunctions.Functions.Managers;
+﻿using UnityEngine;
 
 namespace RTFunctions.Functions.Components
 {
+	/// <summary>
+	/// Component for handling empty objects.
+	/// </summary>
     public class EmptyActiveHandler : MonoBehaviour
     {
         public RTObject refObject;

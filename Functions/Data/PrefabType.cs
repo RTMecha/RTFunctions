@@ -1,27 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using UnityEngine;
+﻿using UnityEngine;
 
 using SimpleJSON;
 
-using RTFunctions.Functions;
 using RTFunctions.Functions.IO;
-using RTFunctions.Functions.Managers.Networking;
 
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
-using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
-
-using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
-using BasePrefab = DataManager.GameData.Prefab;
-using BasePrefabObject = DataManager.GameData.PrefabObject;
-using BaseBackground = DataManager.GameData.BackgroundObject;
-using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 using BasePrefabType = DataManager.PrefabType;
 
 namespace RTFunctions.Functions.Data

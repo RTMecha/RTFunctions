@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using HarmonyLib;
 
@@ -12,7 +11,6 @@ using LSFunctions;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Managers;
-using RTFunctions.Functions;
 
 namespace RTFunctions.Patchers
 {

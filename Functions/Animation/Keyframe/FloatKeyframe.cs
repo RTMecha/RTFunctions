@@ -20,7 +20,7 @@ namespace RTFunctions.Functions.Animation.Keyframe
 
         public float Interpolate(IKeyframe<float> other, float time)
         {
-            FloatKeyframe second = (FloatKeyframe)other;
+            var second = (FloatKeyframe)other;
             return RTMath.Lerp(Value, second.Value, second.Ease(time));
         }
     }

@@ -1,27 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using UnityEngine;
+﻿using System.Collections.Generic;
 
 using SimpleJSON;
 using LSFunctions;
 
-using RTFunctions.Functions.Components;
-using RTFunctions.Functions.Optimization;
-
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
-using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
-
-using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
-using BasePrefab = DataManager.GameData.Prefab;
 using BasePrefabObject = DataManager.GameData.PrefabObject;
-using BaseBackground = DataManager.GameData.BackgroundObject;
-using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 
 namespace RTFunctions.Functions.Data
 {
@@ -53,6 +35,8 @@ namespace RTFunctions.Functions.Data
         }
 
         public float speed = 1f;
+
+        public Prefab Prefab => (Prefab)DataManager.inst.gameData.prefabs.Find(x => x.ID == prefabID);
 
         #region Methods
 

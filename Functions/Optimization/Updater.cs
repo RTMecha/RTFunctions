@@ -4,20 +4,12 @@ using System.Linq;
 
 using UnityEngine;
 
-using LSFunctions;
-
 using RTFunctions.Patchers;
-using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization.Level;
 using RTFunctions.Functions.Optimization.Objects;
-using RTFunctions.Functions.Animation;
-using RTFunctions.Functions.Animation.Keyframe;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
 using PrefabObject = DataManager.GameData.PrefabObject;
-using Prefab = DataManager.GameData.Prefab;
-
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 
 namespace RTFunctions.Functions.Optimization
 {

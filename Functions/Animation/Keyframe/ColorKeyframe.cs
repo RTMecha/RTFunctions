@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
+﻿using UnityEngine;
+using RTFunctions.Functions.IO;
 
 namespace RTFunctions.Functions.Animation.Keyframe
 {
@@ -24,10 +21,8 @@ namespace RTFunctions.Functions.Animation.Keyframe
 
         public Color Interpolate(IKeyframe<Color> other, float time)
         {
-            ColorKeyframe second = (ColorKeyframe)other;
-            return Lerp(Value, second.Value, second.Ease(time));
+            var second = (ColorKeyframe)other;
+            return RTMath.Lerp(Value, second.Value, second.Ease(time));
         }
-
-        Color Lerp(Color x, Color y, float t) => x + (y - x) * t;
     }
 }

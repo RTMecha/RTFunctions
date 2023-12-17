@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
 using System.IO;
 
 using BepInEx;
@@ -14,7 +12,6 @@ using UnityEngine.UI;
 
 using LSFunctions;
 using SimpleJSON;
-using DG.Tweening;
 
 using RTFunctions.Functions;
 using RTFunctions.Functions.Animation;
@@ -32,21 +29,38 @@ using Version = RTFunctions.Functions.Version;
 
 namespace RTFunctions
 {
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.7.0")]
+	/// <summary>
+	/// Base plugin for initializing all the patches.
+	/// </summary>
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.7.1")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
-		//EnumPatcher from https://github.com/SlimeRancherModding/SRML
-		//Easing code from https://github.com/Reimnop/Catalyst
+		// Easing code from https://github.com/Reimnop/Catalyst
 
-		//Updates:
-
+		/// <summary>
+		/// Path where all the plugins are stored.
+		/// </summary>
 		public static string BepInExPluginsPath => "BepInEx/plugins/";
+
+		/// <summary>
+		/// Path where all the mod-specific assets are stored.
+		/// </summary>
 		public static string BepInExAssetsPath => $"{BepInExPluginsPath}Assets/";
 
-		public static Version CurrentVersion => new Version(PluginInfo.PLUGIN_VERSION, "25/11/2023 10:03 PM");
+		/// <summary>
+		/// For future reference.
+		/// </summary>
+		public static Version CurrentVersion => new Version(PluginInfo.PLUGIN_VERSION);
 
+		/// <summary>
+		/// We'll need the instance as we don't want to use GetComponent.
+		/// </summary>
 		public static FunctionsPlugin inst;
+
+		/// <summary>
+		/// Since most PA classes have a "className" for logging I decided to give some of mine a unique one.
+		/// </summary>
 		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
 		public static readonly Harmony harmony = new Harmony("rtfunctions");
 
@@ -714,49 +728,44 @@ namespace RTFunctions
 				textRT.sizeDelta = new Vector2(200f, 100f);
 
 				var text = textObj.AddComponent<Text>();
-				text.font = Font.GetDefault();
+				text.font = FontManager.inst.Inconsolata;
 				text.text = "Took Screenshot!";
 
-                //var colorKeyframes = new List<IKeyframe<Color>>();
-                //colorKeyframes.Add(new ColorKeyframe(0f, new Color(1f, 1f, 1f, 1f), Ease.Linear));
-                //colorKeyframes.Add(new ColorKeyframe(1.5f, new Color(1f, 1f, 1f, 0f), Ease.SineIn));
-                //var colorSequence = new Sequence<Color>(colorKeyframes);
+				var animation = new AnimationManager.Animation("Screenshot Notification");
+				animation.colorAnimations = new List<AnimationManager.Animation.AnimationObject<Color>>
+				{
+					new AnimationManager.Animation.AnimationObject<Color>(new List<IKeyframe<Color>>
+					{
+						new ColorKeyframe(0f, Color.white, Ease.Linear),
+						new ColorKeyframe(1.5f, new Color(1f, 1f, 1f, 0f), Ease.SineIn),
+					}, delegate (Color x)
+					{
+						if (im)
+							im.color = x;
+						if (text)
+							text.color = x;
+					}),
+				};
+				animation.vector2Animations = new List<AnimationManager.Animation.AnimationObject<Vector2>>
+				{
+					new AnimationManager.Animation.AnimationObject<Vector2>(new List<IKeyframe<Vector2>>
+					{
+						new Vector2Keyframe(0f, new Vector2(850f, -480f), Ease.Linear),
+						new Vector2Keyframe(1.5f, new Vector2(850f, -600f), Ease.BackIn)
+					}, delegate (Vector2 x)
+					{
+						imageRT.anchoredPosition = x;
+					}, delegate ()
+					{
+						scr = null;
 
-                //var moveKeyframes = new List<IKeyframe<Vector2>>();
-                //moveKeyframes.Add(new Vector2Keyframe(0f, new Vector2(850f, -480f), Ease.Linear));
-                //moveKeyframes.Add(new Vector2Keyframe(0f, new Vector2(850f, -600f), Ease.BackIn));
-                //var moveSequence = new Sequence<Vector2>(moveKeyframes);
+						Destroy(inter);
 
-                //text.material.AnimateColor(colorSequence);
-                //im.material.AnimateColor(colorSequence);
+						AnimationManager.inst?.RemoveID(animation.id);
+					}),
+				};
 
-                //SequenceManager.inst.AnimateVector2(delegate (Vector2 x)
-                //{
-                //	imageRT.anchoredPosition = x;
-                //}, moveSequence, onComplete: delegate ()
-                //{
-                //	scr = null;
-
-                //	Destroy(inter);
-                //});
-
-                var tween = DOTween.To(delegate (float x)
-                {
-                    im.color = new Color(1f, 1f, 1f, x);
-                    text.color = new Color(1f, 1f, 1f, x);
-                }, 1f, 0f, 1.5f).SetEase(DataManager.inst.AnimationList[2].Animation);
-
-                DOTween.To(delegate (float x)
-                {
-                    imageRT.anchoredPosition = new Vector2(850f, x);
-                }, -480f, -600f, 1.5f).SetEase(DataManager.inst.AnimationList[8].Animation);
-
-                tween.OnComplete(delegate ()
-                {
-                    scr = null;
-
-                    Destroy(inter);
-                });
+				AnimationManager.inst?.Play(animation);
             }
 
 			yield break;
@@ -847,50 +856,41 @@ namespace RTFunctions
 
         #endregion
 
+		/// <summary>
+		/// For setting mostly unlimited render depth range.
+		/// </summary>
         public static void SetCameraRenderDistance()
 		{
 			if (GameManager.inst == null)
 				return;
 
-			Camera camera = GameObject.Find("Main Camera").GetComponent<Camera>();
-			if (IncreasedClipPlanes.Value)
-			{
-				camera.farClipPlane = 100000;
-				camera.nearClipPlane = -100000;
-			}
-			else
-			{
-				camera.farClipPlane = 32f;
-				camera.nearClipPlane = 0.1f;
-			}
+			//var camera = GameObject.Find("Main Camera").GetComponent<Camera>();
+			var camera = Camera.main;
+			camera.farClipPlane = IncreasedClipPlanes.Value ? 100000 : 32f;
+			camera.nearClipPlane = IncreasedClipPlanes.Value ? -100000 : 0.1f;
 		}
 
 		public static void SaveProfile()
-        {
-			JSONNode jn = JSON.Parse("{}");
+		{
+			var jn = JSON.Parse("{}");
 
 			jn["user_data"]["name"] = player.sprName;
 			jn["user_data"]["spr-id"] = player.sprID;
 
 			if (!RTFile.DirectoryExists(RTFile.ApplicationDirectory + "profile"))
-			{
 				Directory.CreateDirectory(RTFile.ApplicationDirectory + "profile");
-			}
-			if (RTFile.DirectoryExists(RTFile.ApplicationDirectory + "profile") && jn != null)
-			{
-				RTFile.WriteToFile("profile/profile.sep", jn.ToString(3));
-			}
+			RTFile.WriteToFile("profile/profile.sep", jn.ToString(3));
 		}
 
 		public static void ParseProfile()
         {
 			if (RTFile.DirectoryExists(RTFile.ApplicationDirectory + "profile"))
 			{
-				string rawProfileJSON = FileManager.inst.LoadJSONFile("profile/profile.sep");
+				string rawProfileJSON = RTFile.ReadFromFile(RTFile.ApplicationDirectory + "profile/profile.sep");
 
 				if (!string.IsNullOrEmpty(rawProfileJSON))
 				{
-					JSONNode jn = JSON.Parse(rawProfileJSON);
+					var jn = JSON.Parse(rawProfileJSON);
 
 					if (!string.IsNullOrEmpty(jn["user_data"]["name"]))
 					{

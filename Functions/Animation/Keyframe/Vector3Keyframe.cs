@@ -21,7 +21,7 @@ namespace RTFunctions.Functions.Animation.Keyframe
 
         public Vector3 Interpolate(IKeyframe<Vector3> other, float time)
         {
-            Vector3Keyframe second = (Vector3Keyframe)other;
+            var second = (Vector3Keyframe)other;
             return RTMath.Lerp(Value, second.Value, second.Ease(time));
         }
     }

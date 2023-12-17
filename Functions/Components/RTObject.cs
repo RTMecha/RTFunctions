@@ -4,16 +4,16 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using LSFunctions;
 
-using RTFunctions.Functions;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
 
-using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
-
 namespace RTFunctions.Functions.Components
 {
+	/// <summary>
+	/// Component for selecting and dragging objects. Still needs a ton of work though.
+	/// </summary>
     public class RTObject : MonoBehaviour
     {
 		public bool CanDrag => ModCompatibility.sharedFunctions.ContainsKey("SelectedObjectCount") && ((int)ModCompatibility.sharedFunctions["SelectedObjectCount"]) < 2;
@@ -106,9 +106,6 @@ namespace RTFunctions.Functions.Components
 
 		void Awake()
 		{
-			//if (EditorManager.inst == null)
-			//	Destroy(this);
-
 			if (GetComponent<Renderer>())
 				renderer = GetComponent<Renderer>();
 		}
@@ -344,17 +341,20 @@ namespace RTFunctions.Functions.Components
 
         void Update()
 		{
+			if (!EditorManager.inst || !EditorManager.inst.isEditing)
+				return;
+
 			var m = 0f;
 
 			if (beatmapObject != null && ShowObjectsOnlyOnLayer && beatmapObject.editorData.layer != EditorManager.inst.layer)
 				m = -renderer.material.color.a + LayerOpacity;
 
-			if (EditorManager.inst != null && EditorManager.inst.isEditing && !hovered && renderer != null && renderer.material.HasProperty("_Color"))
+			if (!hovered && renderer != null && renderer.material.HasProperty("_Color"))
             {
 				renderer.material.color += new Color(0f, 0f, 0f, m);
             }
 
-			if (EditorManager.inst != null && EditorManager.inst.isEditing && HighlightObjects && hovered && renderer != null && renderer.material.HasProperty("_Color"))
+			if (HighlightObjects && hovered && renderer != null && renderer.material.HasProperty("_Color"))
 			{
 				var color = Input.GetKey(KeyCode.LeftShift) ? new Color(
 					renderer.material.color.r > 0.9f ? -HighlightDoubleColor.r : HighlightDoubleColor.r,
@@ -369,7 +369,7 @@ namespace RTFunctions.Functions.Components
 				renderer.material.color += color;
 			}
 
-			if (EditorManager.inst != null && EditorManager.inst.showHelp && beatmapObject != null)
+			if (EditorManager.inst.showHelp && beatmapObject != null)
 			{
 				TipEnabled = true;
 

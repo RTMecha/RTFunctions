@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 using UnityEngine;
-
-using HarmonyLib;
 
 using SimpleJSON;
 using LSFunctions;
@@ -21,169 +17,18 @@ using RTFunctions.Functions.Managers;
 using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
 using BasePrefab = DataManager.GameData.Prefab;
-using BasePrefabObject = DataManager.GameData.PrefabObject;
-using BaseBackgroundObject = DataManager.GameData.BackgroundObject;
 using BaseBeatmapTheme = DataManager.BeatmapTheme;
 using BaseMarker = DataManager.GameData.BeatmapData.Marker;
 using BaseCheckpoint = DataManager.GameData.BeatmapData.Checkpoint;
 
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
-using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-
 namespace RTFunctions.Functions
 {
-    public enum TitleFormat
+	public class ProjectData
     {
-        ArtistTitle,
-        TitleArtist
-    }
-
-    public class ProjectData
-    {
-        public static List<Level> levels;
-        public static List<Collection> collections;
-
-        public class Level
-        {
-            public Song song;
-            public Beatmap beatmap;
-        }
-
-        public class Song
-        {
-            public Song(string[] artists, string title, bool remix, string[] remixArtists)
-            {
-                this.artists = artists;
-                this.title = title;
-                this.remix = remix;
-                this.remixArtists = remixArtists;
-            }
-
-            public string[] artists;
-            public string title;
-            public bool remix;
-            public string[] remixArtists;
-
-            public string genre;
-
-            public override string ToString() => title;
-        }
-
-        public class Beatmap
-        {
-            public Beatmap(string[] creators, string name)
-            {
-                this.creators = creators;
-                this.name = name;
-            }
-
-            public string[] creators;
-            public string name;
-            public string id;
-            public string tags;
-
-            public string refCollectionID;
-
-            #region Difficulty
-
-            public static List<string> DifficultyNames = new List<string>
-            {
-                "Animation",
-                "Easy",
-                "Normal",
-                "Hard",
-                "Expert",
-                "Expert+",
-                "Master",
-            };
-            public static List<Color> DifficultyColors = new List<Color>
-            {
-
-            };
-            public static int MaxDifficulty => 6;
-
-            int difficulty;
-            public int Difficulty
-            {
-                get => Mathf.Clamp(difficulty, 0, MaxDifficulty);
-                set => difficulty = Mathf.Clamp(value, 0, MaxDifficulty);
-            }
-
-            public string DifficultyName => DifficultyNames[Difficulty];
-            public Color DifficultyColor => DifficultyColors[Difficulty];
-
-            #endregion
-
-            public Beatmap GetNextLevel()
-            {
-                if (collections.Find(x => x.id == refCollectionID) != null)
-                {
-                    var collection = collections.Find(x => x.id == refCollectionID);
-                    int index = collection.levels.IndexOf(this) + 1;
-                    if (index > 0 && index < collection.levels.Count)
-                        return collection.levels[index];
-                }
-
-                return null;
-            }
-            
-            public Beatmap GetPrevLevel()
-            {
-                if (collections.Find(x => x.id == refCollectionID) != null)
-                {
-                    var collection = collections.Find(x => x.id == refCollectionID);
-                    int index = collection.levels.IndexOf(this) - 1;
-                    if (index > 0 && index < collection.levels.Count)
-                        return collection.levels[index];
-                }
-
-                return null;
-            }
-
-            public override string ToString() => name;
-        }
-
-        public class Collection
-        {
-            public Collection(List<Beatmap> levels, string name, string id)
-            {
-                this.levels = levels;
-                this.name = name;
-                this.id = id;
-            }
-
-            public List<Beatmap> levels;
-            public string name;
-            public string id;
-
-            public override string ToString() => name;
-        }
-
-		public class MetaData
-        {
-
-        }
-
 		public static class Converter
         {
             public static void ConvertPrefabToDAE(BasePrefab prefab)
             {
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-                sb.AppendLine("<COLLADA xmlns=\"http://www.collada.org/2005/11/COLLADASchema\" version=\"1.4.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">");
-                sb.AppendLine("  <asset>");
-                sb.AppendLine("    <contributor>");
-                sb.AppendLine("      <author>RTMecha</author>");
-                sb.AppendLine("      <authoring_tool>Project Arrhythmia</authoring_tool>");
-                sb.AppendLine("    </contributor>");
-                sb.AppendLine("    <created>2023-09-25T00:03:52</created>");
-                sb.AppendLine("    <modified>2023-09-25T00:03:52</modified>");
-                sb.AppendLine("    <unit name=\"meter\" meter=\"1\"/>");
-                sb.AppendLine("    <up_axis>Z_UP</up_axis>");
-                sb.AppendLine("  </asset>");
-                sb.AppendLine("  <library_geometries>");
-                sb.AppendLine("    <geometry id=\"Beatmap-mesh\" name=\"Beatmap\">");
-                sb.AppendLine("      <mesh>");
 
             }
 
@@ -322,11 +167,11 @@ namespace RTFunctions.Functions
 
                 for (int i = 0; i < jn["themes"].Count; i++)
 					if (!gameData.beatmapThemes.ContainsKey(jn["themes"][i]["id"]))
-						gameData.beatmapThemes.Add(jn["themes"][i]["id"], Reader.ParseBeatmapTheme(jn["themes"][i], Reader.FileType.LS));
+						gameData.beatmapThemes.Add(jn["themes"][i]["id"], Reader.ParseBeatmapTheme(jn["themes"][i], FileType.LS));
 
 				for (int i = 0; i < jn32["themes"].Count; i++)
 					if (!gameData.beatmapThemes.ContainsKey(jn32["themes"][i]["id"]))
-						gameData.beatmapThemes.Add(jn32["themes"][i]["id"], Reader.ParseBeatmapTheme(jn32["themes"][i], Reader.FileType.LS));
+						gameData.beatmapThemes.Add(jn32["themes"][i]["id"], Reader.ParseBeatmapTheme(jn32["themes"][i], FileType.LS));
 
                 #endregion
 
@@ -401,12 +246,6 @@ namespace RTFunctions.Functions
 
 		public static class Reader
 		{
-			public enum FileType
-            {
-				LS,
-				VG
-            }
-
 			public static BaseEventKeyframe ParseVGKeyframe(JSONNode jn)
             {
 				var keyframe = new BaseEventKeyframe();

@@ -20,6 +20,9 @@ using RTFunctions.Functions.Optimization.Objects.Visual;
 
 namespace RTFunctions.Functions.Managers
 {
+    /// <summary>
+    /// This class is used to store fonts from the customfonts.asset file.
+    /// </summary>
     public class FontManager : MonoBehaviour
     {
         public static FontManager inst;
@@ -467,9 +470,9 @@ namespace RTFunctions.Functions.Managers
             var refer = MaterialReferenceManager.instance;
             var dictionary = (Dictionary<int, TMP_FontAsset>)refer.GetType().GetField("m_FontAssetReferenceLookup", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(refer);
 
-            if (RTFile.FileExists(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/customfonts"))
+            if (RTFile.FileExists(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/customfonts.asset"))
             {
-                var assetBundle = GetAssetBundle(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets", "customfonts");
+                var assetBundle = GetAssetBundle(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets", "customfonts.asset");
                 foreach (var asset in assetBundle.GetAllAssetNames())
                 {
                     string str = asset.Replace("assets/font/", "");

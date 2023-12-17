@@ -10,17 +10,14 @@ using UnityEngine;
 
 namespace RTFunctions.Patchers
 {
+    [HarmonyPatch(typeof(DiscordController))]
     public class DiscordControllerPatch : MonoBehaviour
     {
-        static DiscordController Instance { get => DiscordController.inst; set => DiscordController.inst = value; }
-        public static void Init()
+        [HarmonyPatch("Awake")]
+        [HarmonyPrefix]
+        static void AwakePrefix(DiscordController __instance)
         {
-            Patcher.CreatePatch(AccessTools.Method(typeof(DiscordController), "Awake"), PatchType.Postfix, (Action)AwakePostfix);
-        }
-
-        static void AwakePostfix()
-        {
-            Instance.applicationId = "1176264603374735420";
+            __instance.applicationId = "1176264603374735420";
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using UnityEngine;
 
@@ -10,12 +8,14 @@ using LSFunctions;
 
 using RTFunctions.Functions.Animation.Keyframe;
 
-using UnityAnimation = UnityEngine.Animation;
 using UnityTime = UnityEngine.Time;
 
 namespace RTFunctions.Functions.Animation
 {
-    public class AnimationManager : MonoBehaviour
+	/// <summary>
+	/// All animation code aside from this is from https://github.com/Reimnop/Catalyst
+	/// </summary>
+	public class AnimationManager : MonoBehaviour
     {
 		public static AnimationManager inst;
 

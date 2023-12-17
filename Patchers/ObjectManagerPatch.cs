@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using HarmonyLib;
 
 using UnityEngine;
 using LSFunctions;
 
-using RTFunctions.Functions;
 using RTFunctions.Functions.Data;
-using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
-using RTFunctions.Functions.Optimization.Level;
-using RTFunctions.Functions.Optimization.Objects;
 
 namespace RTFunctions.Patchers
 {
@@ -108,42 +101,6 @@ namespace RTFunctions.Patchers
 			return false;
 		}
 
-		//[HarmonyPatch("updateObjects", new Type[] { typeof(string) })]
-		//[HarmonyPrefix]
-		//static void updateObjectsPrefix1(ObjectManager __instance)
-		//{
-		//    Debug.LogFormat("{0}Updating Objects", FunctionsPlugin.className);
-		//    Objects.inst.StartCoroutine(Objects.inst.updateObjects());
-		//}
-
-		//[HarmonyPatch("updateObjectsForAll", new Type[] { typeof(string) })]
-		//[HarmonyPrefix]
-		//static void updateObjectsPrefix2(ObjectManager __instance)
-		//{
-		//    Debug.LogFormat("{0}Updating Objects", FunctionsPlugin.className);
-		//    Objects.inst.StartCoroutine(Objects.inst.updateObjects());
-		//}
-
-		//[HarmonyPatch("updateObjects", new Type[] { typeof(ObjEditor.ObjectSelection), typeof(bool) })]
-		//[HarmonyPrefix]
-		//static void updateObjectsPrefix3(ObjectManager __instance, ObjEditor.ObjectSelection __0, bool __1)
-		//{
-		//    if (__0.IsObject())
-		//    {
-		//        Debug.LogFormat("{0}Updating Objects", FunctionsPlugin.className);
-		//        Objects.inst.StartCoroutine(Objects.inst.updateObjects(__0));
-		//    }
-		//}
-
-		//[HarmonyPatch("updateObjects", new Type[] { })]
-		//[HarmonyPrefix]
-		//static void updateObjectsPrefix4(ObjectManager __instance)
-		//{
-		//    Debug.LogFormat("{0}Updating Objects", FunctionsPlugin.className);
-		//    Objects.inst.StartCoroutine(Objects.inst.updateObjects());
-		//}
-
-
 		public static event LevelTickEventHandler LevelTick;
 
 		[HarmonyPatch("Update")]
@@ -151,46 +108,6 @@ namespace RTFunctions.Patchers
 		static bool UpdatePrefix()
 		{
 			LevelTick?.Invoke();
-			return false;
-		}
-
-		[HarmonyPatch("updateObjects", new Type[] { typeof(string) })]
-		[HarmonyPrefix]
-		static bool updateObjectsPrefix1(ObjectManager __instance)
-		{
-			AddPrefabObjects(__instance);
-			//Updater.UpdateObjects();
-			return false;
-		}
-
-		[HarmonyPatch("updateObjectsForAll", new Type[] { typeof(string) })]
-		[HarmonyPrefix]
-		static bool updateObjectsPrefix2(ObjectManager __instance)
-		{
-			AddPrefabObjects(__instance);
-			Updater.UpdateObjects();
-			return false;
-		}
-
-		[HarmonyPatch("updateObjects", new Type[] { typeof(ObjEditor.ObjectSelection), typeof(bool) })]
-		[HarmonyPrefix]
-		static bool updateObjectsPrefix3(ObjectManager __instance, ObjEditor.ObjectSelection __0, bool __1)
-		{
-			if (__0.IsObject())
-			{
-				Updater.updateProcessor(__0);
-			}
-			if (__1)
-			{
-				__instance.updateObjectsForAll(__0.GetPrefabData().ID);
-			}
-			if (__0.IsPrefab())
-			{
-				foreach (var bm in DataManager.inst.gameData.beatmapObjects.FindAll(x => x.prefabInstanceID == __0.GetPrefabObjectData().ID))
-                {
-					Updater.UpdateProcessor(bm);
-                }
-			}
 			return false;
 		}
 
@@ -205,28 +122,11 @@ namespace RTFunctions.Patchers
 
 		public static void AddPrefabObjects(ObjectManager __instance)
 		{
-			
 			DataManager.inst.gameData.beatmapObjects.RemoveAll(x => x.fromPrefab);
 			for (int i = 0; i < DataManager.inst.gameData.prefabObjects.Count; i++)
 			{
 				__instance.AddPrefabToLevel(DataManager.inst.gameData.prefabObjects[i]);
 			}
-			for (int j = 0; j < DataManager.inst.gameData.beatmapObjects.Count; j++)
-			{
-				if (!DataManager.inst.gameData.beatmapObjects[j].fromPrefab)
-				{
-					DataManager.inst.gameData.beatmapObjects[j].active = false;
-					for (int k = 0; k < DataManager.inst.gameData.beatmapObjects[j].events.Count; k++)
-					{
-						for (int l = 0; l < DataManager.inst.gameData.beatmapObjects[j].events[k].Count; l++)
-						{
-							DataManager.inst.gameData.beatmapObjects[j].events[k][l].active = false;
-						}
-					}
-				}
-			}
 		}
-
-
 	}
 }

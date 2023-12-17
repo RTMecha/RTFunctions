@@ -1,27 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using UnityEngine;
 
 using SimpleJSON;
 
-using RTFunctions.Functions.Components;
 using RTFunctions.Functions.IO;
-using RTFunctions.Functions.Optimization;
 
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
-using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
-
-using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
-using BasePrefab = DataManager.GameData.Prefab;
-using BasePrefabObject = DataManager.GameData.PrefabObject;
-using BaseBackground = DataManager.GameData.BackgroundObject;
-using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 using BaseMetadata = DataManager.MetaData;
 using BaseArtist = DataManager.MetaData.Artist;
 using BaseCreator = DataManager.MetaData.Creator;
@@ -235,6 +220,8 @@ namespace RTFunctions.Functions.Data
         public LevelCreator LevelCreator => (LevelCreator)creator;
         public LevelSong LevelSong => (LevelSong)song;
 		public LevelBeatmap LevelBeatmap => (LevelBeatmap)beatmap;
+
+		public static implicit operator bool(Metadata exists) => exists != null;
     }
 
     public class LevelArtist : BaseArtist

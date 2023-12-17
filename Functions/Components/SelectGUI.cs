@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
-
-using LSFunctions;
 
 namespace RTFunctions.Functions.Components
 {
@@ -75,8 +67,6 @@ namespace RTFunctions.Functions.Components
                     target.position = new Vector3(startPos.x + -x, startPos.y + -y);
                 }
             }
-
-            //Start pos = Vector2(100f, 50f)
         }
     }
 }

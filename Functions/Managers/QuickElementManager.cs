@@ -1,22 +1,21 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using System.Text.RegularExpressions;
 
 using UnityEngine;
 
 using TMPro;
 using SimpleJSON;
 
-using RTFunctions.Functions;
 using RTFunctions.Functions.IO;
 
 using BeatmapObject = DataManager.GameData.BeatmapObject;
 
 namespace RTFunctions.Functions.Managers
 {
+    /// <summary>
+    /// This class manages the QuickElements you see in the PA menus. It can create, save and load new QuickElements.
+    /// </summary>
     public class QuickElementManager : MonoBehaviour
     {
         public static QuickElementManager inst;

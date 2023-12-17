@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
+﻿using UnityEngine;
 
 using HarmonyLib;
 
@@ -17,7 +13,7 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("ApplySettingsFile")]
         [HarmonyPostfix]
-        private static void ApplySettingsFilePostfix(SaveManager __instance)
+        static void ApplySettingsFilePostfix(SaveManager __instance)
         {
             FunctionsPlugin.prevFullscreen = FunctionsPlugin.Fullscreen.Value;
             FunctionsPlugin.Fullscreen.Value = DataManager.inst.GetSettingBool("FullScreen", false);

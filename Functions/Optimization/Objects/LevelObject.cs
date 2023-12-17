@@ -3,7 +3,6 @@
 using UnityEngine;
 
 using RTFunctions.Functions.Animation;
-using RTFunctions.Functions.Animation.Keyframe;
 
 using RTFunctions.Functions.Optimization.Objects.Visual;
 

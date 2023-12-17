@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -25,7 +24,7 @@ namespace RTFunctions.Functions.Optimization.Level
             level = new LevelStorage(levelObjects);
             engine = new Engine(level);
 
-            Debug.Log($"Loaded {level.Objects.Count} objects (original: {gameData.beatmapObjects.Count})");
+            Debug.Log($"{Updater.className}Loaded {level.Objects.Count} objects (original: {gameData.beatmapObjects.Count})");
         }
 
         public void Update(float time) => engine.Update(time);

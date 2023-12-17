@@ -22,10 +22,12 @@ using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 namespace RTFunctions.Functions.Optimization.Objects
 {
     // WARNING: This class has side effects and will instantiate GameObjects
-    // Converts GameData to LevelObjects to be used by the mod
+    /// <summary>
+    /// Converts GameData to LevelObjects to be used by the mod
+    /// </summary>
     public class ObjectConverter
     {
-        // Add Homing Objects to Random EventKeyframe
+        // Add Homing Objects to Random EventKeyframe somehow
 
         public class CachedSequences
         {

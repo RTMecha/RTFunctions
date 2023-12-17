@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using UnityEngine;
@@ -8,8 +6,6 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 using LSFunctions;
-
-using BeatmapTheme = DataManager.BeatmapTheme;
 
 namespace RTFunctions.Functions.IO
 {
@@ -35,11 +31,6 @@ namespace RTFunctions.Functions.IO
 		public static bool InEditor => EditorManager.inst;
 		public static bool InGame => GameManager.inst;
 		public static bool InMenu => ArcadeManager.inst.ic;
-
-		public static void TestRun()
-        {
-			new TaskRunner().Run(TestRun);
-        }
 
         public static float getPitch()
         {

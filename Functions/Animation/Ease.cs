@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using RTFunctions.Functions.IO;
 
 namespace RTFunctions.Functions.Animation
 {
@@ -40,17 +38,6 @@ namespace RTFunctions.Functions.Animation
             { "InOutExpo", ExpoInOut }
         };
 
-        public static bool TryGetEaseFunction(string name, out EaseFunction easeFunction)
-        {
-            if (EaseLookup.ContainsKey(name))
-            {
-                easeFunction = EaseLookup[name];
-                return true;
-            }
-            easeFunction = EaseLookup["Linear"];
-            return false;
-        }
-
         public static EaseFunction GetEaseFunction(string name) => EaseLookup[name];
 
         const float PI = 3.14159265359f;
@@ -65,10 +52,7 @@ namespace RTFunctions.Functions.Animation
         /// <summary>
         /// Ease a value to its target and then back. Use this to wrap another easing function.
         /// </summary>
-        public static Func<float, float> ToAndFro(EaseFunction easer)
-        {
-            return t => ToAndFro(easer(t));
-        }
+        public static Func<float, float> ToAndFro(EaseFunction easer) => t => ToAndFro(easer(t));
 
         /// <summary>
         /// Ease a value to its target and then back.
@@ -91,6 +75,11 @@ namespace RTFunctions.Functions.Animation
         /// <returns>Eased timescale.</returns>
         public static float Instant(float t) => 0.0f;
 
+        /// <summary>
+        /// lol
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
         public static float Outstant(float t) => 1f;
 
         #region Sine
@@ -100,11 +89,7 @@ namespace RTFunctions.Functions.Animation
         /// </summary>
         /// <param name="t">Time elapsed.</param>
         /// <returns>Eased timescale.</returns>
-        public static float SineIn(float t)
-        {
-            if (t == 1) return 1;
-            return -Mathf.Cos(PI2 * t) + 1;
-        }
+        public static float SineIn(float t) => t == 1 ? 1 : -Mathf.Cos(PI2 * t) + 1;
 
         /// <summary>
         /// Sine out.
@@ -136,11 +121,7 @@ namespace RTFunctions.Functions.Animation
         /// </summary>
         /// <param name="t">Time elapsed.</param>
         /// <returns>Eased timescale.</returns>
-        public static float ElasticOut(float t)
-        {
-            if (t == 1) return 1;
-            return (Mathf.Sin(-13 * PI2 * (t + 1)) * Mathf.Pow(2, -10 * t) + 1);
-        }
+        public static float ElasticOut(float t) => t == 1 ? 1 : (Mathf.Sin(-13 * PI2* (t + 1)) * Mathf.Pow(2, -10 * t) + 1);
 
         /// <summary>
         /// Elastic in and out.
@@ -148,14 +129,16 @@ namespace RTFunctions.Functions.Animation
         /// <param name="t">Time elapsed.</param>
         /// <returns>Eased timescale.</returns>
         public static float ElasticInOut(float t)
-        {
-            if (t < 0.5)
-            {
-                return (0.5f * Mathf.Sin(13 * PI2 * (2 * t)) * Mathf.Pow(2, 10 * ((2 * t) - 1)));
-            }
+            => t < 0.5 ? (0.5f * Mathf.Sin(13 * PI2 * (2 * t)) * Mathf.Pow(2, 10 * ((2 * t) - 1)))
+            : (0.5f * (Mathf.Sin(-13 * PI2 * ((2 * t - 1) + 1)) * Mathf.Pow(2, -10 * (2 * t - 1)) + 2));
+        //{
+        //    if (t < 0.5)
+        //    {
+        //        return (0.5f * Mathf.Sin(13 * PI2 * (2 * t)) * Mathf.Pow(2, 10 * ((2 * t) - 1)));
+        //    }
 
-            return (0.5f * (Mathf.Sin(-13 * PI2 * ((2 * t - 1) + 1)) * Mathf.Pow(2, -10 * (2 * t - 1)) + 2));
-        }
+        //    return (0.5f * (Mathf.Sin(-13 * PI2 * ((2 * t - 1) + 1)) * Mathf.Pow(2, -10 * (2 * t - 1)) + 2));
+        //}
 
         #endregion
 
@@ -308,51 +291,88 @@ namespace RTFunctions.Functions.Animation
         /// </summary>
         /// <param name="t">Time elapsed.</param>
         /// <returns>Eased timescale.</returns>
-        public static float ExpoOut(float t)
-        {
-            if (t == 1) return 1;
-            return (-Mathf.Pow(2, -10 * t) + 1);
-        }
+        public static float ExpoOut(float t) => t == 1 ? 1 : (-Mathf.Pow(2, -10 * t) + 1);
 
         /// <summary>
         /// Exponential in and out.
         /// </summary>
         /// <param name="t">Time elapsed.</param>
         /// <returns>Eased timescale.</returns>
-        public static float ExpoInOut(float t)
-        {
-            if (t == 1) return 1;
-            return (t < .5 ? Mathf.Pow(2, 10 * (t * 2 - 1)) / 2 : (-Mathf.Pow(2, -10 * (t * 2 - 1)) + 2) / 2);
-        }
+        public static float ExpoInOut(float t) => t == 1 ? 1 : (t < .5 ? Mathf.Pow(2, 10 * (t * 2 - 1)) / 2 : (-Mathf.Pow(2, -10 * (t * 2 - 1)) + 2) / 2);
 
         #endregion
 
         #region Cubic
 
+        /// <summary>
+        /// Cubic in.
+        /// </summary>
+        /// <param name="t">Time elapsed.</param>
+        /// <returns>Eased timescale.</returns>
         public static float CubicIn(float t) => t * t * t;
 
+        /// <summary>
+        /// Cubic out.
+        /// </summary>
+        /// <param name="t">Time elapsed.</param>
+        /// <returns>Eased timescale.</returns>
         public static float CubicOut(float t) => -t * (t - 3);
 
+        /// <summary>
+        /// Cubic in and out.
+        /// </summary>
+        /// <param name="t">Time elapsed.</param>
+        /// <returns>Eased timescale.</returns>
         public static float CubicInOut(float t) => t < 0.5 ? 4 * t * t * t : 1 - Mathf.Pow(-2 * t + 2, 3) / 2;
 
         #endregion
 
         #region Quart
 
+        /// <summary>
+        /// Quart in.
+        /// </summary>
+        /// <param name="t">Time elapsed.</param>
+        /// <returns>Eased timescale.</returns>
         public static float QuartIn(float t) => t * t * t * t;
 
+        /// <summary>
+        /// Quart out.
+        /// </summary>
+        /// <param name="t">Time elapsed.</param>
+        /// <returns>Eased timescale.</returns>
         public static float QuartOut(float t) => -t * (t - 4);
 
+        /// <summary>
+        /// Quart in and out.
+        /// </summary>
+        /// <param name="t">Time elapsed.</param>
+        /// <returns>Eased timescale.</returns>
         public static float QuartInOut(float t) => t < 0.5f ? 8f * t * t * t * t : 1 - Mathf.Pow(-2f * t + 2, 4) / 2;
 
         #endregion
 
         #region Quint
 
+        /// <summary>
+        /// Quint in.
+        /// </summary>
+        /// <param name="t">Time elapsed.</param>
+        /// <returns>Eased timescale.</returns>
         public static float QuintIn(float t) => t * t * t * t * t;
 
+        /// <summary>
+        /// Quint out.
+        /// </summary>
+        /// <param name="t">Time elapsed.</param>
+        /// <returns>Eased timescale.</returns>
         public static float QuintOut(float t) => -t * (t - 5);
 
+        /// <summary>
+        /// Quint in and out.
+        /// </summary>
+        /// <param name="t">Time elapsed.</param>
+        /// <returns>Eased timescale.</returns>
         public static float QuintInOut(float t) => t < 0.5f ? 16f * t * t * t * t * t : 1 - Mathf.Pow(-2f * t + 2f, 5) / 2f;
 
         #endregion

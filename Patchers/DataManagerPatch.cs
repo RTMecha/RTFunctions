@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -300,12 +299,7 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("ParseBeatmap")]
         [HarmonyPrefix]
-        static bool ParseBeatmapPatch(string _json)
-        {
-            Debug.LogFormat("{0}Parse Beatmap", FunctionsPlugin.className);
-            DataManager.inst.StartCoroutine(Parser.ParseBeatmap(_json));
-            return false;
-        }
+        static bool ParseBeatmapPatch(string _json) => false;
     }
 
     [HarmonyPatch(typeof(BeatmapTheme))]

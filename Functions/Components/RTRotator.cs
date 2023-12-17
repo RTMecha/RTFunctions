@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.Events;
+﻿using UnityEngine;
 
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
@@ -12,6 +6,9 @@ using RTFunctions.Functions.Optimization;
 
 namespace RTFunctions.Functions.Components
 {
+    /// <summary>
+    /// Component for handling drag rotation.
+    /// </summary>
     public class RTRotator : MonoBehaviour
     {
         public static float RotatorRadius { get; set; } = 22f;

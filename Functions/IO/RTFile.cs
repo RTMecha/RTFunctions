@@ -1,127 +1,85 @@
 ﻿using System;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 
 using UnityEngine;
-using UnityEngine.Networking;
 
 using Debug = UnityEngine.Debug;
-using Object = UnityEngine.Object;
 
 namespace RTFunctions.Functions.IO
 {
 	public static class RTFile
 	{
-		static Assembly _compressionAssembly;
-		static Assembly _zipFileAssembly;
-
-		public static Assembly CompressionAssembly
-		{
-			get
-			{
-				if (FileExists(ApplicationDirectory + "Project Arrhythmia_Data/Managed/System.IO.Compression.dll") && _compressionAssembly == null)
-					_compressionAssembly = Assembly.LoadFile(ApplicationDirectory + "Project Arrhythmia_Data/Managed/System.IO.Compression.dll");
-
-				return _compressionAssembly;
-			}
-		}
-
-		public static Assembly ZipFileAssembly
-		{
-			get
-			{
-				if (FileExists(ApplicationDirectory + "Project Arrhythmia_Data/Managed/System.IO.Compression.ZipFile.dll") && _zipFileAssembly == null)
-					_zipFileAssembly = Assembly.LoadFile(ApplicationDirectory + "Project Arrhythmia_Data/Managed/System.IO.Compression.ZipFile.dll");
-
-				return _zipFileAssembly;
-			}
-		}
-
 		public static string ApplicationDirectory => Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/")) + "/";
 
 		public static string PersistentApplicationDirectory => Application.persistentDataPath;
 
-		//F:/PA_Builds/PA Launcher App/bin/Debug/net6.0-windows/4.1.16-BepInEx-5.4.21/beatmaps/story\CA - Ahead of the Curve [PAA3]\level.ogg
 		public static string BasePath
-		{
-			get
-			{
-				if (GameManager.inst != null && !string.IsNullOrEmpty(GameManager.inst.basePath))
-				{
-					return GameManager.inst.basePath;
-				}
-				else
-				{
-					return SaveManager.inst.ArcadeQueue.AudioFileStr.Replace("\\", "/").Replace("/level.ogg", "/");
-				}
-			}
-		}
+			=> GameManager.inst != null && !string.IsNullOrEmpty(GameManager.inst.basePath) ? GameManager.inst.basePath
+			: SaveManager.inst.ArcadeQueue.AudioFileStr.Replace("\\", "/").Replace("/level.ogg", "/");
 
-		public static IEnumerator LoadImageFile(string _path, Action<Sprite> action, Action<string> onError)
-		{
-			if (!File.Exists(_path))
-			{
-				onError(_path);
-			}
-			else
-			{
-				var bytes = File.ReadAllBytes(_path);
-				var tex = new Texture2D(256, 256, TextureFormat.RGBA32, true);
-				tex.LoadImage(bytes);
+		//public static IEnumerator LoadImageFile(string _path, Action<Sprite> action, Action<string> onError)
+		//{
+		//	if (!File.Exists(_path))
+		//	{
+		//		onError(_path);
+		//	}
+		//	else
+		//	{
+		//		var bytes = File.ReadAllBytes(_path);
+		//		var tex = new Texture2D(256, 256, TextureFormat.RGBA32, true);
+		//		tex.LoadImage(bytes);
 
-				tex.wrapMode = TextureWrapMode.Clamp;
-				tex.filterMode = FilterMode.Point;
-				tex.Apply();
+		//		tex.wrapMode = TextureWrapMode.Clamp;
+		//		tex.filterMode = FilterMode.Point;
+		//		tex.Apply();
 
-				action(Sprite.Create(tex, new Rect(0f, 0f, (float)tex.width, (float)tex.height), new Vector2(0.5f, 0.5f), 100f));
-				tex = null;
-			}
-			yield break;
-		}
+		//		action(Sprite.Create(tex, new Rect(0f, 0f, (float)tex.width, (float)tex.height), new Vector2(0.5f, 0.5f), 100f));
+		//		tex = null;
+		//	}
+		//	yield break;
+		//}
 
-		public static IEnumerator LoadMusicFile(string _path, Action<AudioClip> action, Action<string> onError)
-		{
-			if (!File.Exists(_path))
-			{
-				onError(_path);
-			}
-			else
-			{
-				AudioType audioType;
+		//public static IEnumerator LoadMusicFile(string _path, Action<AudioClip> action, Action<string> onError)
+		//{
+		//	if (!File.Exists(_path))
+		//	{
+		//		onError(_path);
+		//	}
+		//	else
+		//	{
+		//		AudioType audioType;
 
-				string ext = Path.GetExtension(_path);
+		//		string ext = Path.GetExtension(_path);
 
-				if (ext.ToLower() == ".ogg")
-				{
-					audioType = AudioType.OGGVORBIS;
-				}
-				else if (ext.ToLower() == ".wav")
-				{
-					audioType = AudioType.WAV;
-				}
-				else
-				{
-					audioType = AudioType.UNKNOWN;
-				}
+		//		if (ext.ToLower() == ".ogg")
+		//		{
+		//			audioType = AudioType.OGGVORBIS;
+		//		}
+		//		else if (ext.ToLower() == ".wav")
+		//		{
+		//			audioType = AudioType.WAV;
+		//		}
+		//		else
+		//		{
+		//			audioType = AudioType.UNKNOWN;
+		//		}
 
-				var www = UnityWebRequestMultimedia.GetAudioClip(_path, audioType);
-				yield return www.SendWebRequest();
-				if (www.isHttpError)
-				{
-					Debug.LogWarning("Audio error:" + www.error);
-				}
-				else
-				{
-					AudioClip audioClip = ((DownloadHandlerAudioClip)www.downloadHandler).audioClip;
-					action(audioClip);
-				}
-			}
-		}
+		//		var www = UnityWebRequestMultimedia.GetAudioClip(_path, audioType);
+		//		yield return www.SendWebRequest();
+		//		if (www.isHttpError)
+		//		{
+		//			Debug.LogWarning("Audio error:" + www.error);
+		//		}
+		//		else
+		//		{
+		//			AudioClip audioClip = ((DownloadHandlerAudioClip)www.downloadHandler).audioClip;
+		//			action(audioClip);
+		//		}
+		//	}
+		//}
 
 		public static bool FileExists(string _filePath) => !string.IsNullOrEmpty(_filePath) && File.Exists(_filePath);
 
@@ -129,7 +87,7 @@ namespace RTFunctions.Functions.IO
 
 		public static void WriteToFile(string path, string json)
 		{
-			StreamWriter streamWriter = new StreamWriter(path);
+			var streamWriter = new StreamWriter(path);
 			streamWriter.Write(json);
 			streamWriter.Flush();
 			streamWriter.Close();
@@ -142,7 +100,7 @@ namespace RTFunctions.Functions.IO
 				Debug.LogFormat("{0}Could not load JSON file [{1}]", FunctionsPlugin.className, path);
 				return null;
 			}
-			StreamReader streamReader = new StreamReader(path);
+			var streamReader = new StreamReader(path);
 			string result = streamReader.ReadToEnd().ToString();
 			streamReader.Close();
 			return result;
@@ -281,14 +239,11 @@ namespace RTFunctions.Functions.IO
 			Bit64
         }
 
+		/// <summary>
+		/// Class for handling Zip files.
+		/// </summary>
 		public static class ZipUtil
 		{
-			/*RTFile.Zip("E:/SteamLibrary/steamapps/common/Project Arrhythmia/beatmaps/testzip.zip", new string[]
-			 *	{
-			 *		"E:/SteamLibrary/steamapps/common/Project Arrhythmia/beatmaps/arcade/test.cs",
-			 *	};
-			 */
-
 			public static void Zip(string path, string[] files)
 			{
 				using (var memoryStream = new MemoryStream())
@@ -309,9 +264,6 @@ namespace RTFunctions.Functions.IO
 				}
 			}
 
-			// RTFile.UnZip("E:/SteamLibrary/steamapps/common/Project Arrhythmia/beatmaps/testzip.zip", "E:/SteamLibrary/steamapps/common/Project Arrhythmia/beatmaps/testzip output");
-
-			// UPDATE THIS
 			public static void UnZip(string path, string output)
 			{
 				var archive = ZipFile.OpenRead(path);
@@ -651,82 +603,6 @@ namespace RTFunctions.Functions.IO
 
 			#endregion
 		}
-
-		readonly struct VorbisHeader
-		{
-			#region Public types & data
-
-			public int BitDepth { get; }
-			public int AudioSampleSize { get; }
-			public int AudioSampleCount { get; }
-			public ushort Channels { get; }
-			public int SampleRate { get; }
-			public int AudioStartIndex { get; }
-			public int ByteRate { get; }
-			public ushort BlockAlign { get; }
-
-			#endregion
-
-			#region Constructors & Finalizer
-
-			VorbisHeader(int bitDepth,
-				int audioSize,
-				int audioStartIndex,
-				ushort channels,
-				int sampleRate,
-				int byteRate,
-				ushort blockAlign)
-			{
-				BitDepth = bitDepth;
-				_negativeDepth = Mathf.Pow(2f, BitDepth - 1f);
-				_positiveDepth = _negativeDepth - 1f;
-
-				AudioSampleSize = bitDepth / 8;
-				AudioSampleCount = Mathf.FloorToInt(audioSize / (float)AudioSampleSize);
-				AudioStartIndex = audioStartIndex;
-
-				Channels = channels;
-				SampleRate = sampleRate;
-				ByteRate = byteRate;
-				BlockAlign = blockAlign;
-			}
-
-			#endregion
-
-			#region Private types & Data
-
-			const int SizeIndex = 16;
-
-			readonly float _positiveDepth;
-			readonly float _negativeDepth;
-
-			#endregion
-		}
-
-		readonly struct VorbisData
-		{
-			#region Public types & data
-
-			public float[] Value { get; }
-			public int Length { get; }
-			public int Channels { get; }
-			public int SampleRate { get; }
-
-			#endregion
-
-			#region Constructors & Finalizer
-
-			VorbisData(float[] value, int channels, int sampleRate)
-			{
-				Value = value;
-				Length = value.Length;
-				Channels = channels;
-				SampleRate = sampleRate;
-            }
-
-            #endregion
-
-        }
 
         public static AudioClip GetAudioClip(string path)
         {

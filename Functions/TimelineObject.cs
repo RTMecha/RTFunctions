@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,8 +7,6 @@ using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Optimization;
 
 using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
-using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
-using Prefab = DataManager.GameData.Prefab;
 using BasePrefabObject = DataManager.GameData.PrefabObject;
 
 namespace RTFunctions.Functions

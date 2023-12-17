@@ -50,11 +50,5 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
         }
 
         public override void SetColor(Color color) => material?.SetColor(new Color(color.r, color.g, color.b, color.a * opacity));
-
-        //public override void SetColor(Color color)
-        //{
-        //    if (material)
-        //        material.color = new Color(color.r, color.g, color.b, color.a * opacity);
-        //}
     }
 }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RTFunctions
+﻿namespace RTFunctions
 {
     public enum DifficultyMode
     {
@@ -26,5 +20,11 @@ namespace RTFunctions
         p1080,
         p1440,
         p2160
+    }
+
+    public enum FileType
+    {
+        LS,
+        VG
     }
 }

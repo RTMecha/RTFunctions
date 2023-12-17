@@ -1,28 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using SimpleJSON;
 using LSFunctions;
 
-using RTFunctions.Functions;
 using RTFunctions.Functions.IO;
-using RTFunctions.Functions.Managers;
 
 using BaseGameData = DataManager.GameData;
 
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
-using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
 using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 
 using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
 using BaseBackgroundObject = DataManager.GameData.BackgroundObject;
-using BasePrefab = DataManager.GameData.Prefab;
-using BasePrefabObject = DataManager.GameData.PrefabObject;
-using BaseBackground = DataManager.GameData.BackgroundObject;
-using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 using BaseBeatmapTheme = DataManager.BeatmapTheme;
 
 namespace RTFunctions.Functions.Data

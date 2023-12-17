@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
 using VersionComparison = DataManager.VersionComparison;
@@ -11,50 +9,31 @@ namespace RTFunctions.Functions
 {
     public struct Version
     {
-        public Version(int major, int minor, int patch, string iteration, string buildDate)
+        public Version(int major, int minor, int patch, string iteration)
         {
             Major = major;
             Minor = minor;
             Patch = patch;
             Iteration = iteration;
 
-            //BuildDate = DateTime.Now.ToString("G");
-            BuildDate = buildDate;
+            BuildDate = DateTime.Now.ToString("G");
         }
 
-        public Version(int major, int minor, int patch, string buildDate)
+        public Version(int major, int minor, int patch)
         {
             Major = major;
             Minor = minor;
             Patch = patch;
             Iteration = "";
 
-            BuildDate = buildDate;
+            BuildDate = DateTime.Now.ToString("G");
         }
 
-        public Version(string ver, string buildDate)
+        public Version(string ver)
         {
             this = Parse(ver);
 
-            //var list = ver.Split('.').ToList();
-
-            //if (list.Count < 0)
-            //    throw new Exception("String must be correct format!");
-
-            //var major = int.Parse(list[0]);
-            //var minor = int.Parse(list[1]);
-            //var patch = int.Parse(list[2][0].ToString());
-            
-            //Major = major;
-            //Minor = minor;
-            //Patch = patch;
-
-            //if (list[2].Length > 1)
-            //    Iteration = list[2][1].ToString();
-            //else
-            //    Iteration = "";
-
-            BuildDate = buildDate;
+            BuildDate = DateTime.Now.ToString("G");
         }
 
         public int Major { get; set; }

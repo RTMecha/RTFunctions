@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 
 using HarmonyLib;
 
@@ -10,7 +6,6 @@ using UnityEngine;
 
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
-using RTFunctions.Functions.Managers;
 
 namespace RTFunctions.Patchers
 {

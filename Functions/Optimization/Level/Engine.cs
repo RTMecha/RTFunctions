@@ -4,11 +4,10 @@ using System.Runtime.CompilerServices;
 using RTFunctions.Functions.Optimization.Objects;
 
 namespace RTFunctions.Functions.Optimization.Level
-
-/// <summary>
-/// Main animation engine class.
-/// </summary>
 {
+    /// <summary>
+    /// Main animation engine class.
+    /// </summary>
     public class Engine : Exists, IDisposable
     {
         public readonly ObjectSpawner objectSpawner;

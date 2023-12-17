@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using UnityEngine;
 
@@ -11,15 +7,7 @@ using SimpleJSON;
 
 using RTFunctions.Functions.Managers;
 
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
-using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
-
-using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
-using BasePrefab = DataManager.GameData.Prefab;
-using BasePrefabObject = DataManager.GameData.PrefabObject;
 using BaseBackground = DataManager.GameData.BackgroundObject;
-using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 
 namespace RTFunctions.Functions.Data
 {

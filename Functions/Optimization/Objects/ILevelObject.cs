@@ -1,9 +1,8 @@
 ﻿namespace RTFunctions.Functions.Optimization.Objects
-
-/// <summary>
-/// Represents a level object.
-/// </summary>
 {
+    /// <summary>
+    /// Represents a level object.
+    /// </summary>
     public interface ILevelObject
     {
         public float StartTime { get; set; }

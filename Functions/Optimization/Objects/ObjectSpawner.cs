@@ -14,11 +14,11 @@ namespace RTFunctions.Functions.Optimization.Objects
         public readonly List<ILevelObject> activateList = new List<ILevelObject>();
         public readonly List<ILevelObject> deactivateList = new List<ILevelObject>();
 
-        private int activateIndex = 0;
-        private int deactivateIndex = 0;
-        private float currentTime = 0.0f;
+        int activateIndex = 0;
+        int deactivateIndex = 0;
+        float currentTime = 0.0f;
 
-        private readonly HashSet<ILevelObject> activeObjects = new HashSet<ILevelObject>();
+        readonly HashSet<ILevelObject> activeObjects = new HashSet<ILevelObject>();
 
         public ObjectSpawner(IEnumerable<ILevelObject> levelObjects)
         {
@@ -35,6 +35,8 @@ namespace RTFunctions.Functions.Optimization.Objects
 
         public void Update(float time)
         {
+            //((Action<float>)(time >= currentTime ? UpdateObjectsForward : UpdateObjectsBackward)).Invoke(time);
+
             if (time >= currentTime)
             {
                 UpdateObjectsForward(time);
@@ -141,7 +143,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             UpdateObjectsForward(currentTime);
         }
 
-        private void UpdateObjectsForward(float time)
+        void UpdateObjectsForward(float time)
         {
             // Spawn
             while (activateIndex < activateList.Count && time >= activateList[activateIndex].StartTime)
@@ -160,7 +162,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             }
         }
 
-        private void UpdateObjectsBackward(float time)
+        void UpdateObjectsBackward(float time)
         {
             // Spawn (backwards)
             while (deactivateIndex - 1 >= 0 && time < deactivateList[deactivateIndex - 1].KillTime)

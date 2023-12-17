@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-
-using HarmonyLib;
 
 using UnityEngine;
 
@@ -13,17 +9,10 @@ using SimpleJSON;
 using LSFunctions;
 
 using RTFunctions.Functions.Components;
-using RTFunctions.Functions.Optimization;
 
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
-using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
 using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 
 using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
-using BasePrefab = DataManager.GameData.Prefab;
-using BasePrefabObject = DataManager.GameData.PrefabObject;
-using BaseBackground = DataManager.GameData.BackgroundObject;
-using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 
 namespace RTFunctions.Functions.Data
 {
@@ -632,9 +621,6 @@ namespace RTFunctions.Functions.Data
 		#region Operators
 
 		public static implicit operator bool(BeatmapObject exists) => exists != null;
-
-        //public static bool operator ==(BeatmapObject a, BeatmapObject b) => a && b && a.id == b.id;
-        //public static bool operator !=(BeatmapObject a, BeatmapObject b) => a == null || b == null || a.id != b.id;
 
         public override bool Equals(object obj) => obj is BeatmapObject && this == (BeatmapObject)obj;
 

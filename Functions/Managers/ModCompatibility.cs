@@ -1,24 +1,15 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections.Generic;
-using System.Linq;
-
-using HarmonyLib;
 
 using UnityEngine;
 
-using BeatmapObject = DataManager.GameData.BeatmapObject;
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
-using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
-using Prefab = DataManager.GameData.Prefab;
-
 namespace RTFunctions.Functions.Managers
 {
+    /// <summary>
+    /// This class is used to share mod variables and functions, as well as check if a mod is installed.
+    /// </summary>
     public class ModCompatibility : MonoBehaviour
     {
-        //Move this to RTFunctions.Functions.Managers
-
         public static ModCompatibility inst;
 
         public static GameObject bepinex;
@@ -39,15 +30,6 @@ namespace RTFunctions.Functions.Managers
 
                     var mod = new Mod(ue, ue.GetType());
 
-                    //var consoleController = AccessTools.TypeByName("UnityExplorer.CSConsole.ConsoleController");
-
-                    //if (consoleController != null)
-                    //{
-                    //    var csmod = new Mod(null, consoleController);
-                    //    csmod.Methods.Add("Evaluate", consoleController.GetMethod("Evaluate", new Type[] { typeof(string), typeof(bool) }).CreateDelegate(consoleController));
-                    //    mod.components.Add("ConsoleController", csmod);
-                    //}
-
                     mods.Add("UnityExplorer", mod);
                 }
                 catch (Exception ex)
@@ -56,6 +38,18 @@ namespace RTFunctions.Functions.Managers
                 }
             }
         }
+
+        public static bool EditorManagementInstalled => mods.ContainsKey("EditorManagement");
+
+        public static bool CreativePlayersInstalled => mods.ContainsKey("CreativePlayers");
+
+        public static bool ObjectModifiersInstalled => mods.ContainsKey("ObjectModifiers");
+
+        public static bool ExampleCompanionInstalled => mods.ContainsKey("ExampleCompanion");
+
+        public static bool EventsCoreInstalled => mods.ContainsKey("EventsCore");
+
+        public static bool ArcadiaCustomsInstalled => mods.ContainsKey("ArcadiaCustoms");
 
         public static Dictionary<string, Mod> mods = new Dictionary<string, Mod>();
 

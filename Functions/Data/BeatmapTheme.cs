@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using UnityEngine;
@@ -7,7 +6,6 @@ using UnityEngine;
 using LSFunctions;
 using SimpleJSON;
 
-using RTFunctions.Functions;
 using RTFunctions.Functions.IO;
 
 using BaseBeatmapTheme = DataManager.BeatmapTheme;

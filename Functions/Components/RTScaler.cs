@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
+﻿using UnityEngine;
 
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
@@ -10,6 +6,9 @@ using RTFunctions.Functions.Optimization;
 
 namespace RTFunctions.Functions.Components
 {
+    /// <summary>
+    /// Component for handling drag scale.
+    /// </summary>
     public class RTScaler : MonoBehaviour
     {
         public static float ScalerOffset { get; set; } = 6f;

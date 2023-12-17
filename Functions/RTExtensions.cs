@@ -1,22 +1,16 @@
 ﻿using System;
-using System.Reflection;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
-using UnityEngine.EventSystems;
 
 using LSFunctions;
 using SimpleJSON;
 
 using RTFunctions.Functions.Animation;
-using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Optimization;

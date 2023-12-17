@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -8,28 +7,16 @@ using UnityEngine;
 
 using SimpleJSON;
 
-using RTFunctions.Functions.Components;
-using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
-using RTFunctions.Functions.Optimization;
-
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
-using AutoKillType = DataManager.GameData.BeatmapObject.AutoKillType;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
-
-using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
-using BasePrefab = DataManager.GameData.Prefab;
-using BasePrefabObject = DataManager.GameData.PrefabObject;
-using BaseBackground = DataManager.GameData.BackgroundObject;
-using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 
 namespace RTFunctions.Functions.Managers
 {
+    /// <summary>
+    /// This class handles everything to do with Custom Shapes.
+    /// </summary>
     public class ShapeManager : MonoBehaviour
     {
         public static ShapeManager inst;
-
-        public static Dictionary<string, Sprite> shapeSprites = new Dictionary<string, Sprite>();
 
         public static string ShapesPath => "beatmaps/shapes/";
         public static string ShapesSetup => $"{ShapesPath}setup.lss";

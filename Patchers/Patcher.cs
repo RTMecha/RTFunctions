@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Reflection;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using HarmonyLib;
 
@@ -39,6 +36,9 @@ namespace RTFunctions.Patchers
         ILManipulator
     }
 
+    /// <summary>
+    /// An attempt at a runtime patcher.
+    /// </summary>
     public static class Patcher
     {
         public static void PatchPropertySetter(Type type, string property, BindingFlags bindingFlags, bool nonPublic,
