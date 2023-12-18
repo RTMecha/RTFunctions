@@ -23,6 +23,8 @@ namespace RTFunctions.Functions.Data
 
 		}
 
+		public static GameData Current => (GameData)DataManager.inst.gameData;
+
 		public Dictionary<string, BaseBeatmapTheme> beatmapThemes = new Dictionary<string, BaseBeatmapTheme>();
 
         #region Methods
