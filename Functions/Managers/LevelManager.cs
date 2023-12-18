@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using SimpleJSON;
+using LSFunctions;
 
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
@@ -17,6 +18,20 @@ namespace RTFunctions.Functions.Managers
         public static LevelManager inst;
         public static string className = "[<color=#7F00FF>LevelManager</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
 
+        #region Path
+
+        public static string Path
+        {
+            get => path;
+            set => path = value;
+        }
+
+        static string path = "arcade";
+        public static string ListPath => $"beatmaps/{Path}";
+        public static string ListSlash => $"beatmaps/{Path}/";
+
+        #endregion
+
         public static bool LoadingFromHere { get; set; }
 
         public static bool InEditor => EditorManager.inst;
@@ -28,6 +43,12 @@ namespace RTFunctions.Functions.Managers
 
         public static List<Level> EditorLevels { get; set; }
 
+        public static List<Level> ArcadeQueue { get; set; }
+
+        public static int current;
+
+        public static bool finished = false;
+
         public static Action OnLevelEnd { get; set; }
 
         void Awake()
@@ -35,12 +56,30 @@ namespace RTFunctions.Functions.Managers
             inst = this;
             Levels = new List<Level>();
             EditorLevels = new List<Level>();
+            ArcadeQueue = new List<Level>();
         }
 
         void Update()
         {
             if (!InEditor)
                 EditorLevels.Clear();
+        }
+
+        public static void UpdateSavesFile()
+        {
+            var jn = JSON.Parse("{}");
+            for (int i = 0; i < Levels.Count; i++)
+            {
+                jn["arcade"][i]["level_data"]["id"] = Levels[i].id;
+                jn["arcade"][i]["level_data"]["ver"] = Levels[i].playerData.version;
+                jn["arcade"][i]["play_data"]["finished"] = Levels[i].playerData.completed;
+                jn["arcade"][i]["play_data"]["hits"] = Levels[i].playerData.hits;
+                jn["arcade"][i]["play_data"]["deaths"] = Levels[i].playerData.deaths;
+            }
+
+            string text = jn.ToString();
+            text = LSEncryption.EncryptText(text, SaveManager.inst.encryptionKey);
+            FileManager.inst.SaveJSONFile(SaveManager.inst.settingsFilePath, SaveManager.inst.savesFileName, text);
         }
 
         public static IEnumerator Play(Level level)
@@ -51,15 +90,19 @@ namespace RTFunctions.Functions.Managers
 
             Debug.Log($"{className}Switching to Game scene");
 
-            if (!GameManager.inst || EditorManager.inst)
+            bool inGame = RTHelpers.InGame;
+            if (!inGame || EditorManager.inst)
                 SceneManager.inst.LoadScene("Game");
 
-            Debug.Log($"{className}");
+            Debug.Log($"{className}Loading music...");
 
             level.LoadAudioClip();
 
-            while (!GameManager.inst)
-                yield return null;
+            if (!RTHelpers.InGame)
+            {
+                while (!RTHelpers.InGame)
+                    yield return null;
+            }
 
             Debug.Log($"{className}Parsing level...");
 
@@ -85,6 +128,9 @@ namespace RTFunctions.Functions.Managers
             GameManager.inst.introArtist.text = level.metadata.artist.Name;
 
             Debug.Log($"{className}Playing music...");
+
+            while (level.music == null)
+                yield return null;
 
             AudioManager.inst.PlayMusic(null, level.music, true, 0.5f, false);
             AudioManager.inst.SetPitch(GameManager.inst.getPitch());

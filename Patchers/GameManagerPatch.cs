@@ -98,6 +98,7 @@ namespace RTFunctions.Patchers
         {
             if (!LevelManager.LoadingFromHere && LevelManager.CurrentLevel)
             {
+                LevelManager.finished = false;
                 __instance.StartCoroutine(LevelManager.Play(LevelManager.CurrentLevel));
             }
             return false;
@@ -191,6 +192,7 @@ namespace RTFunctions.Patchers
             Time.timeScale = 1f;
             DG.Tweening.DOTween.Clear();
             InputDataManager.inst.SetAllControllerRumble(0f);
+            LevelManager.finished = true;
             LevelManager.OnLevelEnd?.Invoke();
             yield break;
         }

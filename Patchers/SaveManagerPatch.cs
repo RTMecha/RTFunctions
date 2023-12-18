@@ -60,5 +60,19 @@ namespace RTFunctions.Patchers
                 RTFile.WriteToFile("settings/functions.lss", jn.ToString(3));
             }
         }
+
+        [HarmonyPatch("OnApplicationQuit")]
+        [HarmonyPrefix]
+        static bool OnApplicationQuitPrefix()
+        {
+            DiscordController.inst.OnDisableDiscord();
+            Debug.Log("Run Quit Function");
+            PlayerPrefs.DeleteAll();
+            return false;
+        }
+
+        [HarmonyPatch("LoadSavesFile")]
+        [HarmonyPrefix]
+        static bool LoadSavesFilePrefix() => false;
     }
 }
