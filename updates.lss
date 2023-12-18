@@ -1,3 +1,5 @@
+1.7.3 > Fix for shapes not being loaded yet causing the game to not load in the arcade.
+-
 1.7.2 > More fixes and features for the new level system.
 -
 1.7.1 > Removed custom log window since it caused a ton of slow down.
