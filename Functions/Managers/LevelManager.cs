@@ -100,7 +100,7 @@ namespace RTFunctions.Functions.Managers
 
             if (!RTHelpers.InGame)
             {
-                while (!RTHelpers.InGame)
+                while (!RTHelpers.InGame || !ShapeManager.inst.loadedShapes)
                     yield return null;
             }
 

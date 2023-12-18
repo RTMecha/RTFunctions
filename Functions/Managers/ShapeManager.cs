@@ -22,7 +22,7 @@ namespace RTFunctions.Functions.Managers
         public static string ShapesSetup => $"{ShapesPath}setup.lss";
 
         bool gameHasLoaded;
-        bool loadedShapes;
+        public bool loadedShapes;
 
         void Awake()
         {
@@ -39,6 +39,7 @@ namespace RTFunctions.Functions.Managers
             if (ObjectManager.inst && !gameHasLoaded)
             {
                 gameHasLoaded = true;
+                loadedShapes = false;
                 Load();
             }
             else if (!ObjectManager.inst)
