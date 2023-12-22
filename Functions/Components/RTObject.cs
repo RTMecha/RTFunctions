@@ -257,7 +257,7 @@ namespace RTFunctions.Functions.Components
 			onMouseDrag?.Invoke();
 
 			dragTime = Time.time;
-			if (EditorManager.inst && EditorManager.inst.isEditing && dragTime > startDragTime + 0.1f && CanDrag && Enabled)
+			if (EditorManager.inst && EditorManager.inst.isEditing && dragTime > startDragTime + 0.1f && CanDrag && Enabled && !EventSystem.current.IsPointerOverGameObject())
             {
 				var vector = new Vector3(Input.mousePosition.x, Input.mousePosition.y, transform.localPosition.z);
 				var vector2 = Camera.main.ScreenToWorldPoint(vector);
