@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 using LSFunctions;
+using InControl;
 
 namespace RTFunctions.Functions.IO
 {
@@ -32,7 +33,27 @@ namespace RTFunctions.Functions.IO
 		public static bool InGame => GameManager.inst;
 		public static bool InMenu => ArcadeManager.inst.ic;
 
-        public static float getPitch()
+		public static float Pitch
+		{
+			get
+			{
+				float pitch = AudioManager.inst.CurrentAudioSource.pitch;
+				if (pitch < 0f)
+				{
+					pitch = -pitch;
+				}
+
+				if (pitch == 0f)
+					pitch = 0.0001f;
+
+				return pitch;
+			}
+		}
+
+		public static bool Paused => GameManager.inst && GameManager.inst.gameState == GameManager.State.Paused;
+		public static bool Playing => GameManager.inst && GameManager.inst.gameState == GameManager.State.Playing;
+
+		public static float getPitch()
         {
 			if (EditorManager.inst != null)
 				return 1f;
@@ -947,6 +968,62 @@ namespace RTFunctions.Functions.IO
 		}
 
 		public static bool SearchString(string a, string searchTerm) => a.ToLower().Contains(searchTerm.ToLower()) || string.IsNullOrEmpty(searchTerm);
+
+		/// <summary>
+		/// Assigns both Keyboard and Controller to actions.
+		/// </summary>
+		/// <returns>MyGameActions with both Keyboard and Controller inputs.</returns>
+		public static MyGameActions CreateWithBothBindings()
+		{
+			var myGameActions = new MyGameActions();
+
+			// Controller
+			myGameActions.Up.AddDefaultBinding(InputControlType.DPadUp);
+			myGameActions.Up.AddDefaultBinding(InputControlType.LeftStickUp);
+			myGameActions.Down.AddDefaultBinding(InputControlType.DPadDown);
+			myGameActions.Down.AddDefaultBinding(InputControlType.LeftStickDown);
+			myGameActions.Left.AddDefaultBinding(InputControlType.DPadLeft);
+			myGameActions.Left.AddDefaultBinding(InputControlType.LeftStickLeft);
+			myGameActions.Right.AddDefaultBinding(InputControlType.DPadRight);
+			myGameActions.Right.AddDefaultBinding(InputControlType.LeftStickRight);
+			myGameActions.Boost.AddDefaultBinding(InputControlType.RightTrigger);
+			myGameActions.Boost.AddDefaultBinding(InputControlType.RightBumper);
+			myGameActions.Boost.AddDefaultBinding(InputControlType.Action1);
+			myGameActions.Boost.AddDefaultBinding(InputControlType.Action3);
+			myGameActions.Join.AddDefaultBinding(InputControlType.Action1);
+			myGameActions.Join.AddDefaultBinding(InputControlType.Action2);
+			myGameActions.Join.AddDefaultBinding(InputControlType.Action3);
+			myGameActions.Join.AddDefaultBinding(InputControlType.Action4);
+			myGameActions.Pause.AddDefaultBinding(InputControlType.Command);
+			myGameActions.Escape.AddDefaultBinding(InputControlType.Action2);
+			myGameActions.Escape.AddDefaultBinding(InputControlType.Action4);
+
+			// Keyboard
+			myGameActions.Up.AddDefaultBinding(new Key[] { Key.UpArrow });
+			myGameActions.Up.AddDefaultBinding(new Key[] { Key.W });
+			myGameActions.Down.AddDefaultBinding(new Key[] { Key.DownArrow });
+			myGameActions.Down.AddDefaultBinding(new Key[] { Key.S });
+			myGameActions.Left.AddDefaultBinding(new Key[] { Key.LeftArrow });
+			myGameActions.Left.AddDefaultBinding(new Key[] { Key.A });
+			myGameActions.Right.AddDefaultBinding(new Key[] { Key.RightArrow });
+			myGameActions.Right.AddDefaultBinding(new Key[] { Key.D });
+			myGameActions.Boost.AddDefaultBinding(new Key[] { Key.Space });
+			myGameActions.Boost.AddDefaultBinding(new Key[] { Key.Return });
+			myGameActions.Boost.AddDefaultBinding(new Key[] { Key.Z });
+			myGameActions.Boost.AddDefaultBinding(new Key[] { Key.X });
+			myGameActions.Join.AddDefaultBinding(new Key[] { Key.Space });
+			myGameActions.Join.AddDefaultBinding(new Key[] { Key.A });
+			myGameActions.Join.AddDefaultBinding(new Key[] { Key.S });
+			myGameActions.Join.AddDefaultBinding(new Key[] { Key.D });
+			myGameActions.Join.AddDefaultBinding(new Key[] { Key.W });
+			myGameActions.Join.AddDefaultBinding(new Key[] { Key.LeftArrow });
+			myGameActions.Join.AddDefaultBinding(new Key[] { Key.RightArrow });
+			myGameActions.Join.AddDefaultBinding(new Key[] { Key.DownArrow });
+			myGameActions.Join.AddDefaultBinding(new Key[] { Key.UpArrow });
+			myGameActions.Pause.AddDefaultBinding(new Key[] { Key.Escape });
+			myGameActions.Escape.AddDefaultBinding(new Key[] { Key.Escape });
+			return myGameActions;
+		}
 
 		#region Cipher Encryptions because heck it
 
