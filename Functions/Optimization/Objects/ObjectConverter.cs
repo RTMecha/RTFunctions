@@ -303,7 +303,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                                 playerParent = new GameObject("PLAYER_PARENT [" + beatmapObject.id + "]");
                                 playerParent.transform.SetParent(ObjectManager.inst.objectParent.transform);
                                 playerParent.transform.localScale = Vector3.zero;
-                                var delayTracker = playerParent.AddComponent<RTDelayTracker>();
+                                var delayTracker = playerParent.AddComponent<ObjectDelayTracker>();
 
                                 delayTracker.move = beatmapObject.GetParentType(0);
                                 delayTracker.rotate = beatmapObject.GetParentType(2);
@@ -315,7 +315,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                             {
                                 playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
 
-                                var delayTracker = playerParent.AddComponent<RTDelayTracker>();
+                                var delayTracker = playerParent.AddComponent<ObjectDelayTracker>();
 
                                 delayTracker.move = beatmapObject.GetParentType(0);
                                 delayTracker.rotate = beatmapObject.GetParentType(2);
@@ -327,7 +327,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                             {
                                 playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
 
-                                var delayTracker = playerParent.GetComponent<RTDelayTracker>();
+                                var delayTracker = playerParent.GetComponent<ObjectDelayTracker>();
 
                                 delayTracker.move = beatmapObject.GetParentType(0);
                                 delayTracker.rotate = beatmapObject.GetParentType(2);
