@@ -955,6 +955,26 @@ namespace RTFunctions.Functions.Managers
             }
 
             public static string Percentage(float t, float length) => string.Format("{0:000}", ((int)RTMath.Percentage(t, length)).ToString());
+
+            public static string ConvertHealthToEquals(int _num, int _max = 3)
+            {
+                string str = "[";
+                for (int i = 0; i < _num; i++)
+                {
+                    str += "=";
+                }
+
+                int e = -_num + _max;
+                if (e > 0)
+                {
+                    for (int i = 0; i < e; i++)
+                    {
+                        str += " ";
+                    }
+                }
+
+                return str += "]";
+            }
         }
     }
 }
