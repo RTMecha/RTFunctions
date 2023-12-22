@@ -148,10 +148,21 @@ namespace RTFunctions.Functions.Managers
 
             Debug.Log($"{className}Spawning...");
 
+            if (InputDataManager.inst.players.Count == 0)
+            {
+                var customPlayer = new Data.Player.CustomPlayer(true, 0, null);
+                InputDataManager.inst.players.Add(customPlayer);
+            }
+
+            PlayerManager.LoadLocalModels?.Invoke();
+            PlayerManager.LoadIndexes?.Invoke();
+
             GameManager.inst.introAnimator.SetTrigger("play");
             GameManager.inst.SpawnPlayers(DataManager.inst.gameData.beatmapData.checkpoints[0].pos);
 
-            ObjectManager.inst.updateObjects();
+            //ObjectManager.inst.updateObjects();
+            Patchers.ObjectManagerPatch.AddPrefabObjects(ObjectManager.inst);
+            Patchers.GameManagerPatch.StartInvoke();
 
             Debug.Log($"{className}Done!");
 
@@ -173,9 +184,7 @@ namespace RTFunctions.Functions.Managers
                 if (setLevelEnd)
                     OnLevelEnd = delegate ()
                     {
-                        DG.Tweening.DOTween.Clear();
-                        DataManager.inst.gameData = null;
-                        DataManager.inst.gameData = new GameData();
+                        Clear();
                         Updater.OnLevelEnd();
                         SceneManager.inst.LoadScene("Main Menu");
                     };
@@ -186,6 +195,14 @@ namespace RTFunctions.Functions.Managers
             }
 
             Debug.LogError($"{className}Couldn't load level from {path} as it doesn't exist.");
+        }
+
+        public static void Clear()
+        {
+            DG.Tweening.DOTween.Clear();
+            DataManager.inst.gameData = null;
+            DataManager.inst.gameData = new GameData();
+            InputDataManager.inst.SetAllControllerRumble(0f);
         }
 
         public static string UpdateBeatmap(string _json, string _version)

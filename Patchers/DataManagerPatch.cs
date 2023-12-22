@@ -65,6 +65,10 @@ namespace RTFunctions.Patchers
             var levelManager = new GameObject("LevelManager");
             levelManager.transform.SetParent(systemManager.transform);
             levelManager.AddComponent<LevelManager>();
+            
+            var playerManager = new GameObject("PlayerManager");
+            playerManager.transform.SetParent(systemManager.transform);
+            playerManager.AddComponent<PlayerManager>();
 
             //AlephNetworkManager.Init();
 
@@ -234,7 +238,7 @@ namespace RTFunctions.Patchers
                     jn = ((Functions.Data.Metadata)__1).ToJSON();
 
                     Debug.Log($"{__instance.className}Saving Metadata Full");
-                    LSFile.WriteToFile(__0, jn.ToString());
+                    RTFile.WriteToFile(__0, jn.ToString());
                 }
                 else
                 {
@@ -281,7 +285,7 @@ namespace RTFunctions.Patchers
                 jn["beatmap"]["workshop_id"] = __1.beatmap.workshop_id.ToString();
 
                 Debug.Log($"{__instance.className}Saving Metadata");
-                LSFile.WriteToFile(__0, jn.ToString());
+                RTFile.WriteToFile(__0, jn.ToString());
             }
 
             __result = result;

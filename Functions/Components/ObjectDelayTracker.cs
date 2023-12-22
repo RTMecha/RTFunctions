@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
+using RTFunctions.Functions.IO;
 
 namespace RTFunctions.Functions.Components
 {
-    public class RTDelayTracker : MonoBehaviour
+    public class ObjectDelayTracker : MonoBehaviour
 	{
 		public Transform self;
 
@@ -31,11 +32,7 @@ namespace RTFunctions.Functions.Components
         {
 			if (leader && self)
 			{
-				float pitch = AudioManager.inst.CurrentAudioSource.pitch;
-				if (pitch < 0f)
-					pitch = -pitch;
-				if (pitch == 0f)
-					pitch = 0.001f;
+				float pitch = RTHelpers.Pitch;
 
 				target = leader.position + moveOffset;
 
