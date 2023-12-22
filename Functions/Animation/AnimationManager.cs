@@ -176,6 +176,12 @@ namespace RTFunctions.Functions.Animation
 				{
 					playing = false;
 					onComplete?.Invoke();
+
+					if (loop)
+                    {
+						ResetTime();
+						Play();
+					}
 				}
 			}
 
@@ -183,6 +189,8 @@ namespace RTFunctions.Functions.Animation
 			public string name;
 
 			public bool useRealTime = true;
+
+			public bool loop;
 
 			float time;
             public float Time
