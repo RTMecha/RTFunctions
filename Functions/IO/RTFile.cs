@@ -16,9 +16,7 @@ namespace RTFunctions.Functions.IO
 
 		public static string PersistentApplicationDirectory => Application.persistentDataPath;
 
-		public static string BasePath
-			=> GameManager.inst != null && !string.IsNullOrEmpty(GameManager.inst.basePath) ? GameManager.inst.basePath
-			: SaveManager.inst.ArcadeQueue.AudioFileStr.Replace("\\", "/").Replace("/level.ogg", "/");
+		public static string BasePath => GameManager.inst.basePath;
 
 		//public static IEnumerator LoadImageFile(string _path, Action<Sprite> action, Action<string> onError)
 		//{
