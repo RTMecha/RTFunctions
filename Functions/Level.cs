@@ -96,5 +96,7 @@ namespace RTFunctions.Functions
             public bool completed;
             public int version;
         }
+
+        public override string ToString() => System.IO.Path.GetFileName(path);
     }
 }
