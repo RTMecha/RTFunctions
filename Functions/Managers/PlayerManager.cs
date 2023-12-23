@@ -86,6 +86,8 @@ namespace RTFunctions.Functions.Managers
         public static Action<string> DuplicatePlayerModel { get; set; }
         public static Action<int, string> SetPlayerModel { get; set; }
 
+        public static bool allowController;
+
         public static string GetPlayerModelIndex(int index) => PlayerModelsIndex[index];
 
         public static void SetPlayerModelIndex(int index, int _id)
@@ -130,15 +132,16 @@ namespace RTFunctions.Functions.Managers
             customPlayer.Player = player;
             customPlayer.GameObject = player.gameObject;
 
-            player.Spawn();
-
-            player.UpdatePlayer();
+            if (GameManager.inst.players.activeSelf)
+                player.UpdatePlayer();
+            else
+                player.playerNeedsUpdating = true;
 
             if (customPlayer.device == null)
             {
-                player.Actions = EditorManager.inst && InputDataManager.inst.players.Count == 1 ? RTHelpers.CreateWithBothBindings() : InputDataManager.inst.keyboardListener;
+                player.Actions = (EditorManager.inst || allowController) && InputDataManager.inst.players.Count == 1 ? RTHelpers.CreateWithBothBindings() : InputDataManager.inst.keyboardListener;
                 player.isKeyboard = true;
-                player.faceController = EditorManager.inst != null && InputDataManager.inst.players.Count == 1 ? FaceController.CreateWithBothBindings() : FaceController.CreateWithKeyboardBindings();
+                player.faceController = (EditorManager.inst || allowController) && InputDataManager.inst.players.Count == 1 ? FaceController.CreateWithBothBindings() : FaceController.CreateWithKeyboardBindings();
             }
             else
             {
@@ -233,9 +236,10 @@ namespace RTFunctions.Functions.Managers
             player.PlayerModel = playerModel;
             player.playerIndex = index;
 
-            player.Spawn();
-
-            player.UpdatePlayer();
+            if (GameManager.inst.players.activeSelf)
+                player.UpdatePlayer();
+            else
+                player.playerNeedsUpdating = true;
 
             foreach (var path in player.path)
             {
