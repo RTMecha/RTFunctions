@@ -4,6 +4,7 @@ using System.Linq;
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace RTFunctions.Functions.Managers
 {
@@ -15,9 +16,10 @@ namespace RTFunctions.Functions.Managers
         {
             inst = this;
             perspectiveCam = GameManager.inst.CameraPerspective.GetComponent<Camera>();
+            postProcessLayer = Camera.main.gameObject.GetComponent<PostProcessLayer>();
         }
 
         public Camera perspectiveCam;
-
+        public PostProcessLayer postProcessLayer;
     }
 }
