@@ -27,6 +27,7 @@ using Application = UnityEngine.Application;
 using Screen = UnityEngine.Screen;
 using Ease = RTFunctions.Functions.Animation.Ease;
 using Version = RTFunctions.Functions.Version;
+using System.Linq;
 
 namespace RTFunctions
 {
@@ -82,10 +83,11 @@ namespace RTFunctions
 
 		public static ConfigEntry<bool> LDM { get; set; }
 
-		public static ConfigEntry<bool> ShowLogPopup { get; set; }
-		public static ConfigEntry<int> LogPopupCap { get; set; }
-
 		public static ConfigEntry<bool> AntiAliasing { get; set; }
+
+		public static ConfigEntry<KeyCode> ScreenshotKey { get; set; }
+
+		public static ConfigEntry<string> ScreenshotsPath { get; set; }
 
 		#endregion
 
@@ -335,9 +337,9 @@ namespace RTFunctions
 
 			DebugsOn = Config.Bind("Debugging", "Enabled", true, "If disabled, turns all Unity debug logs off. Might boost performance.");
 			NotifyREPL = Config.Bind("Debugging", "Notify REPL", false, "If in editor, code ran will have their results be notified.");
-			ShowLogPopup = Config.Bind("Debugging", "Log Popup", true, "");
-			LogPopupCap = Config.Bind("Debugging", "Log Popup Cap", 50, "");
 
+			ScreenshotsPath = Config.Bind("Game", "Screenshot Path", "screenshots", "The path to save screenshots to.");
+			ScreenshotKey = Config.Bind("Game", "Screenshot Key", KeyCode.P, "The key to press to take a screenshot.");
 			AntiAliasing = Config.Bind("Game", "Anti-Aliasing", true, "If antialiasing is on or not.");
 			IncreasedClipPlanes = Config.Bind("Game", "Camera Clip Planes", true, "Increases the clip panes to a very high amount, allowing for object render depth to go really high or really low.");
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
@@ -361,16 +363,21 @@ namespace RTFunctions
 
 			// Patchers
 			{
+				//harmony.PatchAll();
 				harmony.PatchAll(typeof(FunctionsPlugin));
+				harmony.PatchAll(typeof(BackgroundManagerPatch));
 				harmony.PatchAll(typeof(DataManagerPatch));
 				harmony.PatchAll(typeof(DataManagerGameDataPatch));
 				harmony.PatchAll(typeof(DataManagerBeatmapObjectPatch));
 				harmony.PatchAll(typeof(DataManagerPrefabPatch));
-				harmony.PatchAll(typeof(GameManagerPatch));
-				harmony.PatchAll(typeof(ObjectManagerPatch));
-				harmony.PatchAll(typeof(SaveManagerPatch));
-				harmony.PatchAll(typeof(BackgroundManagerPatch));
 				harmony.PatchAll(typeof(DiscordControllerPatch));
+				harmony.PatchAll(typeof(GameManagerPatch));
+				harmony.PatchAll(typeof(InputDataManagerPatch));
+				harmony.PatchAll(typeof(InputSelectManagerPatch));
+				harmony.PatchAll(typeof(MyGameActionsPatch));
+				harmony.PatchAll(typeof(ObjectManagerPatch));
+				harmony.PatchAll(typeof(PlayerPatch));
+				harmony.PatchAll(typeof(SaveManagerPatch));
 			}
 
 			// Hooks
@@ -517,75 +524,18 @@ namespace RTFunctions
 		static void DisableLoggers()
 		{
 			Debug.unityLogger.logEnabled = DebugsOn.Value;
-			//UnityEngine.Analytics.Analytics.initializeOnStartup = false;
-			//UnityEngine.Analytics.PerformanceReporting.enabled = false;
-			//UnityEngine.Analytics.Analytics.deviceStatsEnabled = false;
 		}
-
-        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(object) })]
-        //[HarmonyPostfix]
-        //static void ILoggerLog(object __0)
-        //{
-        //    RTLogger.AddLog(__0.ToString());
-        //}
-
-        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(LogType), typeof(object) })]
-        //[HarmonyPostfix]
-        //static void ILoggerLog(LogType __0, object __1)
-        //{
-        //    RTLogger.AddLog(__1.ToString());
-        //}
-
-        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(string), typeof(object) })]
-        //[HarmonyPostfix]
-        //static void ILoggerLog(string __0, object __1)
-        //{
-        //    RTLogger.AddLog(__1.ToString());
-        //}
-
-        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(string), typeof(object), typeof(UnityEngine.Object) })]
-        //[HarmonyPostfix]
-        //static void ILoggerLog(string __0, object __1, UnityEngine.Object __2)
-        //{
-        //    RTLogger.AddLog(__1.ToString());
-        //}
-
-        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(LogType), typeof(string), typeof(object) })]
-        //[HarmonyPostfix]
-        //static void ILoggerLog(LogType __0, string __1, object __2)
-        //{
-        //    RTLogger.AddLog(__2.ToString());
-        //}
-
-        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(string), typeof(object), typeof(UnityEngine.Object) })]
-        //[HarmonyPostfix]
-        //static void ILoggerLog(string __0, object __1, object __2)
-        //{
-        //    RTLogger.AddLog(__1.ToString());
-        //}
-
-        //[HarmonyPatch(typeof(ILogger), "Log", new Type[] { typeof(LogType), typeof(string), typeof(object), typeof(UnityEngine.Object) })]
-        //[HarmonyPostfix]
-        //static void ILoggerLog(LogType __0, string __1, object __2, UnityEngine.Object __3)
-        //{
-        //    RTLogger.AddLog(__2.ToString());
-        //}
 
         [HarmonyPatch(typeof(SystemManager), "Update")]
 		[HarmonyPrefix]
 		static bool SystemManagerUpdatePrefix()
 		{
-			if ((Input.GetKeyDown(KeyCode.P) && !LSHelpers.IsUsingInputField()) || (Input.GetKeyDown(KeyCode.F12) && !LSHelpers.IsUsingInputField()))
-			{
+			if (Input.GetKeyDown(ScreenshotKey.Value) && !LSHelpers.IsUsingInputField())
 				TakeScreenshot();
-			}
+
 			if (Input.GetKeyDown(KeyCode.F11) && !LSHelpers.IsUsingInputField())
-			{
 				Fullscreen.Value = !Fullscreen.Value;
 
-				//DataManager.inst.UpdateSettingBool("FullScreen", !DataManager.inst.GetSettingBool("FullScreen"));
-				//SaveManager.inst.ApplyVideoSettings();
-			}
 			return false;
         }
 
@@ -594,7 +544,7 @@ namespace RTFunctions
         static void EditorStartPostfix(EditorManager __instance)
         {
             __instance.SetCreatorName(DisplayName.Value);
-			if (SteamWrapper.inst != null)
+			if (SteamWrapper.inst)
 				SteamWrapper.inst.user.displayName = DisplayName.Value;
 		}
 
@@ -611,10 +561,6 @@ namespace RTFunctions
 			__result = text;
 			return false;
 		}
-
-		[HarmonyPatch(typeof(ObjEditor), "DeleteObject")]
-		[HarmonyPrefix]
-		static void ObjEditorDeletePrefix(ObjEditor __instance, ObjEditor.ObjectSelection __0) => Updater.updateProcessor(__0, false);
 
 		[HarmonyPatch(typeof(EventManager), "updateTheme")]
 		[HarmonyPrefix]
@@ -638,36 +584,13 @@ namespace RTFunctions
 		public static Action<GameManager> EventsCoreGameThemePrefix { get; set; }
 		public static Action<EventManager, float> EventsCoreUpdateThemePrefix { get; set; }
 
-		//[HarmonyPatch(typeof(InterfaceController), "Start")]
-		//[HarmonyPrefix]
-		//static void InterfaceControllerPrefix(InterfaceController __instance)
-		//{
-		//	if (__instance.gameObject.scene.name == "Main Menu")
-		//		GameManagerPatch.EndInvoke();
-		//}
-
-		//public static bool DepthSetterPrefix(int value, object __instance)
-		//{
-		//	// Instance is not null
-		//	//Debug.Log($"{className}BeatmapObject Instance: {__instance}");
-
-		//	if (__instance is Functions.Data.BeatmapObject)
-		//		((Functions.Data.BeatmapObject)__instance).depth = value;
-		//	else
-		//		((DataManager.GameData.BeatmapObject)__instance).depth = value;
-
-		//	return false;
-		//}
-
 		#endregion
 
 		public static void TakeScreenshot()
 		{
-			string directory = RTFile.ApplicationDirectory + "screenshots";
+			string directory = RTFile.ApplicationDirectory + ScreenshotsPath.Value;
 			if (!Directory.Exists(directory))
-			{
 				Directory.CreateDirectory(directory);
-			}
 
 			var file = directory + "/" + DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss") + ".png";
 			ScreenCapture.CaptureScreenshot(file, 1);
@@ -777,91 +700,6 @@ namespace RTFunctions
 			yield break;
         }
 
-        #region Debugging
-
-        public static int ObjectsOnScreenCount()
-		{
-			int posnum = 0;
-			float camPosX = 1.775f * EventManager.inst.camZoom + EventManager.inst.camPos.x;
-			float camPosY = 1f * EventManager.inst.camZoom + EventManager.inst.camPos.y;
-
-			if (Updater.Active)
-			{
-				foreach (var beatmapObject in Updater.levelProcessor.level.objects)
-				{
-					try
-					{
-						var bm = (LevelObject)beatmapObject;
-
-						if (bm.visualObject.GameObject)
-						{
-							//var lossyScale = Vector3.one;
-							//var position = bm.visualObject.GameObject.transform.position;
-
-							//foreach (var chain in functionObject.transformChain)
-							//{
-							//	var chvector = chain.transform.localScale;
-							//	lossyScale = new Vector3(lossyScale.x * chvector.x, lossyScale.y * chvector.y, 1f);
-							//}
-
-							//var array = new Vector3[functionObject.meshFilter.mesh.vertices.Length];
-							//for (int i = 0; i < array.Length; i++)
-							//{
-							//	var a = functionObject.meshFilter.mesh.vertices[i];
-							//	array[i] = new Vector3(a.x * lossyScale.x, a.y * lossyScale.y, 0f) + position;
-							//}
-
-							//if (array.All(x => x.x > camPosX || x.y > camPosY || x.x < -camPosX || x.y < -camPosY))
-							//{
-							//	posnum += 1;
-							//}
-						}
-					}
-					catch
-					{
-
-					}
-				}
-			}
-
-   //         foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
-			//{
-			//	if (Objects.beatmapObjects.ContainsKey(beatmapObject.id))
-			//	{
-			//		var functionObject = Objects.beatmapObjects[beatmapObject.id];
-			//		if (functionObject.gameObject != null && functionObject.meshFilter != null)
-			//		{
-			//			var lossyScale = Vector3.one;
-			//			var position = functionObject.gameObject.transform.position;
-
-			//			foreach (var chain in functionObject.transformChain)
-			//			{
-			//				var chvector = chain.transform.localScale;
-			//				lossyScale = new Vector3(lossyScale.x * chvector.x, lossyScale.y * chvector.y, 1f);
-			//			}
-
-			//			var array = new Vector3[functionObject.meshFilter.mesh.vertices.Length];
-			//			for (int i = 0; i < array.Length; i++)
-			//			{
-			//				var a = functionObject.meshFilter.mesh.vertices[i];
-			//				array[i] = new Vector3(a.x * lossyScale.x, a.y * lossyScale.y, 0f) + position;
-			//			}
-
-			//			if (array.All(x => x.x > camPosX || x.y > camPosY || x.x < -camPosX || x.y < -camPosY))
-			//			{
-			//				posnum += 1;
-			//			}
-			//		}
-			//	}
-			//}
-
-			return posnum;
-		}
-
-		public static int ObjectsAliveCount() => DataManager.inst.gameData.beatmapObjects.FindAll(x => x.TimeWithinLifespan()).Count;
-
-        #endregion
-
 		/// <summary>
 		/// For setting mostly unlimited render depth range.
 		/// </summary>
@@ -870,7 +708,6 @@ namespace RTFunctions
 			if (GameManager.inst == null)
 				return;
 
-			//var camera = GameObject.Find("Main Camera").GetComponent<Camera>();
 			var camera = Camera.main;
 			camera.farClipPlane = IncreasedClipPlanes.Value ? 100000 : 32f;
 			camera.nearClipPlane = IncreasedClipPlanes.Value ? -100000 : 0.1f;
@@ -878,9 +715,9 @@ namespace RTFunctions
 
 		public static void SetAntiAliasing()
         {
-			if (GameManager.inst != null)
+			if (GameStorageManager.inst && GameStorageManager.inst.postProcessLayer)
 			{
-				Camera.main.gameObject.GetComponent<PostProcessLayer>().antialiasingMode
+				GameStorageManager.inst.postProcessLayer.antialiasingMode
 					= AntiAliasing.Value ? PostProcessLayer.Antialiasing.FastApproximateAntialiasing : PostProcessLayer.Antialiasing.None;
 			}
 		}
