@@ -152,6 +152,11 @@ namespace RTFunctions.Functions.Managers
             {
                 var customPlayer = new Data.Player.CustomPlayer(true, 0, null);
                 InputDataManager.inst.players.Add(customPlayer);
+                PlayerManager.allowController = true;
+            }
+            else
+            {
+                PlayerManager.allowController = false;
             }
 
             PlayerManager.LoadLocalModels?.Invoke();
