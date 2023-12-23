@@ -668,13 +668,23 @@ namespace RTFunctions.Functions
 		static void Test()
         {
 			DataManager.inst.gameData.beatmapObjects.ToDictionary(x => x.id, x => x);
+
+			var dictionary = new Dictionary<string, object>();
+
+			dictionary.Get<Component, string>("test");
         }
 
 		public static List<string> GetLines(this string str) => str.Split(new string[] { "\n", "\n\r", "\r" }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
-        #endregion
+		public static T Get<T>(this List<object> list, int index) => (T)list[index];
 
-        #region JSON
+		public static T Get<T, TKey>(this Dictionary<TKey, object> keyValuePairs, TKey key) => (T)keyValuePairs[key];
+
+		public static Vector2 ToVector2(this Vector3 _v) => new Vector2(_v.x, _v.y);
+
+		#endregion
+
+		#region JSON
 
 		public static JSONNode ToJSON(this Vector2 vector2)
         {
