@@ -199,19 +199,25 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 try
                 {
-                    if (beatmapObject.fromPrefab && !string.IsNullOrEmpty(beatmapObject.prefabInstanceID))
+                    if (beatmapObject.fromPrefab && !string.IsNullOrEmpty(beatmapObject.prefabInstanceID) && gameData.prefabObjects.Has(x => x.ID == beatmapObject.prefabInstanceID))
                     {
                         var prefab = gameData.prefabObjects.Find(x => x.ID == beatmapObject.prefabInstanceID);
 
-                        var pos = new Vector3(prefab.events[0].eventValues[0], prefab.events[0].eventValues[1], 0f);
-                        var sca = new Vector3(prefab.events[1].eventValues[0], prefab.events[1].eventValues[1], 1f);
-                        var rot = Quaternion.Euler(0f, 0f, prefab.events[2].eventValues[0]);
+                        var pos = new Vector3(
+                            prefab.events.Count > 0 && prefab.events[0] != null && prefab.events[0].eventValues.Length > 0 ? prefab.events[0].eventValues[0] : 0f,
+                            prefab.events.Count > 0 && prefab.events[0] != null && prefab.events[0].eventValues.Length > 1 ? prefab.events[0].eventValues[1] : 0f,
+                            0f);
+                        var sca = new Vector3(
+                            prefab.events.Count > 1 && prefab.events[1] != null && prefab.events[1].eventValues.Length > 0 ? prefab.events[1].eventValues[0] : 1f,
+                            prefab.events.Count > 1 && prefab.events[1] != null && prefab.events[1].eventValues.Length > 1 ? prefab.events[1].eventValues[1] : 1f,
+                            1f);
+                        var rot = Quaternion.Euler(0f, 0f, prefab.events.Count > 2 && prefab.events[2] != null && prefab.events[2].eventValues.Length > 0 ? prefab.events[2].eventValues[0] : 0f);
 
-                        if (prefab.events[0].random != 0)
+                        if (prefab.events.Count > 0 && prefab.events[0] != null && prefab.events[0].random != 0)
                             pos = ObjectManager.inst.RandomVector2Parser(prefab.events[0]);
-                        if (prefab.events[1].random != 0)
+                        if (prefab.events.Count > 1 && prefab.events[1] != null && prefab.events[1].random != 0)
                             sca = ObjectManager.inst.RandomVector2Parser(prefab.events[1]);
-                        if (prefab.events[2].random != 0)
+                        if (prefab.events.Count > 2 && prefab.events[2] != null && prefab.events[2].random != 0)
                             rot = Quaternion.Euler(0f, 0f, ObjectManager.inst.RandomFloatParser(prefab.events[2]));
 
                         top.transform.localPosition = pos;
