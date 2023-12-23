@@ -6,7 +6,7 @@ using UnityEngine;
 using HarmonyLib;
 using InControl;
 
-namespace CreativePlayers.Patchers
+namespace RTFunctions.Patchers
 {
 	[HarmonyPatch(typeof(MyGameActions))]
 	public class MyGameActionsPatch : MonoBehaviour
