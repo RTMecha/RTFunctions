@@ -561,15 +561,22 @@ namespace RTFunctions.Functions.Components.Player
             barRT.pivot = new Vector2(0f, 0.5f);
             barRT.anchoredPosition = new Vector2(-100f, 0f);
 
+            health.SetActive(false);
+
             burst = playerObjects["Head"].gameObject.transform.Find("burst-explosion").GetComponent<ParticleSystem>();
             death = playerObjects["Head"].gameObject.transform.Find("death-explosion").GetComponent<ParticleSystem>();
             spawn = playerObjects["Head"].gameObject.transform.Find("spawn-implosion").GetComponent<ParticleSystem>();
         }
 
+        public bool playerNeedsUpdating;
         void Start()
         {
             playerHealEvent += UpdateTail;
             playerHitEvent += UpdateTail;
+            Spawn();
+
+            if (playerNeedsUpdating)
+                UpdatePlayer();
         }
 
         public void Spawn()
