@@ -122,9 +122,9 @@ namespace RTFunctions.Patchers
             {
                 if (EditorManager.inst == null)
                 {
-                    foreach (InputDataManager.CustomPlayer player in InputDataManager.inst.players)
+                    foreach (var player in PlayerManager.Players)
                     {
-                        if (player.player && player.player.Actions.Pause.WasPressed)
+                        if (player.Player && player.Player.Actions.Pause.WasPressed)
                             __instance.Pause();
                     }
                 }
