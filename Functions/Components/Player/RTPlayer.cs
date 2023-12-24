@@ -209,11 +209,11 @@ namespace RTFunctions.Functions.Components.Player
 
         public bool CanBoost
         {
-            get => (EditorManager.inst == null || !EditorManager.inst.isEditing) && canBoost && !isBoosting && !RTHelpers.Paused && !LSHelpers.IsUsingInputField();
+            get => (!EditorManager.inst || !EditorManager.inst.isEditing) && canBoost && !isBoosting && !RTHelpers.Paused && !LSHelpers.IsUsingInputField();
             set => canBoost = value;
         }
 
-        public bool PlayerAlive => InputDataManager.inst != null && InputDataManager.inst.players.Count > 0 && InputDataManager.inst != null && CustomPlayer && CustomPlayer.Health > 0 && !isDead;
+        public bool PlayerAlive => InputDataManager.inst && InputDataManager.inst.players.Count > 0 && CustomPlayer && CustomPlayer.Health > 0 && !isDead;
 
         #endregion
 
@@ -1764,16 +1764,7 @@ namespace RTFunctions.Functions.Components.Player
 
                 //Health
                 {
-                    if (EditorManager.inst == null && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 0) == 3)
-                    {
-                        CustomPlayer.Health = 1;
-                    }
-                    else if (EditorManager.inst != null)
-                    {
-                        CustomPlayer.Health = (int)currentModel.values["Base Health"];
-                    }
-
-                    initialHealthCount = CustomPlayer.Health;
+                    CustomPlayer.Health = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 0) == 3 ? 1 : (int)currentModel.values["Base Health"];
                 }
 
                 //Health Images

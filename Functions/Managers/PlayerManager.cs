@@ -163,7 +163,7 @@ namespace RTFunctions.Functions.Managers
                 }
             }
 
-            if (EditorManager.inst == null)
+            //if (EditorManager.inst == null)
             {
                 if (DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 3 || DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 2)
                 {
@@ -173,8 +173,11 @@ namespace RTFunctions.Functions.Managers
                         {
                             GameManager.inst.lastCheckpointState = -1;
                             GameManager.inst.ResetCheckpoints();
-                            GameManager.inst.hits.Clear();
-                            GameManager.inst.deaths.Clear();
+                            if (!EditorManager.inst)
+                            {
+                                GameManager.inst.hits.Clear();
+                                GameManager.inst.deaths.Clear();
+                            }
                             GameManager.inst.gameState = GameManager.State.Reversing;
                         }
                     };
@@ -189,7 +192,7 @@ namespace RTFunctions.Functions.Managers
                         }
                     };
                 }
-                if (player.playerIndex == 0)
+                if (player.playerIndex == 0 && !EditorManager.inst)
                 {
                     player.playerDeathEvent += delegate (Vector3 _val)
                     {
@@ -201,17 +204,16 @@ namespace RTFunctions.Functions.Managers
                     };
                 }
             }
-            else
-            {
-                player.playerDeathEvent += delegate (Vector3 _val)
-                {
-                    if (InputDataManager.inst.players.All(x => x is CustomPlayer && (x as CustomPlayer).Player == null || !(x as CustomPlayer).Player.PlayerAlive))
-                    {
-                        //__instance.ResetCheckpoints();
-                        GameManager.inst.gameState = GameManager.State.Reversing;
-                    }
-                };
-            }
+            //else
+            //{
+            //    player.playerDeathEvent += delegate (Vector3 _val)
+            //    {
+            //        if (InputDataManager.inst.players.All(x => x is CustomPlayer && (x as CustomPlayer).Player == null || !(x as CustomPlayer).Player.PlayerAlive))
+            //        {
+            //            GameManager.inst.gameState = GameManager.State.Reversing;
+            //        }
+            //    };
+            //}
 
             customPlayer.active = true;
         }
