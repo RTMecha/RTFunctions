@@ -116,7 +116,7 @@ namespace RTFunctions.Patchers
 
         [HarmonyPatch("Update")]
         [HarmonyPrefix]
-        static void UpdatePrefix(GameManager __instance)
+        static bool UpdatePrefix(GameManager __instance)
         {
             if (__instance.gameState == GameManager.State.Playing)
             {
@@ -137,7 +137,7 @@ namespace RTFunctions.Patchers
             }
             if (__instance.gameState == GameManager.State.Reversing && !__instance.isReversing)
             {
-                __instance.StartCoroutine(__instance.ReverseToCheckpointLoop());
+                __instance.StartCoroutine(ReverseToCheckpointLoop(__instance));
             }
             else if (__instance.gameState == GameManager.State.Playing)
             {
@@ -152,6 +152,47 @@ namespace RTFunctions.Patchers
 
             if (AudioManager.inst.CurrentAudioSource.clip != null)
                 __instance.prevAudioTime = AudioManager.inst.CurrentAudioSource.time;
+
+            return false;
+        }
+
+        public static IEnumerator ReverseToCheckpointLoop(GameManager __instance)
+        {
+            if (!__instance.isReversing)
+            {
+                __instance.playingCheckpointAnimation = true;
+                __instance.isReversing = true;
+
+                int index = DataManager.inst.gameData.beatmapData.checkpoints.FindIndex(x => x.time > AudioManager.inst.CurrentAudioSource.time);
+                if (index < 0)
+                    index = 0;
+
+                var checkpoint = DataManager.inst.gameData.beatmapData.checkpoints[index];
+                AudioManager.inst.SetPitch(-1.5f);
+                AudioManager.inst.PlaySound("rewind");
+
+                yield return new WaitForSeconds(2f);
+
+                float time = Mathf.Clamp(checkpoint.time + 0.01f, 0.1f, AudioManager.inst.CurrentAudioSource.clip.length);
+                if (EditorManager.inst == null && (DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 2 || DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 3))
+                    time = 0.1f;
+
+                AudioManager.inst.CurrentAudioSource.time = time;
+                __instance.gameState = GameManager.State.Playing;
+
+                AudioManager.inst.CurrentAudioSource.Play();
+                AudioManager.inst.SetPitch(__instance.getPitch());
+
+                __instance.UpdateEventSequenceTime();
+                __instance.isReversing = false;
+
+                yield return new WaitForSeconds(0.1f);
+
+                __instance.SpawnPlayers(checkpoint.pos);
+                __instance.playingCheckpointAnimation = false;
+                checkpoint = null;
+            }
+            yield break;
         }
 
         [HarmonyPatch("PlayLevel")]
