@@ -62,11 +62,14 @@ namespace RTFunctions.Functions.Components
                     {
                         setKeyframeValues = true;
                         dragKeyframeValues = refObject.selectedKeyframe.eventValues[0];
-                        dragOffset = Input.GetKey(KeyCode.LeftShift) ? RTMath.roundToNearest(vector2.y, 15f) : vector2.y;
+                        //dragOffset = Input.GetKey(KeyCode.LeftShift) ? RTMath.roundToNearest(vector2.y, 15f) : vector2.y;
+                        dragOffset = Input.GetKey(KeyCode.LeftShift) ? RTMath.roundToNearest(-RTMath.VectorAngle(transform.position, vector2), 15f) : -RTMath.VectorAngle(transform.position, vector2);
                     }
 
-                    refObject.selectedKeyframe.eventValues[0] = Input.GetKey(KeyCode.LeftShift) ? RTMath.roundToNearest(dragKeyframeValues - dragOffset + vector2.y, 15f) : dragKeyframeValues - dragOffset + vector2.y;
-                    //refObject.selectedKeyframe.eventValues[0] = dragKeyframeValues - dragOffset + (Input.GetKey(KeyCode.LeftShift) ? RTMath.roundToNearest(vector2.y, 15f) : vector2.y);
+                    //refObject.selectedKeyframe.eventValues[0] =
+                    //    Input.GetKey(KeyCode.LeftShift) ? RTMath.roundToNearest(dragKeyframeValues - dragOffset + vector2.y, 15f) : dragKeyframeValues - dragOffset + vector2.y;
+                    refObject.selectedKeyframe.eventValues[0] =
+                        Input.GetKey(KeyCode.LeftShift) ? RTMath.roundToNearest(dragKeyframeValues - dragOffset + -RTMath.VectorAngle(transform.position, vector2), 15f) : dragKeyframeValues - dragOffset + -RTMath.VectorAngle(transform.position, vector2);
                     Updater.UpdateProcessor(refObject.beatmapObject, "Keyframes");
                 }
             }
