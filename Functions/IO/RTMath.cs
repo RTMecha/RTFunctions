@@ -140,16 +140,31 @@ namespace RTFunctions.Functions.IO
 			return Mathf.Round(_value * (float)num) / (float)num;
 		}
 
-		public static float Distance(float x, float y)
-        {
-			if (x > y)
-				return -(-x + y);
-			else
-				return (-x + y);
-		}
+		public static float Distance(float x, float y) => x > y ? -(-x + y) : (-x + y);
 
 		public static float InverseLerp(float x, float y, float t) => (t - x) / (y - x);
 
 		public static float Percentage(float t, float length) => t / length * 100f;
+
+		static float VectorAngle90(Vector2 vector2) => vector2 == Vector2.zero ? 0f : ((vector2.normalized.x - vector2.normalized.y) + 1f) * 45f;
+
+		public static float VectorAngle(float x, float y) => VectorAngle(new Vector3(x, y));
+
+		public static float VectorAngle(Vector3 from, Vector3 to) => VectorAngle(new Vector3((-from.x + to.x), (-from.y + to.y)));
+
+		public static float VectorAngle(Vector3 targetVector)
+        {
+			float x = RoundToNearestDecimal(targetVector.x);
+			float y = RoundToNearestDecimal(targetVector.y);
+
+			bool downRight = x >= 0f && y <= 0f;
+			bool downLeft = x <= 0f && y <= 0f;
+			bool upLeft = x <= 0f && y >= 0f;
+			bool upRight = x >= 0f && y >= 0f;
+
+			var vector = upRight ? targetVector : downRight ? Quaternion.Euler(0f, 0f, 90f) * targetVector : downLeft ? Quaternion.Euler(0f, 0f, 180f) * targetVector : upLeft ? Quaternion.Euler(0f, 0f, 270f) * targetVector : targetVector;
+
+			return targetVector == Vector3.zero ? 0f : ((vector.normalized.x - vector.normalized.y) + 1f) * 45f + (upRight ? 0f : downRight ? 90f : downLeft ? 180f : upLeft ? 270f : 0f);
+		}
 	}
 }
