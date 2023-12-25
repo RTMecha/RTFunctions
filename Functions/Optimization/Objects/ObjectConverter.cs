@@ -599,7 +599,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 var kf = (Data.EventKeyframe)eventKeyframe;
                 var value = new Vector3(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1], eventKeyframe.eventValues.Length > 2 ? eventKeyframe.eventValues[2] : 0f);
-                if (eventKeyframe.random != 0)
+                if (eventKeyframe.random != 0 && eventKeyframe.random != 5)
                 {
                     var random = ObjectManager.inst.RandomVector2Parser(eventKeyframe);
                     value.x = random.x;
@@ -608,7 +608,14 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 currentValue = kf.relative ? new Vector3(currentValue.x, currentValue.y, 0f) + value : value;
 
-                keyframes.Add(new Vector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
+                if (eventKeyframe.random != 5)
+                {
+                    keyframes.Add(new Vector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
+                }
+                else
+                {
+                    keyframes.Add(new DynamicVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
+                }
             }
 
             // If there is no keyframe, add default
@@ -630,16 +637,22 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 var kf = (Data.EventKeyframe)eventKeyframe;
                 var value = new Vector2(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1]);
-                if (eventKeyframe.random != 0)
+                if (eventKeyframe.random != 0 && eventKeyframe.random != 5)
                 {
                     var random = ObjectManager.inst.RandomVector2Parser(eventKeyframe);
                     value.x = random.x;
                     value.y = random.y;
                 }
-
                 currentValue = kf.relative ? currentValue + value : value;
+                if (eventKeyframe.random != 5)
+                {
+                    keyframes.Add(new Vector2Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
+                }
+                else
+                {
+                    keyframes.Add(new DynamicVector2Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
+                }
 
-                keyframes.Add(new Vector2Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
             }
 
             // If there is no keyframe, add default
