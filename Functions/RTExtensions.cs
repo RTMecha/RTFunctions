@@ -682,6 +682,13 @@ namespace RTFunctions.Functions
 
 		public static Vector2 ToVector2(this Vector3 _v) => new Vector2(_v.x, _v.y);
 
+		public static List<T> ForEachReturn<T>(this List<T> ts, Action<T> action)
+        {
+			ts.ForEach(action);
+
+			return ts;
+        }
+
 		#endregion
 
 		#region JSON
