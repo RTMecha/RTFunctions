@@ -39,6 +39,14 @@ namespace RTFunctions.Functions.Managers
             }
         }
 
+        public static void Set(string id, object a)
+        {
+            if (!sharedFunctions.ContainsKey(id))
+                sharedFunctions.Add(id, a);
+            else
+                sharedFunctions[id] = a;
+        }
+
         public static bool EditorManagementInstalled => mods.ContainsKey("EditorManagement");
 
         public static bool CreativePlayersInstalled => mods.ContainsKey("CreativePlayers");
