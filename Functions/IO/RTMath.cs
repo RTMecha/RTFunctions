@@ -148,21 +148,25 @@ namespace RTFunctions.Functions.IO
 
 		static float VectorAngle90(Vector2 vector2) => vector2 == Vector2.zero ? 0f : ((vector2.normalized.x - vector2.normalized.y) + 1f) * 45f;
 
+		public static Vector3 Move(Vector3 a, Vector2 b) => new Vector3(a.x + b.x, a.y + b.y, a.z);
+		public static Vector3 Scale(Vector3 a, Vector2 b) => new Vector3(a.x * b.x, a.y * b.y, a.z);
+		public static Vector3 Rotate(Vector3 a, float b) => Quaternion.Euler(0, 0, b) * a;
+
 		public static float VectorAngle(float x, float y) => VectorAngle(new Vector3(x, y));
 
 		public static float VectorAngle(Vector3 from, Vector3 to) => VectorAngle(new Vector3((-from.x + to.x), (-from.y + to.y)));
 
 		public static float VectorAngle(Vector3 targetVector)
         {
-			float x = RoundToNearestDecimal(targetVector.x);
-			float y = RoundToNearestDecimal(targetVector.y);
+			float x = targetVector.x;
+			float y = targetVector.y;
 
 			bool downRight = x >= 0f && y <= 0f;
 			bool downLeft = x <= 0f && y <= 0f;
 			bool upLeft = x <= 0f && y >= 0f;
 			bool upRight = x >= 0f && y >= 0f;
 
-			var vector = upRight ? targetVector : downRight ? Quaternion.Euler(0f, 0f, 90f) * targetVector : downLeft ? Quaternion.Euler(0f, 0f, 180f) * targetVector : upLeft ? Quaternion.Euler(0f, 0f, 270f) * targetVector : targetVector;
+			var vector = upRight ? targetVector : downRight ? Rotate(targetVector, 90f) : downLeft ? Rotate(targetVector, 180f) : upLeft ? Rotate(targetVector, 270f) : targetVector;
 
 			return targetVector == Vector3.zero ? 0f : ((vector.normalized.x - vector.normalized.y) + 1f) * 45f + (upRight ? 0f : downRight ? 90f : downLeft ? 180f : upLeft ? 270f : 0f);
 		}
