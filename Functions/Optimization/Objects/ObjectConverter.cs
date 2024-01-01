@@ -411,9 +411,9 @@ namespace RTFunctions.Functions.Optimization.Objects
                 // 4 = text object
                 // 6 = image object
                 VisualObject visual =
-                    beatmapObject.shape == 4 ? new TextObject(visualObject, opacity, beatmapObject.text) :
-                    beatmapObject.shape == 6 ? new ImageObject(visualObject, opacity, beatmapObject.text) :
-                    new SolidObject(visualObject, opacity, hasCollider, isSolid);
+                    beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text) :
+                    beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text) :
+                    new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid);
 
                 try
                 {
@@ -449,6 +449,8 @@ namespace RTFunctions.Functions.Optimization.Objects
                     cachedSequences[beatmapObject.id].ValueSequence);
 
                 levelObject.SetActive(false);
+
+                ((Data.BeatmapObject)beatmapObject).levelObject = levelObject;
 
                 return levelObject;
             }

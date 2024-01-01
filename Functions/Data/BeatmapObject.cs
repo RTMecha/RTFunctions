@@ -110,6 +110,10 @@ namespace RTFunctions.Functions.Data
 		public TrailRenderer trailRenderer;
 		public RTObject RTObject { get; set; }
 
+		public Optimization.Objects.LevelObject levelObject;
+
+		public TimelineObject timelineObject;
+
         public int integerVariable;
         public float floatVariable;
         public string stringVariable = "";
@@ -118,6 +122,37 @@ namespace RTFunctions.Functions.Data
         {
 			get => depth;
 			set => depth = value;
+        }
+
+		public bool Alive
+        {
+			get
+			{
+				var time = AudioManager.inst.CurrentAudioSource.time;
+				var st = StartTime;
+				var akt = autoKillType;
+				var ako = autoKillOffset;
+				var l = GetObjectLifeLength(_oldStyle: true);
+				return time >= st && (time <= l + st && akt != AutoKillType.OldStyleNoAutokill && akt != AutoKillType.SongTime || akt == AutoKillType.OldStyleNoAutokill || time < ako && akt == AutoKillType.SongTime);
+			}
+        }
+
+		public int KeyframeCount
+        {
+			get
+            {
+				int result = -1;
+				if (events != null && events.Count > 0)
+                {
+					for (int i = 0; i < events.Count; i++)
+					{
+						if (events[i] != null && events[i].Count > 0)
+							result += events[i].Count;
+					}
+				}
+
+				return result;
+            }
         }
 
         public class Modifier
@@ -622,7 +657,7 @@ namespace RTFunctions.Functions.Data
 
 		public static implicit operator bool(BeatmapObject exists) => exists != null;
 
-        public override bool Equals(object obj) => obj is BeatmapObject && this == (BeatmapObject)obj;
+        public override bool Equals(object obj) => obj is BeatmapObject && id == (obj as BeatmapObject).id;
 
         public override string ToString() => id;
 
