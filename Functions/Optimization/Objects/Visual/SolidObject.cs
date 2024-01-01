@@ -5,15 +5,18 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
     public class SolidObject : VisualObject
     {
         public override GameObject GameObject { get; set; }
+        public override Transform Top { get; set; }
         public override Renderer Renderer { get; set; }
         public override Collider2D Collider { get; set; }
 
         readonly Material material;
         readonly float opacity;
 
-        public SolidObject(GameObject gameObject, float opacity, bool hasCollider, bool solid = false)
+        public SolidObject(GameObject gameObject, Transform top, float opacity, bool hasCollider, bool solid = false)
         {
             GameObject = gameObject;
+            Top = top;
+
             this.opacity = opacity;
 
             Renderer = gameObject.GetComponent<Renderer>();

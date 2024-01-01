@@ -6,6 +6,8 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
     {
         public abstract GameObject GameObject { get; set; }
 
+        public abstract Transform Top { get; set; }
+
         public abstract Renderer Renderer { get; set; }
 
         public abstract Collider2D Collider { get; set; }
