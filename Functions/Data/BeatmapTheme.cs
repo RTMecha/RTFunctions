@@ -307,18 +307,16 @@ namespace RTFunctions.Functions.Data
 
 		public Color GetFXColor(int _val) => effectColors[Mathf.Clamp(_val, 0, effectColors.Count - 1)];
 
-		public override string ToString() => $"{id}: {name}";
-
         #endregion
 
         #region Operators
 
         public static implicit operator bool(BeatmapTheme exists) => exists != null;
 
-		//public static bool operator ==(BeatmapTheme a, BeatmapTheme b) => a && b && a.id == b.id;
+		public override bool Equals(object obj) => obj is BeatmapTheme && id == (obj as BeatmapTheme).id;
 
-		//public static bool operator !=(BeatmapTheme a, BeatmapTheme b) => a && b && a.id != b.id;
+		public override string ToString() => $"{id}: {name}";
 
-        #endregion
-    }
+		#endregion
+	}
 }

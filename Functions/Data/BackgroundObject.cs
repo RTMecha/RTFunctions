@@ -350,5 +350,13 @@ namespace RTFunctions.Functions.Data
 		}
 
 		#endregion
+
+		#region Operators
+
+		public static implicit operator bool(BackgroundObject exists) => exists != null;
+
+		public override string ToString() => name;
+
+		#endregion
 	}
 }

@@ -142,5 +142,15 @@ namespace RTFunctions.Functions.Data
         }
 
         #endregion
+
+        #region Operators
+
+        public static implicit operator bool(Prefab exists) => exists != null;
+
+        public override bool Equals(object obj) => obj is Prefab && ID == (obj as Prefab).ID;
+
+        public override string ToString() => ID;
+
+        #endregion
     }
 }

@@ -252,7 +252,15 @@ namespace RTFunctions.Functions.Data
         public LevelSong LevelSong => (LevelSong)song;
 		public LevelBeatmap LevelBeatmap => (LevelBeatmap)beatmap;
 
-		public static implicit operator bool(Metadata exists) => exists != null;
+        #region Operators
+
+        public static implicit operator bool(Metadata exists) => exists != null;
+
+		public override bool Equals(object obj) => obj is Metadata && LevelBeatmap.beatmap_id == (obj as Metadata).LevelBeatmap.beatmap_id;
+
+		public override string ToString() => $"{LevelBeatmap.beatmap_id}: {artist.Name} - {song.title}";
+
+        #endregion
     }
 
     public class LevelArtist : BaseArtist
@@ -266,6 +274,17 @@ namespace RTFunctions.Functions.Data
         {
 
         }
+
+		public string URL
+			=> LinkType < 0 || LinkType > DataManager.inst.linkTypes.Count - 1 || Link.Contains("http://") || Link.Contains("https://") ? null : string.Format(DataManager.inst.linkTypes[LinkType].linkFormat, Link);
+
+        #region Operators
+
+		public static implicit operator bool(LevelArtist exists) => exists != null;
+
+		public override string ToString() => Name;
+
+        #endregion
     }
 
     public class LevelCreator : BaseCreator
@@ -296,9 +315,17 @@ namespace RTFunctions.Functions.Data
 			new DataManager.LinkType("Patreon", "https://patreon.com/{0}"),
 			new DataManager.LinkType("Twitter", "https://twitter.com/{0}"),
 		};
-    }
 
-    public class LevelSong : BaseSong
+		#region Operators
+
+		public static implicit operator bool(LevelCreator exists) => exists != null;
+
+		public override string ToString() => steam_name;
+
+		#endregion
+	}
+
+	public class LevelSong : BaseSong
     {
         public LevelSong() : base()
 		{
@@ -311,7 +338,15 @@ namespace RTFunctions.Functions.Data
         }
 
         public string[] tags;
-    }
+
+		#region Operators
+
+		public static implicit operator bool(LevelSong exists) => exists != null;
+
+		public override string ToString() => title;
+
+		#endregion
+	}
 
 	public class LevelBeatmap : BaseBeatmap
     {
@@ -352,5 +387,13 @@ namespace RTFunctions.Functions.Data
         }
 
 		public List<string> requiredMods = new List<string>();
-    }
+
+		#region Operators
+
+		public static implicit operator bool(LevelBeatmap exists) => exists != null;
+
+		public override string ToString() => beatmap_id;
+
+		#endregion
+	}
 }

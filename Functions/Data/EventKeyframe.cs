@@ -124,6 +124,8 @@ namespace RTFunctions.Functions.Data
 
         #region Operators
 
+        public static implicit operator bool(EventKeyframe exists) => exists != null;
+
         public override string ToString()
         {
             string strs = "";
@@ -136,6 +138,8 @@ namespace RTFunctions.Functions.Data
 
             return $"{index}, {type}: {strs}";
         }
+
+        public override bool Equals(object obj) => obj is EventKeyframe && id == (obj as EventKeyframe).id;
 
         #endregion
 

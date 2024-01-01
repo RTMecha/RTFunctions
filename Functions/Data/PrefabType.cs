@@ -40,5 +40,27 @@ namespace RTFunctions.Functions.Data
 
             return jn;
         }
+
+        static PrefabType invalidType;
+        public static PrefabType InvalidType
+        {
+            get
+            {
+                if (!invalidType)
+                    invalidType = new PrefabType("invalid", Color.red);
+                return invalidType;
+            }
+        }
+
+
+        #region Operators
+
+        public static implicit operator bool(PrefabType exists) => exists != null;
+
+        public override bool Equals(object obj) => obj is PrefabType && Name == (obj as PrefabType).Name;
+
+        public override string ToString() => Name;
+
+        #endregion
     }
 }
