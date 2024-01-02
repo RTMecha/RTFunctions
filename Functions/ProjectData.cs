@@ -412,50 +412,61 @@ namespace RTFunctions.Functions
 				for (int i = 0; i < jn["grain"].Count; i++)
 					allEvents[9].Add(EventKeyframe.Parse(jn["grain"][i], 3));
 
-				if (jn["cg"] != null && ModCompatibility.mods.ContainsKey("EventsCore"))
+				if (ModCompatibility.mods.ContainsKey("EventsCore"))
 				{
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["cg"].Count; i++)
-						allEvents[10].Add(EventKeyframe.Parse(jn["cg"][i], 9));
+					if (jn["cg"] != null)
+						for (int i = 0; i < jn["cg"].Count; i++)
+							allEvents[10].Add(EventKeyframe.Parse(jn["cg"][i], 9));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["rip"].Count; i++)
-						allEvents[11].Add(EventKeyframe.Parse(jn["rip"][i], 5));
+					if (jn["rip"] != null)
+						for (int i = 0; i < jn["rip"].Count; i++)
+							allEvents[11].Add(EventKeyframe.Parse(jn["rip"][i], 5));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["rb"].Count; i++)
+					if (jn["rb"] != null)
+						for (int i = 0; i < jn["rb"].Count; i++)
 						allEvents[12].Add(EventKeyframe.Parse(jn["rb"][i], 2));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["cs"].Count; i++)
+					if (jn["cs"] != null)
+						for (int i = 0; i < jn["cs"].Count; i++)
 						allEvents[13].Add(EventKeyframe.Parse(jn["cs"][i], 1));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["offset"].Count; i++)
+					if (jn["offset"] != null)
+						for (int i = 0; i < jn["offset"].Count; i++)
 						allEvents[14].Add(EventKeyframe.Parse(jn["offset"][i], 2));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["grd"].Count; i++)
+					if (jn["grd"] != null)
+						for (int i = 0; i < jn["grd"].Count; i++)
 						allEvents[15].Add(EventKeyframe.Parse(jn["grd"][i], 5));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["dbv"].Count; i++)
-						allEvents[16].Add(EventKeyframe.Parse(jn["grd"][i], 1));
+					if (jn["dbv"] != null)
+						for (int i = 0; i < jn["dbv"].Count; i++)
+						allEvents[16].Add(EventKeyframe.Parse(jn["dbv"][i], 1));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["scan"].Count; i++)
+					if (jn["scan"] != null)
+						for (int i = 0; i < jn["scan"].Count; i++)
 						allEvents[17].Add(EventKeyframe.Parse(jn["scan"][i], 3));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["blur"].Count; i++)
+					if (jn["blur"] != null)
+						for (int i = 0; i < jn["blur"].Count; i++)
 						allEvents[18].Add(EventKeyframe.Parse(jn["blur"][i], 2));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["pixel"].Count; i++)
+					if (jn["pixel"] != null)
+						for (int i = 0; i < jn["pixel"].Count; i++)
 						allEvents[19].Add(EventKeyframe.Parse(jn["pixel"][i], 1));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["bg"].Count; i++)
+					if (jn["bg"] != null)
+						for (int i = 0; i < jn["bg"].Count; i++)
 						allEvents[20].Add(EventKeyframe.Parse(jn["bg"][i], 1));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
@@ -464,39 +475,43 @@ namespace RTFunctions.Functions
                             allEvents[21].Add(EventKeyframe.Parse(jn["invert"][i], 1));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["timeline"].Count; i++)
+					if (jn["timeline"] != null)
+						for (int i = 0; i < jn["timeline"].Count; i++)
 						allEvents[22].Add(EventKeyframe.Parse(jn["timeline"][i], 7));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["player"].Count; i++)
+					if (jn["player"] != null)
+						for (int i = 0; i < jn["player"].Count; i++)
 						allEvents[23].Add(EventKeyframe.Parse(jn["player"][i], 4));
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["follow_player"].Count; i++)
-					{
-						var eventKeyframe = EventKeyframe.Parse(jn["follow_player"][i], 10);
-						if (string.IsNullOrEmpty(jn["follow_player"][i]["z2"]))
+					if (jn["follow_player"] != null)
+						for (int i = 0; i < jn["follow_player"].Count; i++)
 						{
-							eventKeyframe.SetEventValues(new float[]
+							var eventKeyframe = EventKeyframe.Parse(jn["follow_player"][i], 10);
+							if (string.IsNullOrEmpty(jn["follow_player"][i]["z2"]))
 							{
-								jn["follow_player"][i]["x"].AsFloat,
-								jn["follow_player"][i]["y"].AsFloat,
-								jn["follow_player"][i]["z"].AsFloat,
-								jn["follow_player"][i]["x2"].AsFloat,
-								jn["follow_player"][i]["y2"].AsFloat,
-								9999f,
-								-9999f,
-								9999f,
-								-9999f,
-								1f
-							});
+								eventKeyframe.SetEventValues(new float[]
+								{
+									jn["follow_player"][i]["x"].AsFloat,
+									jn["follow_player"][i]["y"].AsFloat,
+									jn["follow_player"][i]["z"].AsFloat,
+									jn["follow_player"][i]["x2"].AsFloat,
+									jn["follow_player"][i]["y2"].AsFloat,
+									9999f,
+									-9999f,
+									9999f,
+									-9999f,
+									1f
+								});
+							}
+							allEvents[24].Add(eventKeyframe);
 						}
-						allEvents[24].Add(eventKeyframe);
-					}
 
 					allEvents.Add(new List<BaseEventKeyframe>());
-					for (int i = 0; i < jn["audio"].Count; i++)
-						allEvents[25].Add(EventKeyframe.Parse(jn["audio"][i], 2));
+					if (jn["audio"] != null)
+						for (int i = 0; i < jn["audio"].Count; i++)
+							allEvents[25].Add(EventKeyframe.Parse(jn["audio"][i], 2));
 				}
 
 				ClampEventListValues(allEvents, ModCompatibility.mods.ContainsKey("EventsCore") ? 26 : 10);
