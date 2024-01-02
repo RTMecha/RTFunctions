@@ -113,12 +113,13 @@ namespace RTFunctions.Functions.Managers
 
             Debug.Log($"{className}Setting paths...");
 
+            DataManager.inst.metaData = level.metadata;
             GameManager.inst.currentLevelName = level.metadata.song.title;
             GameManager.inst.basePath = level.path;
 
             Debug.Log($"{className}Updating states...");
 
-            FunctionsPlugin.UpdateDiscordStatus($"Level: {DataManager.inst.metaData.song.title}", "In Arcade", "play");
+            FunctionsPlugin.UpdateDiscordStatus($"Level: {level.metadata.song.title}", "In Arcade", "arcade");
             DataManager.inst.UpdateSettingBool("IsArcade", true);
 
             while (!GameManager.inst.introTitle && !GameManager.inst.introArtist)
