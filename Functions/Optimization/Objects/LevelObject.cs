@@ -166,9 +166,12 @@ namespace RTFunctions.Functions.Optimization.Objects
                     if (parentObject.Position3DSequence != null)
                     {
                         var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - positionOffset);
-                        float z = depth * 0.0005f;
-                        float calc = value.z / 10f;
-                        z = z + calc;
+                        //float z = depth * 0.0005f;
+                        //float calc = value.z / 10f;
+                        //z = z + calc;
+
+                        float z = depth * 0.0005f + (value.z / 10f);
+
                         parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, z);
                     }
                     else

@@ -312,12 +312,14 @@ namespace RTFunctions.Functions.Optimization
                             break;
                         }
                     case "origin":
+                    case "depth":
                     case "originoffset":
                         {
-                            if (levelObject.visualObject != null)
-                                levelObject.visualObject.GameObject.transform.localPosition = new Vector3(beatmapObject.origin.x, beatmapObject.origin.y, 0f);
+                            levelObject.depth = beatmapObject.depth;
+                            if (levelObject.visualObject != null && levelObject.visualObject.GameObject)
+                                levelObject.visualObject.GameObject.transform.localPosition = new Vector3(beatmapObject.origin.x, beatmapObject.origin.y, beatmapObject.depth * 0.1f);
                             break;
-                        } // Origin
+                        } // Origin & Depth
                     case "shape":
                         {
                             //if (beatmapObject.shape == 4 || beatmapObject.shape == 6)
@@ -332,11 +334,6 @@ namespace RTFunctions.Functions.Optimization
                                 (levelObject.visualObject as Objects.Visual.TextObject).TextMeshPro.text = beatmapObject.text;
                             break;
                         }
-                    case "depth":
-                        {
-                            levelObject.depth = beatmapObject.depth;
-                            break;
-                        } // Depth
                     case "keyframe":
                     case "keyframes":
                         {
@@ -610,8 +607,11 @@ namespace RTFunctions.Functions.Optimization
 
         public static void RemoveObjects(List<string> ids)
         {
-            levelProcessor.level.objects.Where(x => ids.Contains(x.ID)).ToList().ForEach(x => Object.DestroyImmediate(((LevelObject)x).visualObject.GameObject));
-            levelProcessor.level.objects.RemoveAll(x => ids.Contains(x.ID));
+            levelProcessor.level.objects
+                .Where(x => ids.Contains(x.ID))
+                .ToList()
+                .ForEachReturn(x => Object.DestroyImmediate(((LevelObject)x).visualObject.Top?.gameObject))
+                .RemoveAll(x => ids.Contains(x.ID));
         }
 
         public static void RemoveObject(string id)
@@ -623,9 +623,9 @@ namespace RTFunctions.Functions.Optimization
         }
 
         /// <summary>
-        /// Updates everything and reinitializes the engine. There's probably a better way of doing this but I'm not sure of how to do that.
+        /// Updates everything and reinitializes the engine.
         /// </summary>
-        /// <param name="restart"></param>
+        /// <param name="restart">If the engine should restart or not.</param>
         public static void UpdateObjects(bool restart = true)
         {
             // We check if LevelProcessor has been invoked and if the level should restart.
