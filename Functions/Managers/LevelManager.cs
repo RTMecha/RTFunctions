@@ -118,7 +118,7 @@ namespace RTFunctions.Functions.Managers
 
             Debug.Log($"{className}Updating states...");
 
-            DiscordController.inst.OnStateChange("Level: " + GameManager.inst.currentLevelName);
+            FunctionsPlugin.UpdateDiscordStatus($"Level: {DataManager.inst.metaData.song.title}", "In Arcade", "play");
             DataManager.inst.UpdateSettingBool("IsArcade", true);
 
             while (!GameManager.inst.introTitle && !GameManager.inst.introArtist)

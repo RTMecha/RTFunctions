@@ -89,6 +89,8 @@ namespace RTFunctions
 
 		public static ConfigEntry<string> ScreenshotsPath { get; set; }
 
+		public static ConfigEntry<bool> DiscordShowLevel { get; set; }
+
 		#endregion
 
 		// PA Settings
@@ -354,6 +356,7 @@ namespace RTFunctions
 			ControllerRumble = Config.Bind("Settings", "Controller Vibrate", true, "If the controllers should vibrate or not.");
 			BGReactiveLerp = Config.Bind("Level Backgrounds", "Reactive Color Lerp", true, "If on, reactive color will lerp from base color to reactive color. Otherwise, the reactive color will be added to the base color.");
 			LDM = Config.Bind("Level", "Low Detail Mode", false, "If enabled, any objects with \"LDM\" on will not be rendered.");
+			DiscordShowLevel = Config.Bind("Discord", "Show Level Status", true, "Level name is shown.");
 
 			displayName = DisplayName.Value;
 
@@ -492,6 +495,8 @@ namespace RTFunctions
 				SetControllerRumble(ControllerRumble.Value);
 				//ControllerRumbleProp = ControllerRumble.Value;
             }
+
+			UpdateDiscordStatus(discordLevel, discordDetails, discordIcon, discordArt);
 
 			SaveProfile();
 		}
@@ -720,6 +725,25 @@ namespace RTFunctions
 				GameStorageManager.inst.postProcessLayer.antialiasingMode
 					= AntiAliasing.Value ? PostProcessLayer.Antialiasing.FastApproximateAntialiasing : PostProcessLayer.Antialiasing.None;
 			}
+		}
+
+		public static string discordLevel = "";
+		public static string discordDetails = "";
+		public static string discordIcon = "";
+		public static string discordArt = "";
+		public static void UpdateDiscordStatus(string level, string details, string icon, string art = "pa_logo_white")
+        {
+			DiscordController.inst.OnStateChange(DiscordShowLevel.Value ? level : "");
+			DiscordController.inst.OnArtChange(art);
+			DiscordController.inst.OnIconChange(icon);
+			DiscordController.inst.OnDetailsChange(details);
+
+			discordLevel = level;
+			discordDetails = details;
+			discordIcon = icon;
+			discordArt = art;
+
+			DiscordRpc.UpdatePresence(DiscordController.inst.presence);
 		}
 
 		public static void SaveProfile()
