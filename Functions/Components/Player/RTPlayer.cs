@@ -251,7 +251,6 @@ namespace RTFunctions.Functions.Components.Player
             playerObjects.Add("RB Parent", new PlayerObject("RB Parent", rb));
             playerObjects["RB Parent"].values.Add("Transform", rb.transform);
             playerObjects["RB Parent"].values.Add("Rigidbody2D", rb.GetComponent<Rigidbody2D>());
-            playerObjects["RB Parent"].values.Add("OnTriggerEnterPass", rb.GetComponent<OnTriggerEnterPass>());
 
             var circleCollider = rb.GetComponent<CircleCollider2D>();
 
@@ -643,7 +642,7 @@ namespace RTFunctions.Functions.Components.Player
 
             if (!RTHelpers.Paused)
             {
-                if (!PlayerAlive && !isDead)
+                if (!PlayerAlive && !isDead && CustomPlayer)
                     StartCoroutine(Kill());
 
                 if (CanMove && PlayerAlive && Actions != null)
@@ -1724,8 +1723,8 @@ namespace RTFunctions.Functions.Components.Player
 
                 rotateMode = (RotateMode)(int)currentModel.values["Base Rotate Mode"];
 
-                ((CircleCollider2D)playerObjects["RB Parent"].values["CircleCollider2D"]).isTrigger = EditorManager.inst != null && ZenEditorIncludesSolid;
-                ((PolygonCollider2D)playerObjects["RB Parent"].values["PolygonCollider2D"]).isTrigger = EditorManager.inst != null && ZenEditorIncludesSolid;
+                ((CircleCollider2D)playerObjects["RB Parent"].values["CircleCollider2D"]).isTrigger = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0 && ZenEditorIncludesSolid;
+                ((PolygonCollider2D)playerObjects["RB Parent"].values["PolygonCollider2D"]).isTrigger = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0 && ZenEditorIncludesSolid;
 
                 var colAcc = (bool)currentModel.values["Base Collision Accurate"];
                 if (colAcc)
@@ -1764,7 +1763,8 @@ namespace RTFunctions.Functions.Components.Player
 
                 //Health
                 {
-                    CustomPlayer.Health = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 0) == 3 ? 1 : (int)currentModel.values["Base Health"];
+                    if (CustomPlayer)
+                        CustomPlayer.Health = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 0) == 3 ? 1 : (int)currentModel.values["Base Health"];
                 }
 
                 //Health Images
@@ -2268,51 +2268,78 @@ namespace RTFunctions.Functions.Components.Player
                             case 3:
                                 {
                                     bool zen = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0;
-                                    if (!not)
-                                        obj.gameObject.SetActive(zen);
-                                    else
-                                        obj.gameObject.SetActive(!zen);
+                                    obj.gameObject.SetActive(!not && zen || !zen);
                                     break;
                                 }
                             case 4:
                                 {
-                                    if (!not)
-                                        obj.gameObject.SetActive((float)CustomPlayer.health / (float)initialHealthCount * 100f >= value);
+                                    if (CustomPlayer)
+                                    {
+                                        var val = (float)CustomPlayer.health / (float)initialHealthCount * 100f >= value;
+                                        if (!not)
+                                            obj.gameObject.SetActive(val);
+                                        else
+                                            obj.gameObject.SetActive(!val);
+                                    }
                                     else
-                                        obj.gameObject.SetActive(!((float)CustomPlayer.health / (float)initialHealthCount * 100f >= value));
+                                        obj.gameObject.SetActive(false);
+
                                     break;
                                 }
                             case 5:
                                 {
-                                    if (!not)
-                                        obj.gameObject.SetActive(CustomPlayer.health >= value);
+                                    if (CustomPlayer)
+                                    {
+                                        var val = CustomPlayer.health >= value;
+                                        if (!not)
+                                            obj.gameObject.SetActive(val);
+                                        else
+                                            obj.gameObject.SetActive(!val);
+                                    }
                                     else
-                                        obj.gameObject.SetActive(!(CustomPlayer.health >= value));
+                                        obj.gameObject.SetActive(false);
                                     break;
                                 }
                             case 6:
                                 {
-                                    if (!not)
-                                        obj.gameObject.SetActive(CustomPlayer.health == value);
+                                    if (CustomPlayer)
+                                    {
+                                        var val = CustomPlayer.health == value;
+                                        if (!not)
+                                            obj.gameObject.SetActive(val);
+                                        else
+                                            obj.gameObject.SetActive(!val);
+                                    }
                                     else
-                                        obj.gameObject.SetActive(!(CustomPlayer.health == value));
+                                        obj.gameObject.SetActive(false);
                                     break;
                                 }
                             case 7:
                                 {
-                                    if (!not)
-                                        obj.gameObject.SetActive(CustomPlayer.health > value);
+                                    if (CustomPlayer)
+                                    {
+                                        var val = CustomPlayer.health > value;
+                                        if (!not)
+                                            obj.gameObject.SetActive(val);
+                                        else
+                                            obj.gameObject.SetActive(!val);
+                                    }
                                     else
-                                        obj.gameObject.SetActive(!(CustomPlayer.health > value));
+                                        obj.gameObject.SetActive(false);
                                     break;
                                 }
                             case 8:
                                 {
-                                    bool active = Input.GetKey(GetKeyCode((int)value));
-                                    if (!not)
-                                        obj.gameObject.SetActive(active);
+                                    if (CustomPlayer)
+                                    {
+                                        bool val = Input.GetKey(GetKeyCode((int)value));
+                                        if (!not)
+                                            obj.gameObject.SetActive(val);
+                                        else
+                                            obj.gameObject.SetActive(!val);
+                                    }
                                     else
-                                        obj.gameObject.SetActive(!active);
+                                        obj.gameObject.SetActive(false);
                                     break;
                                 }
                         }
