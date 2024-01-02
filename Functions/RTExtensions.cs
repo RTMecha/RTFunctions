@@ -447,6 +447,12 @@ namespace RTFunctions.Functions
 
 		public static Prefab GetPrefab(this PrefabObject prefabObject) => DataManager.inst.gameData.prefabs.Find(x => x.ID == prefabObject.prefabID);
 
+		/// <summary>
+		/// Creates a new list with all the same element instances as the parent list.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="list"></param>
+		/// <returns>Returns cloned list.</returns>
 		public static List<T> Clone<T>(this List<T> list)
         {
 			var array = new T[list.Count];
@@ -753,6 +759,18 @@ namespace RTFunctions.Functions
 		public static EventKeyframe GetEventKeyframe(this List<EventKeyframe> eventKeyframes, int index) => eventKeyframes[RTMath.Clamp(index, 0, eventKeyframes.Count - 1)];
 
 		public static void SetColor(this Material material, Color color) => material.color = color;
+
+		public static void SetText(this Text text, string str) => text.text = str;
+
+		public static void SetColor(this Image image, Color color) => image.color = color;
+
+		public static void SetText(this InputField inputField, string str) => inputField.text = str;
+
+		public static void SetIsOn(this Toggle toggle, bool on) => toggle.isOn = on;
+
+		public static void SetValue(this Dropdown dropdown, int value) => dropdown.value = value;
+
+		public static void SetSlider(this Slider slider, float value) => slider.value = value;
 
 		public static string ColorToHex(Color32 color) => color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
 

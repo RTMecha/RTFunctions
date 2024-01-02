@@ -8,6 +8,9 @@ using RTFunctions.Functions.Managers.Networking;
 
 namespace RTFunctions.Functions.Optimization.Objects.Visual
 {
+    /// <summary>
+    /// Class for special image objects.
+    /// </summary>
     public class ImageObject : VisualObject
     {
         public override GameObject GameObject { get; set; }

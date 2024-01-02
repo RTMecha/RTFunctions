@@ -2,6 +2,9 @@
 
 namespace RTFunctions.Functions.Optimization.Objects.Visual
 {
+    /// <summary>
+    /// Base Class for all VisualObjects.
+    /// </summary>
     public abstract class VisualObject
     {
         public abstract GameObject GameObject { get; set; }

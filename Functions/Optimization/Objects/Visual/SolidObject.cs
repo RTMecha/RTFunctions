@@ -2,6 +2,9 @@
 
 namespace RTFunctions.Functions.Optimization.Objects.Visual
 {
+    /// <summary>
+    /// Class for regular shape objects.
+    /// </summary>
     public class SolidObject : VisualObject
     {
         public override GameObject GameObject { get; set; }

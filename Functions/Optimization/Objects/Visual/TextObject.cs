@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace RTFunctions.Functions.Optimization.Objects.Visual
 {
+    /// <summary>
+    /// Class for special text objects.
+    /// </summary>
     public class TextObject : VisualObject
     {
         public override GameObject GameObject { get; set; }
