@@ -833,6 +833,14 @@ namespace RTFunctions.Functions
 			s.m_PersistentCalls.m_Calls.Clear();
 			s.RemoveAllListeners();
         }
+		
+		public static void ClearAll(this Scrollbar.ScrollEvent s)
+        {
+			s.m_Calls.m_ExecutingCalls.Clear();
+			s.m_Calls.m_PersistentCalls.Clear();
+			s.m_PersistentCalls.m_Calls.Clear();
+			s.RemoveAllListeners();
+        }
 
 		public static void NewOnClickListener(this Button b, UnityAction unityAction)
         {
