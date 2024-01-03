@@ -1324,7 +1324,7 @@ namespace RTFunctions.Functions.Components.Player
 
         #region Init
 
-        void PlayerHit()
+        public void PlayerHit()
         {
             var rb = (Rigidbody2D)playerObjects["RB Parent"].values["Rigidbody2D"];
             var anim = (Animator)playerObjects["Base"].values["Animator"];
@@ -1409,7 +1409,7 @@ namespace RTFunctions.Functions.Components.Player
             CanTakeDamage = true;
         }
 
-        void StartBoost()
+        public void StartBoost()
         {
             if (CanBoost && !isBoosting)
             {
