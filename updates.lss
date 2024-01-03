@@ -1,7 +1,9 @@
+1.7.6 > Made some Player methods accessible for other mods.
+-
 1.7.5 > Added Discord status config, so you can show / hide what level you're editing / playing.
 1.7.5 > Fixed updating an object's depth.
 1.7.5 > Started laying the groundwork for Player Objects (shape).
-
+-
 1.7.4 > Added modified player components, so anything fixed / changed in CreativePlayers is now in RTFunctions.
 1.7.4 > Fixed rotation dragging so it's properly circular.
 1.7.4 > Started working on Homing Keyframes (Dynamic / Static).
