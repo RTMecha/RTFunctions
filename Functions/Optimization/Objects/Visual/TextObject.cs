@@ -30,6 +30,12 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
             TextMeshPro.text = text;
         }
 
+        public void SetText(string text)
+        {
+            if (TextMeshPro)
+                TextMeshPro.text = text;
+        }
+
         public override void SetColor(Color color) => TextMeshPro.color = new Color(color.r, color.g, color.b, color.a * opacity);
     }
 }
