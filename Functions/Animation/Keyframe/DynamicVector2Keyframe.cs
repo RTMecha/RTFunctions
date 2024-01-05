@@ -9,6 +9,8 @@ namespace RTFunctions.Functions.Animation.Keyframe
 {
     public struct DynamicVector2Keyframe : IKeyframe<Vector2>
     {
+        public bool Active { get; set; }
+
         public float Time { get; set; }
         public EaseFunction Ease { get; set; }
         public Vector2 Value { get; set; }
@@ -41,6 +43,12 @@ namespace RTFunctions.Functions.Animation.Keyframe
             Time = time;
             Value = value;
             Ease = ease;
+            Active = false;
+        }
+
+        public void Start()
+        {
+
         }
 
         public Vector2 Interpolate(IKeyframe<Vector2> other, float time)

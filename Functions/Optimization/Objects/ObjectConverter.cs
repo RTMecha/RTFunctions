@@ -69,24 +69,24 @@ namespace RTFunctions.Functions.Optimization.Objects
         {
             var collection = new CachedSequences()
             {
-                Position3DSequence = GetVector3Sequence(beatmapObject.events[0], new Vector3Keyframe(0.0f, Vector3.zero, Ease.Linear)),
+                Position3DSequence = GetVector3Sequence(beatmapObject.events[0], new Vector3Keyframe(0.0f, Vector3.zero, Ease.Linear, null)),
                 ScaleSequence = GetVector2Sequence(beatmapObject.events[1], new Vector2Keyframe(0.0f, Vector2.one, Ease.Linear)),
-                RotationSequence = GetFloatSequence(beatmapObject.events[2], 0, new FloatKeyframe(0.0f, 0.0f, Ease.Linear))
             };
+            collection.RotationSequence = GetFloatSequence(beatmapObject.events[2], 0, new FloatKeyframe(0.0f, 0.0f, Ease.Linear, null), collection.Position3DSequence, false);
 
             // Empty objects don't need a color sequence, so it is not cached
             if (ShowEmpties || beatmapObject.objectType != ObjectType.Empty)
             {
-                collection.ColorSequence = GetColorSequence(beatmapObject.events[3], new ThemeKeyframe(0.0f, 0, Ease.Linear));
+                collection.ColorSequence = GetColorSequence(beatmapObject.events[3], new ThemeKeyframe(0.0f, 0, Ease.Linear), collection.Position3DSequence);
 
                 if (beatmapObject.events[3][0].eventValues.Length > 1)
-                    collection.OpacitySequence = GetFloatSequence(beatmapObject.events[3], 1, new FloatKeyframe(0.0f, 0, Ease.Linear));
+                    collection.OpacitySequence = GetFloatSequence(beatmapObject.events[3], 1, new FloatKeyframe(0.0f, 0, Ease.Linear, null), collection.Position3DSequence, true);
 
                 if (beatmapObject.events[3][0].eventValues.Length > 2)
                 {
-                    collection.HueSequence = GetFloatSequence(beatmapObject.events[3], 2, new FloatKeyframe(0.0f, 0, Ease.Linear));
-                    collection.SaturationSequence = GetFloatSequence(beatmapObject.events[3], 3, new FloatKeyframe(0.0f, 0, Ease.Linear));
-                    collection.ValueSequence = GetFloatSequence(beatmapObject.events[3], 4, new FloatKeyframe(0.0f, 0, Ease.Linear));
+                    collection.HueSequence = GetFloatSequence(beatmapObject.events[3], 2, new FloatKeyframe(0.0f, 0, Ease.Linear, null), collection.Position3DSequence, true);
+                    collection.SaturationSequence = GetFloatSequence(beatmapObject.events[3], 3, new FloatKeyframe(0.0f, 0, Ease.Linear, null), collection.Position3DSequence, true);
+                    collection.ValueSequence = GetFloatSequence(beatmapObject.events[3], 4, new FloatKeyframe(0.0f, 0, Ease.Linear, null), collection.Position3DSequence, true);
                 }
             }
 
@@ -539,13 +539,13 @@ namespace RTFunctions.Functions.Optimization.Objects
                 else
                 {
                     var pos = new List<IKeyframe<Vector3>>();
-                    pos.Add(new Vector3Keyframe(0f, Vector3.zero, Ease.Linear));
+                    pos.Add(new Vector3Keyframe(0f, Vector3.zero, Ease.Linear, null));
 
                     var sca = new List<IKeyframe<Vector2>>();
                     sca.Add(new Vector2Keyframe(0f, Vector2.one, Ease.Linear));
 
                     var rot = new List<IKeyframe<float>>();
-                    rot.Add(new FloatKeyframe(0f, 0f, Ease.Linear));
+                    rot.Add(new FloatKeyframe(0f, 0f, Ease.Linear, null));
 
                     levelParentObject = new LevelParentObject
                     {
@@ -594,6 +594,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             List<IKeyframe<Vector3>> keyframes = new List<IKeyframe<Vector3>>(eventKeyframes.Count);
 
             var currentValue = Vector3.zero;
+            IKeyframe<Vector3> currentKeyfame = null;
             foreach (var eventKeyframe in eventKeyframes)
             {
                 if (!(eventKeyframe is Data.EventKeyframe))
@@ -601,23 +602,30 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 var kf = (Data.EventKeyframe)eventKeyframe;
                 var value = new Vector3(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1], eventKeyframe.eventValues.Length > 2 ? eventKeyframe.eventValues[2] : 0f);
-                if (eventKeyframe.random != 0 && eventKeyframe.random != 5)
+                if (eventKeyframe.random != 0 && eventKeyframe.random != 4 && eventKeyframe.random != 5)
                 {
                     var random = ObjectManager.inst.RandomVector2Parser(eventKeyframe);
                     value.x = random.x;
                     value.y = random.y;
                 }
 
-                currentValue = kf.relative ? new Vector3(currentValue.x, currentValue.y, 0f) + value : value;
+                currentValue = kf.relative && eventKeyframe.random != 5 ? new Vector3(currentValue.x, currentValue.y, 0f) + value : value;
 
-                if (eventKeyframe.random != 5)
-                {
-                    keyframes.Add(new Vector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
-                }
-                else
-                {
-                    keyframes.Add(new DynamicVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
-                }
+                //if (eventKeyframe.random != 5)
+                //{
+                //    currentKeyfame = new Vector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
+                //}
+                //else
+                //{
+                //    currentKeyfame = new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
+                //}
+
+                currentKeyfame = eventKeyframe.random == 4 ? new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
+                    eventKeyframe.random == 5 ? new DynamicVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
+                    eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], kf.relative, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
+                    new Vector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
+
+                keyframes.Add(currentKeyfame);
             }
 
             // If there is no keyframe, add default
@@ -664,11 +672,12 @@ namespace RTFunctions.Functions.Optimization.Objects
             return new Sequence<Vector2>(keyframes);
         }
 
-        public Sequence<float> GetFloatSequence(List<EventKeyframe> eventKeyframes, int index, FloatKeyframe defaultKeyframe)
+        public Sequence<float> GetFloatSequence(List<EventKeyframe> eventKeyframes, int index, FloatKeyframe defaultKeyframe, Sequence<Vector3> vector3Sequence, bool color)
         {
             List<IKeyframe<float>> keyframes = new List<IKeyframe<float>>(eventKeyframes.Count);
 
             var currentValue = 0f;
+            IKeyframe<float> currentKeyfame = null;
             foreach (var eventKeyframe in eventKeyframes)
             {
                 if (!(eventKeyframe is Data.EventKeyframe))
@@ -677,9 +686,14 @@ namespace RTFunctions.Functions.Optimization.Objects
                 var kf = (Data.EventKeyframe)eventKeyframe;
                 var value = eventKeyframe.random != 0 ? RandomFloatParser(eventKeyframe, index) : eventKeyframe.eventValues[index];
 
-                currentValue = kf.relative ? currentValue + value : value;
+                currentValue = kf.relative && eventKeyframe.random != 5 && !color ? currentValue + value : value;
 
-                keyframes.Add(new FloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
+                currentKeyfame = eventKeyframe.random == 4 && !color ? new StaticFloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, vector3Sequence) :
+                    eventKeyframe.random == 5 && !color ? new DynamicFloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
+                    eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], kf.relative, vector3Sequence) :
+                    new FloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
+
+                keyframes.Add(currentKeyfame);
             }
 
             // If there is no keyframe, add default
@@ -689,7 +703,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             return new Sequence<float>(keyframes);
         }
 
-        public Sequence<Color> GetColorSequence(List<EventKeyframe> eventKeyframes, ThemeKeyframe defaultKeyframe)
+        public Sequence<Color> GetColorSequence(List<EventKeyframe> eventKeyframes, ThemeKeyframe defaultKeyframe, Sequence<Vector3> vector3Sequence)
         {
             List<IKeyframe<Color>> keyframes = new List<IKeyframe<Color>>(eventKeyframes.Count);
 
@@ -699,7 +713,10 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 value = Mathf.Clamp(value, 0, GameManager.inst.LiveTheme.objectColors.Count - 1);
 
-                keyframes.Add(new ThemeKeyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
+                keyframes.Add(eventKeyframe.random == 5 ? new DynamicThemeKeyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
+                    eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], false,
+                    Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, GameManager.inst.LiveTheme.objectColors.Count - 1), vector3Sequence) :
+                    new ThemeKeyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
             }
 
             // If there is no keyframe, add default
