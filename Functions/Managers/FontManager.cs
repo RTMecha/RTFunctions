@@ -975,6 +975,21 @@ namespace RTFunctions.Functions.Managers
 
                 return str += "]";
             }
+
+            public static string ArrayToStringParams(params object[] vs) => ArrayToString(vs);
+
+            public static string ArrayToString(object[] vs)
+            {
+                string s = "";
+                if (vs.Length > 0)
+                    for (int i = 0; i < vs.Length; i++)
+                    {
+                        s += vs[i].ToString();
+                        if (i != vs.Length - 1)
+                            s += ", ";
+                    }
+                return s;
+            }
         }
     }
 }
