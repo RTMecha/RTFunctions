@@ -159,7 +159,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             var shape = Mathf.Clamp(beatmapObject.shape, 0, ObjectManager.inst.objectPrefabs.Count - 1);
             var shapeOption = Mathf.Clamp(beatmapObject.shapeOption, 0, ObjectManager.inst.objectPrefabs[shape].options.Count - 1);
 
-            var baseObject = Object.Instantiate(ObjectManager.inst.objectPrefabs[shape].options[shapeOption], parent == null ? null : parent.transform);
+            var baseObject = Object.Instantiate(ObjectManager.inst.objectPrefabs[shape].options[shapeOption], parent == null ? ObjectManager.inst.objectParent.transform : parent.transform);
             baseObject.transform.localScale = Vector3.one;
 
             var visualObject = baseObject.transform.GetChild(0).gameObject;
@@ -193,7 +193,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 baseObject.name = beatmapObject.name;
 
-                var top = new GameObject("top");
+                var top = new GameObject($"top - [{beatmapObject.name}]");
                 top.transform.SetParent(ObjectManager.inst.objectParent.transform);
                 top.transform.localScale = Vector3.one;
 
@@ -201,28 +201,54 @@ namespace RTFunctions.Functions.Optimization.Objects
                 {
                     if (beatmapObject.fromPrefab && !string.IsNullOrEmpty(beatmapObject.prefabInstanceID) && gameData.prefabObjects.Has(x => x.ID == beatmapObject.prefabInstanceID))
                     {
-                        var prefab = gameData.prefabObjects.Find(x => x.ID == beatmapObject.prefabInstanceID);
+                        var prefabObject = gameData.prefabObjects.Find(x => x.ID == beatmapObject.prefabInstanceID);
+
+                        bool hasPosX = prefabObject.events.Count > 0 && prefabObject.events[0] != null && prefabObject.events[0].eventValues.Length > 0;
+                        bool hasPosY = prefabObject.events.Count > 0 && prefabObject.events[0] != null && prefabObject.events[0].eventValues.Length > 1;
+
+                        bool hasScaX = prefabObject.events.Count > 1 && prefabObject.events[1] != null && prefabObject.events[1].eventValues.Length > 0;
+                        bool hasScaY = prefabObject.events.Count > 1 && prefabObject.events[1] != null && prefabObject.events[1].eventValues.Length > 1;
+
+                        bool hasRot = prefabObject.events.Count > 2 && prefabObject.events[2] != null && prefabObject.events[2].eventValues.Length > 0;
 
                         var pos = new Vector3(
-                            prefab.events.Count > 0 && prefab.events[0] != null && prefab.events[0].eventValues.Length > 0 ? prefab.events[0].eventValues[0] : 0f,
-                            prefab.events.Count > 0 && prefab.events[0] != null && prefab.events[0].eventValues.Length > 1 ? prefab.events[0].eventValues[1] : 0f,
+                            hasPosX ? prefabObject.events[0].eventValues[0] : 0f,
+                            hasPosY ? prefabObject.events[0].eventValues[1] : 0f,
                             0f);
                         var sca = new Vector3(
-                            prefab.events.Count > 1 && prefab.events[1] != null && prefab.events[1].eventValues.Length > 0 ? prefab.events[1].eventValues[0] : 1f,
-                            prefab.events.Count > 1 && prefab.events[1] != null && prefab.events[1].eventValues.Length > 1 ? prefab.events[1].eventValues[1] : 1f,
+                            hasScaX ? prefabObject.events[1].eventValues[0] : 1f,
+                            hasScaY ? prefabObject.events[1].eventValues[1] : 1f,
                             1f);
-                        var rot = Quaternion.Euler(0f, 0f, prefab.events.Count > 2 && prefab.events[2] != null && prefab.events[2].eventValues.Length > 0 ? prefab.events[2].eventValues[0] : 0f);
+                        var rot = Quaternion.Euler(0f, 0f, hasRot ? prefabObject.events[2].eventValues[0] : 0f);
 
-                        if (prefab.events.Count > 0 && prefab.events[0] != null && prefab.events[0].random != 0)
-                            pos = ObjectManager.inst.RandomVector2Parser(prefab.events[0]);
-                        if (prefab.events.Count > 1 && prefab.events[1] != null && prefab.events[1].random != 0)
-                            sca = ObjectManager.inst.RandomVector2Parser(prefab.events[1]);
-                        if (prefab.events.Count > 2 && prefab.events[2] != null && prefab.events[2].random != 0)
-                            rot = Quaternion.Euler(0f, 0f, ObjectManager.inst.RandomFloatParser(prefab.events[2]));
+                        try
+                        {
+                            if (prefabObject.events[0].random != 0)
+                                pos = ObjectManager.inst.RandomVector2Parser(prefabObject.events[0]);
+                            if (prefabObject.events[1].random != 0)
+                                sca = ObjectManager.inst.RandomVector2Parser(prefabObject.events[1]);
+                            if (prefabObject.events[2].random != 0)
+                                rot = Quaternion.Euler(0f, 0f, ObjectManager.inst.RandomFloatParser(prefabObject.events[2]));
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogError($"{Updater.className}Prefab Randomization error.\n{ex}");
+                        }
 
                         top.transform.localPosition = pos;
                         top.transform.localScale = (sca.x > 0f || sca.x < 0f) && (sca.y > 0f || sca.y < 0f) ? sca : Vector3.one;
                         top.transform.localRotation = rot;
+
+                        if (!hasPosX)
+                            Debug.LogError($"{Updater.className}PrefabObject does not have Postion X in its' eventValues.\nPossible causes:");
+                        if (!hasPosY)
+                            Debug.LogError($"{Updater.className}PrefabObject does not have Postion Y in its' eventValues.");
+                        if (!hasScaX)
+                            Debug.LogError($"{Updater.className}PrefabObject does not have Scale X in its' eventValues.");
+                        if (!hasScaY)
+                            Debug.LogError($"{Updater.className}PrefabObject does not have Scale Y in its' eventValues.");
+                        if (!hasRot)
+                            Debug.LogError($"{Updater.className}PrefabObject does not have Rotation in its' eventValues.");
                     }
                 }
                 catch (Exception e)
@@ -301,52 +327,53 @@ namespace RTFunctions.Functions.Optimization.Objects
                         else if (ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]"))
                             Object.Destroy(ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]").gameObject);
 
-                        if (beatmapParent.parent == "PLAYER_PARENT")
-                        {
-                            GameObject playerParent;
-                            if (!ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]"))
-                            {
-                                playerParent = new GameObject("PLAYER_PARENT [" + beatmapObject.id + "]");
-                                playerParent.transform.SetParent(ObjectManager.inst.objectParent.transform);
-                                playerParent.transform.localScale = Vector3.zero;
-                                var delayTracker = playerParent.AddComponent<ObjectDelayTracker>();
+                        // This is no longer needed due to Homing Keyframes :)
+                        //if (beatmapParent.parent == "PLAYER_PARENT")
+                        //{
+                        //    GameObject playerParent;
+                        //    if (!ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]"))
+                        //    {
+                        //        playerParent = new GameObject("PLAYER_PARENT [" + beatmapObject.id + "]");
+                        //        playerParent.transform.SetParent(ObjectManager.inst.objectParent.transform);
+                        //        playerParent.transform.localScale = Vector3.zero;
+                        //        var delayTracker = playerParent.AddComponent<ObjectDelayTracker>();
 
-                                delayTracker.move = beatmapObject.GetParentType(0);
-                                delayTracker.rotate = beatmapObject.GetParentType(2);
+                        //        delayTracker.move = beatmapObject.GetParentType(0);
+                        //        delayTracker.rotate = beatmapObject.GetParentType(2);
 
-                                delayTracker.moveDelay = beatmapObject.getParentOffset(0);
-                                delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
-                            }
-                            else if (!ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").GetComponent<CameraParent>())
-                            {
-                                playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
+                        //        delayTracker.moveDelay = beatmapObject.getParentOffset(0);
+                        //        delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
+                        //    }
+                        //    else if (!ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").GetComponent<CameraParent>())
+                        //    {
+                        //        playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
 
-                                var delayTracker = playerParent.AddComponent<ObjectDelayTracker>();
+                        //        var delayTracker = playerParent.AddComponent<ObjectDelayTracker>();
 
-                                delayTracker.move = beatmapObject.GetParentType(0);
-                                delayTracker.rotate = beatmapObject.GetParentType(2);
+                        //        delayTracker.move = beatmapObject.GetParentType(0);
+                        //        delayTracker.rotate = beatmapObject.GetParentType(2);
 
-                                delayTracker.moveDelay = beatmapObject.getParentOffset(0);
-                                delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
-                            }
-                            else
-                            {
-                                playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
+                        //        delayTracker.moveDelay = beatmapObject.getParentOffset(0);
+                        //        delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
+                        //    }
+                        //    else
+                        //    {
+                        //        playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
 
-                                var delayTracker = playerParent.GetComponent<ObjectDelayTracker>();
+                        //        var delayTracker = playerParent.GetComponent<ObjectDelayTracker>();
 
-                                delayTracker.move = beatmapObject.GetParentType(0);
-                                delayTracker.rotate = beatmapObject.GetParentType(2);
+                        //        delayTracker.move = beatmapObject.GetParentType(0);
+                        //        delayTracker.rotate = beatmapObject.GetParentType(2);
 
-                                delayTracker.moveDelay = beatmapObject.getParentOffset(0);
-                                delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
-                            }
+                        //        delayTracker.moveDelay = beatmapObject.getParentOffset(0);
+                        //        delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
+                        //    }
 
-                            top.transform.SetParent(playerParent.transform);
-                            top.transform.localScale = Vector3.one;
-                        }
-                        else if (ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]"))
-                            Object.Destroy(ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]").gameObject);
+                        //    top.transform.SetParent(playerParent.transform);
+                        //    top.transform.localScale = Vector3.one;
+                        //}
+                        //else if (ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]"))
+                        //    Object.Destroy(ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]").gameObject);
                     }
                 }
                 catch (Exception e)
