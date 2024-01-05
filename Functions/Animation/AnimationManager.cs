@@ -39,7 +39,9 @@ namespace RTFunctions.Functions.Animation
 
 		public void Play(Animation animation)
         {
-			animations.Add(animation);
+			if (!animations.Has(x => x.id == animation.id))
+				animations.Add(animation);
+			animation.ResetTime();
 			animation.Play();
         }
 
