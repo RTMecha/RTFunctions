@@ -26,9 +26,25 @@ namespace RTFunctions.Functions.Optimization.Objects
 
         public readonly List<Transform> transformChain;
 
+        Data.BeatmapObject beatmapObject;
+
         public void SetSequences(Sequence<Color> colorSequence, Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence)
         {
             this.colorSequence = colorSequence;
+            this.opacitySequence = opacitySequence;
+            this.hueSequence = hueSequence;
+            this.satSequence = satSequence;
+            this.valSequence = valSequence;
+        }
+
+        public LevelObject(Data.BeatmapObject beatmapObject, Sequence<Color> colorSequence, List<LevelParentObject> parentObjects, VisualObject visualObject, Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence)
+        {
+            this.beatmapObject = beatmapObject;
+            ID = beatmapObject.id;
+            StartTime = beatmapObject.StartTime;
+            KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(_oldStyle: true);
+            this.colorSequence = colorSequence;
+            depth = beatmapObject.depth;
             this.opacitySequence = opacitySequence;
             this.hueSequence = hueSequence;
             this.satSequence = satSequence;
