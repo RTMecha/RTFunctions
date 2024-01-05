@@ -1,33 +1,34 @@
-1.8.0 > Added new feature: Homing Keyframes! Homing keyframes have two different types of homing:
+1.8.0 > [Jan 5, 2024]
+- Added new feature: Homing Keyframes! Homing keyframes have two different types of homing:
 Dynamic Homing - Always tracks the player at a delay. Includes min / max range detection and fleeing.
 Static Homing - Targets the player once on keyframe activation.
 Keep in mind homing is still early stage so it might not work the best in some ways, but they still work for the most part.
-1.8.0 > Fixed a bug with DeepCopying prefabs not carrying over the BeatmapObject refeference for modifiers.
-1.8.0 > Fixed a bug with setting eventRandomValues. If the value was higher than it was previously, it would set the regular eventValues to default.
--
-1.7.6 > Made some Player methods accessible for other mods.
--
-1.7.5 > Added Discord status config, so you can show / hide what level you're editing / playing.
-1.7.5 > Fixed updating an object's depth.
-1.7.5 > Started laying the groundwork for Player Objects (shape).
--
-1.7.4 > Added modified player components, so anything fixed / changed in CreativePlayers is now in RTFunctions.
-1.7.4 > Fixed rotation dragging so it's properly circular.
-1.7.4 > Started working on Homing Keyframes (Dynamic / Static).
--
-1.7.3 > Fix for shapes not being loaded yet causing the game to not load in the arcade.
--
-1.7.2 > More fixes and features for the new level system.
--
-1.7.1 > Removed custom log window since it caused a ton of slow down.
-1.7.1 > Fix for themes having pink colors where a hex color is 8 digits long.
-1.7.1 > Began working on a new level loading system that allows you to load an arcade level from anywhere at any point.
-1.7.1 > More code cleanup.
-1.7.1 > Added AntiAliasing to config.
--
-1.7.0 > Overide most of the original PA data, allowing me to add a ton of new features.
-1.7.0 > Merge AdditionalFonts and CustomShapes into RTFunctions.
-1.7.0 > Added relative keyframes.
-1.7.0 > Added new parent settings.
-1.7.0 > Added Low Detail Mode for objects.
-1.7.0 > Tons of optimizations and bug fixes.
+- Fixed a bug with DeepCopying prefabs not carrying over the BeatmapObject refeference for modifiers.
+- Fixed a bug with setting eventRandomValues. If the value was higher than it was previously, it would set the regular eventValues to default.
+1.7.6 > [Jan 3, 2024]
+- Made some Player methods accessible for other mods.
+1.7.5 > [Jan 3, 2024]
+- Added Discord status config, so you can show / hide what level you're editing / playing.
+- Fixed updating an object's depth.
+- Started laying the groundwork for Player Objects (shape).
+1.7.4 > [Dec 26, 2023]
+- Added modified player components, so anything fixed / changed in CreativePlayers is now in RTFunctions.
+- Fixed rotation dragging so it's properly circular.
+- Started working on Homing Keyframes (Dynamic / Static).
+1.7.3 > [Dec 19, 2023]
+- Fix for shapes not being loaded yet causing the game to not load in the arcade.
+1.7.2 > [Dec 18, 2023]
+- More fixes and features for the new level system.
+1.7.1 > [Dec 18, 2023]
+- Removed custom log window since it caused a ton of slow down.
+- Fix for themes having pink colors where a hex color is 8 digits long.
+- Began working on a new level loading system that allows you to load an arcade level from anywhere at any point.
+- More code cleanup.
+- Added AntiAliasing to config.
+1.7.0 > [Dec 16, 2023]
+- Overide most of the original PA data, allowing me to add a ton of new features.
+- Merge AdditionalFonts and CustomShapes into RTFunctions.
+- Added relative keyframes.
+- Added new parent settings.
+- Added Low Detail Mode for objects.
+- Tons of optimizations and bug fixes.
