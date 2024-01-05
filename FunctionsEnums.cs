@@ -27,4 +27,11 @@
         LS,
         VG
     }
+
+    public enum AxisMode
+    {
+        Both,
+        XOnly,
+        YOnly,
+    }
 }
