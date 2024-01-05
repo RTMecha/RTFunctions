@@ -942,6 +942,13 @@ namespace RTFunctions.Functions
 			return t;
         }
 
+		public static Vector3 X(this Vector3 vector3) => new Vector3(vector3.x, 0f, 0f);
+		public static Vector3 Y(this Vector3 vector3) => new Vector3(0f, vector3.y, 0f);
+		public static Vector3 Z(this Vector3 vector3) => new Vector3(0f, 0f, vector3.z);
+		
+		public static Vector2 X(this Vector2 vector3) => new Vector2(vector3.x, 0f);
+		public static Vector2 Y(this Vector2 vector3) => new Vector2(0f, vector3.y);
+
 		#endregion
 	}
 }
