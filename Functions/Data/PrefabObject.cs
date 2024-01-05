@@ -122,7 +122,7 @@ namespace RTFunctions.Functions.Data
                 }
                 else
                 {
-                    prefabObject.events.Add(new EventKeyframe(new float[2] { 0f, 0f }, new float[2] { 0f, 0f }));
+                    prefabObject.events.Add(new EventKeyframe(new float[2] { 0f, 0f }, new float[3] { 0f, 0f, 0f }));
                 }
                 if (jn["e"]["sca"] != null)
                 {
@@ -145,7 +145,7 @@ namespace RTFunctions.Functions.Data
                 }
                 else
                 {
-                    prefabObject.events.Add(new EventKeyframe(new float[2] { 1f, 1f }, new float[2] { 1f, 1f }));
+                    prefabObject.events.Add(new EventKeyframe(new float[2] { 1f, 1f }, new float[3] { 0f, 0f, 0f }));
                 }
                 if (jn["e"]["rot"] != null)
                 {
@@ -167,16 +167,16 @@ namespace RTFunctions.Functions.Data
                 }
                 else
                 {
-                    prefabObject.events.Add(new EventKeyframe(new float[1] { 0f }, new float[1] { 0f }));
+                    prefabObject.events.Add(new EventKeyframe(new float[1] { 0f }, new float[3] { 0f, 0f, 0f }));
                 }
             }
             else
             {
                 prefabObject.events = new List<DataManager.GameData.EventKeyframe>()
                 {
-                    new EventKeyframe(new float[2] { 0f, 0f }, new float[2] { 0f, 0f }),
-                    new EventKeyframe(new float[2] { 1f, 1f }, new float[2] { 0f, 0f }),
-                    new EventKeyframe(new float[1] { 0f }, new float[1] { 0f }),
+                    new EventKeyframe(new float[2] { 0f, 0f }, new float[3] { 0f, 0f, 0f }),
+                    new EventKeyframe(new float[2] { 1f, 1f }, new float[3] { 0f, 0f, 0f }),
+                    new EventKeyframe(new float[1] { 0f }, new float[3] { 0f, 0f, 0f }),
                 };
             }
             return prefabObject;
