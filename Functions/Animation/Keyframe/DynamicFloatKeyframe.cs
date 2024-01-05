@@ -21,6 +21,11 @@ namespace RTFunctions.Functions.Animation.Keyframe
         public float MaxRange { get; set; }
         public bool Flee { get; set; }
 
+        public float Angle { get; set; }
+        public float Angle360 { get; set; }
+
+        public Vector3 Target { get; set; }
+
         public Sequence<Vector3> PositionSequence { get; set; }
 
         public Transform Player
@@ -56,12 +61,18 @@ namespace RTFunctions.Functions.Animation.Keyframe
             MinRange = min;
             MaxRange = max;
             Flee = flee;
+            Angle360 = 0f;
+            Angle = 0f;
+            Target = Vector3.zero;
             PositionSequence = positionSequence;
         }
 
         public void Start()
         {
             Value = OriginalValue;
+            Target = Player?.localPosition ?? Vector3.zero;
+            Angle360 = 0f;
+            Angle = 0f;
         }
 
         public float Interpolate(IKeyframe<float> other, float time)
@@ -70,7 +81,20 @@ namespace RTFunctions.Functions.Animation.Keyframe
             var secondEase = other is DynamicFloatKeyframe keyframe1 ? keyframe1.Ease(time) : ((FloatKeyframe)other).Ease(time);
 
             var vector = Player?.localPosition ?? Vector3.zero;
-            var angle = -RTMath.VectorAngle(PositionSequence.Value, Player?.localPosition ?? Vector3.zero);
+            var angle = -RTMath.VectorAngle(PositionSequence.Value, vector);
+
+            // Calculation for rotation looping so it doesn't flip around with a lower delay.
+            //if (Target.x < vector.x && vector.x > PositionSequence.Value.x && Angle > angle)
+            //{
+            //    Angle360 += 360f;
+            //}
+            //if (Target.x > vector.x && vector.x < PositionSequence.Value.x && Angle < angle)
+            //{
+            //    Angle360 -= 360f;
+            //}
+
+            Angle = angle + Angle360;
+            Target = Player?.localPosition ?? Vector3.zero;
 
             float pitch = RTHelpers.Pitch;
 
@@ -79,7 +103,7 @@ namespace RTFunctions.Functions.Animation.Keyframe
             float po = 1f - Mathf.Pow(1f - Mathf.Clamp(Delay, 0.001f, 1f), p);
 
             if (MinRange == 0f && MaxRange == 0f || Vector2.Distance(vector, PositionSequence.Value) > MinRange && Vector2.Distance(vector, PositionSequence.Value) < MaxRange)
-                Value += Flee ? (angle + Value) * po : (angle - Value) * po;
+                Value += Flee ? (Angle + Value) * po : (Angle - Value) * po;
 
             //return RTMath.Lerp(Value + OriginalValue, secondValue, secondEase);
             return Value;
