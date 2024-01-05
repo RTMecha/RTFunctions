@@ -1,5 +1,6 @@
 1.8.1 > [Jan 5, 2024]
 - Optimized PrefabObject offset updating.
+- Removed Player Parenting since we now have Homing Keyframes.
 1.8.0 > [Jan 5, 2024]
 - Added new feature: Homing Keyframes! Homing keyframes have two different types of homing:
 Dynamic Homing - Always tracks the player at a delay. Includes min / max range detection and fleeing.
