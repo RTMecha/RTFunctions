@@ -211,7 +211,7 @@ namespace RTFunctions.Functions.Data
 
 			#region Methods
 
-			public static Modifier DeepCopy(Modifier orig)
+			public static Modifier DeepCopy(Modifier orig, BeatmapObject beatmapObject = null)
 			{
 				var modifier = new Modifier();
 				modifier.type = orig.type;
@@ -221,7 +221,7 @@ namespace RTFunctions.Functions.Data
 					modifier.commands.Add(l);
 				}
 				modifier.value = orig.value;
-				modifier.modifierObject = orig.modifierObject;
+				modifier.modifierObject = beatmapObject ?? orig.modifierObject;
 				modifier.not = orig.not;
 				modifier.constant = orig.constant;
 
@@ -271,40 +271,44 @@ namespace RTFunctions.Functions.Data
 
 		#region Methods
 
-		public static BeatmapObject DeepCopy(BeatmapObject orig, bool newID = true, bool copyVariables = true) => new BeatmapObject
+		public static BeatmapObject DeepCopy(BeatmapObject orig, bool newID = true, bool copyVariables = true)
         {
-            id = newID ? LSText.randomString(16) : orig.id,
-            parent = orig.parent,
-            name = orig.name,
-            active = orig.active,
-            autoKillOffset = orig.autoKillOffset,
-            autoKillType = orig.autoKillType,
-            Depth = orig.Depth,
-            editorData = new ObjectEditorData()
-            {
-                Bin = orig.editorData.Bin,
-                layer = orig.editorData.layer,
-                collapse = orig.editorData.collapse,
-                locked = orig.editorData.locked
-            },
-            fromPrefab = orig.fromPrefab,
-            objectType = orig.objectType,
-            origin = orig.origin,
-            prefabID = orig.prefabID,
-            prefabInstanceID = orig.prefabInstanceID,
-            shape = orig.shape,
-            shapeOption = orig.shapeOption,
-            StartTime = orig.StartTime,
-            text = orig.text,
-            LDM = orig.LDM,
-            modifiers = orig.modifiers.Select(x => Modifier.DeepCopy(x)).ToList(),
-			events = orig.events.Clone(),
-			parentType = orig.parentType,
-			parentOffsets = orig.parentOffsets,
-			integerVariable = copyVariables ? orig.integerVariable : 0,
-            floatVariable = copyVariables ? orig.floatVariable : 0f,
-            stringVariable = copyVariables ? orig.stringVariable : ""
-        };
+			var beatmapObject = new BeatmapObject
+			{
+				id = newID ? LSText.randomString(16) : orig.id,
+				parent = orig.parent,
+				name = orig.name,
+				active = orig.active,
+				autoKillOffset = orig.autoKillOffset,
+				autoKillType = orig.autoKillType,
+				Depth = orig.Depth,
+				editorData = new ObjectEditorData()
+				{
+					Bin = orig.editorData.Bin,
+					layer = orig.editorData.layer,
+					collapse = orig.editorData.collapse,
+					locked = orig.editorData.locked
+				},
+				fromPrefab = orig.fromPrefab,
+				objectType = orig.objectType,
+				origin = orig.origin,
+				prefabID = orig.prefabID,
+				prefabInstanceID = orig.prefabInstanceID,
+				shape = orig.shape,
+				shapeOption = orig.shapeOption,
+				StartTime = orig.StartTime,
+				text = orig.text,
+				LDM = orig.LDM,
+				events = orig.events.Clone(),
+				parentType = orig.parentType,
+				parentOffsets = orig.parentOffsets,
+				integerVariable = copyVariables ? orig.integerVariable : 0,
+				floatVariable = copyVariables ? orig.floatVariable : 0f,
+				stringVariable = copyVariables ? orig.stringVariable : ""
+			};
+			beatmapObject.modifiers = orig.modifiers.Select(x => Modifier.DeepCopy(x, beatmapObject)).ToList();
+			return beatmapObject;
+		}
 
         public static BeatmapObject Parse(JSONNode jn)
 		{
@@ -353,9 +357,10 @@ namespace RTFunctions.Functions.Data
 					eventKeyframe.random = kfjn["r"].AsInt;
 					eventKeyframe.SetEventRandomValues(new float[]
 					{
-							kfjn["rx"].AsFloat,
-							kfjn["ry"].AsFloat,
-							kfjn["rz"].AsFloat
+						kfjn["rx"].AsFloat, // Random Value X
+						kfjn["ry"].AsFloat, // Random Value Y
+						kfjn["rz"].AsFloat, // Random Interval
+						kfjn["rx2"].AsFloat, // Random Axis
 					});
 
 					eventKeyframe.relative = !string.IsNullOrEmpty(kfjn["rel"]) && kfjn["rel"].AsBool;
@@ -454,7 +459,10 @@ namespace RTFunctions.Functions.Data
 					eventKeyframe.random = kfjn["r"].AsInt;
 					eventKeyframe.SetEventRandomValues(new float[]
 					{
-							kfjn["rx"].AsFloat
+							kfjn["rx"].AsFloat,
+							kfjn["ry"].AsFloat,
+							kfjn["rz"].AsFloat,
+							kfjn["rx2"].AsFloat,
 					});
 
 					eventKeyframe.active = false;
