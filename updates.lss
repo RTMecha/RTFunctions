@@ -1,3 +1,10 @@
+1.8.0 > Added new feature: Homing Keyframes! Homing keyframes have two different types of homing:
+Dynamic Homing - Always tracks the player at a delay. Includes min / max range detection and fleeing.
+Static Homing - Targets the player once on keyframe activation.
+Keep in mind homing is still early stage so it might not work the best in some ways, but they still work for the most part.
+1.8.0 > Fixed a bug with DeepCopying prefabs not carrying over the BeatmapObject refeference for modifiers.
+1.8.0 > Fixed a bug with setting eventRandomValues. If the value was higher than it was previously, it would set the regular eventValues to default.
+-
 1.7.6 > Made some Player methods accessible for other mods.
 -
 1.7.5 > Added Discord status config, so you can show / hide what level you're editing / playing.
