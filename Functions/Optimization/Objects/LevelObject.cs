@@ -106,15 +106,15 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 a = -a;
 
-                float b = 1f;
-                if (a >= 0f && a <= 1f)
-                {
-                    b = color.a * a;
-                }
-                else
-                {
-                    b = color.a;
-                }
+                float b = a >= 0f && a <= 1f ? color.a * a : color.a;
+                //if (a >= 0f && a <= 1f)
+                //{
+                //    b = color.a * a;
+                //}
+                //else
+                //{
+                //    b = color.a;
+                //}
 
                 visualObject.SetColor(LSFunctions.LSColors.fadeColor(ChangeColorHSV(color, hue, sat, val), b));
             }
@@ -127,15 +127,15 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 a = -a;
 
-                float b = 1f;
-                if (a >= 0f && a <= 1f)
-                {
-                    b = color.a * a;
-                }
-                else
-                {
-                    b = color.a;
-                }
+                float b = a >= 0f && a <= 1f ? color.a * a : color.a;
+                //if (a >= 0f && a <= 1f)
+                //{
+                //    b = color.a * a;
+                //}
+                //else
+                //{
+                //    b = color.a;
+                //}
 
                 visualObject.SetColor(LSFunctions.LSColors.fadeColor(color, b));
             }
