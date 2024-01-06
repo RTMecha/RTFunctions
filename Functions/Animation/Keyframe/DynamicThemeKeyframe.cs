@@ -37,15 +37,21 @@ namespace RTFunctions.Functions.Animation.Keyframe
                 if (PlayerManager.Players.Count > 0)
                 {
                     var value = PositionSequence.Value;
-                    var player = PlayerManager.Players
+                    var orderedList = PlayerManager.Players
                         .Where(x => x.Player && x.Player.transform.Find("Player"))
-                        .OrderBy(x => Vector2.Distance(x.Player.transform.Find("Player").position, value))
-                        .ToList()[0];
+                        .OrderBy(x => Vector2.Distance(x.Player.transform.Find("Player").localPosition, value))
+                        .ToList();
 
-                    if (player && player.Player)
+                    if (orderedList.Count > 0)
                     {
-                        return player.Player.transform.Find("Player");
+                        var player = orderedList[0];
+
+                        if (player && player.Player)
+                        {
+                            return player.Player.transform.Find("Player");
+                        }
                     }
+                    return null;
                 }
 
                 return null;
