@@ -195,6 +195,10 @@ namespace RTFunctions.Functions.Optimization.Objects
                 top.transform.SetParent(ObjectManager.inst.objectParent.transform);
                 top.transform.localScale = Vector3.one;
 
+                Vector3 prefabOffsetPosition = Vector3.zero;
+                Vector3 prefabOffsetScale  = Vector3.one;
+                Vector3 prefabOffsetRotation = Vector3.zero;
+
                 try
                 {
                     if (beatmapObject.fromPrefab && !string.IsNullOrEmpty(beatmapObject.prefabInstanceID) && gameData.prefabObjects.Has(x => x.ID == beatmapObject.prefabInstanceID))
@@ -233,9 +237,12 @@ namespace RTFunctions.Functions.Optimization.Objects
                             Debug.LogError($"{Updater.className}Prefab Randomization error.\n{ex}");
                         }
 
-                        top.transform.localPosition = pos;
-                        top.transform.localScale = (sca.x > 0f || sca.x < 0f) && (sca.y > 0f || sca.y < 0f) ? sca : Vector3.one;
-                        top.transform.localRotation = rot;
+                        prefabOffsetPosition = pos;
+                        prefabOffsetScale = (sca.x > 0f || sca.x < 0f) && (sca.y > 0f || sca.y < 0f) ? sca : Vector3.one;
+                        prefabOffsetRotation = rot.eulerAngles;
+                        //top.transform.localPosition = pos;
+                        //top.transform.localScale = (sca.x > 0f || sca.x < 0f) && (sca.y > 0f || sca.y < 0f) ? sca : Vector3.one;
+                        //top.transform.localRotation = rot;
 
                         if (!hasPosX)
                             Debug.LogError($"{Updater.className}PrefabObject does not have Postion X in its' eventValues.\nPossible causes:");
@@ -339,7 +346,8 @@ namespace RTFunctions.Functions.Optimization.Objects
                     cachedSequences[beatmapObject.id].OpacitySequence,
                     cachedSequences[beatmapObject.id].HueSequence,
                     cachedSequences[beatmapObject.id].SaturationSequence,
-                    cachedSequences[beatmapObject.id].ValueSequence);
+                    cachedSequences[beatmapObject.id].ValueSequence,
+                    prefabOffsetPosition, prefabOffsetScale, prefabOffsetRotation);
 
                 levelObject.SetActive(false);
 

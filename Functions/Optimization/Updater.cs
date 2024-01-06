@@ -781,17 +781,9 @@ namespace RTFunctions.Functions.Optimization
                 var level = levelProcessor.level;
                 var objects = level.objects;
 
-                // Here we get all the GameObjects and destroy them.
-                //foreach (var obj in objects)
-                //{
-                //    var gameObject = ((LevelObject)obj).visualObject.GameObject;
-                //    if (gameObject != null && gameObject.transform.parent.name != "GameObjects")
-                //        UnityEngine.Object.Destroy(gameObject.transform.parent.gameObject);
-                //}
-
                 level.objects.Clear();
 
-                // Just in case there's anything left behind, we delete all the "GameObjects" children.
+                // Delete all the "GameObjects" children.
                 LSFunctions.LSHelpers.DeleteChildren(GameObject.Find("GameObjects").transform);
 
                 // Removing and reinserting prefabs.

@@ -38,9 +38,13 @@ namespace RTFunctions.Functions.Optimization.Objects
         public float scaleParentOffset;
         public float rotationParentOffset;
 
-        public Vector3 originalPosition;
-        public Vector3 originalScale;
-        public Vector3 originalRotation;
+        public Vector3 topPositionOffset;
+        public Vector3 topScaleOffset;
+        public Vector3 topRotationOffset;
+
+        public Vector3 prefabOffsetPosition;
+        public Vector3 prefabOffsetScale;
+        public Vector3 prefabOffsetRotation;
 
         public void SetSequences(Sequence<Color> colorSequence, Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence)
         {
@@ -51,7 +55,9 @@ namespace RTFunctions.Functions.Optimization.Objects
             this.valSequence = valSequence;
         }
 
-        public LevelObject(Data.BeatmapObject beatmapObject, Sequence<Color> colorSequence, List<LevelParentObject> parentObjects, VisualObject visualObject, Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence)
+        public LevelObject(Data.BeatmapObject beatmapObject, Sequence<Color> colorSequence, List<LevelParentObject> parentObjects, VisualObject visualObject,
+            Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence,
+            Vector3 prefabOffsetPosition, Vector3 prefabOffsetScale, Vector3 prefabOffsetRotation)
         {
             this.beatmapObject = beatmapObject;
 
@@ -69,6 +75,10 @@ namespace RTFunctions.Functions.Optimization.Objects
             this.satSequence = satSequence;
             this.valSequence = valSequence;
 
+            this.prefabOffsetPosition = prefabOffsetPosition;
+            this.prefabOffsetScale = prefabOffsetScale;
+            this.prefabOffsetRotation = prefabOffsetRotation;
+
             try
             {
                 this.parentObjects.Reverse();
@@ -81,10 +91,6 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 if (this.visualObject != null && this.visualObject.GameObject)
                     transformChain.Add(this.visualObject.GameObject.transform);
-
-                originalPosition = transformChain[0].localPosition;
-                originalScale = transformChain[0].localScale;
-                originalRotation = transformChain[0].localRotation.eulerAngles;
 
                 var pc = beatmapObject.GetParentChain();
 
@@ -154,9 +160,9 @@ namespace RTFunctions.Functions.Optimization.Objects
                 if (this.visualObject != null && this.visualObject.GameObject)
                     transformChain.Add(this.visualObject.GameObject.transform);
 
-                originalPosition = transformChain[0].localPosition;
-                originalScale = transformChain[0].localScale;
-                originalRotation = transformChain[0].localRotation.eulerAngles;
+                topPositionOffset = transformChain[0].localPosition;
+                topScaleOffset = transformChain[0].localScale;
+                topRotationOffset = transformChain[0].localRotation.eulerAngles;
 
                 var pc = beatmapObject.GetParentChain();
 
@@ -252,36 +258,33 @@ namespace RTFunctions.Functions.Optimization.Objects
             }
 
             // Update Camera Parent
-            if (cameraParent)
+            if (positionParent && cameraParent)
             {
-                if (positionParent)
-                {
-                    var x = EventManager.inst.cam.transform.position.x;
-                    var y = EventManager.inst.cam.transform.position.y;
+                var x = EventManager.inst.cam.transform.position.x;
+                var y = EventManager.inst.cam.transform.position.y;
 
-                    transformChain[0].localPosition = (new Vector3(x, y, 0f) * positionParentOffset) + originalPosition;
-                }
-                else
-                    transformChain[0].localPosition = originalPosition;
-
-                if (scaleParent)
-                {
-                    float camOrthoZoom = EventManager.inst.cam.orthographicSize / 20f;
-
-                    transformChain[0].localScale = (new Vector3(camOrthoZoom, camOrthoZoom, 1f) * scaleParentOffset) + originalScale;
-                }
-                else
-                    transformChain[0].localScale = originalScale;
-
-                if (rotationParent)
-                {
-                    var camRot = EventManager.inst.camParent.transform.rotation.eulerAngles;
-
-                    transformChain[0].localRotation = Quaternion.Euler((camRot * rotationParentOffset) + originalRotation);
-                }
-                else
-                    transformChain[0].localRotation = Quaternion.Euler(originalRotation);
+                transformChain[0].localPosition = (new Vector3(x, y, 0f) * positionParentOffset) + prefabOffsetPosition + topPositionOffset;
             }
+            else
+                transformChain[0].localPosition = prefabOffsetPosition + topPositionOffset;
+
+            if (scaleParent && cameraParent)
+            {
+                float camOrthoZoom = EventManager.inst.cam.orthographicSize / 20f;
+
+                transformChain[0].localScale = (new Vector3(camOrthoZoom, camOrthoZoom, 1f) * scaleParentOffset) + prefabOffsetScale + topScaleOffset;
+            }
+            else
+                transformChain[0].localScale = prefabOffsetScale + topScaleOffset;
+
+            if (rotationParent && cameraParent)
+            {
+                var camRot = EventManager.inst.camParent.transform.rotation.eulerAngles;
+
+                transformChain[0].localRotation = Quaternion.Euler((camRot * rotationParentOffset) + prefabOffsetRotation + topRotationOffset);
+            }
+            else
+                transformChain[0].localRotation = Quaternion.Euler(prefabOffsetRotation + topRotationOffset);
 
             // Update parents
             float positionOffset = 0.0f;
