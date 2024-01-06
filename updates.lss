@@ -1,3 +1,7 @@
+1.8.2 > [Jan 6, 2024]
+- Trying to find a way to fix the Rotation Dynamic Homing flip bug.
+- Fixed Camera parenting, it now properly updates.
+- Updating keyframes now updates the color sequence.
 1.8.1 > [Jan 5, 2024]
 - Optimized PrefabObject offset updating.
 - Removed Player Parenting since we now have Homing Keyframes.
