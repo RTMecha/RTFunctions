@@ -27,8 +27,6 @@ namespace RTFunctions.Functions.Optimization.Objects
     /// </summary>
     public class ObjectConverter
     {
-        // Add Homing Objects to Random EventKeyframe somehow
-
         public class CachedSequences
         {
             public Sequence<Vector3> Position3DSequence { get; set; }
@@ -263,141 +261,11 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 try
                 {
-                    var pc = beatmapObject.GetParentChain();
-                    if (pc != null && pc.Count > 0)
-                    {
-                        var beatmapParent = pc[pc.Count - 1];
+                    var tf = parentObjects != null && parentObjects.Count > 0 && parentObjects[parentObjects.Count - 1] && parentObjects[parentObjects.Count - 1].Transform ?
+                        parentObjects[parentObjects.Count - 1].Transform : baseObject.transform;
 
-                        if (beatmapParent.parent == "CAMERA_PARENT")
-                        {
-                            GameObject camParent;
-                            if (!ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]"))
-                            {
-                                camParent = new GameObject("CAMERA_PARENT [" + beatmapParent.id + "]");
-                                camParent.transform.SetParent(ObjectManager.inst.objectParent.transform);
-                                camParent.transform.localScale = Vector3.zero;
-                                var camParentComponent = camParent.AddComponent<CameraParent>();
-
-                                camParentComponent.parentObject = beatmapParent;
-
-                                camParentComponent.positionParent = beatmapParent.GetParentType(0);
-                                camParentComponent.scaleParent = beatmapParent.GetParentType(1);
-                                camParentComponent.rotationParent = beatmapParent.GetParentType(2);
-
-                                camParentComponent.positionParentOffset = beatmapParent.getParentOffset(0);
-                                camParentComponent.scaleParentOffset = beatmapParent.getParentOffset(1);
-                                camParentComponent.rotationParentOffset = beatmapParent.getParentOffset(2);
-                            }
-                            else if (!ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]").GetComponent<CameraParent>())
-                            {
-                                camParent = ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]").gameObject;
-
-                                var camParentComponent = camParent.AddComponent<CameraParent>();
-
-                                camParentComponent.parentObject = beatmapParent;
-
-                                camParentComponent.positionParent = beatmapParent.GetParentType(0);
-                                camParentComponent.scaleParent = beatmapParent.GetParentType(1);
-                                camParentComponent.rotationParent = beatmapParent.GetParentType(2);
-
-                                camParentComponent.positionParentOffset = beatmapParent.getParentOffset(0);
-                                camParentComponent.scaleParentOffset = beatmapParent.getParentOffset(1);
-                                camParentComponent.rotationParentOffset = beatmapParent.getParentOffset(2);
-                            }
-                            else
-                            {
-                                camParent = ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]").gameObject;
-
-                                var camParentComponent = camParent.GetComponent<CameraParent>();
-
-                                camParentComponent.parentObject = beatmapParent;
-
-                                camParentComponent.positionParent = beatmapParent.GetParentType(0);
-                                camParentComponent.scaleParent = beatmapParent.GetParentType(1);
-                                camParentComponent.rotationParent = beatmapParent.GetParentType(2);
-
-                                camParentComponent.positionParentOffset = beatmapParent.getParentOffset(0);
-                                camParentComponent.scaleParentOffset = beatmapParent.getParentOffset(1);
-                                camParentComponent.rotationParentOffset = beatmapParent.getParentOffset(2);
-                            }
-
-                            top.transform.SetParent(camParent.transform);
-                            top.transform.localScale = Vector3.one;
-                        }
-                        else if (ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]"))
-                            Object.Destroy(ObjectManager.inst.objectParent.transform.Find("CAMERA_PARENT [" + beatmapParent.id + "]").gameObject);
-
-                        // This is no longer needed due to Homing Keyframes :)
-                        //if (beatmapParent.parent == "PLAYER_PARENT")
-                        //{
-                        //    GameObject playerParent;
-                        //    if (!ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]"))
-                        //    {
-                        //        playerParent = new GameObject("PLAYER_PARENT [" + beatmapObject.id + "]");
-                        //        playerParent.transform.SetParent(ObjectManager.inst.objectParent.transform);
-                        //        playerParent.transform.localScale = Vector3.zero;
-                        //        var delayTracker = playerParent.AddComponent<ObjectDelayTracker>();
-
-                        //        delayTracker.move = beatmapObject.GetParentType(0);
-                        //        delayTracker.rotate = beatmapObject.GetParentType(2);
-
-                        //        delayTracker.moveDelay = beatmapObject.getParentOffset(0);
-                        //        delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
-                        //    }
-                        //    else if (!ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").GetComponent<CameraParent>())
-                        //    {
-                        //        playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
-
-                        //        var delayTracker = playerParent.AddComponent<ObjectDelayTracker>();
-
-                        //        delayTracker.move = beatmapObject.GetParentType(0);
-                        //        delayTracker.rotate = beatmapObject.GetParentType(2);
-
-                        //        delayTracker.moveDelay = beatmapObject.getParentOffset(0);
-                        //        delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
-                        //    }
-                        //    else
-                        //    {
-                        //        playerParent = ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + pc[pc.Count - 1].id + "]").gameObject;
-
-                        //        var delayTracker = playerParent.GetComponent<ObjectDelayTracker>();
-
-                        //        delayTracker.move = beatmapObject.GetParentType(0);
-                        //        delayTracker.rotate = beatmapObject.GetParentType(2);
-
-                        //        delayTracker.moveDelay = beatmapObject.getParentOffset(0);
-                        //        delayTracker.rotateDelay = beatmapObject.getParentOffset(2);
-                        //    }
-
-                        //    top.transform.SetParent(playerParent.transform);
-                        //    top.transform.localScale = Vector3.one;
-                        //}
-                        //else if (ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]"))
-                        //    Object.Destroy(ObjectManager.inst.objectParent.transform.Find("PLAYER_PARENT [" + beatmapParent.id + "]").gameObject);
-                    }
-                }
-                catch (Exception e)
-                {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    stringBuilder.AppendLine($"{Updater.className}Failed to set camera / player parent for '{beatmapObject.id}'.");
-                    stringBuilder.AppendLine($"Exception: {e.Message}");
-                    stringBuilder.AppendLine(e.StackTrace);
-
-                    Debug.LogError(stringBuilder.ToString());
-                } // Camera parenting & Player parenting
-
-                try
-                {
-                    if (parentObjects != null && parentObjects.Count > 0 && parentObjects[parentObjects.Count - 1] && parentObjects[parentObjects.Count - 1].Transform)
-                    {
-                        parentObjects[parentObjects.Count - 1].Transform.SetParent(top.transform);
-                        parentObjects[parentObjects.Count - 1].Transform.localScale = Vector3.one;
-                    }
-                    else
-                    {
-                        baseObject.transform.SetParent(top.transform);
-                        baseObject.transform.localScale = Vector3.one;
-                    }
+                    tf.SetParent(top.transform);
+                    tf.localScale = Vector3.one;
                 }
                 catch (Exception e)
                 {
@@ -437,6 +305,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 // 4 = text object
                 // 6 = image object
+                // 9 = player object (Implement soon)
                 VisualObject visual =
                     beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text) :
                     beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text) :
@@ -463,13 +332,10 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 Object.Destroy(visualObject.GetComponent<SelectObjectInEditor>());
 
-                var levelObject = new LevelObject(beatmapObject.id,
-                    beatmapObject.StartTime,
-                    beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(_oldStyle: true),
+                var levelObject = new LevelObject(
+                    (Data.BeatmapObject)beatmapObject,
                     cachedSequences[beatmapObject.id].ColorSequence,
-                    beatmapObject.depth,
-                    parentObjects,
-                    visual,
+                    parentObjects, visual,
                     cachedSequences[beatmapObject.id].OpacitySequence,
                     cachedSequences[beatmapObject.id].HueSequence,
                     cachedSequences[beatmapObject.id].SaturationSequence,
