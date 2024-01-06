@@ -301,13 +301,18 @@ namespace RTFunctions.Functions.Data
 				StartTime = orig.StartTime,
 				text = orig.text,
 				LDM = orig.LDM,
-				events = orig.events.Clone(),
 				parentType = orig.parentType,
 				parentOffsets = orig.parentOffsets,
 				integerVariable = copyVariables ? orig.integerVariable : 0,
 				floatVariable = copyVariables ? orig.floatVariable : 0f,
 				stringVariable = copyVariables ? orig.stringVariable : ""
 			};
+
+			for (int i = 0; i < beatmapObject.events.Count; i++)
+            {
+				beatmapObject.events[i].AddRange(orig.events[i].Select(x => EventKeyframe.DeepCopy((EventKeyframe)x)));
+            }
+
 			beatmapObject.modifiers = orig.modifiers.Select(x => Modifier.DeepCopy(x, beatmapObject)).ToList();
 			return beatmapObject;
 		}
