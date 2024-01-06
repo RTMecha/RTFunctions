@@ -25,6 +25,12 @@ namespace RTFunctions.Functions.Optimization
 
         public static bool TryGetObject(BeatmapObject beatmapObject, out LevelObject levelObject)
         {
+            if (beatmapObject is Data.BeatmapObject && (beatmapObject as Data.BeatmapObject).levelObject)
+            {
+                levelObject = (beatmapObject as Data.BeatmapObject).levelObject;
+                return true;
+            }
+
             if (HasObject(beatmapObject))
             {
                 levelObject = (LevelObject)levelProcessor.level.objects.Find(x => x.ID == beatmapObject.id);
@@ -253,7 +259,23 @@ namespace RTFunctions.Functions.Optimization
                                 if (!beatmapObject.TimeWithinLifespan())
                                     levelObject.SetActive(false);
 
-                                FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject, levelProcessor.converter, true, true));
+                                //FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject, levelProcessor.converter, true, true));
+
+                                foreach (var levelParent in levelObject.parentObjects)
+                                {
+                                    if (DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == levelParent.ID, out BeatmapObject parent))
+                                    {
+                                        levelParent.TimeOffset = parent.StartTime;
+
+                                        levelParent.ParentAnimatePosition = parent.GetParentType(0);
+                                        levelParent.ParentAnimateScale = parent.GetParentType(1);
+                                        levelParent.ParentAnimateRotation = parent.GetParentType(2);
+
+                                        levelParent.ParentOffsetPosition = parent.getParentOffset(0);
+                                        levelParent.ParentOffsetScale = parent.getParentOffset(1);
+                                        levelParent.ParentOffsetRotation = parent.getParentOffset(2);
+                                    }
+                                }
 
                                 //if (spawner.activateList.Has(x => x.ID == beatmapObject.id))
                                 //{
@@ -287,30 +309,87 @@ namespace RTFunctions.Functions.Optimization
                         } // Autokill
                     case "parent":
                         {
-                            UpdateProcessor(beatmapObject);
+                            var parentChain = beatmapObject.GetParentChain();
+                            if (beatmapObject.parent == "CAMERA_PARENT" || parentChain.Count > 1 && parentChain[parentChain.Count - 1].parent == "CAMERA_PARENT")
+                            {
+                                var beatmapParent = parentChain.Count > 1 && parentChain[parentChain.Count - 1].parent == "CAMERA_PARENT" ? parentChain[parentChain.Count - 1] : beatmapObject;
+
+                                var ids = new List<string>();
+                                foreach (var child in beatmapParent.GetChildChain())
+                                {
+                                    ids.AddRange(child.Where(x => !ids.Contains(x.id)).Select(x => x.id));
+                                }
+
+                                foreach (var id in ids)
+                                {
+                                    var child = DataManager.inst.gameData.beatmapObjects.Find(x => x.id == id);
+                                    if (TryGetObject(child, out LevelObject childLevelObject))
+                                    {
+                                        childLevelObject.cameraParent = beatmapParent.parent == "CAMERA_PARENT";
+
+                                        childLevelObject.positionParent = beatmapParent.GetParentType(0);
+                                        childLevelObject.scaleParent = beatmapParent.GetParentType(1);
+                                        childLevelObject.rotationParent = beatmapParent.GetParentType(2);
+
+                                        childLevelObject.positionParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[0];
+                                        childLevelObject.scaleParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[1];
+                                        childLevelObject.rotationParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[2];
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                UpdateProcessor(beatmapObject);
+                            }
+
                             break;
                         } // Parent
                     case "parenttype":
                     case "parentoffset":
                         {
-                            if (levelProcessor && levelProcessor.converter != null)
+                            var parentChain = beatmapObject.GetParentChain();
+                            if (beatmapObject.parent == "CAMERA_PARENT" || parentChain.Count > 1 && parentChain[parentChain.Count - 1].parent == "CAMERA_PARENT")
                             {
-                                var converter = levelProcessor.converter;
+                                var beatmapParent = parentChain.Count > 1 && parentChain[parentChain.Count - 1].parent == "CAMERA_PARENT" ? parentChain[parentChain.Count - 1] : beatmapObject;
 
-                                foreach (var levelParent in levelObject.parentObjects)
+                                var ids = new List<string>();
+                                foreach (var child in beatmapParent.GetChildChain())
                                 {
-                                    if (DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == levelParent.ID, out BeatmapObject parent))
-                                    {
-                                        levelParent.ParentAnimatePosition = parent.GetParentType(0);
-                                        levelParent.ParentAnimateScale = parent.GetParentType(1);
-                                        levelParent.ParentAnimateRotation = parent.GetParentType(2);
+                                    ids.AddRange(child.Where(x => !ids.Contains(x.id)).Select(x => x.id));
+                                }
 
-                                        levelParent.ParentOffsetPosition = parent.getParentOffset(0);
-                                        levelParent.ParentOffsetScale = parent.getParentOffset(1);
-                                        levelParent.ParentOffsetRotation = parent.getParentOffset(2);
+                                foreach (var id in ids)
+                                {
+                                    var child = DataManager.inst.gameData.beatmapObjects.Find(x => x.id == id);
+                                    if (TryGetObject(child, out LevelObject childLevelObject))
+                                    {
+                                        childLevelObject.cameraParent = beatmapParent.parent == "CAMERA_PARENT";
+
+                                        childLevelObject.positionParent = beatmapParent.GetParentType(0);
+                                        childLevelObject.scaleParent = beatmapParent.GetParentType(1);
+                                        childLevelObject.rotationParent = beatmapParent.GetParentType(2);
+
+                                        childLevelObject.positionParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[0];
+                                        childLevelObject.scaleParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[1];
+                                        childLevelObject.rotationParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[2];
                                     }
                                 }
                             }
+
+                            foreach (var levelParent in levelObject.parentObjects)
+                            {
+                                if (DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == levelParent.ID, out BeatmapObject parent))
+                                {
+                                    levelParent.ParentAnimatePosition = parent.GetParentType(0);
+                                    levelParent.ParentAnimateScale = parent.GetParentType(1);
+                                    levelParent.ParentAnimateRotation = parent.GetParentType(2);
+
+                                    levelParent.ParentOffsetPosition = parent.getParentOffset(0);
+                                    levelParent.ParentOffsetScale = parent.getParentOffset(1);
+                                    levelParent.ParentOffsetRotation = parent.getParentOffset(2);
+                                }
+                            }
+
                             break;
                         }
                     case "origin":
@@ -475,18 +554,27 @@ namespace RTFunctions.Functions.Optimization
             {
                 yield return FunctionsPlugin.inst.StartCoroutine(converter.CacheSequence(bm));
 
-                if (updateParents && TryGetObject(bm, out LevelObject levelObject))
+                if (TryGetObject(bm, out LevelObject levelObject))
                 {
-                    foreach (var levelParent in levelObject.parentObjects)
-                    {
-                        if (converter.cachedSequences.ContainsKey(levelParent.ID))
+                    if (converter.cachedSequences.ContainsKey(bm.id))
+                        levelObject.SetSequences(
+                            converter.cachedSequences[bm.id].ColorSequence,
+                            converter.cachedSequences[bm.id].OpacitySequence,
+                            converter.cachedSequences[bm.id].HueSequence,
+                            converter.cachedSequences[bm.id].SaturationSequence,
+                            converter.cachedSequences[bm.id].ValueSequence);
+
+                    if (updateParents)
+                        foreach (var levelParent in levelObject.parentObjects)
                         {
-                            var cachedSequences = converter.cachedSequences[levelParent.ID];
-                            levelParent.Position3DSequence = cachedSequences.Position3DSequence;
-                            levelParent.ScaleSequence = cachedSequences.ScaleSequence;
-                            levelParent.RotationSequence = cachedSequences.RotationSequence;
+                            if (converter.cachedSequences.ContainsKey(levelParent.ID))
+                            {
+                                var cachedSequences = converter.cachedSequences[levelParent.ID];
+                                levelParent.Position3DSequence = cachedSequences.Position3DSequence;
+                                levelParent.ScaleSequence = cachedSequences.ScaleSequence;
+                                levelParent.RotationSequence = cachedSequences.RotationSequence;
+                            }
                         }
-                    }
                 }
             }
 
@@ -566,23 +654,16 @@ namespace RTFunctions.Functions.Optimization
             {
                 var visualObject = ((LevelObject)iLevelObject).visualObject;
 
-                var gameObject = visualObject.GameObject;
+                var top = visualObject.Top;
 
-                if (gameObject != null)
-                {
-                    // Get the top-most parent that isn't the "GameObjects" object.
-                    while (gameObject.transform.parent.name != "GameObjects" && !gameObject.transform.parent.name.Contains("CAMERA_PARENT ["))
-                        gameObject = gameObject.transform.parent.gameObject;
-
-                    // Remove GameObject.
-                    UnityEngine.Object.Destroy(gameObject);
-                    objects.Remove(iLevelObject);
-                }
+                // Remove GameObject.
+                objectSpawner.RemoveObject(iLevelObject);
+                objects.Remove(iLevelObject);
+                Object.Destroy(top.gameObject);
+                ((LevelObject)iLevelObject).parentObjects.Clear();
 
                 // Remove BeatmapObject from converter.
-                //Managers.Objects.beatmapObjects.Remove(id);
-
-                ((LevelObject)iLevelObject).parentObjects.Clear();
+                converter.beatmapObjects.Remove(id);
 
                 iLevelObject = null;
             }
