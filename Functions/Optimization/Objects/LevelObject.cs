@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 using UnityEngine;
 
@@ -24,9 +25,22 @@ namespace RTFunctions.Functions.Optimization.Objects
         public List<LevelParentObject> parentObjects;
         public readonly VisualObject visualObject;
 
-        public readonly List<Transform> transformChain;
+        public readonly List<Transform> transformChain = new List<Transform>();
 
         Data.BeatmapObject beatmapObject;
+
+        public bool cameraParent;
+        public bool positionParent;
+        public bool scaleParent;
+        public bool rotationParent;
+
+        public float positionParentOffset;
+        public float scaleParentOffset;
+        public float rotationParentOffset;
+
+        public Vector3 originalPosition;
+        public Vector3 originalScale;
+        public Vector3 originalRotation;
 
         public void SetSequences(Sequence<Color> colorSequence, Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence)
         {
@@ -40,15 +54,59 @@ namespace RTFunctions.Functions.Optimization.Objects
         public LevelObject(Data.BeatmapObject beatmapObject, Sequence<Color> colorSequence, List<LevelParentObject> parentObjects, VisualObject visualObject, Sequence<float> opacitySequence, Sequence<float> hueSequence, Sequence<float> satSequence, Sequence<float> valSequence)
         {
             this.beatmapObject = beatmapObject;
+
             ID = beatmapObject.id;
             StartTime = beatmapObject.StartTime;
             KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(_oldStyle: true);
-            this.colorSequence = colorSequence;
             depth = beatmapObject.depth;
+
+            this.parentObjects = parentObjects;
+            this.visualObject = visualObject;
+
+            this.colorSequence = colorSequence;
             this.opacitySequence = opacitySequence;
             this.hueSequence = hueSequence;
             this.satSequence = satSequence;
             this.valSequence = valSequence;
+
+            try
+            {
+                this.parentObjects.Reverse();
+
+                transformChain.Add(this.parentObjects[0].Transform.parent);
+
+                transformChain.AddRange(this.parentObjects.Select(x => x.Transform));
+
+                this.parentObjects.Reverse();
+
+                if (this.visualObject != null && this.visualObject.GameObject)
+                    transformChain.Add(this.visualObject.GameObject.transform);
+
+                originalPosition = transformChain[0].localPosition;
+                originalScale = transformChain[0].localScale;
+                originalRotation = transformChain[0].localRotation.eulerAngles;
+
+                var pc = beatmapObject.GetParentChain();
+
+                if (pc != null && pc.Count > 0)
+                {
+                    var beatmapParent = (Data.BeatmapObject)pc[pc.Count - 1];
+
+                    cameraParent = beatmapParent.parent == "CAMERA_PARENT";
+
+                    positionParent = beatmapParent.GetParentType(0);
+                    scaleParent = beatmapParent.GetParentType(1);
+                    rotationParent = beatmapParent.GetParentType(2);
+
+                    positionParentOffset = beatmapParent.parallaxSettings[0];
+                    scaleParentOffset = beatmapParent.parallaxSettings[1];
+                    rotationParentOffset = beatmapParent.parallaxSettings[2];
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"{Updater.className}a\n{ex}");
+            }
         }
 
         public LevelObject(string _id, float startTime, float killTime, Sequence<Color> colorSequence, float depth, List<LevelParentObject> parentObjects, VisualObject visualObject, Sequence<float> _os, Sequence<float> _hs, Sequence<float> _ss, Sequence<float> _vs)
@@ -67,27 +125,59 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             try
             {
-                var list = new List<Transform>();
-                var tf1 = visualObject.GameObject.transform;
+                //var list = new List<Transform>();
+                //var tf1 = visualObject.GameObject.transform;
 
-                while (tf1.parent != null && tf1.parent.gameObject.name != "GameObjects")
+                //while (tf1.parent != null && tf1.parent.gameObject.name != "GameObjects")
+                //{
+                //    tf1 = tf1.parent;
+                //}
+
+                //list.Add(tf1);
+
+                //while (tf1.childCount != 0 && tf1.GetChild(0) != null)
+                //{
+                //    tf1 = tf1.GetChild(0);
+                //    list.Add(tf1);
+                //}
+
+                //transformChain = list;
+
+                this.parentObjects.Reverse();
+
+                transformChain.Add(this.parentObjects[0].Transform.parent);
+
+                transformChain.AddRange(this.parentObjects.Select(x => x.Transform));
+
+                this.parentObjects.Reverse();
+
+                if (this.visualObject != null && this.visualObject.GameObject)
+                    transformChain.Add(this.visualObject.GameObject.transform);
+
+                originalPosition = transformChain[0].localPosition;
+                originalScale = transformChain[0].localScale;
+                originalRotation = transformChain[0].localRotation.eulerAngles;
+
+                var pc = beatmapObject.GetParentChain();
+
+                if (pc != null && pc.Count > 0)
                 {
-                    tf1 = tf1.parent;
+                    var beatmapParent = (Data.BeatmapObject)pc[pc.Count - 1];
+
+                    cameraParent = beatmapParent.parent == "CAMERA_PARENT";
+
+                    positionParent = beatmapParent.GetParentType(0);
+                    scaleParent = beatmapParent.GetParentType(1);
+                    rotationParent = beatmapParent.GetParentType(2);
+
+                    positionParentOffset = beatmapParent.parallaxSettings[0];
+                    scaleParentOffset = beatmapParent.parallaxSettings[1];
+                    rotationParentOffset = beatmapParent.parallaxSettings[2];
                 }
-
-                list.Add(tf1);
-
-                while (tf1.childCount != 0 && tf1.GetChild(0) != null)
-                {
-                    tf1 = tf1.GetChild(0);
-                    list.Add(tf1);
-                }
-
-                transformChain = list;
             }
-            catch
+            catch (System.Exception ex)
             {
-
+                Debug.LogError($"{Updater.className}a\n{ex}");
             }
         }
 
@@ -159,6 +249,38 @@ namespace RTFunctions.Functions.Optimization.Objects
             {
                 Color color = colorSequence.Interpolate(time - StartTime);
                 visualObject.SetColor(color);
+            }
+
+            // Update Camera Parent
+            if (cameraParent)
+            {
+                if (positionParent)
+                {
+                    var x = EventManager.inst.cam.transform.position.x;
+                    var y = EventManager.inst.cam.transform.position.y;
+
+                    transformChain[0].localPosition = (new Vector3(x, y, 0f) * positionParentOffset) + originalPosition;
+                }
+                else
+                    transformChain[0].localPosition = originalPosition;
+
+                if (scaleParent)
+                {
+                    float camOrthoZoom = EventManager.inst.cam.orthographicSize / 20f;
+
+                    transformChain[0].localScale = (new Vector3(camOrthoZoom, camOrthoZoom, 1f) * scaleParentOffset) + originalScale;
+                }
+                else
+                    transformChain[0].localScale = originalScale;
+
+                if (rotationParent)
+                {
+                    var camRot = EventManager.inst.camParent.transform.rotation.eulerAngles;
+
+                    transformChain[0].localRotation = Quaternion.Euler((camRot * rotationParentOffset) + originalRotation);
+                }
+                else
+                    transformChain[0].localRotation = Quaternion.Euler(originalRotation);
             }
 
             // Update parents
