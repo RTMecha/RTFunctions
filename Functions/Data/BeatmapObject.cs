@@ -114,6 +114,8 @@ namespace RTFunctions.Functions.Data
 
 		public TimelineObject timelineObject;
 
+		public Detector detector;
+
         public int integerVariable;
         public float floatVariable;
         public string stringVariable = "";
