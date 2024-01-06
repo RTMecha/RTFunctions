@@ -1,3 +1,8 @@
+1.8.3 > [Jan 6, 2024]
+- Events now properly update if you don't have EventsCore.
+- Fixed a bug that caused some objects to share the same keyframes.
+- Fix for no players alive to use for homing keyframes error.
+- Fixed the Camera Parent bugs.
 1.8.2 > [Jan 6, 2024]
 - Trying to find a way to fix the Rotation Dynamic Homing flip bug.
 - Fixed Camera parenting, it now properly updates.
