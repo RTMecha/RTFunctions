@@ -166,8 +166,18 @@ namespace RTFunctions.Functions.Managers
             GameManager.inst.introAnimator.SetTrigger("play");
             GameManager.inst.SpawnPlayers(DataManager.inst.gameData.beatmapData.checkpoints[0].pos);
 
+            EventManager.inst?.updateEvents();
+            if (ModCompatibility.sharedFunctions.ContainsKey("EventsCoreResetOffsets"))
+            {
+                ((Action)ModCompatibility.sharedFunctions["EventsCoreResetOffsets"])?.Invoke();
+            }
+
+            if (inGame)
+                Updater.UpdateObjects(false);
+
             //ObjectManager.inst.updateObjects();
             Patchers.ObjectManagerPatch.AddPrefabObjects(ObjectManager.inst);
+
             Patchers.GameManagerPatch.StartInvoke();
 
             Debug.Log($"{className}Done!");
