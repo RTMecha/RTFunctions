@@ -433,7 +433,7 @@ namespace RTFunctions.Functions.Data
 					eventKeyframe.SetEventRandomValues(new float[]
 					{
 						kfjn["rx"].AsFloat,
-						0f,
+						kfjn["ry"].AsFloat,
 						kfjn["rz"].AsFloat
 					});
 
