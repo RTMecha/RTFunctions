@@ -481,9 +481,9 @@ namespace RTFunctions.Functions.Optimization
                                     Debug.LogError($"{className}Prefab Randomization error.\n{ex}");
                                 }
 
-                                top.transform.localPosition = pos;
-                                top.transform.localScale = sca.x != 0f && sca.y != 0f ? sca : Vector3.one;
-                                top.transform.localRotation = rot;
+                                beatmapObject.levelObject.prefabOffsetPosition = pos;
+                                beatmapObject.levelObject.prefabOffsetScale = sca.x != 0f && sca.y != 0f ? sca : Vector3.one;
+                                beatmapObject.levelObject.prefabOffsetRotation = rot.eulerAngles;
 
                                 if (!hasPosX)
                                     Debug.LogError($"{className}PrefabObject does not have Postion X in its' eventValues.\nPossible causes:");
