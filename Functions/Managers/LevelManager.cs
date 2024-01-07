@@ -98,9 +98,12 @@ namespace RTFunctions.Functions.Managers
 
             level.LoadAudioClip();
 
-            if (!RTHelpers.InGame)
+            if (ShapeManager.inst.loadedShapes)
+                ShapeManager.inst.Load();
+
+            if (RTHelpers.InEditor || !RTHelpers.InGame || !ShapeManager.inst.loadedShapes)
             {
-                while (!RTHelpers.InGame || !ShapeManager.inst.loadedShapes)
+                while (RTHelpers.InEditor || !RTHelpers.InGame || !ShapeManager.inst.loadedShapes)
                     yield return null;
             }
 

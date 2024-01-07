@@ -36,16 +36,16 @@ namespace RTFunctions.Functions.Managers
 
         void Update()
         {
-            if (ObjectManager.inst && !gameHasLoaded)
-            {
-                gameHasLoaded = true;
-                loadedShapes = false;
-                Load();
-            }
-            else if (!ObjectManager.inst)
-            {
-                gameHasLoaded = false;
-            }
+            //if (ObjectManager.inst && !gameHasLoaded)
+            //{
+            //    gameHasLoaded = true;
+            //    loadedShapes = false;
+            //    Load();
+            //}
+            //else if (!ObjectManager.inst)
+            //{
+            //    gameHasLoaded = false;
+            //}
         }
 
         public void Save()
@@ -99,7 +99,12 @@ namespace RTFunctions.Functions.Managers
         public void Load()
         {
             if (!RTFile.FileExists(RTFile.ApplicationDirectory + ShapesSetup))
+            {
                 System.Windows.Forms.MessageBox.Show("Shapes Setup file does not exist.\nYou may run into issues with playing the game from here on, so it is recommended to\ndownload the proper assets from Github and place them into the appropriate folders.", "Error!");
+                return;
+            }
+
+            loadedShapes = false;
 
             Shapes2D = new List<List<Shape>>();
             Shapes3D = new List<List<Shape>>();
@@ -113,7 +118,6 @@ namespace RTFunctions.Functions.Managers
                 {
                     var fullPath = RTFile.ApplicationDirectory + jn["type"][i]["option"][j]["path"];
 
-                    //Debug.Log($"{FunctionsPlugin.className}Loading shape from: {jn["type"][i]["option"][j]["path"]}");
                     // 2D
                     {
                         var sjn = JSON.Parse(RTFile.ReadFromFile(fullPath + "/data.lssh"));
@@ -121,7 +125,6 @@ namespace RTFunctions.Functions.Managers
                         Mesh mesh = null;
                         if (i != 4 && i != 6 && sjn["verts"] != null && sjn["tris"] != null)
                         {
-                            //Debug.Log($"{FunctionsPlugin.className}Setting mesh data for {sjn["name"]}");
                             mesh = new Mesh();
                             mesh.name = sjn["name"];
                             Vector3[] vertices = new Vector3[sjn["verts"].Count];
@@ -138,7 +141,6 @@ namespace RTFunctions.Functions.Managers
 
                         if (ObjectManager.inst.objectPrefabs.Count < i + 1)
                         {
-                            //Debug.Log($"{FunctionsPlugin.className}Adding new ObjectPrefabHolder [{i}]");
                             var p = new ObjectManager.ObjectPrefabHolder();
                             p.options = new List<GameObject>();
                             ObjectManager.inst.objectPrefabs.Add(p);
@@ -146,13 +148,10 @@ namespace RTFunctions.Functions.Managers
 
                         if (ObjectManager.inst.objectPrefabs[i].options.Count < j + 1 && mesh != null)
                         {
-                            //Debug.Log($"{FunctionsPlugin.className}Adding new ObjectPrefab [{i}, {j}]");
                             var gameObject = ObjectManager.inst.objectPrefabs[1].options[0].Duplicate(null, sjn["name"]);
 
                             gameObject.transform.GetChild(0).GetComponent<MeshFilter>().mesh = mesh;
                             gameObject.transform.GetChild(0).GetComponent<PolygonCollider2D>().points = mesh.vertices.Select(x => new Vector2(x.x, x.y)).ToArray();
-
-                            //gameObject.hideFlags = HideFlags.HideAndDontSave;
 
                             ObjectManager.inst.objectPrefabs[i].options.Add(gameObject);
                         }
@@ -176,26 +175,16 @@ namespace RTFunctions.Functions.Managers
                             ObjectManager.inst.objectPrefabs[6].options.Add(imageMesh);
                         }
 
-                        if (!loadedShapes)
+                        var shape = new Shape(sjn["name"], i, j, mesh, null, string.IsNullOrEmpty(sjn["p"]) ? Shape.Property.RegularObject : (Shape.Property)sjn["p"].AsInt);
+
+                        if (RTFile.FileExists(fullPath + "/icon.png"))
                         {
-                            var shape = new Shape(sjn["name"], i, j, mesh, null, string.IsNullOrEmpty(sjn["p"]) ? Shape.Property.RegularObject : (Shape.Property)sjn["p"].AsInt);
-
-                            if (RTFile.FileExists(fullPath + "/icon.png"))
-                            {
-                                shape.Icon = SpriteManager.LoadSprite(fullPath + "/icon.png");
-                            //    Debug.Log($"{FunctionsPlugin.className}Setting Icon for {sjn["name"]}");
-                            //    Networking.AlephNetworkManager.inst.StartCoroutine(Networking.AlephNetworkManager.DownloadImageTexture("file://" + fullPath + "/icon.png", delegate (Texture2D texture2D)
-                            //    {
-                            //        var s = Shapes2D[i][j];
-                            //        s.Icon = RTSpriteManager.CreateSprite(texture2D);
-                            //        Shapes2D[i][j] = s;
-                            //    }));
-                            }
-
-                            shape.GameObject = ObjectManager.inst.objectPrefabs[i].options[j];
-
-                            Shapes2D[i].Add(shape);
+                            shape.Icon = SpriteManager.LoadSprite(fullPath + "/icon.png");
                         }
+
+                        shape.GameObject = ObjectManager.inst.objectPrefabs[i].options[j];
+
+                        Shapes2D[i].Add(shape);
                     }
 
                     // 3D
@@ -206,7 +195,6 @@ namespace RTFunctions.Functions.Managers
                         Mesh mesh = null;
                         if (i != 4 && i != 6 && sjn["verts"] != null && sjn["tris"] != null)
                         {
-                            //Debug.Log($"{FunctionsPlugin.className}Setting mesh data for {sjn["name"]}");
                             mesh = new Mesh();
                             mesh.name = sjn["name"];
                             Vector3[] vertices = new Vector3[sjn["verts"].Count];
@@ -221,50 +209,28 @@ namespace RTFunctions.Functions.Managers
                             mesh.triangles = triangles;
                         }
 
-                        if (!loadedShapes)
+                        var shape = new Shape(sjn["name"], i, j, mesh, null, string.IsNullOrEmpty(sjn["p"]) ? Shape.Property.RegularObject : (Shape.Property)sjn["p"].AsInt);
+
+                        if (RTFile.FileExists(fullPath + "/icon.png"))
                         {
-                            var shape = new Shape(sjn["name"], i, j, mesh, null, string.IsNullOrEmpty(sjn["p"]) ? Shape.Property.RegularObject : (Shape.Property)sjn["p"].AsInt);
-
-                            if (RTFile.FileExists(fullPath + "/icon.png"))
-                            {
-                                shape.Icon = SpriteManager.LoadSprite(fullPath + "/icon.png");
-                                //    Debug.Log($"{FunctionsPlugin.className}Setting Icon for {sjn["name"]}");
-                                //    Networking.AlephNetworkManager.inst.StartCoroutine(Networking.AlephNetworkManager.DownloadImageTexture("file://" + fullPath + "/icon.png", delegate (Texture2D texture2D)
-                                //    {
-                                //        var s = Shapes2D[i][j];
-                                //        s.Icon = RTSpriteManager.CreateSprite(texture2D);
-                                //        Shapes2D[i][j] = s;
-                                //    }));
-                            }
-
-                            Shapes3D[i].Add(shape);
+                            shape.Icon = SpriteManager.LoadSprite(fullPath + "/icon.png");
                         }
+
+                        Shapes3D[i].Add(shape);
                     }
-                    else if (!loadedShapes)
+                    else
                     {
-                        if (!loadedShapes)
+                        var shape = new Shape("null", i, j, null, null, i == 4 ? Shape.Property.TextObject : i == 6 ? Shape.Property.ImageObject : Shape.Property.RegularObject);
+
+                        if (RTFile.FileExists(fullPath + "/icon.png"))
                         {
-                            var shape = new Shape("null", i, j, null, null, i == 4 ? Shape.Property.TextObject : i == 6 ? Shape.Property.ImageObject : Shape.Property.RegularObject);
-
-                            if (RTFile.FileExists(fullPath + "/icon.png"))
-                            {
-                                shape.Icon = SpriteManager.LoadSprite(fullPath + "/icon.png");
-                                //    Debug.Log($"{FunctionsPlugin.className}Setting Icon for {sjn["name"]}");
-                                //    Networking.AlephNetworkManager.inst.StartCoroutine(Networking.AlephNetworkManager.DownloadImageTexture("file://" + fullPath + "/icon.png", delegate (Texture2D texture2D)
-                                //    {
-                                //        var s = Shapes2D[i][j];
-                                //        s.Icon = RTSpriteManager.CreateSprite(texture2D);
-                                //        Shapes2D[i][j] = s;
-                                //    }));
-                            }
-
-                            Shapes3D[i].Add(shape);
+                            shape.Icon = SpriteManager.LoadSprite(fullPath + "/icon.png");
                         }
+
+                        Shapes3D[i].Add(shape);
                     }
                 }
             }
-
-            //StartCoroutine(LoadIcons());
 
             loadedShapes = true;
         }

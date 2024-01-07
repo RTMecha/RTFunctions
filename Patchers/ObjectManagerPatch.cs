@@ -7,6 +7,7 @@ using UnityEngine;
 using LSFunctions;
 
 using RTFunctions.Functions.Data;
+using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
 
 namespace RTFunctions.Patchers
@@ -19,8 +20,10 @@ namespace RTFunctions.Patchers
         [HarmonyPatch("Awake")]
         [HarmonyPostfix]
         static void AwakePatch(ObjectManager __instance)
-        {
-            foreach (var option in __instance.objectPrefabs[5].options)
+		{
+			ShapeManager.inst.Load();
+
+			foreach (var option in __instance.objectPrefabs[5].options)
             {
                 option.GetComponentInChildren<Collider2D>().isTrigger = true;
             }
