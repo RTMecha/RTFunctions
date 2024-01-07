@@ -120,6 +120,8 @@ namespace RTFunctions.Functions.Data
         public float floatVariable;
         public string stringVariable = "";
 
+		public string originalID;
+
 		public new int Depth
         {
 			get => depth;
