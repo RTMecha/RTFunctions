@@ -496,6 +496,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             var currentValue = Vector3.zero;
             IKeyframe<Vector3> currentKeyfame = null;
+            int num = 0;
             foreach (var eventKeyframe in eventKeyframes)
             {
                 if (!(eventKeyframe is Data.EventKeyframe))
@@ -521,12 +522,13 @@ namespace RTFunctions.Functions.Optimization.Objects
                 //    currentKeyfame = new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
                 //}
 
-                currentKeyfame = eventKeyframe.random == 5 ? new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
+                currentKeyfame = eventKeyframe.random == 5 || eventKeyframe.random != 6 && eventKeyframes.Count > num + 1 && eventKeyframes[num + 1].random == 5 ? new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
                     eventKeyframe.random == 6 ? new DynamicVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
                     eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], kf.relative, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
                     new Vector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
 
                 keyframes.Add(currentKeyfame);
+                num++;
             }
 
             // If there is no keyframe, add default
