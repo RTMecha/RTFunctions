@@ -1,3 +1,8 @@
+1.8.6 > [Jan 8, 2024]
+- Fixed Dynamic Homing Rotation flip axis bug, now the objects should properly loop around when the player moves around the object in a circle.
+- Dynamic Homing keyframe Speed now lerps between keyframes.
+- Fixed position keyframe using next homing's modified value.
+- Static homing keyframes now properly lerp after a regular keyframe.
 1.8.5 > [Jan 7, 2024]
 - Fixed a bug with random being offset incorrectly. This will break any levels that use homing keyframes before this, but you can fix it as long as you set the random types again.
 - Expanding and updating prefabs is now faster.
