@@ -10,6 +10,8 @@ using UnityEngine.UI;
 using TMPro;
 using LSFunctions;
 
+using RTFunctions.Functions.Animation;
+using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Data.Player;
@@ -163,12 +165,36 @@ namespace RTFunctions.Patchers
                 __instance.playingCheckpointAnimation = true;
                 __instance.isReversing = true;
 
-                int index = DataManager.inst.gameData.beatmapData.checkpoints.FindIndex(x => x.time > AudioManager.inst.CurrentAudioSource.time);
+                int index = DataManager.inst.gameData.beatmapData.checkpoints.FindLastIndex(x => x.time < AudioManager.inst.CurrentAudioSource.time);
                 if (index < 0)
                     index = 0;
 
                 var checkpoint = DataManager.inst.gameData.beatmapData.checkpoints[index];
-                AudioManager.inst.SetPitch(-1.5f);
+
+                var animation = new AnimationManager.Animation("Reverse");
+                animation.floatAnimations = new List<AnimationManager.Animation.AnimationObject<float>>
+                {
+                    new AnimationManager.Animation.AnimationObject<float>(new List<IKeyframe<float>>
+                    {
+                        new FloatKeyframe(0f, AudioManager.inst.CurrentAudioSource.pitch, Ease.Linear),
+                        new FloatKeyframe(1f, -1.5f, Ease.CircIn)
+                    }, delegate (float x)
+                    {
+                        if (AudioManager.inst.CurrentAudioSource.time > 1f)
+                            AudioManager.inst.SetPitch(x);
+                        else
+                            AudioManager.inst.CurrentAudioSource.time = 1f;
+                    }),
+                };
+
+                animation.onComplete = delegate ()
+                {
+                    AnimationManager.inst.RemoveID(animation.id);
+                };
+
+                AnimationManager.inst.Play(animation);
+
+                //AudioManager.inst.SetPitch(-1.5f);
                 AudioManager.inst.PlaySound("rewind");
 
                 yield return new WaitForSeconds(2f);
