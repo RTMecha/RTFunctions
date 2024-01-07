@@ -5,11 +5,12 @@ using System.Linq;
 using UnityEngine;
 
 using RTFunctions.Patchers;
+using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Optimization.Level;
 using RTFunctions.Functions.Optimization.Objects;
 
-using BeatmapObject = DataManager.GameData.BeatmapObject;
-using PrefabObject = DataManager.GameData.PrefabObject;
+using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using BasePrefabObject = DataManager.GameData.PrefabObject;
 
 namespace RTFunctions.Functions.Optimization
 {
@@ -21,9 +22,9 @@ namespace RTFunctions.Functions.Optimization
 
         public static bool Active => levelProcessor && levelProcessor.level;
 
-        public static bool HasObject(BeatmapObject beatmapObject) => Active && (LevelObject)levelProcessor.level.objects.Find(x => x.ID == beatmapObject.id);
+        public static bool HasObject(BaseBeatmapObject beatmapObject) => Active && (LevelObject)levelProcessor.level.objects.Find(x => x.ID == beatmapObject.id);
 
-        public static bool TryGetObject(BeatmapObject beatmapObject, out LevelObject levelObject)
+        public static bool TryGetObject(BaseBeatmapObject beatmapObject, out LevelObject levelObject)
         {
             if (beatmapObject is Data.BeatmapObject && (beatmapObject as Data.BeatmapObject).levelObject)
             {
@@ -63,7 +64,7 @@ namespace RTFunctions.Functions.Optimization
         /// </summary>
         /// <param name="_beatmapObject"></param>
         /// <returns>ILevelObject from specified BeatmapObject.</returns>
-        public static ILevelObject GetLevelObject(BeatmapObject _beatmapObject)
+        public static ILevelObject GetLevelObject(BaseBeatmapObject _beatmapObject)
         {
             if (levelProcessor == null || levelProcessor.level == null)
                 return null;
@@ -80,7 +81,7 @@ namespace RTFunctions.Functions.Optimization
         /// </summary>
         /// <param name="beatmapObject"></param>
         /// <returns>GameObject from specified BeatmapObject. Null if object does not exist.</returns>
-        public static GameObject GetGameObject(BeatmapObject beatmapObject)
+        public static GameObject GetGameObject(BaseBeatmapObject beatmapObject)
         {
             try
             {
@@ -120,7 +121,7 @@ namespace RTFunctions.Functions.Optimization
         /// <param name="_beatmapObject"></param>
         /// <param name="objects"></param>
         /// <returns>ILevelObject from specified BeatmapObject.</returns>
-        public static ILevelObject GetILevelObject(BeatmapObject _beatmapObject, List<ILevelObject> objects)
+        public static ILevelObject GetILevelObject(BaseBeatmapObject _beatmapObject, List<ILevelObject> objects)
         {
             if (objects == null || objects.Count < 1)
                 return null;
@@ -170,7 +171,7 @@ namespace RTFunctions.Functions.Optimization
             }
         }
 
-        public static void UpdateProcessor(BeatmapObject beatmapObject, bool recache = true, bool update = true, bool reinsert = true)
+        public static void UpdateProcessor(BaseBeatmapObject beatmapObject, bool recache = true, bool update = true, bool reinsert = true)
         {
             var lp = levelProcessor;
             if (lp != null)
@@ -232,7 +233,7 @@ namespace RTFunctions.Functions.Optimization
         /// <param name="beatmapObject"></param>
         /// <param name="context"></param>
         /// <param name="value">The specific context to update under.</param>
-        public static void UpdateProcessor(BeatmapObject beatmapObject, string context)
+        public static void UpdateProcessor(BaseBeatmapObject beatmapObject, string context)
         {
             if (TryGetObject(beatmapObject, out LevelObject levelObject))
             {
@@ -263,7 +264,7 @@ namespace RTFunctions.Functions.Optimization
 
                                 foreach (var levelParent in levelObject.parentObjects)
                                 {
-                                    if (DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == levelParent.ID, out BeatmapObject parent))
+                                    if (DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == levelParent.ID, out BaseBeatmapObject parent))
                                     {
                                         levelParent.TimeOffset = parent.StartTime;
 
@@ -378,7 +379,7 @@ namespace RTFunctions.Functions.Optimization
 
                             foreach (var levelParent in levelObject.parentObjects)
                             {
-                                if (DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == levelParent.ID, out BeatmapObject parent))
+                                if (DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == levelParent.ID, out BaseBeatmapObject parent))
                                 {
                                     levelParent.ParentAnimatePosition = parent.GetParentType(0);
                                     levelParent.ParentAnimateScale = parent.GetParentType(1);
@@ -431,7 +432,7 @@ namespace RTFunctions.Functions.Optimization
             }
         }
 
-        public static void UpdatePrefab(PrefabObject prefabObject, bool reinsert = true)
+        public static void UpdatePrefab(BasePrefabObject prefabObject, bool reinsert = true)
         {
             if (DataManager.inst.gameData.beatmapObjects.FindAll(x => x.prefabInstanceID == prefabObject.ID).Count < 0 && reinsert)
                 ObjectManager.inst.AddPrefabToLevel(prefabObject);
@@ -442,7 +443,7 @@ namespace RTFunctions.Functions.Optimization
             }
         }
 
-        public static void UpdatePrefab(PrefabObject prefabObject, string context)
+        public static void UpdatePrefab(BasePrefabObject prefabObject, string context)
         {
             switch (context.ToLower().Replace(" ", "").Replace("_", ""))
             {
@@ -499,6 +500,103 @@ namespace RTFunctions.Functions.Optimization
                         }
                         break;
                     }
+                case "time":
+                case "starttime":
+                    {
+                        float t = 1f;
+
+                        var moddedPrefab = (PrefabObject)prefabObject;
+
+                        if (prefabObject.RepeatOffsetTime != 0f)
+                            t = prefabObject.RepeatOffsetTime;
+
+                        float timeToAdd = 0f;
+
+                        var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == prefabObject.prefabID);
+
+                        for (int i = 0; i < prefabObject.RepeatCount + 1; i++)
+                        {
+                            foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects.Where(x => x.prefabInstanceID == prefabObject.ID))
+                            {
+                                if (prefab.objects.TryFind(x => x.id == ((BeatmapObject)beatmapObject).originalID, out BaseBeatmapObject original))
+                                {
+                                    beatmapObject.StartTime = prefabObject.StartTime + prefab.Offset + (original.StartTime + timeToAdd) * moddedPrefab.speed;
+
+                                    UpdateProcessor(beatmapObject, "Start Time");
+                                }
+                            }
+
+                            timeToAdd += t;
+                        }
+
+                        break;
+                    }
+            }
+        }
+
+        public static void AddPrefabToLevel(BasePrefabObject __0)
+        {
+            var prefabObject = (PrefabObject)__0;
+
+            bool flag = DataManager.inst.gameData.prefabs.FindIndex(x => x.ID == __0.prefabID) != -1;
+            if (!flag)
+            {
+                DataManager.inst.gameData.prefabObjects.RemoveAll(x => x.prefabID == __0.prefabID);
+            }
+
+            if (!(!string.IsNullOrEmpty(__0.prefabID) && flag))
+            {
+                return;
+            }
+
+            float t = 1f;
+
+            if (__0.RepeatOffsetTime != 0f)
+                t = __0.RepeatOffsetTime;
+
+            float timeToAdd = 0f;
+
+            var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == __0.prefabID);
+
+            for (int i = 0; i < __0.RepeatCount + 1; i++)
+            {
+                // ids = new Dictionary<string, string>();
+
+                var ids = prefab.objects.ToDictionary(x => x.id, x => LSFunctions.LSText.randomString(16));
+
+                //foreach (var beatmapObject in prefab.objects)
+                //{
+                //    string value = LSFunctions.LSText.randomString(16);
+                //    ids.Add(beatmapObject.id, value);
+                //}
+
+                string iD = __0.ID;
+                foreach (var beatmapObj in prefab.objects)
+                {
+                    var beatmapObject = BeatmapObject.DeepCopy((BeatmapObject)beatmapObj, false);
+                    if (ids.ContainsKey(beatmapObj.id))
+                        beatmapObject.id = ids[beatmapObj.id];
+
+                    if (ids.ContainsKey(beatmapObj.parent))
+                        beatmapObject.parent = ids[beatmapObj.parent];
+                    else if (DataManager.inst.gameData.beatmapObjects.FindIndex(x => x.id == beatmapObj.parent) == -1)
+                        beatmapObject.parent = "";
+
+                    beatmapObject.active = false;
+                    beatmapObject.fromPrefab = true;
+                    beatmapObject.prefabInstanceID = iD;
+
+                    beatmapObject.StartTime = __0.StartTime + prefab.Offset + (beatmapObject.StartTime + timeToAdd) * prefabObject.speed;
+
+                    beatmapObject.prefabID = __0.prefabID;
+
+                    beatmapObject.originalID = beatmapObj.id;
+                    DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
+
+                    UpdateProcessor(beatmapObject);
+                }
+
+                timeToAdd += t;
             }
         }
 
@@ -535,7 +633,7 @@ namespace RTFunctions.Functions.Optimization
         /// <param name="converter"></param>
         /// <param name="reinsert"></param>
         /// <returns></returns>
-        public static IEnumerator RecacheSequences(BeatmapObject bm, ObjectConverter converter, bool reinsert = true, bool updateParents = false)
+        public static IEnumerator RecacheSequences(BaseBeatmapObject bm, ObjectConverter converter, bool reinsert = true, bool updateParents = false)
         {
             if (converter.cachedSequences.ContainsKey(bm.id))
             {
@@ -603,7 +701,7 @@ namespace RTFunctions.Functions.Optimization
                     FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject.id, converter, reinsert, updateParents));
             }
 
-            if (reinsert && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == id, out BeatmapObject result))
+            if (reinsert && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == id, out BaseBeatmapObject result))
             {
                 yield return FunctionsPlugin.inst.StartCoroutine(converter.CacheSequence(result));
 
@@ -635,7 +733,7 @@ namespace RTFunctions.Functions.Optimization
         /// <param name="objectSpawner"></param>
         /// <param name="reinsert"></param>
         /// <returns></returns>
-        public static IEnumerator UpdateObjects(BeatmapObject bm, LevelStorage level, List<ILevelObject> objects, ObjectConverter converter, ObjectSpawner objectSpawner, bool reinsert = true)
+        public static IEnumerator UpdateObjects(BaseBeatmapObject bm, LevelStorage level, List<ILevelObject> objects, ObjectConverter converter, ObjectSpawner objectSpawner, bool reinsert = true)
         {
             string id = bm.id;
 
@@ -733,7 +831,7 @@ namespace RTFunctions.Functions.Optimization
             }
 
             // If the object should be reinserted and it is not null then we reinsert the object.
-            if (reinsert && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == id, out BeatmapObject result))
+            if (reinsert && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == id, out BaseBeatmapObject result))
             {
                 // It's important that the beatmapObjects Dictionary has a reference to the object.
                 if (!converter.beatmapObjects.ContainsKey(id))

@@ -93,6 +93,7 @@ namespace RTFunctions.Patchers
 					//{
 					//	beatmapObject.editorData.Layer = EditorManager.inst.layer;
 					//}
+					beatmapObject.originalID = beatmapObj.id;
 					DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
 
 					Updater.UpdateProcessor(beatmapObject);
