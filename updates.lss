@@ -1,3 +1,7 @@
+1.8.4 > [Jan 7, 2024]
+- Fixed Shape loading issue when switching to arcade mode.
+- Fixed checkpoints, now they set properly. Also made reversing pitch animated.
+- Fixed Prefab Updating.
 1.8.3 > [Jan 6, 2024]
 - Events now properly update if you don't have EventsCore.
 - Fixed a bug that caused some objects to share the same keyframes.
