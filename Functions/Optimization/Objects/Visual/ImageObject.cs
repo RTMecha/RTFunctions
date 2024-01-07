@@ -21,6 +21,8 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
         readonly Material material;
         readonly float opacity;
 
+        public string Path { get; set; }
+
         public ImageObject(GameObject gameObject, Transform top, float opacity, string text)
         {
             GameObject = gameObject;
@@ -38,10 +40,10 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
             var regex = new System.Text.RegularExpressions.Regex(@"img\((.*?)\)");
             var match = regex.Match(text);
 
-            string imagePath = match.Success ? RTFile.BasePath + match.Groups[1].ToString() : RTFile.BasePath + text;
+            Path = match.Success ? RTFile.BasePath + match.Groups[1].ToString() : RTFile.BasePath + text;
 
-            if (RTFile.FileExists(imagePath))
-                FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadImageTexture("file://" + imagePath, delegate (Texture2D x)
+            if (RTFile.FileExists(Path))
+                FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadImageTexture("file://" + Path, delegate (Texture2D x)
                 {
                     ((SpriteRenderer)Renderer).sprite = SpriteManager.CreateSprite(x);
                     GameObject.transform.localPosition = local;
@@ -51,6 +53,12 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
                 {
                     ((SpriteRenderer)Renderer).sprite = ArcadeManager.inst.defaultImage;
                 }));
+            //{
+            //    ((SpriteRenderer)Renderer).sprite = SpriteManager.LoadSprite(Path);
+            //    GameObject.transform.localPosition = local;
+            //    GameObject.transform.localPosition = local;
+            //    GameObject.transform.localPosition = local;
+            //}
             else ((SpriteRenderer)Renderer).sprite = ArcadeManager.inst.defaultImage;
         }
 
