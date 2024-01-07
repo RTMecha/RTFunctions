@@ -76,6 +76,8 @@ namespace RTFunctions.Functions.Animation.Keyframe
             var value = other is Vector3Keyframe vector3Keyframe ? vector3Keyframe.Value : other is DynamicVector3Keyframe dynamicVector3Keyframe ? dynamicVector3Keyframe.Value : other is StaticVector3Keyframe staticVector3Keyframe ? staticVector3Keyframe.Value : Vector3.zero;
             var ease = other is Vector3Keyframe vector3Keyframe1 ? vector3Keyframe1.Ease(time) : other is DynamicVector3Keyframe dynamicVector3Keyframe1 ? dynamicVector3Keyframe1.Ease(time) : other is StaticVector3Keyframe staticVector3Keyframe1 ? staticVector3Keyframe1.Ease(time) : 0f;
 
+            var delayOther = other is DynamicVector3Keyframe keyframe2 ? keyframe2.Delay : -1f;
+
             //return RTMath.Lerp(Value, new Vector3(Player?.localPosition.x ?? 0f, Player?.localPosition.y ?? 0f, 0f) + value, ease);
 
             var vector = Player?.localPosition ?? Vector3.zero;
@@ -84,7 +86,7 @@ namespace RTFunctions.Functions.Animation.Keyframe
 
             float p = UnityEngine.Time.deltaTime * pitch;
 
-            float po = 1f - Mathf.Pow(1f - Mathf.Clamp(Delay, 0.001f, 1f), p);
+            float po = 1f - Mathf.Pow(1f - Mathf.Clamp(delayOther < 0f ? Delay : RTMath.Lerp(Delay, delayOther, ease), 0.001f, 1f), p);
             if ((MinRange == 0f && MaxRange == 0f || MinRange > MaxRange || Vector2.Distance(vector, Value) > MinRange && Vector2.Distance(vector, Value) < MaxRange) && Axis == AxisMode.Both)
                 Value += Flee ? -(vector - Value) * po : (vector - Value) * po;
 

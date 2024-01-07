@@ -83,6 +83,7 @@ namespace RTFunctions.Functions.Animation.Keyframe
         {
             var value = other is ThemeKeyframe vector3Keyframe ? vector3Keyframe.Value : other is DynamicThemeKeyframe dynamicVector3Keyframe ? dynamicVector3Keyframe.Value : 0;
             var ease = other is ThemeKeyframe vector3Keyframe1 ? vector3Keyframe1.Ease(time) : other is DynamicThemeKeyframe dynamicVector3Keyframe1 ? dynamicVector3Keyframe1.Ease(time) : 0f;
+            var delayOther = other is DynamicThemeKeyframe keyframe2 ? keyframe2.Delay : -1f;
 
             var distance = Vector2.Distance(Player.position, PositionSequence.Value);
 
@@ -93,7 +94,7 @@ namespace RTFunctions.Functions.Animation.Keyframe
 
             float p = UnityEngine.Time.deltaTime * pitch;
 
-            float po = 1f - Mathf.Pow(1f - Delay == 0f ? 1f : Mathf.Clamp(Delay, 0.001f, 1f), p);
+            float po = 1f - Mathf.Pow(1f - Mathf.Clamp(delayOther < 0f ? Delay : RTMath.Lerp(Delay, delayOther, ease), 0.001f, 1f), p);
 
             Current += (RTMath.Lerp(RTMath.Lerp(Theme[Value], Theme[value], ease), Theme[Home], Mathf.Clamp(t, 0f, 1f)) - Current) * po;
 
