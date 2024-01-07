@@ -581,6 +581,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             var currentValue = 0f;
             IKeyframe<float> currentKeyfame = null;
+            int num = 0;
             foreach (var eventKeyframe in eventKeyframes)
             {
                 if (!(eventKeyframe is Data.EventKeyframe))
@@ -591,12 +592,13 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 currentValue = kf.relative && eventKeyframe.random != 6 && !color ? currentValue + value : value;
 
-                currentKeyfame = eventKeyframe.random == 5 && !color ? new StaticFloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, vector3Sequence) :
+                currentKeyfame = (eventKeyframe.random == 5 || eventKeyframe.random != 6 && eventKeyframes.Count > num + 1 && eventKeyframes[num + 1].random == 5) && !color ? new StaticFloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, vector3Sequence) :
                     eventKeyframe.random == 6 && !color ? new DynamicFloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
                     eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], kf.relative, vector3Sequence) :
                     new FloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
 
                 keyframes.Add(currentKeyfame);
+                num++;
             }
 
             // If there is no keyframe, add default
