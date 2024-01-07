@@ -503,14 +503,14 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 var kf = (Data.EventKeyframe)eventKeyframe;
                 var value = new Vector3(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1], eventKeyframe.eventValues.Length > 2 ? eventKeyframe.eventValues[2] : 0f);
-                if (eventKeyframe.random != 0 && eventKeyframe.random != 4 && eventKeyframe.random != 5)
+                if (eventKeyframe.random != 0 && eventKeyframe.random != 5 && eventKeyframe.random != 6)
                 {
                     var random = ObjectManager.inst.RandomVector2Parser(eventKeyframe);
                     value.x = random.x;
                     value.y = random.y;
                 }
 
-                currentValue = kf.relative && eventKeyframe.random != 5 ? new Vector3(currentValue.x, currentValue.y, 0f) + value : value;
+                currentValue = kf.relative && eventKeyframe.random != 6 ? new Vector3(currentValue.x, currentValue.y, 0f) + value : value;
 
                 //if (eventKeyframe.random != 5)
                 //{
@@ -521,8 +521,8 @@ namespace RTFunctions.Functions.Optimization.Objects
                 //    currentKeyfame = new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
                 //}
 
-                currentKeyfame = eventKeyframe.random == 4 ? new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
-                    eventKeyframe.random == 5 ? new DynamicVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
+                currentKeyfame = eventKeyframe.random == 5 ? new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
+                    eventKeyframe.random == 6 ? new DynamicVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
                     eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], kf.relative, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
                     new Vector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
 
@@ -548,14 +548,14 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 var kf = (Data.EventKeyframe)eventKeyframe;
                 var value = new Vector2(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1]);
-                if (eventKeyframe.random != 0 && eventKeyframe.random != 5)
+                if (eventKeyframe.random != 0 && eventKeyframe.random != 6)
                 {
                     var random = ObjectManager.inst.RandomVector2Parser(eventKeyframe);
                     value.x = random.x;
                     value.y = random.y;
                 }
                 currentValue = kf.relative ? currentValue + value : value;
-                if (eventKeyframe.random != 5)
+                if (eventKeyframe.random != 6)
                 {
                     keyframes.Add(new Vector2Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
                 }
@@ -587,10 +587,10 @@ namespace RTFunctions.Functions.Optimization.Objects
                 var kf = (Data.EventKeyframe)eventKeyframe;
                 var value = eventKeyframe.random != 0 ? RandomFloatParser(eventKeyframe, index) : eventKeyframe.eventValues[index];
 
-                currentValue = kf.relative && eventKeyframe.random != 5 && !color ? currentValue + value : value;
+                currentValue = kf.relative && eventKeyframe.random != 6 && !color ? currentValue + value : value;
 
-                currentKeyfame = eventKeyframe.random == 4 && !color ? new StaticFloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, vector3Sequence) :
-                    eventKeyframe.random == 5 && !color ? new DynamicFloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
+                currentKeyfame = eventKeyframe.random == 5 && !color ? new StaticFloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, vector3Sequence) :
+                    eventKeyframe.random == 6 && !color ? new DynamicFloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
                     eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], kf.relative, vector3Sequence) :
                     new FloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
 
@@ -614,7 +614,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 value = Mathf.Clamp(value, 0, GameManager.inst.LiveTheme.objectColors.Count - 1);
 
-                keyframes.Add(eventKeyframe.random == 5 ? new DynamicThemeKeyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
+                keyframes.Add(eventKeyframe.random == 6 ? new DynamicThemeKeyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
                     eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], false,
                     Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, GameManager.inst.LiveTheme.objectColors.Count - 1), vector3Sequence) :
                     new ThemeKeyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
