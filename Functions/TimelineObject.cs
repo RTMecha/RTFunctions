@@ -3,6 +3,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+using TMPro;
+
+using RTFunctions.Functions.Components;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Optimization;
 
@@ -42,6 +45,8 @@ namespace RTFunctions.Functions
         public object Data { get; set; }
         public GameObject GameObject { get; set; }
         public Image Image { get; set; }
+        public HoverUI Hover { get; set; }
+        public TextMeshProUGUI Text { get; set; }
 
         public string ID
         {
