@@ -366,7 +366,6 @@ namespace RTFunctions
 
 			// Patchers
 			{
-				//harmony.PatchAll();
 				harmony.PatchAll(typeof(FunctionsPlugin));
 				harmony.PatchAll(typeof(BackgroundManagerPatch));
 				harmony.PatchAll(typeof(DataManagerPatch));
@@ -399,10 +398,6 @@ namespace RTFunctions
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
-					//string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
-					//if (RTFile.FileExists(lvl))
-					//	File.Copy(lvl, modBackup);
-
 					StartCoroutine(DataManager.inst.SaveData(modBackup));
 				}
 			};
@@ -416,15 +411,9 @@ namespace RTFunctions
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
-					//string lvl = RTFile.ApplicationDirectory + str + "level.lsb";
-					//if (RTFile.FileExists(lvl))
-					//	File.Copy(lvl, modBackup);
-
 					StartCoroutine(DataManager.inst.SaveData(modBackup));
 				}
 			};
-
-			//SequenceManager.Init();
 
 			Logger.LogInfo($"Plugin RT Functions is loaded!");
 		}
