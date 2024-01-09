@@ -304,7 +304,9 @@ namespace RTFunctions.Functions.Data
 				text = orig.text,
 				LDM = orig.LDM,
 				parentType = orig.parentType,
-				parentOffsets = orig.parentOffsets,
+				parentOffsets = orig.parentOffsets.Clone(),
+				parentAdditive = orig.parentAdditive,
+				parallaxSettings = orig.parallaxSettings.Copy(),
 				integerVariable = copyVariables ? orig.integerVariable : 0,
 				floatVariable = copyVariables ? orig.floatVariable : 0f,
 				stringVariable = copyVariables ? orig.stringVariable : ""
