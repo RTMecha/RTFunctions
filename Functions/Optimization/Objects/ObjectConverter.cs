@@ -97,8 +97,17 @@ namespace RTFunctions.Functions.Optimization.Objects
         {
             foreach (var beatmapObject in gameData.beatmapObjects)
             {
-                if (!ShowEmpties && beatmapObject.objectType == ObjectType.Empty || !(beatmapObject is Data.BeatmapObject bm) || bm.LDM && FunctionsPlugin.LDM.Value)
+                if (beatmapObject is Data.BeatmapObject bm && VerifyObject(bm))
+                {
+                    if (beatmapObject is Data.BeatmapObject bm1)
+                    {
+                        if (bm1.levelObject != null && bm1.levelObject.parentObjects != null)
+                            bm1.levelObject.parentObjects.Clear();
+                        if (bm1.levelObject != null)
+                            bm1.levelObject = null;
+                    }
                     continue;
+                }
 
                 LevelObject levelObject = null;
 
@@ -121,10 +130,21 @@ namespace RTFunctions.Functions.Optimization.Objects
             }
         }
 
+        public bool VerifyObject(Data.BeatmapObject beatmapObject) => !ShowEmpties && beatmapObject.objectType == ObjectType.Empty || beatmapObject.LDM && FunctionsPlugin.LDM.Value;
+
         public ILevelObject ToILevelObject(BeatmapObject beatmapObject)
         {
-            if (!ShowEmpties && beatmapObject.objectType == ObjectType.Empty || !(beatmapObject is Data.BeatmapObject bm) || bm.LDM && FunctionsPlugin.LDM.Value)
+            if (beatmapObject is Data.BeatmapObject bm && VerifyObject(bm))
+            {
+                if (beatmapObject is Data.BeatmapObject bm1)
+                {
+                    if (bm1.levelObject != null && bm1.levelObject.parentObjects != null)
+                        bm1.levelObject.parentObjects.Clear();
+                    if (bm1.levelObject != null)
+                        bm1.levelObject = null;
+                }
                 return null;
+            }
 
             LevelObject levelObject = null;
 
