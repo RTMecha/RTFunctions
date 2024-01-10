@@ -34,7 +34,7 @@ namespace RTFunctions
 	/// <summary>
 	/// Base plugin for initializing all the patches.
 	/// </summary>
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.8.7")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.8.8")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
