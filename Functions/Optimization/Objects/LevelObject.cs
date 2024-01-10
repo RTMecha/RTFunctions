@@ -291,6 +291,10 @@ namespace RTFunctions.Functions.Optimization.Objects
             float scaleOffset = 0.0f;
             float rotationOffset = 0.0f;
 
+            float positionAddedOffset = 0.0f;
+            float scaleAddedOffset = 0.0f;
+            float rotationAddedOffset = 0.0f;
+
             bool animatePosition = true;
             bool animateScale = true;
             bool animateRotation = true;
@@ -299,17 +303,22 @@ namespace RTFunctions.Functions.Optimization.Objects
             float scaleParallax = 1f;
             float rotationParallax = 1f;
 
+            int num = 0;
             foreach (var parentObject in parentObjects)
             {
+                if (parentObject.ParentAdditivePosition)
+                    positionAddedOffset += parentObject.ParentOffsetPosition;
+                if (parentObject.ParentAdditiveScale)
+                    scaleAddedOffset += parentObject.ParentOffsetScale;
+                if (parentObject.ParentAdditiveRotation)
+                    rotationAddedOffset += parentObject.ParentOffsetRotation;
+
                 // If last parent is position parented, animate position
                 if (animatePosition)
                 {
                     if (parentObject.Position3DSequence != null)
                     {
-                        var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - positionOffset);
-                        //float z = depth * 0.0005f;
-                        //float calc = value.z / 10f;
-                        //z = z + calc;
+                        var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset));
 
                         float z = depth * 0.0005f + (value.z / 10f);
 
@@ -317,7 +326,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                     }
                     else
                     {
-                        Vector2 value = parentObject.PositionSequence.Interpolate(time - parentObject.TimeOffset - positionOffset);
+                        var value = parentObject.PositionSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset));
                         parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, depth * 0.0005f);
                     }
                 }
@@ -325,7 +334,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 // If last parent is scale parented, animate scale
                 if (animateScale)
                 {
-                    var value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - scaleOffset);
+                    var value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - (scaleOffset + scaleAddedOffset));
                     parentObject.Transform.localScale = new Vector3(value.x * scaleParallax, value.y * scaleParallax, 1.0f);
                 }
 
@@ -333,14 +342,14 @@ namespace RTFunctions.Functions.Optimization.Objects
                 if (animateRotation)
                 {
                     parentObject.Transform.localRotation = Quaternion.AngleAxis(
-                        parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - rotationOffset) * rotationParallax,
+                        parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - (rotationOffset + rotationAddedOffset)) * rotationParallax,
                         Vector3.forward);
                 }
 
                 // Cache parent values to use for next parent
-                positionOffset = parentObject.ParentAdditivePosition ? positionOffset + parentObject.ParentOffsetPosition : parentObject.ParentOffsetPosition;
-                scaleOffset = parentObject.ParentAdditiveScale ? scaleOffset + parentObject.ParentOffsetScale : parentObject.ParentOffsetScale;
-                rotationOffset = parentObject.ParentAdditiveRotation ? rotationOffset + parentObject.ParentOffsetRotation : parentObject.ParentOffsetRotation;
+                positionOffset = parentObject.ParentOffsetPosition;
+                scaleOffset = parentObject.ParentOffsetScale;
+                rotationOffset = parentObject.ParentOffsetRotation;
 
                 animatePosition = parentObject.ParentAnimatePosition;
                 animateScale = parentObject.ParentAnimateScale;
@@ -353,6 +362,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 positionParallax = parentObject.ParentParallaxPosition;
                 scaleParallax = parentObject.ParentParallaxScale;
                 rotationParallax = parentObject.ParentParallaxRotation;
+                num++;
             }
         }
     }
