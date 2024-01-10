@@ -1,3 +1,5 @@
+1.8.9 > [Jan 11, 2024]
+- Fixed a bug with Parent Additive Offset not being saved.
 1.8.8 > [Jan 11, 2024]
 - Fixed some errors with updating an object, like empty objects retaining internal objects and some issues with updating StartTime.
 - Parent Additive Offset now works! It basically allows objects to consider *every* parent when delaying at it's specific offset.
