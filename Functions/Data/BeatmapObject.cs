@@ -609,7 +609,7 @@ namespace RTFunctions.Functions.Data
 					jn["ps"][i] = parallaxSettings[i].ToString();
             }
 
-			if (parentAdditive != "111")
+			if (parentAdditive != "000")
 				jn["pa"] = parentAdditive;
 
 			jn["p"] = parent.ToString();
