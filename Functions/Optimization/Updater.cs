@@ -12,6 +12,8 @@ using RTFunctions.Functions.Optimization.Objects;
 using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
 using BasePrefabObject = DataManager.GameData.PrefabObject;
 
+using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
+
 namespace RTFunctions.Functions.Optimization
 {
     public class Updater
@@ -26,9 +28,9 @@ namespace RTFunctions.Functions.Optimization
 
         public static bool TryGetObject(BaseBeatmapObject beatmapObject, out LevelObject levelObject)
         {
-            if (beatmapObject is Data.BeatmapObject && (beatmapObject as Data.BeatmapObject).levelObject)
+            if (beatmapObject is BeatmapObject && (beatmapObject as BeatmapObject).levelObject)
             {
-                levelObject = (beatmapObject as Data.BeatmapObject).levelObject;
+                levelObject = (beatmapObject as BeatmapObject).levelObject;
                 return true;
             }
 
@@ -254,13 +256,12 @@ namespace RTFunctions.Functions.Optimization
                                 levelObject.StartTime = beatmapObject.StartTime;
                                 levelObject.KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
 
-                                spawner.RemoveObject(levelObject);
-                                spawner.InsertObject(levelObject);
+                                spawner.activateList.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+                                spawner.deactivateList.Sort((a, b) => a.KillTime.CompareTo(b.KillTime));
+                                spawner.RecalculateObjectStates();
 
                                 if (!beatmapObject.TimeWithinLifespan())
                                     levelObject.SetActive(false);
-
-                                //FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject, levelProcessor.converter, true, true));
 
                                 foreach (var levelParent in levelObject.parentObjects)
                                 {
@@ -277,27 +278,7 @@ namespace RTFunctions.Functions.Optimization
                                         levelParent.ParentOffsetRotation = parent.getParentOffset(2);
                                     }
                                 }
-
-                                //if (spawner.activateList.Has(x => x.ID == beatmapObject.id))
-                                //{
-                                //    spawner.activateList.Find(x => x.ID == beatmapObject.id).StartTime = beatmapObject.StartTime;
-                                //    spawner.activateList.Find(x => x.ID == beatmapObject.id).KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
-                                //}
-
-                                //if (spawner.deactivateList.Has(x => x.ID == beatmapObject.id))
-                                //{
-                                //    spawner.deactivateList.Find(x => x.ID == beatmapObject.id).StartTime = beatmapObject.StartTime;
-                                //    spawner.deactivateList.Find(x => x.ID == beatmapObject.id).KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
-                                //}
-
-                                //// sort by start time
-                                //spawner.activateList.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
-
-                                //// sort by kill time
-                                //spawner.deactivateList.Sort((a, b) => a.KillTime.CompareTo(b.KillTime));
                             }
-
-                            //FunctionsPlugin.inst.StartCoroutine(UpdateSpawnerList(beatmapObject, levelProcessor.engine.objectSpawner));
 
                             break;
                         } // StartTime
@@ -430,6 +411,17 @@ namespace RTFunctions.Functions.Optimization
             {
                 FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject, levelProcessor.converter, true, true));
             }
+            else if (context.ToLower() == "starttime" || context.ToLower() == "time")
+            {
+                if (levelProcessor && levelProcessor.engine && levelProcessor.engine.objectSpawner != null)
+                {
+                    var spawner = levelProcessor.engine.objectSpawner;
+
+                    spawner.activateList.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+                    spawner.deactivateList.Sort((a, b) => a.KillTime.CompareTo(b.KillTime));
+                    spawner.RecalculateObjectStates();
+                }
+            }
         }
 
         public static void UpdatePrefab(BasePrefabObject prefabObject, bool reinsert = true)
@@ -558,6 +550,7 @@ namespace RTFunctions.Functions.Optimization
 
             var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == __0.prefabID);
 
+            var list = new List<BeatmapObject>();
             for (int i = 0; i < __0.RepeatCount + 1; i++)
             {
                 // ids = new Dictionary<string, string>();
@@ -592,12 +585,18 @@ namespace RTFunctions.Functions.Optimization
 
                     beatmapObject.originalID = beatmapObj.id;
                     DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
-
-                    UpdateProcessor(beatmapObject);
+                    list.Add(beatmapObject);
                 }
 
                 timeToAdd += t;
             }
+
+            foreach (var bm in list)
+            {
+                UpdateProcessor(bm);
+            }
+            list.Clear();
+            list = null;
         }
 
         //public static IEnumerator UpdateSpawnerList(BeatmapObject beatmapObject, ObjectSpawner objectSpawner)
