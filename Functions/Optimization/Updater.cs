@@ -652,7 +652,7 @@ namespace RTFunctions.Functions.Optimization
 
                     for (int j = 0; j < beatmapObject.events.Count; j++)
                     {
-                        beatmapObject.events[i].ForEach(x => x.eventTime /= Mathf.Clamp(prefabObject.speed, 0.1f, 100f));
+                        beatmapObject.events[i].ForEach(x => x.eventTime /= Mathf.Clamp(prefabObject.speed, 0.1f, MaxFastSpeed));
                     }
 
                     if (prefabObject.autoKillType != PrefabObject.AutoKillType.Regular && beatmapObject.GetObjectLifeLength(_oldStyle: true) > prefabObject.autoKillOffset)
