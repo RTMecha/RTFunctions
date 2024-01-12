@@ -33,74 +33,79 @@ namespace RTFunctions.Patchers
 		[HarmonyPrefix]
 		static bool AddPrefabToLevelPrefix(DataManager.GameData.PrefabObject __0)
 		{
-			var prefabObject = (PrefabObject)__0;
+			Updater.AddPrefabToLevel(__0);
 
-			bool flag = DataManager.inst.gameData.prefabs.FindIndex(x => x.ID == __0.prefabID) != -1;
-			if (!flag)
-			{
-				DataManager.inst.gameData.prefabObjects.RemoveAll(x => x.prefabID == __0.prefabID);
-			}
+			//var prefabObject = (PrefabObject)__0;
 
-			if (!(!string.IsNullOrEmpty(__0.prefabID) && flag))
-			{
-				return false;
-			}
+			//bool flag = DataManager.inst.gameData.prefabs.FindIndex(x => x.ID == __0.prefabID) != -1;
+			//if (!flag)
+			//{
+			//	DataManager.inst.gameData.prefabObjects.RemoveAll(x => x.prefabID == __0.prefabID);
+			//}
 
-			float t = 1f;
+			//if (!(!string.IsNullOrEmpty(__0.prefabID) && flag))
+			//{
+			//	return false;
+			//}
 
-			if (__0.RepeatOffsetTime != 0f)
-				t = __0.RepeatOffsetTime;
+			//float t = 1f;
 
-			float timeToAdd = 0f;
+			//if (__0.RepeatOffsetTime != 0f)
+			//	t = __0.RepeatOffsetTime;
 
-			var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == __0.prefabID);
+			//float timeToAdd = 0f;
+
+			//var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == __0.prefabID);
 			
-			for (int i = 0; i < __0.RepeatCount + 1; i++)
-			{
-				var ids = new Dictionary<string, string>();
+			//for (int i = 0; i < __0.RepeatCount + 1; i++)
+			//{
+			//	var ids = new Dictionary<string, string>();
 
-				foreach (var beatmapObject in prefab.objects)
-				{
-					string value = LSText.randomString(16);
-					ids.Add(beatmapObject.id, value);
-				}
+			//	foreach (var beatmapObject in prefab.objects)
+			//	{
+			//		string value = LSText.randomString(16);
+			//		ids.Add(beatmapObject.id, value);
+			//	}
 
-				string iD = __0.ID;
-				foreach (var beatmapObj in prefab.objects)
-				{
-					var beatmapObject = BeatmapObject.DeepCopy((BeatmapObject)beatmapObj, false);
-					if (ids.ContainsKey(beatmapObj.id))
-						beatmapObject.id = ids[beatmapObj.id];
+			//	string iD = __0.ID;
+			//	foreach (var beatmapObj in prefab.objects)
+			//	{
+			//		var beatmapObject = BeatmapObject.DeepCopy((BeatmapObject)beatmapObj, false);
+			//		if (ids.ContainsKey(beatmapObj.id))
+			//			beatmapObject.id = ids[beatmapObj.id];
 
-					if (ids.ContainsKey(beatmapObj.parent))
-						beatmapObject.parent = ids[beatmapObj.parent];
-					else if (DataManager.inst.gameData.beatmapObjects.FindIndex(x => x.id == beatmapObj.parent) == -1)
-						beatmapObject.parent = "";
+			//		if (ids.ContainsKey(beatmapObj.parent))
+			//			beatmapObject.parent = ids[beatmapObj.parent];
+			//		else if (DataManager.inst.gameData.beatmapObjects.FindIndex(x => x.id == beatmapObj.parent) == -1)
+			//			beatmapObject.parent = "";
 
-					beatmapObject.active = false;
-					beatmapObject.fromPrefab = true;
-                    beatmapObject.prefabInstanceID = iD;
+			//		beatmapObject.active = false;
+			//		beatmapObject.fromPrefab = true;
+   //                 beatmapObject.prefabInstanceID = iD;
 
-					beatmapObject.StartTime = __0.StartTime + prefab.Offset + (beatmapObject.StartTime + timeToAdd) * prefabObject.speed;
+			//		beatmapObject.StartTime = __0.StartTime + prefab.Offset + (beatmapObject.StartTime + timeToAdd) / Mathf.Clamp(prefabObject.speed, 0.001f, 100f);
 
-                    //beatmapObject.StartTime += timeToAdd;
-					//beatmapObject.StartTime += __0.StartTime;
-					//beatmapObject.StartTime += prefab.Offset;
+			//		for (int j = 0; j < beatmapObject.events.Count; j++)
+   //                 {
+			//			beatmapObject.events[i].ForEach(x => x.eventTime /= Mathf.Clamp(prefabObject.speed, 0.001f, 100f));
+   //                 }
 
-					beatmapObject.prefabID = __0.prefabID;
+			//		if (prefabObject.autoKillType != PrefabObject.AutoKillType.Regular && beatmapObject.GetObjectLifeLength(_oldStyle: true) > prefabObject.autoKillOffset)
+   //                 {
+			//			beatmapObject.autoKillType = DataManager.GameData.BeatmapObject.AutoKillType.SongTime;
+			//			beatmapObject.autoKillOffset = prefabObject.autoKillType == PrefabObject.AutoKillType.StartTimeOffset ? prefabObject.StartTime + prefab.Offset + prefabObject.autoKillOffset : prefabObject.autoKillOffset;
+			//		}
 
-					//if (EditorManager.inst != null)
-					//{
-					//	beatmapObject.editorData.Layer = EditorManager.inst.layer;
-					//}
-					beatmapObject.originalID = beatmapObj.id;
-					DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
+			//		beatmapObject.prefabID = __0.prefabID;
 
-					Updater.UpdateProcessor(beatmapObject);
-				}
+			//		beatmapObject.originalID = beatmapObj.id;
+			//		DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
 
-				timeToAdd += t;
-			}
+			//		Updater.UpdateProcessor(beatmapObject);
+			//	}
+
+			//	timeToAdd += t;
+			//}
 
 			return false;
 		}
