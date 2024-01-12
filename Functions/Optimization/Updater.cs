@@ -570,7 +570,7 @@ namespace RTFunctions.Functions.Optimization
 
                         foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects.Where(x => x.fromPrefab && x.prefabInstanceID == prefabObject.ID))
                         {
-                            if (pr.autoKillType != PrefabObject.AutoKillType.Regular && beatmapObject.GetObjectLifeLength(_oldStyle: true) > pr.autoKillOffset)
+                            if (pr.autoKillType != PrefabObject.AutoKillType.Regular && prefabObject.StartTime + pr.Prefab?.Offset + beatmapObject.GetObjectLifeLength(_oldStyle: true) > pr.autoKillOffset)
                             {
                                 beatmapObject.autoKillType = ObjectAutoKillType.SongTime;
                                 beatmapObject.autoKillOffset = pr.autoKillType == PrefabObject.AutoKillType.StartTimeOffset ? prefabObject.StartTime + pr.Prefab?.Offset ?? 0f + pr.autoKillOffset : pr.autoKillOffset;
@@ -655,7 +655,7 @@ namespace RTFunctions.Functions.Optimization
                         beatmapObject.events[i].ForEach(x => x.eventTime /= Mathf.Clamp(prefabObject.speed, 0.1f, MaxFastSpeed));
                     }
 
-                    if (prefabObject.autoKillType != PrefabObject.AutoKillType.Regular && beatmapObject.GetObjectLifeLength(_oldStyle: true) > prefabObject.autoKillOffset)
+                    if (prefabObject.autoKillType != PrefabObject.AutoKillType.Regular && __0.StartTime + prefab.Offset + beatmapObject.GetObjectLifeLength(_oldStyle: true) > prefabObject.autoKillOffset)
                     {
                         beatmapObject.autoKillType = ObjectAutoKillType.SongTime;
                         beatmapObject.autoKillOffset = prefabObject.autoKillType == PrefabObject.AutoKillType.StartTimeOffset ? prefabObject.StartTime + prefab.Offset + prefabObject.autoKillOffset : prefabObject.autoKillOffset;
