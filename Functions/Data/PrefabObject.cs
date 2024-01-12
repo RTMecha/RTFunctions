@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 using SimpleJSON;
 using LSFunctions;
@@ -38,6 +39,21 @@ namespace RTFunctions.Functions.Data
 
         public Prefab Prefab => (Prefab)DataManager.inst.gameData.prefabs.Find(x => x.ID == prefabID);
 
+        public List<BeatmapObject> ExpandedObjects => DataManager.inst.gameData.beatmapObjects.Where(x => x is BeatmapObject && x.fromPrefab && x.prefabInstanceID == ID).Select(x => x as BeatmapObject).ToList();
+
+        public enum AutoKillType
+        {
+            Regular,
+            StartTimeOffset,
+            SongTime
+        }
+
+        public AutoKillType autoKillType = AutoKillType.Regular;
+
+        public float autoKillOffset = -1f;
+
+        public bool fromModifier;
+
         #region Methods
 
         public static PrefabObject DeepCopy(PrefabObject orig, bool _newID = true)
@@ -56,7 +72,10 @@ namespace RTFunctions.Functions.Data
                     layer = orig.editorData.layer,
                     locked = orig.editorData.locked,
                     collapse = orig.editorData.collapse
-                }
+                },
+                speed = orig.speed,
+                autoKillOffset = orig.autoKillOffset,
+                autoKillType = orig.autoKillType
             };
 
             if (prefabObject.events == null)
@@ -84,6 +103,15 @@ namespace RTFunctions.Functions.Data
                 prefabObject.RepeatOffsetTime = jn["ro"].AsFloat;
 
             prefabObject.ID = jn["id"] != null ? jn["id"] : LSText.randomString(16);
+
+            if (jn["sp"] != null)
+                prefabObject.speed = jn["sp"].AsFloat;
+
+            if (jn["akt"] != null)
+                prefabObject.autoKillType = (AutoKillType)jn["akt"].AsInt;
+
+            if (jn["ako"] != null)
+                prefabObject.autoKillOffset = jn["ako"].AsFloat;
 
             //if (jn["ed"]["locked"] != null)
             //    prefabObject.editorData.locked = jn["ed"]["locked"].AsBool;
@@ -189,6 +217,12 @@ namespace RTFunctions.Functions.Data
             jn["id"] = ID;
             jn["pid"] = prefabID;
             jn["st"] = StartTime.ToString();
+
+            jn["sp"] = speed.ToString();
+
+            jn["akt"] = ((int)autoKillType).ToString();
+
+            jn["ako"] = autoKillOffset.ToString();
 
             if (RepeatCount > 0)
                 jn["rc"] = RepeatCount.ToString();
