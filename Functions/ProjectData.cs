@@ -608,7 +608,8 @@ namespace RTFunctions.Functions
 				Debug.Log($"{FunctionsPlugin.className}Saving Object Prefabs");
 				for (int i = 0; i < _data.prefabObjects.Count; i++)
 				{
-					jn["prefab_objects"][i] = ((PrefabObject)_data.prefabObjects[i]).ToJSON();
+					if (!((PrefabObject)_data.prefabObjects[i]).fromModifier)
+						jn["prefab_objects"][i] = ((PrefabObject)_data.prefabObjects[i]).ToJSON();
 				}
 
                 Debug.Log($"{FunctionsPlugin.className}Saving Level Data");
