@@ -1,3 +1,7 @@
+1.8.10 > [Jan 13, 2024]
+- Added Tags to the internal data for Beatmap Objects. This will be used for ObjectModifiers and some editor stuff when I fully implement this.
+- Added Autokill Type and Autokill Offset to Prefab Objects. Now you can have every object in a Prefab Object autokill at a specific time, assuming they're still alive then.
+- Fully implemented Prefab Object speed, so every object becomes faster or slower depending on the speed you set. (This includes Start Time and every keyframe time)
 1.8.9 > [Jan 11, 2024]
 - Fixed a bug with Parent Additive Offset not being saved.
 1.8.8 > [Jan 11, 2024]
