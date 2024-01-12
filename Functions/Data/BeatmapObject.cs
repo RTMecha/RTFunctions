@@ -122,6 +122,8 @@ namespace RTFunctions.Functions.Data
 
 		public string originalID;
 
+		public List<string> tags = new List<string>();
+
 		public new int Depth
         {
 			get => depth;
@@ -309,7 +311,8 @@ namespace RTFunctions.Functions.Data
 				parallaxSettings = orig.parallaxSettings.Copy(),
 				integerVariable = copyVariables ? orig.integerVariable : 0,
 				floatVariable = copyVariables ? orig.floatVariable : 0f,
-				stringVariable = copyVariables ? orig.stringVariable : ""
+				stringVariable = copyVariables ? orig.stringVariable : "",
+				tags = orig.tags.Clone()
 			};
 
 			for (int i = 0; i < beatmapObject.events.Count; i++)
@@ -534,6 +537,10 @@ namespace RTFunctions.Functions.Data
 			if (jn["name"] != null)
 				beatmapObject.name = jn["name"];
 
+			if (jn["tags"] != null)
+				for (int i = 0; i < jn["tags"].Count; i++)
+					beatmapObject.tags.Add(jn["tags"][i]);
+
 			if (jn["s"] != null)
 				beatmapObject.shape = jn["s"].AsInt;
 
@@ -636,6 +643,10 @@ namespace RTFunctions.Functions.Data
 
 			if (!string.IsNullOrEmpty(text))
 				jn["text"] = text;
+
+			if (tags != null && tags.Count > 0)
+				for (int i = 0; i < tags.Count; i++)
+					jn["tags"][i] = tags[i];
 
 			jn["o"]["x"] = origin.x.ToString();
 			jn["o"]["y"] = origin.y.ToString();
