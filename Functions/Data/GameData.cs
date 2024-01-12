@@ -222,7 +222,8 @@ namespace RTFunctions.Functions.Data
 			}
 
 			for (int i = 0; i < prefabObjects.Count; i++)
-				jn["prefab_objects"][i] = ((Data.PrefabObject)prefabObjects[i]).ToJSON();
+				if (!((Data.PrefabObject)prefabObjects[i]).fromModifier)
+					jn["prefab_objects"][i] = ((Data.PrefabObject)prefabObjects[i]).ToJSON();
 
 			jn["level_data"]["level_version"] = _data.beatmapData.levelData.levelVersion.ToString();
 			jn["level_data"]["background_color"] = _data.beatmapData.levelData.backgroundColor.ToString();
