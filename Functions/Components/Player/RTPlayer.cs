@@ -631,13 +631,13 @@ namespace RTFunctions.Functions.Components.Player
             if (!PlayerModel)
                 return;
 
-            if (playerObjects["Boost Trail"].values["TrailRenderer"] != null && (bool)PlayerModel.values["Boost Trail Emitting"])
+            if (playerObjects["Boost Trail"].values["TrailRenderer"] != null && PlayerModel.boostPart.Trail.emitting)
             {
                 var tf = playerObjects["Boost"].gameObject.transform;
                 Vector2 v = new Vector2(tf.localScale.x, tf.localScale.y);
 
-                ((TrailRenderer)playerObjects["Boost Trail"].values["TrailRenderer"]).startWidth = (float)PlayerModel.values["Boost Trail Start Width"] * v.magnitude / 1.414213f;
-                ((TrailRenderer)playerObjects["Boost Trail"].values["TrailRenderer"]).endWidth = (float)PlayerModel.values["Boost Trail End Width"] * v.magnitude / 1.414213f;
+                ((TrailRenderer)playerObjects["Boost Trail"].values["TrailRenderer"]).startWidth = PlayerModel.boostPart.Trail.startWidth * v.magnitude / 1.414213f;
+                ((TrailRenderer)playerObjects["Boost Trail"].values["TrailRenderer"]).endWidth = PlayerModel.boostPart.Trail.endWidth * v.magnitude / 1.414213f;
             }
 
             if (!RTHelpers.Paused)
@@ -658,10 +658,10 @@ namespace RTFunctions.Functions.Components.Player
                     }
                 }
 
-                if (PlayerAlive && faceController != null && PlayerModel.values.ContainsKey("Bullet Active") && PlayerModel.values.ContainsKey("Bullet Constant"))
+                if (PlayerAlive && faceController != null && PlayerModel.bulletPart.active)
                 {
-                    if (!PlayerModel.values.Get<bool, string>("Bullet Constant") && faceController.Shoot.WasPressed && canShoot ||
-                        PlayerModel.values.Get<bool, string>("Bullet Constant") && faceController.Shoot.IsPressed && canShoot)
+                    if (!PlayerModel.bulletPart.constant && faceController.Shoot.WasPressed && canShoot ||
+                        PlayerModel.bulletPart.constant && faceController.Shoot.IsPressed && canShoot)
                         CreateBullet();
 
                     //if (!(bool)currentModel.values["Bullet Constant"] && faceController.Shoot.WasPressed && canShoot)
@@ -683,7 +683,7 @@ namespace RTFunctions.Functions.Components.Player
             if (UpdateMode == TailUpdateMode.FixedUpdate)
                 UpdateTailDistance();
 
-            health?.SetActive(PlayerModel && (bool)PlayerModel.values["GUI Health Active"] && GameManager.inst.timeline.activeSelf);
+            health?.SetActive(PlayerModel && PlayerModel.guiPart.active && GameManager.inst.timeline.activeSelf);
         }
 
         void LateUpdate()
@@ -711,10 +711,10 @@ namespace RTFunctions.Functions.Components.Player
             if (!PlayerModel)
                 return;
 
-            if ((bool)PlayerModel.values["Face Control Active"] && faceController != null)
+            if (PlayerModel.FaceControlActive && faceController != null)
             {
                 var vector = new Vector2(faceController.Move.Vector.x, faceController.Move.Vector.y);
-                var fp = (Vector2)PlayerModel.values["Face Position"];
+                var fp = PlayerModel.FacePosition;
                 if (vector.magnitude > 1f)
                 {
                     vector = vector.normalized;
@@ -735,11 +735,11 @@ namespace RTFunctions.Functions.Components.Player
             if (!PlayerModel)
                 return;
 
-            var idl = (float)PlayerModel.values["Base Move Speed"];
-            var bst = (float)PlayerModel.values["Base Boost Speed"];
-            var bstcldwn = (float)PlayerModel.values["Base Boost Cooldown"];
-            var bstmin = (float)PlayerModel.values["Base Min Boost Time"];
-            var bstmax = (float)PlayerModel.values["Base Max Boost Time"];
+            var idl = PlayerModel.basePart.moveSpeed;
+            var bst = PlayerModel.basePart.boostSpeed;
+            var bstcldwn = PlayerModel.basePart.boostCooldown;
+            var bstmin = PlayerModel.basePart.minBoostTime;
+            var bstmax = PlayerModel.basePart.maxBoostTime;
 
             float pitch = RTHelpers.Pitch;
 
@@ -858,11 +858,15 @@ namespace RTFunctions.Functions.Components.Player
             if (!PlayerModel)
                 return;
 
-            for (int i = 1; i < 4; i++)
+            for (int i = 0; i < PlayerModel.tailParts.Count; i++)
             {
-                var t2 = (Vector2)PlayerModel.values[string.Format("Tail {0} Scale", i)];
+                var str = string.Format("Tail {0}", i + 1);
+                if (playerObjects.ContainsKey(str))
+                {
+                    var t2 = PlayerModel.tailParts[i].scale;
 
-                playerObjects[string.Format("Tail {0}", i)].gameObject.transform.localScale = new Vector3(t2.x, t2.y, 1f);
+                    playerObjects[str].gameObject.transform.localScale = new Vector3(t2.x, t2.y, 1f);
+                }
             }
         }
 
@@ -874,14 +878,18 @@ namespace RTFunctions.Functions.Components.Player
             var headTrail = (TrailRenderer)playerObjects["Head Trail"].values["TrailRenderer"];
             var boostTrail = (TrailRenderer)playerObjects["Boost Trail"].values["TrailRenderer"];
 
-            headTrail.time = (float)PlayerModel.values["Head Trail Time"] / RTHelpers.Pitch;
-            boostTrail.time = (float)PlayerModel.values["Boost Trail Time"] / RTHelpers.Pitch;
+            headTrail.time = PlayerModel.headPart.Trail.time / RTHelpers.Pitch;
+            boostTrail.time = PlayerModel.boostPart.Trail.time / RTHelpers.Pitch;
 
-            for (int i = 1; i < 4; i++)
+            for (int i = 0; i < PlayerModel.tailParts.Count; i++)
             {
-                var tailTrail = (TrailRenderer)playerObjects[string.Format("Tail {0}", i)].values["TrailRenderer"];
+                var str = string.Format("Tail {0}", i + 1);
+                if (playerObjects.ContainsKey(str))
+                {
+                    var tailTrail = (TrailRenderer)playerObjects[str].values["TrailRenderer"];
 
-                tailTrail.time = (float)PlayerModel.values[string.Format("Tail {0} Trail Time", i)] / RTHelpers.Pitch;
+                    tailTrail.time = PlayerModel.tailParts[i].Trail.time / RTHelpers.Pitch;
+                }
             }
         }
 
@@ -931,7 +939,7 @@ namespace RTFunctions.Functions.Components.Player
                     if (vector.magnitude > 1f)
                         vector = vector.normalized;
 
-                    var sp = (bool)PlayerModel.values["Base Sprint Sneak Active"] ? faceController.Sprint.IsPressed ? 1.3f : faceController.Sneak.IsPressed ? 0.1f : 1f : 1f;
+                    var sp = (bool)PlayerModel.basePart.sprintSneakActive ? faceController.Sprint.IsPressed ? 1.3f : faceController.Sneak.IsPressed ? 0.1f : 1f : 1f;
 
                     rb.velocity = vector * idleSpeed * pitch * sp;
                     if (stretch && rb.velocity.magnitude > 0f)
@@ -1147,18 +1155,18 @@ namespace RTFunctions.Functions.Components.Player
 
             if (playerObjects.ContainsKey("Head") && playerObjects["Head"].values["MeshRenderer"] != null)
             {
-                int col = (int)PlayerModel.values["Head Color"];
-                var colHex = (string)PlayerModel.values["Head Custom Color"];
-                float alpha = (float)PlayerModel.values["Head Opacity"];
+                int col = PlayerModel.headPart.color;
+                var colHex = PlayerModel.headPart.customColor;
+                float alpha = PlayerModel.headPart.opacity;
 
                 ((MeshRenderer)playerObjects["Head"].values["MeshRenderer"]).material.color = GetColor(col, alpha, colHex);
             }
 
             try
             {
-                int colStart = (int)PlayerModel.values["Head Color"];
-                var colStartHex = (string)PlayerModel.values["Head Custom Color"];
-                float alphaStart = (float)PlayerModel.values["Head Opacity"];
+                int colStart = PlayerModel.headPart.color;
+                var colStartHex = PlayerModel.headPart.customColor;
+                float alphaStart = PlayerModel.headPart.opacity;
 
                 var main1 = playerObjects["Head"].gameObject.transform.Find("burst-explosion").GetComponent<ParticleSystem>().main;
                 var main2 = playerObjects["Head"].gameObject.transform.Find("death-explosion").GetComponent<ParticleSystem>().main;
@@ -1174,30 +1182,30 @@ namespace RTFunctions.Functions.Components.Player
 
             if (playerObjects.ContainsKey("Boost") && playerObjects["Boost"].values["MeshRenderer"] != null)
             {
-                int colStart = (int)PlayerModel.values["Boost Color"];
-                var colStartHex = (string)PlayerModel.values["Boost Custom Color"];
-                float alphaStart = (float)PlayerModel.values["Boost Opacity"];
+                int colStart = PlayerModel.boostPart.color;
+                var colStartHex = PlayerModel.boostPart.customColor;
+                float alphaStart = PlayerModel.boostPart.opacity;
 
                 ((MeshRenderer)playerObjects["Boost"].values["MeshRenderer"]).material.color = GetColor(colStart, alphaStart, colStartHex);
             }
 
             if (playerObjects.ContainsKey("Boost Tail") && playerObjects["Boost Tail"].values["MeshRenderer"] != null)
             {
-                int colStart = (int)PlayerModel.values["Tail Boost Color"];
-                var colStartHex = (string)PlayerModel.values["Tail Boost Custom Color"];
-                float alphaStart = (float)PlayerModel.values["Tail Boost Opacity"];
+                int colStart = PlayerModel.boostTailPart.color;
+                var colStartHex = PlayerModel.boostTailPart.customColor;
+                float alphaStart = PlayerModel.boostTailPart.opacity;
 
                 ((MeshRenderer)playerObjects["Boost Tail"].values["MeshRenderer"]).material.color = GetColor(colStart, alphaStart, colStartHex);
             }
 
             //GUI Bar
             {
-                int baseCol = (int)PlayerModel.values["GUI Health Base Color"];
-                int topCol = (int)PlayerModel.values["GUI Health Top Color"];
-                string baseColHex = (string)PlayerModel.values["GUI Health Base Custom Color"];
-                string topColHex = (string)PlayerModel.values["GUI Health Top Custom Color"];
-                float baseAlpha = (float)PlayerModel.values["GUI Health Base Opacity"];
-                float topAlpha = (float)PlayerModel.values["GUI Health Top Opacity"];
+                int baseCol = PlayerModel.guiPart.baseColor;
+                int topCol = PlayerModel.guiPart.topColor;
+                string baseColHex = PlayerModel.guiPart.baseCustomColor;
+                string topColHex = PlayerModel.guiPart.topCustomColor;
+                float baseAlpha = PlayerModel.guiPart.baseOpacity;
+                float topAlpha = PlayerModel.guiPart.topOpacity;
 
                 for (int i = 0; i < healthObjects.Count; i++)
                 {
@@ -1211,76 +1219,79 @@ namespace RTFunctions.Functions.Components.Player
                 barIm.color = GetColor(topCol, topAlpha, topColHex);
             }
 
-            for (int i = 1; i < 4; i++)
+            for (int i = 0; i < PlayerModel.tailParts.Count; i++)
             {
-                int col = (int)PlayerModel.values[$"Tail {i} Color"];
-                var colHex = (string)PlayerModel.values[$"Tail {i} Custom Color"];
-                float alpha = (float)PlayerModel.values[$"Tail {i} Opacity"];
+                int col = PlayerModel.tailParts[i].color;
+                var colHex = PlayerModel.tailParts[i].customColor;
+                float alpha = PlayerModel.tailParts[i].opacity;
 
-                int colStart = (int)PlayerModel.values[string.Format("Tail {0} Trail Start Color", i)];
-                var colStartHex = (string)PlayerModel.values[string.Format("Tail {0} Trail Start Custom Color", i)];
-                float alphaStart = (float)PlayerModel.values[string.Format("Tail {0} Trail Start Opacity", i)];
-                int colEnd = (int)PlayerModel.values[string.Format("Tail {0} Trail End Color", i)];
-                var colEndHex = (string)PlayerModel.values[string.Format("Tail {0} Trail End Custom Color", i)];
-                float alphaEnd = (float)PlayerModel.values[string.Format("Tail {0} Trail End Opacity", i)];
+                int colStart = PlayerModel.tailParts[i].Trail.startColor;
+                var colStartHex = PlayerModel.tailParts[i].Trail.startCustomColor;
+                float alphaStart = PlayerModel.tailParts[i].Trail.startOpacity;
+                int colEnd = PlayerModel.tailParts[i].Trail.endColor;
+                var colEndHex = PlayerModel.tailParts[i].Trail.endCustomColor;
+                float alphaEnd = PlayerModel.tailParts[i].Trail.endOpacity;
 
-                var psCol = (int)PlayerModel.values[string.Format("Tail {0} Particles Color", i)];
-                var psColHex = (string)PlayerModel.values[string.Format("Tail {0} Particles Custom Color", i)];
+                var psCol = PlayerModel.tailParts[i].Particles.color;
+                var psColHex = PlayerModel.tailParts[i].Particles.customColor;
+                var str = string.Format("Tail {0} Particles", i + 1);
+                if (playerObjects.ContainsKey(str))
+                {
+                    var ps = playerObjects[string.Format("Tail {0} Particles", i + 1)].values.Get<ParticleSystem, string>("ParticleSystem");
+                    var main = ps.main;
 
-                var ps = playerObjects[string.Format("Tail {0} Particles", i)].values.Get<ParticleSystem, string>("ParticleSystem");
-                var main = ps.main;
+                    main.startColor = GetColor(psCol, 1f, psColHex);
 
-                main.startColor = GetColor(psCol, 1f, psColHex);
+                    ((MeshRenderer)playerObjects[string.Format("Tail {0}", i + 1)].values["MeshRenderer"]).material.color = GetColor(col, alpha, colHex);
+                    var trailRenderer = playerObjects[string.Format("Tail {0}", i + 1)].values.Get<TrailRenderer, string>("TrailRenderer");
 
-                ((MeshRenderer)playerObjects[string.Format("Tail {0}", i)].values["MeshRenderer"]).material.color = GetColor(col, alpha, colHex);
-                var trailRenderer = playerObjects[string.Format("Tail {0}", i)].values.Get<TrailRenderer, string>("TrailRenderer");
-
-                trailRenderer.startColor = GetColor(colStart, alphaStart, colStartHex);
-                trailRenderer.endColor = GetColor(colEnd, alphaEnd, colEndHex);
+                    trailRenderer.startColor = GetColor(colStart, alphaStart, colStartHex);
+                    trailRenderer.endColor = GetColor(colEnd, alphaEnd, colEndHex);
+                }
             }
 
-            if (playerObjects["Head Trail"].values["TrailRenderer"] != null && (bool)PlayerModel.values["Head Trail Emitting"])
+            if (playerObjects["Head Trail"].values["TrailRenderer"] != null && PlayerModel.headPart.Trail.emitting)
             {
-                int colStart = (int)PlayerModel.values["Head Trail Start Color"];
-                var colStartHex = (string)PlayerModel.values["Head Trail Start Custom Color"];
-                float alphaStart = (float)PlayerModel.values["Head Trail Start Opacity"];
-                int colEnd = (int)PlayerModel.values["Head Trail End Color"];
-                var colEndHex = (string)PlayerModel.values["Head Trail End Custom Color"];
-                float alphaEnd = (float)PlayerModel.values["Head Trail End Opacity"];
+                int colStart = PlayerModel.headPart.Trail.startColor;
+                var colStartHex = PlayerModel.headPart.Trail.startCustomColor;
+                float alphaStart = PlayerModel.headPart.Trail.startOpacity;
+                int colEnd = PlayerModel.headPart.Trail.endColor;
+                var colEndHex = PlayerModel.headPart.Trail.endCustomColor;
+                float alphaEnd = PlayerModel.headPart.Trail.endOpacity;
 
                 var trailRenderer = (TrailRenderer)playerObjects["Head Trail"].values["TrailRenderer"];
 
                 trailRenderer.startColor = GetColor(colStart, alphaStart, colStartHex);
                 trailRenderer.endColor = GetColor(colEnd, alphaEnd, colEndHex);
             }
-            if (playerObjects["Head Particles"].values["ParticleSystem"] != null && (bool)PlayerModel.values["Head Particles Emitting"])
+            if (playerObjects["Head Particles"].values["ParticleSystem"] != null && PlayerModel.headPart.Particles.emitting)
             {
-                var colStart = (int)PlayerModel.values["Head Particles Color"];
-                var colStartHex = (string)PlayerModel.values["Head Particles Custom Color"];
+                var colStart = PlayerModel.headPart.Particles.color;
+                var colStartHex = PlayerModel.headPart.Particles.customColor;
 
                 var ps = (ParticleSystem)playerObjects["Head Particles"].values["ParticleSystem"];
                 var main = ps.main;
 
                 main.startColor = GetColor(colStart, 1f, colStartHex);
             }
-            if (playerObjects["Boost Trail"].values["TrailRenderer"] != null && (bool)PlayerModel.values["Boost Trail Emitting"])
+            if (playerObjects["Boost Trail"].values["TrailRenderer"] != null && PlayerModel.boostPart.Trail.emitting)
             {
-                var colStart = (int)PlayerModel.values["Boost Trail Start Color"];
-                var colStartHex = (string)PlayerModel.values["Boost Trail Start Custom Color"];
-                var alphaStart = (float)PlayerModel.values["Boost Trail Start Opacity"];
-                var colEnd = (int)PlayerModel.values["Boost Trail End Color"];
-                var colEndHex = (string)PlayerModel.values["Boost Trail End Custom Color"];
-                var alphaEnd = (float)PlayerModel.values["Boost Trail End Opacity"];
+                var colStart = PlayerModel.boostPart.Trail.startColor;
+                var colStartHex = PlayerModel.boostPart.Trail.startCustomColor;
+                var alphaStart = PlayerModel.boostPart.Trail.startOpacity;
+                var colEnd = PlayerModel.boostPart.Trail.endColor;
+                var colEndHex = PlayerModel.boostPart.Trail.endCustomColor;
+                var alphaEnd = PlayerModel.boostPart.Trail.endOpacity;
 
                 var trailRenderer = (TrailRenderer)playerObjects["Boost Trail"].values["TrailRenderer"];
 
                 trailRenderer.startColor = GetColor(colStart, alphaStart, colStartHex);
                 trailRenderer.endColor = GetColor(colEnd, alphaEnd, colEndHex);
             }
-            if (playerObjects["Boost Particles"].values["ParticleSystem"] != null && (bool)PlayerModel.values["Boost Particles Emitting"])
+            if (playerObjects["Boost Particles"].values["ParticleSystem"] != null && PlayerModel.boostPart.Particles.emitting)
             {
-                var colStart = (int)PlayerModel.values["Boost Particles Color"];
-                var colHex = (string)PlayerModel.values["Boost Particles Custom Color"];
+                var colStart = PlayerModel.boostPart.Particles.color;
+                var colHex = PlayerModel.boostPart.Particles.customColor;
 
                 var ps = (ParticleSystem)playerObjects["Boost Particles"].values["ParticleSystem"];
                 var main = ps.main;
@@ -1349,7 +1360,7 @@ namespace RTFunctions.Functions.Components.Player
         {
             var player = playerObjects["RB Parent"].gameObject;
             var headTrail = (TrailRenderer)playerObjects["Boost Trail"].values["TrailRenderer"];
-            if (PlayerModel && (bool)PlayerModel.values["Boost Trail Emitting"])
+            if (PlayerModel && PlayerModel.boostPart.Trail.emitting)
             {
                 headTrail.emitting = false;
             }
@@ -1428,7 +1439,7 @@ namespace RTFunctions.Functions.Components.Player
                 {
                     ps.Play();
                 }
-                if (PlayerModel && (bool)PlayerModel.values["Boost Trail Emitting"])
+                if (PlayerModel && PlayerModel.boostPart.Trail.emitting)
                 {
                     headTrail.emitting = true;
                 }
@@ -1613,88 +1624,83 @@ namespace RTFunctions.Functions.Components.Player
             {
                 //Head Shape
                 {
-                    int s = ((Vector2Int)currentModel.values["Head Shape"]).x;
-                    int so = ((Vector2Int)currentModel.values["Head Shape"]).y;
+                    int s = currentModel.headPart.shape.type;
+                    int so = currentModel.headPart.shape.option;
 
                     s = Mathf.Clamp(s, 0, ObjectManager.inst.objectPrefabs.Count - 1);
                     so = Mathf.Clamp(so, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
 
-                    if (s != 4 && s != 6)
-                        ((MeshFilter)playerObjects["Head"].values["MeshFilter"]).mesh = ObjectManager.inst.objectPrefabs[s].options[so].GetComponentInChildren<MeshFilter>().mesh;
-                    else
-                        ((MeshFilter)playerObjects["Head"].values["MeshFilter"]).mesh = ObjectManager.inst.objectPrefabs[0].options[0].GetComponentInChildren<MeshFilter>().mesh;
+                    ((MeshFilter)playerObjects["Head"].values["MeshFilter"]).mesh =
+                        ObjectManager.inst.objectPrefabs[s != 4 && s != 6 ? s : 0].options[s != 4 && s != 6 ? so : 0].GetComponentInChildren<MeshFilter>().mesh;
                 }
 
                 //Boost Shape
                 {
-                    int s = ((Vector2Int)currentModel.values["Boost Shape"]).x;
-                    int so = ((Vector2Int)currentModel.values["Boost Shape"]).y;
+                    int s = currentModel.boostPart.shape.type;
+                    int so = currentModel.boostPart.shape.option;
 
                     s = Mathf.Clamp(s, 0, ObjectManager.inst.objectPrefabs.Count - 1);
                     so = Mathf.Clamp(so, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
 
-                    if (s != 4 && s != 6)
-                        ((MeshFilter)playerObjects["Boost"].values["MeshFilter"]).mesh = ObjectManager.inst.objectPrefabs[s].options[so].GetComponentInChildren<MeshFilter>().mesh;
-                    else
-                        ((MeshFilter)playerObjects["Boost"].values["MeshFilter"]).mesh = ObjectManager.inst.objectPrefabs[0].options[0].GetComponentInChildren<MeshFilter>().mesh;
+                    ((MeshFilter)playerObjects["Boost"].values["MeshFilter"]).mesh =
+                        ObjectManager.inst.objectPrefabs[s != 4 && s != 6 ? s : 0].options[s != 4 && s != 6 ? so : 0].GetComponentInChildren<MeshFilter>().mesh;
                 }
 
                 //Tail Boost Shape
                 {
-                    int s = ((Vector2Int)currentModel.values["Tail Boost Shape"]).x;
-                    int so = ((Vector2Int)currentModel.values["Tail Boost Shape"]).y;
+                    int s = currentModel.boostTailPart.shape.type;
+                    int so = currentModel.boostTailPart.shape.option;
 
                     s = Mathf.Clamp(s, 0, ObjectManager.inst.objectPrefabs.Count - 1);
                     so = Mathf.Clamp(so, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
 
-                    if (s != 4 && s != 6)
-                        ((MeshFilter)playerObjects["Boost Tail"].values["MeshFilter"]).mesh = ObjectManager.inst.objectPrefabs[s].options[so].GetComponentInChildren<MeshFilter>().mesh;
-                    else
-                        ((MeshFilter)playerObjects["Boost Tail"].values["MeshFilter"]).mesh = ObjectManager.inst.objectPrefabs[0].options[0].GetComponentInChildren<MeshFilter>().mesh;
+                    ((MeshFilter)playerObjects["Boost Tail"].values["MeshFilter"]).mesh =
+                        ObjectManager.inst.objectPrefabs[s != 4 && s != 6 ? s : 0].options[s != 4 && s != 6 ? so : 0].GetComponentInChildren<MeshFilter>().mesh;
                 }
 
                 //Tail 1 Shape
-                for (int i = 1; i < 4; i++)
+                for (int i = 0; i < currentModel.tailParts.Count; i++)
                 {
-                    int s = ((Vector2Int)currentModel.values[string.Format("Tail {0} Shape", i)]).x;
-                    int so = ((Vector2Int)currentModel.values[string.Format("Tail {0} Shape", i)]).y;
+                    int s = currentModel.tailParts[i].shape.type;
+                    int so = currentModel.tailParts[i].shape.option;
 
                     s = Mathf.Clamp(s, 0, ObjectManager.inst.objectPrefabs.Count - 1);
                     so = Mathf.Clamp(so, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
 
-                    if (s != 4 && s != 6)
-                        ((MeshFilter)playerObjects[string.Format("Tail {0}", i)].values["MeshFilter"]).mesh = ObjectManager.inst.objectPrefabs[s].options[so].GetComponentInChildren<MeshFilter>().mesh;
-                    else
-                        ((MeshFilter)playerObjects[string.Format("Tail {0}", i)].values["MeshFilter"]).mesh = ObjectManager.inst.objectPrefabs[0].options[0].GetComponentInChildren<MeshFilter>().mesh;
+                    var str = string.Format("Tail {0}", i + 1);
+
+                    if (playerObjects.ContainsKey(str))
+                        ((MeshFilter)playerObjects[str].values["MeshFilter"]).mesh =
+                        ObjectManager.inst.objectPrefabs[s != 4 && s != 6 ? s : 0].options[s != 4 && s != 6 ? so : 0].GetComponentInChildren<MeshFilter>().mesh;
                 }
 
-                var h1 = (Vector2)currentModel.values["Head Position"];
-                var h2 = (Vector2)currentModel.values["Head Scale"];
-                var h3 = (float)currentModel.values["Head Rotation"];
+                var h1 = currentModel.headPart.position;
+                var h2 = currentModel.headPart.scale;
+                var h3 = currentModel.headPart.rotation;
 
                 playerObjects["Head"].gameObject.transform.localPosition = new Vector3(h1.x, h1.y, 0f);
                 playerObjects["Head"].gameObject.transform.localScale = new Vector3(h2.x, h2.y, 1f);
                 playerObjects["Head"].gameObject.transform.localEulerAngles = new Vector3(0f, 0f, h3);
 
-                var b1 = (Vector2)currentModel.values["Boost Position"];
-                var b2 = (Vector2)currentModel.values["Boost Scale"];
-                var b3 = (float)currentModel.values["Boost Rotation"];
+                var b1 = currentModel.boostPart.position;
+                var b2 = currentModel.boostPart.scale;
+                var b3 = currentModel.boostPart.rotation;
 
-                ((MeshRenderer)playerObjects["Boost"].values["MeshRenderer"]).enabled = (bool)currentModel.values["Boost Active"];
+                ((MeshRenderer)playerObjects["Boost"].values["MeshRenderer"]).enabled = currentModel.boostPart.active;
                 playerObjects["Boost Base"].gameObject.transform.localPosition = new Vector3(b1.x, b1.y, 0.1f);
                 playerObjects["Boost Base"].gameObject.transform.localScale = new Vector3(b2.x, b2.y, 1f);
                 playerObjects["Boost Base"].gameObject.transform.localEulerAngles = new Vector3(0f, 0f, b3);
 
-                tailDistance = (float)currentModel.values["Tail Base Distance"];
-                tailMode = (int)currentModel.values["Tail Base Mode"];
+                tailDistance = currentModel.tailBase.distance;
+                tailMode = (int)currentModel.tailBase.mode;
 
-                tailGrows = (bool)currentModel.values["Tail Base Grows"];
+                tailGrows = (bool)currentModel.tailBase.grows;
 
-                boostTail = (bool)currentModel.values["Tail Boost Active"];
+                boostTail = (bool)currentModel.boostTailPart.active;
 
                 playerObjects["Boost Tail Base"].gameObject.SetActive(boostTail);
 
-                var fp = (Vector2)currentModel.values["Face Position"];
+                var fp = currentModel.FacePosition;
                 playerObjects["Face Parent"].gameObject.transform.localPosition = new Vector3(fp.x, fp.y, 0f);
 
                 if (!isBoosting)
@@ -1704,14 +1710,14 @@ namespace RTFunctions.Functions.Components.Player
 
                 //Stretch
                 {
-                    stretch = (bool)currentModel.values["Stretch Active"];
-                    stretchAmount = (float)currentModel.values["Stretch Amount"];
-                    stretchEasing = (int)currentModel.values["Stretch Easing"];
+                    stretch = (bool)currentModel.stretchPart.active;
+                    stretchAmount = (float)currentModel.stretchPart.amount;
+                    stretchEasing = (int)currentModel.stretchPart.easing;
                 }
 
-                var bt1 = (Vector2)currentModel.values["Tail Boost Position"];
-                var bt2 = (Vector2)currentModel.values["Tail Boost Scale"];
-                var bt3 = (float)currentModel.values["Tail Boost Rotation"];
+                var bt1 = currentModel.boostTailPart.position;
+                var bt2 = currentModel.boostTailPart.scale;
+                var bt3 = currentModel.boostTailPart.rotation;
 
                 playerObjects["Boost Tail"].gameObject.SetActive(boostTail);
                 if (boostTail)
@@ -1721,12 +1727,12 @@ namespace RTFunctions.Functions.Components.Player
                     playerObjects["Boost Tail"].gameObject.transform.localEulerAngles = new Vector3(0f, 0f, bt3);
                 }
 
-                rotateMode = (RotateMode)(int)currentModel.values["Base Rotate Mode"];
+                rotateMode = (RotateMode)(int)currentModel.basePart.rotateMode;
 
                 ((CircleCollider2D)playerObjects["RB Parent"].values["CircleCollider2D"]).isTrigger = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0 && ZenEditorIncludesSolid;
                 ((PolygonCollider2D)playerObjects["RB Parent"].values["PolygonCollider2D"]).isTrigger = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0 && ZenEditorIncludesSolid;
 
-                var colAcc = (bool)currentModel.values["Base Collision Accurate"];
+                var colAcc = (bool)currentModel.basePart.collisionAccurate;
                 if (colAcc)
                 {
                     ((CircleCollider2D)playerObjects["RB Parent"].values["CircleCollider2D"]).enabled = false;
@@ -1739,32 +1745,26 @@ namespace RTFunctions.Functions.Components.Player
                     ((CircleCollider2D)playerObjects["RB Parent"].values["CircleCollider2D"]).enabled = true;
                 }
 
-                for (int i = 1; i < 4; i++)
+                for (int i = 0; i < currentModel.tailParts.Count; i++)
                 {
-                    //int num = i;
-                    //if (boostTail)
-                    //{
-                    //    num += 1;
-                    //}
+                    var t1 = currentModel.tailParts[i].position;
+                    var t2 = currentModel.tailParts[i].scale;
+                    var t3 = currentModel.tailParts[i].rotation;
 
-                    //var PlayerDelayTracker = (PlayerDelayTracker)playerObjects[string.Format("Tail {0} Base", i)].values["PlayerDelayTracker"];
-                    //PlayerDelayTracker.offset = -num * tailDistance / 2f;
-                    //PlayerDelayTracker.followSharpness = 0.1f * (-num + 4);
-
-                    var t1 = (Vector2)currentModel.values[string.Format("Tail {0} Position", i)];
-                    var t2 = (Vector2)currentModel.values[string.Format("Tail {0} Scale", i)];
-                    var t3 = (float)currentModel.values[string.Format("Tail {0} Rotation", i)];
-
-                    ((MeshRenderer)playerObjects[string.Format("Tail {0}", i)].values["MeshRenderer"]).enabled = (bool)currentModel.values[string.Format("Tail {0} Active", i)];
-                    playerObjects[string.Format("Tail {0}", i)].gameObject.transform.localPosition = new Vector3(t1.x, t1.y, 0.1f);
-                    playerObjects[string.Format("Tail {0}", i)].gameObject.transform.localScale = new Vector3(t2.x, t2.y, 1f);
-                    playerObjects[string.Format("Tail {0}", i)].gameObject.transform.localEulerAngles = new Vector3(0f, 0f, t3);
+                    var str = string.Format("Tail {0}", i + 1);
+                    if (playerObjects.ContainsKey(str))
+                    {
+                        ((MeshRenderer)playerObjects[str].values["MeshRenderer"]).enabled = currentModel.tailParts[i].active;
+                        playerObjects[str].gameObject.transform.localPosition = new Vector3(t1.x, t1.y, 0.1f);
+                        playerObjects[str].gameObject.transform.localScale = new Vector3(t2.x, t2.y, 1f);
+                        playerObjects[str].gameObject.transform.localEulerAngles = new Vector3(0f, 0f, t3);
+                    }
                 }
 
                 //Health
                 {
                     if (CustomPlayer)
-                        CustomPlayer.Health = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 0) == 3 ? 1 : (int)currentModel.values["Base Health"];
+                        CustomPlayer.Health = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 0) == 3 ? 1 : currentModel.basePart.health;
                 }
 
                 //Health Images
@@ -1784,12 +1784,12 @@ namespace RTFunctions.Functions.Components.Player
                 {
                     var headTrail = (TrailRenderer)playerObjects["Head Trail"].values["TrailRenderer"];
 
-                    playerObjects["Head Trail"].gameObject.transform.localPosition = (Vector2)currentModel.values["Head Trail Position Offset"];
+                    playerObjects["Head Trail"].gameObject.transform.localPosition = currentModel.headPart.Trail.positionOffset;
 
-                    headTrail.enabled = (bool)currentModel.values["Head Trail Emitting"];
+                    headTrail.enabled = currentModel.headPart.Trail.emitting;
                     //headTrail.time = (float)currentModel.values["Head Trail Time"];
-                    headTrail.startWidth = (float)currentModel.values["Head Trail Start Width"];
-                    headTrail.endWidth = (float)currentModel.values["Head Trail End Width"];
+                    headTrail.startWidth = currentModel.headPart.Trail.startWidth;
+                    headTrail.endWidth = currentModel.headPart.Trail.endWidth;
                 }
 
                 //Particles
@@ -1797,8 +1797,8 @@ namespace RTFunctions.Functions.Components.Player
                     var headParticles = (ParticleSystem)playerObjects["Head Particles"].values["ParticleSystem"];
                     var headParticlesRenderer = (ParticleSystemRenderer)playerObjects["Head Particles"].values["ParticleSystemRenderer"];
 
-                    var s = ((Vector2Int)currentModel.values["Head Particles Shape"]).x;
-                    var so = ((Vector2Int)currentModel.values["Head Particles Shape"]).y;
+                    var s = currentModel.headPart.Particles.shape.type;
+                    var so = currentModel.headPart.Particles.shape.option;
 
                     s = Mathf.Clamp(s, 0, ObjectManager.inst.objectPrefabs.Count - 1);
                     so = Mathf.Clamp(so, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
@@ -1807,37 +1807,39 @@ namespace RTFunctions.Functions.Components.Player
                     {
                         headParticlesRenderer.mesh = ObjectManager.inst.objectPrefabs[s].options[so].GetComponentInChildren<MeshFilter>().mesh;
                     }
+
                     var main = headParticles.main;
                     var emission = headParticles.emission;
 
-                    main.startLifetime = (float)currentModel.values["Head Particles Lifetime"];
-                    main.startSpeed = (float)currentModel.values["Head Particles Speed"];
+                    main.startLifetime = currentModel.headPart.Particles.lifeTime;
+                    main.startSpeed = currentModel.headPart.Particles.speed;
 
-                    emission.enabled = (bool)currentModel.values["Head Particles Emitting"];
-                    headParticles.emissionRate = (float)currentModel.values["Head Particles Amount"];
+                    emission.enabled = currentModel.headPart.Particles.emitting;
+                    headParticles.emissionRate = currentModel.headPart.Particles.amount;
 
                     var rotationOverLifetime = headParticles.rotationOverLifetime;
                     rotationOverLifetime.enabled = true;
                     rotationOverLifetime.separateAxes = true;
                     rotationOverLifetime.xMultiplier = 0f;
                     rotationOverLifetime.yMultiplier = 0f;
-                    rotationOverLifetime.zMultiplier = (float)currentModel.values["Head Particles Rotation"];
+                    rotationOverLifetime.zMultiplier = currentModel.headPart.Particles.rotation;
 
                     var forceOverLifetime = headParticles.forceOverLifetime;
                     forceOverLifetime.enabled = true;
                     forceOverLifetime.space = ParticleSystemSimulationSpace.World;
-                    forceOverLifetime.xMultiplier = ((Vector2)currentModel.values["Head Particles Force"]).x;
-                    forceOverLifetime.yMultiplier = ((Vector2)currentModel.values["Head Particles Force"]).y;
+                    forceOverLifetime.xMultiplier = currentModel.headPart.Particles.force.x;
+                    forceOverLifetime.yMultiplier = currentModel.headPart.Particles.force.y;
+                    forceOverLifetime.zMultiplier = 0f;
 
                     var particlesTrail = headParticles.trails;
-                    particlesTrail.enabled = (bool)currentModel.values["Head Particles Trail Emitting"];
+                    particlesTrail.enabled = currentModel.headPart.Particles.trailEmitting;
 
                     var colorOverLifetime = headParticles.colorOverLifetime;
                     colorOverLifetime.enabled = true;
                     var psCol = colorOverLifetime.color;
 
-                    float alphaStart = (float)currentModel.values["Head Particles Start Opacity"];
-                    float alphaEnd = (float)currentModel.values["Head Particles End Opacity"];
+                    float alphaStart = currentModel.headPart.Particles.startOpacity;
+                    float alphaEnd = currentModel.headPart.Particles.endOpacity;
 
                     var gradient = new Gradient();
                     gradient.alphaKeys = new GradientAlphaKey[2]
@@ -1860,8 +1862,8 @@ namespace RTFunctions.Functions.Components.Player
 
                     var ssss = sizeOverLifetime.size;
 
-                    var sizeStart = (float)currentModel.values["Head Particles Start Scale"];
-                    var sizeEnd = (float)currentModel.values["Head Particles End Scale"];
+                    var sizeStart = currentModel.headPart.Particles.startScale;
+                    var sizeEnd = currentModel.headPart.Particles.endScale;
 
                     var curve = new AnimationCurve(new Keyframe[2]
                     {
@@ -1877,8 +1879,8 @@ namespace RTFunctions.Functions.Components.Player
                 //Boost Trail
                 {
                     var headTrail = (TrailRenderer)playerObjects["Boost Trail"].values["TrailRenderer"];
-                    headTrail.enabled = (bool)currentModel.values["Boost Trail Emitting"];
-                    headTrail.emitting = (bool)currentModel.values["Boost Trail Emitting"];
+                    headTrail.enabled = currentModel.boostPart.Trail.emitting;
+                    headTrail.emitting = currentModel.boostPart.Trail.emitting;
                     //headTrail.time = (float)currentModel.values["Boost Trail Time"];
                 }
 
@@ -1887,8 +1889,8 @@ namespace RTFunctions.Functions.Components.Player
                     var headParticles = (ParticleSystem)playerObjects["Boost Particles"].values["ParticleSystem"];
                     var headParticlesRenderer = (ParticleSystemRenderer)playerObjects["Boost Particles"].values["ParticleSystemRenderer"];
 
-                    var s = ((Vector2Int)currentModel.values["Boost Particles Shape"]).x;
-                    var so = ((Vector2Int)currentModel.values["Boost Particles Shape"]).y;
+                    var s = currentModel.boostPart.Particles.shape.type;
+                    var so = currentModel.boostPart.Particles.shape.option;
 
                     s = Mathf.Clamp(s, 0, ObjectManager.inst.objectPrefabs.Count - 1);
                     so = Mathf.Clamp(so, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
@@ -1901,36 +1903,37 @@ namespace RTFunctions.Functions.Components.Player
                     var main = headParticles.main;
                     var emission = headParticles.emission;
 
-                    main.startLifetime = (float)currentModel.values["Boost Particles Lifetime"];
-                    main.startSpeed = (float)currentModel.values["Boost Particles Speed"];
+                    main.startLifetime = currentModel.boostPart.Particles.lifeTime;
+                    main.startSpeed = currentModel.boostPart.Particles.speed;
 
-                    emission.enabled = (bool)currentModel.values["Boost Particles Emitting"];
+                    emission.enabled = currentModel.boostPart.Particles.emitting;
                     headParticles.emissionRate = 0f;
-                    emission.burstCount = (int)currentModel.values["Boost Particles Amount"];
-                    main.duration = (float)currentModel.values["Boost Particles Duration"];
+                    emission.burstCount = (int)currentModel.boostPart.Particles.amount;
+                    main.duration = 1f;
 
                     var rotationOverLifetime = headParticles.rotationOverLifetime;
                     rotationOverLifetime.enabled = true;
                     rotationOverLifetime.separateAxes = true;
                     rotationOverLifetime.xMultiplier = 0f;
                     rotationOverLifetime.yMultiplier = 0f;
-                    rotationOverLifetime.zMultiplier = (float)currentModel.values["Boost Particles Rotation"];
+                    rotationOverLifetime.zMultiplier = currentModel.boostPart.Particles.rotation;
 
                     var forceOverLifetime = headParticles.forceOverLifetime;
                     forceOverLifetime.enabled = true;
                     forceOverLifetime.space = ParticleSystemSimulationSpace.World;
-                    forceOverLifetime.xMultiplier = ((Vector2)currentModel.values["Boost Particles Force"]).x;
-                    forceOverLifetime.yMultiplier = ((Vector2)currentModel.values["Boost Particles Force"]).y;
+                    forceOverLifetime.xMultiplier = currentModel.boostPart.Particles.force.x;
+                    forceOverLifetime.yMultiplier = currentModel.boostPart.Particles.force.y;
+                    forceOverLifetime.zMultiplier = 0f;
 
                     var particlesTrail = headParticles.trails;
-                    particlesTrail.enabled = (bool)currentModel.values["Boost Particles Trail Emitting"];
+                    particlesTrail.enabled = currentModel.boostPart.Particles.trailEmitting;
 
                     var colorOverLifetime = headParticles.colorOverLifetime;
                     colorOverLifetime.enabled = true;
                     var psCol = colorOverLifetime.color;
 
-                    float alphaStart = (float)currentModel.values["Boost Particles Start Opacity"];
-                    float alphaEnd = (float)currentModel.values["Boost Particles End Opacity"];
+                    float alphaStart = currentModel.boostPart.Particles.startOpacity;
+                    float alphaEnd = currentModel.boostPart.Particles.endOpacity;
 
                     var gradient = new Gradient();
                     gradient.alphaKeys = new GradientAlphaKey[2]
@@ -1953,8 +1956,8 @@ namespace RTFunctions.Functions.Components.Player
 
                     var ssss = sizeOverLifetime.size;
 
-                    var sizeStart = (float)currentModel.values["Boost Particles Start Scale"];
-                    var sizeEnd = (float)currentModel.values["Boost Particles End Scale"];
+                    var sizeStart = currentModel.boostPart.Particles.startScale;
+                    var sizeEnd = currentModel.boostPart.Particles.endScale;
 
                     var curve = new AnimationCurve(new Keyframe[2]
                     {
@@ -1969,94 +1972,98 @@ namespace RTFunctions.Functions.Components.Player
 
                 //Tails Trail / Particles
                 {
-                    for (int i = 1; i < 4; i++)
+                    for (int i = 0; i < PlayerModel.tailParts.Count; i++)
                     {
-                        var headTrail = (TrailRenderer)playerObjects[string.Format("Tail {0}", i)].values["TrailRenderer"];
-                        headTrail.enabled = (bool)currentModel.values[string.Format("Tail {0} Trail Emitting", i)];
-                        headTrail.emitting = (bool)currentModel.values[string.Format("Tail {0} Trail Emitting", i)];
-                        //headTrail.time = (float)currentModel.values[string.Format("Tail {0} Trail Time", i)];
-                        headTrail.startWidth = (float)currentModel.values[string.Format("Tail {0} Trail Start Width", i)];
-                        headTrail.endWidth = (float)currentModel.values[string.Format("Tail {0} Trail End Width", i)];
-
-
-                        var headParticles = (ParticleSystem)playerObjects[string.Format("Tail {0} Particles", i)].values["ParticleSystem"];
-                        var headParticlesRenderer = (ParticleSystemRenderer)playerObjects[string.Format("Tail {0} Particles", i)].values["ParticleSystemRenderer"];
-
-                        var s = ((Vector2Int)currentModel.values[string.Format("Tail {0} Particles Shape", i)]).x;
-                        var so = ((Vector2Int)currentModel.values[string.Format("Tail {0} Particles Shape", i)]).y;
-
-                        s = Mathf.Clamp(s, 0, ObjectManager.inst.objectPrefabs.Count - 1);
-                        so = Mathf.Clamp(so, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
-
-                        if (s != 4 && s != 6)
+                        var str = string.Format("Tail {0}", i + 1);
+                        if (playerObjects.ContainsKey(str) && playerObjects.ContainsKey(string.Format("Tail {0} Particles", i + 1)))
                         {
-                            headParticlesRenderer.mesh = ObjectManager.inst.objectPrefabs[s].options[so].GetComponentInChildren<MeshFilter>().mesh;
+                            var headTrail = (TrailRenderer)playerObjects[str].values["TrailRenderer"];
+                            headTrail.enabled = currentModel.tailParts[i].Trail.emitting;
+                            headTrail.emitting = currentModel.tailParts[i].Trail.emitting;
+                            //headTrail.time = (float)currentModel.values[string.Format("Tail {0} Trail Time", i)];
+                            headTrail.startWidth = currentModel.tailParts[i].Trail.startWidth;
+                            headTrail.endWidth = currentModel.tailParts[i].Trail.endWidth;
+
+
+                            var headParticles = (ParticleSystem)playerObjects[string.Format("Tail {0} Particles", i + 1)].values["ParticleSystem"];
+                            var headParticlesRenderer = (ParticleSystemRenderer)playerObjects[string.Format("Tail {0} Particles", i + 1)].values["ParticleSystemRenderer"];
+
+                            var s = currentModel.tailParts[i].Particles.shape.type;
+                            var so = currentModel.tailParts[i].Particles.shape.option;
+
+                            s = Mathf.Clamp(s, 0, ObjectManager.inst.objectPrefabs.Count - 1);
+                            so = Mathf.Clamp(so, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
+
+                            if (s != 4 && s != 6)
+                            {
+                                headParticlesRenderer.mesh = ObjectManager.inst.objectPrefabs[s].options[so].GetComponentInChildren<MeshFilter>().mesh;
+                            }
+                            var main = headParticles.main;
+                            var emission = headParticles.emission;
+
+                            main.startLifetime = currentModel.tailParts[i].Particles.lifeTime;
+                            main.startSpeed = currentModel.tailParts[i].Particles.speed;
+
+                            emission.enabled = currentModel.tailParts[i].Particles.emitting;
+                            headParticles.emissionRate = currentModel.tailParts[i].Particles.amount;
+
+                            var rotationOverLifetime = headParticles.rotationOverLifetime;
+                            rotationOverLifetime.enabled = true;
+                            rotationOverLifetime.separateAxes = true;
+                            rotationOverLifetime.xMultiplier = 0f;
+                            rotationOverLifetime.yMultiplier = 0f;
+                            rotationOverLifetime.zMultiplier = currentModel.tailParts[i].Particles.rotation;
+
+                            var forceOverLifetime = headParticles.forceOverLifetime;
+                            forceOverLifetime.enabled = true;
+                            forceOverLifetime.space = ParticleSystemSimulationSpace.World;
+                            forceOverLifetime.xMultiplier = currentModel.tailParts[i].Particles.force.x;
+                            forceOverLifetime.yMultiplier = currentModel.tailParts[i].Particles.force.y;
+
+                            var particlesTrail = headParticles.trails;
+                            particlesTrail.enabled = currentModel.tailParts[i].Particles.trailEmitting;
+
+                            var colorOverLifetime = headParticles.colorOverLifetime;
+                            colorOverLifetime.enabled = true;
+                            var psCol = colorOverLifetime.color;
+
+                            float alphaStart = currentModel.tailParts[i].Particles.startOpacity;
+                            float alphaEnd = currentModel.tailParts[i].Particles.endOpacity;
+
+                            var gradient = new Gradient();
+                            gradient.alphaKeys = new GradientAlphaKey[2]
+                            {
+                                new GradientAlphaKey(alphaStart, 0f),
+                                new GradientAlphaKey(alphaEnd, 1f)
+                            };
+                            gradient.colorKeys = new GradientColorKey[2]
+                            {
+                                new GradientColorKey(Color.white, 0f),
+                                new GradientColorKey(Color.white, 1f)
+                            };
+
+                            psCol.gradient = gradient;
+
+                            colorOverLifetime.color = psCol;
+
+                            var sizeOverLifetime = headParticles.sizeOverLifetime;
+                            sizeOverLifetime.enabled = true;
+
+                            var ssss = sizeOverLifetime.size;
+
+                            var sizeStart = currentModel.tailParts[i].Particles.startScale;
+                            var sizeEnd = currentModel.tailParts[i].Particles.endScale;
+
+                            var curve = new AnimationCurve(new Keyframe[2]
+                            {
+                                new Keyframe(0f, sizeStart),
+                                new Keyframe(1f, sizeEnd)
+                            });
+
+                            ssss.curve = curve;
+
+                            sizeOverLifetime.size = ssss;
                         }
-                        var main = headParticles.main;
-                        var emission = headParticles.emission;
-
-                        main.startLifetime = (float)currentModel.values[string.Format("Tail {0} Particles Lifetime", i)];
-                        main.startSpeed = (float)currentModel.values[string.Format("Tail {0} Particles Speed", i)];
-
-                        emission.enabled = (bool)currentModel.values[string.Format("Tail {0} Particles Emitting", i)];
-                        headParticles.emissionRate = (float)currentModel.values[string.Format("Tail {0} Particles Amount", i)];
-
-                        var rotationOverLifetime = headParticles.rotationOverLifetime;
-                        rotationOverLifetime.enabled = true;
-                        rotationOverLifetime.separateAxes = true;
-                        rotationOverLifetime.xMultiplier = 0f;
-                        rotationOverLifetime.yMultiplier = 0f;
-                        rotationOverLifetime.zMultiplier = (float)currentModel.values[string.Format("Tail {0} Particles Rotation", i)];
-
-                        var forceOverLifetime = headParticles.forceOverLifetime;
-                        forceOverLifetime.enabled = true;
-                        forceOverLifetime.space = ParticleSystemSimulationSpace.World;
-                        forceOverLifetime.xMultiplier = ((Vector2)currentModel.values[string.Format("Tail {0} Particles Force", i)]).x;
-                        forceOverLifetime.yMultiplier = ((Vector2)currentModel.values[string.Format("Tail {0} Particles Force", i)]).y;
-
-                        var particlesTrail = headParticles.trails;
-                        particlesTrail.enabled = (bool)currentModel.values[string.Format("Tail {0} Particles Trail Emitting", i)];
-
-                        var colorOverLifetime = headParticles.colorOverLifetime;
-                        colorOverLifetime.enabled = true;
-                        var psCol = colorOverLifetime.color;
-
-                        float alphaStart = (float)currentModel.values[string.Format("Tail {0} Particles Start Opacity", i)];
-                        float alphaEnd = (float)currentModel.values[string.Format("Tail {0} Particles End Opacity", i)];
-
-                        var gradient = new Gradient();
-                        gradient.alphaKeys = new GradientAlphaKey[2]
-                        {
-                            new GradientAlphaKey(alphaStart, 0f),
-                            new GradientAlphaKey(alphaEnd, 1f)
-                        };
-                        gradient.colorKeys = new GradientColorKey[2]
-                        {
-                            new GradientColorKey(Color.white, 0f),
-                            new GradientColorKey(Color.white, 1f)
-                        };
-
-                        psCol.gradient = gradient;
-
-                        colorOverLifetime.color = psCol;
-
-                        var sizeOverLifetime = headParticles.sizeOverLifetime;
-                        sizeOverLifetime.enabled = true;
-
-                        var ssss = sizeOverLifetime.size;
-
-                        var sizeStart = (float)currentModel.values[string.Format("Tail {0} Particles Start Scale", i)];
-                        var sizeEnd = (float)currentModel.values[string.Format("Tail {0} Particles End Scale", i)];
-
-                        var curve = new AnimationCurve(new Keyframe[2]
-                        {
-                        new Keyframe(0f, sizeStart),
-                        new Keyframe(1f, sizeEnd)
-                        });
-
-                        ssss.curve = curve;
-
-                        sizeOverLifetime.size = ssss;
                     }
                 }
             }
@@ -2076,17 +2083,17 @@ namespace RTFunctions.Functions.Components.Player
                     {
                         var customObj = obj.Value;
 
-                        if (((Vector2Int)customObj.values["Shape"]).x != 4 && ((Vector2Int)customObj.values["Shape"]).x != 6)
+                        if (((Shape)customObj.values["Shape"]).type != 4 && ((Shape)customObj.values["Shape"]).type != 6)
                         {
-                            var shape = (Vector2Int)customObj.values["Shape"];
+                            var shape = (Shape)customObj.values["Shape"];
                             var pos = (Vector2)customObj.values["Position"];
                             var sca = (Vector2)customObj.values["Scale"];
                             var rot = (float)customObj.values["Rotation"];
 
                             var depth = (float)customObj.values["Depth"];
 
-                            int s = Mathf.Clamp(shape.x, 0, ObjectManager.inst.objectPrefabs.Count - 1);
-                            int so = Mathf.Clamp(shape.y, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
+                            int s = Mathf.Clamp(shape.type, 0, ObjectManager.inst.objectPrefabs.Count - 1);
+                            int so = Mathf.Clamp(shape.option, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
 
                             customObj.gameObject = Instantiate(ObjectManager.inst.objectPrefabs[s].options[so]);
                             customObj.gameObject.transform.SetParent(transform);
@@ -2159,7 +2166,7 @@ namespace RTFunctions.Functions.Components.Player
         {
             var currentModel = PlayerModel;
 
-            Dictionary<string, object> dictionary = (Dictionary<string, object>)currentModel.values["Custom Objects"];
+            var dictionary = currentModel.customObjects;
 
             foreach (var obj in customObjects)
             {
@@ -2174,41 +2181,39 @@ namespace RTFunctions.Functions.Components.Player
                 foreach (var obj in dictionary)
                 {
                     var id = obj.Key;
-                    var customObj = (Dictionary<string, object>)obj.Value;
+                    var customObj = obj.Value;
 
                     var c = CreateCustomObject();
-                    c.values["ID"] = customObj["ID"];
-                    c.values["Shape"] = customObj["Shape"];
-                    c.values["Position"] = customObj["Position"];
-                    c.values["Scale"] = customObj["Scale"];
-                    c.values["Rotation"] = customObj["Rotation"];
-                    c.values["Color"] = customObj["Color"];
-                    c.values["Custom Color"] = customObj["Custom Color"];
-                    c.values["Opacity"] = customObj["Opacity"];
-                    c.values["Parent"] = customObj["Parent"];
-                    c.values["Parent Position Offset"] = customObj["Parent Position Offset"];
-                    c.values["Parent Scale Offset"] = customObj["Parent Scale Offset"];
-                    c.values["Parent Rotation Offset"] = customObj["Parent Rotation Offset"];
-                    c.values["Parent Scale Active"] = customObj["Parent Scale Active"];
-                    c.values["Parent Rotation Active"] = customObj["Parent Rotation Active"];
-                    c.values["Depth"] = customObj["Depth"];
-                    c.values["Visibility"] = customObj["Visibility"];
-                    c.values["Visibility Value"] = customObj["Visibility Value"];
-                    c.values["Visibility Not"] = customObj["Visibility Not"];
+                    c.values["ID"] = customObj.id;
+                    c.values["Shape"] = customObj.shape;
+                    c.values["Position"] = customObj.position;
+                    c.values["Scale"] = customObj.scale;
+                    c.values["Rotation"] = customObj.rotation;
+                    c.values["Color"] = customObj.color;
+                    c.values["Custom Color"] = customObj.customColor;
+                    c.values["Opacity"] = customObj.opacity;
+                    c.values["Parent"] = customObj.parent;
+                    c.values["Parent Position Offset"] = customObj.positionOffset;
+                    c.values["Parent Scale Offset"] = customObj.scaleOffset;
+                    c.values["Parent Rotation Offset"] = customObj.rotationOffset;
+                    c.values["Parent Scale Active"] = customObj.scaleParent;
+                    c.values["Parent Rotation Active"] = customObj.rotationParent;
+                    c.values["Depth"] = customObj.depth;
+                    c.customObject = customObj;
 
-                    customObjects.Add((string)customObj["ID"], c);
+                    customObjects.Add(customObj.id, c);
                 }
 
             UpdateCustomObjects();
         }
 
-        public PlayerObject CreateCustomObject()
+        public CustomGameObject CreateCustomObject()
         {
-            var obj = new PlayerObject();
+            var obj = new CustomGameObject();
 
             obj.name = "Object";
             obj.values = new Dictionary<string, object>();
-            obj.values.Add("Shape", new Vector2Int(0, 0));
+            obj.values.Add("Shape", ShapeManager.inst.Shapes2D[0][0]);
             obj.values.Add("Position", new Vector2(0f, 0f));
             obj.values.Add("Scale", new Vector2(1f, 1f));
             obj.values.Add("Rotation", 0f);
@@ -2223,9 +2228,6 @@ namespace RTFunctions.Functions.Components.Player
             obj.values.Add("Parent Rotation Active", true);
             obj.values.Add("Depth", 0f);
             obj.values.Add("MeshRenderer", null);
-            obj.values.Add("Visibility", 0);
-            obj.values.Add("Visibility Value", 100f);
-            obj.values.Add("Visibility Not", false);
             var id = LSText.randomNumString(16);
             obj.values.Add("ID", id);
 
@@ -2237,113 +2239,115 @@ namespace RTFunctions.Functions.Components.Player
             if (customObjects.Count > 0)
                 foreach (var obj in customObjects.Values)
                 {
-                    int vis = (int)obj.values["Visibility"];
-                    bool not = (bool)obj.values["Visibility Not"];
-                    float value = (float)obj.values["Visibility Value"];
-                    if (obj.gameObject != null)
-                    {
-                        switch (vis)
-                        {
-                            case 0:
-                                {
-                                    obj.gameObject.SetActive(true);
-                                    break;
-                                }
-                            case 1:
-                                {
-                                    if (!not)
-                                        obj.gameObject.SetActive(isBoosting);
-                                    else
-                                        obj.gameObject.SetActive(!isBoosting);
-                                    break;
-                                }
-                            case 2:
-                                {
-                                    if (!not)
-                                        obj.gameObject.SetActive(isTakingHit);
-                                    else
-                                        obj.gameObject.SetActive(!isTakingHit);
-                                    break;
-                                }
-                            case 3:
-                                {
-                                    bool zen = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0;
-                                    obj.gameObject.SetActive(!not && zen || !zen);
-                                    break;
-                                }
-                            case 4:
-                                {
-                                    if (CustomPlayer)
-                                    {
-                                        var val = (float)CustomPlayer.health / (float)initialHealthCount * 100f >= value;
-                                        if (!not)
-                                            obj.gameObject.SetActive(val);
-                                        else
-                                            obj.gameObject.SetActive(!val);
-                                    }
-                                    else
-                                        obj.gameObject.SetActive(false);
+                    UpdateVisibility(obj);
 
-                                    break;
-                                }
-                            case 5:
-                                {
-                                    if (CustomPlayer)
-                                    {
-                                        var val = CustomPlayer.health >= value;
-                                        if (!not)
-                                            obj.gameObject.SetActive(val);
-                                        else
-                                            obj.gameObject.SetActive(!val);
-                                    }
-                                    else
-                                        obj.gameObject.SetActive(false);
-                                    break;
-                                }
-                            case 6:
-                                {
-                                    if (CustomPlayer)
-                                    {
-                                        var val = CustomPlayer.health == value;
-                                        if (!not)
-                                            obj.gameObject.SetActive(val);
-                                        else
-                                            obj.gameObject.SetActive(!val);
-                                    }
-                                    else
-                                        obj.gameObject.SetActive(false);
-                                    break;
-                                }
-                            case 7:
-                                {
-                                    if (CustomPlayer)
-                                    {
-                                        var val = CustomPlayer.health > value;
-                                        if (!not)
-                                            obj.gameObject.SetActive(val);
-                                        else
-                                            obj.gameObject.SetActive(!val);
-                                    }
-                                    else
-                                        obj.gameObject.SetActive(false);
-                                    break;
-                                }
-                            case 8:
-                                {
-                                    if (CustomPlayer)
-                                    {
-                                        bool val = Input.GetKey(GetKeyCode((int)value));
-                                        if (!not)
-                                            obj.gameObject.SetActive(val);
-                                        else
-                                            obj.gameObject.SetActive(!val);
-                                    }
-                                    else
-                                        obj.gameObject.SetActive(false);
-                                    break;
-                                }
-                        }
-                    }
+                    //int vis = (int)obj.values["Visibility"];
+                    //bool not = (bool)obj.values["Visibility Not"];
+                    //float value = (float)obj.values["Visibility Value"];
+                    //if (obj.gameObject != null)
+                    //{
+                    //    switch (vis)
+                    //    {
+                    //        case 0:
+                    //            {
+                    //                obj.gameObject.SetActive(true);
+                    //                break;
+                    //            }
+                    //        case 1:
+                    //            {
+                    //                if (!not)
+                    //                    obj.gameObject.SetActive(isBoosting);
+                    //                else
+                    //                    obj.gameObject.SetActive(!isBoosting);
+                    //                break;
+                    //            }
+                    //        case 2:
+                    //            {
+                    //                if (!not)
+                    //                    obj.gameObject.SetActive(isTakingHit);
+                    //                else
+                    //                    obj.gameObject.SetActive(!isTakingHit);
+                    //                break;
+                    //            }
+                    //        case 3:
+                    //            {
+                    //                bool zen = DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0;
+                    //                obj.gameObject.SetActive(!not && zen || !zen);
+                    //                break;
+                    //            }
+                    //        case 4:
+                    //            {
+                    //                if (CustomPlayer)
+                    //                {
+                    //                    var val = (float)CustomPlayer.health / (float)initialHealthCount * 100f >= value;
+                    //                    if (!not)
+                    //                        obj.gameObject.SetActive(val);
+                    //                    else
+                    //                        obj.gameObject.SetActive(!val);
+                    //                }
+                    //                else
+                    //                    obj.gameObject.SetActive(false);
+
+                    //                break;
+                    //            }
+                    //        case 5:
+                    //            {
+                    //                if (CustomPlayer)
+                    //                {
+                    //                    var val = CustomPlayer.health >= value;
+                    //                    if (!not)
+                    //                        obj.gameObject.SetActive(val);
+                    //                    else
+                    //                        obj.gameObject.SetActive(!val);
+                    //                }
+                    //                else
+                    //                    obj.gameObject.SetActive(false);
+                    //                break;
+                    //            }
+                    //        case 6:
+                    //            {
+                    //                if (CustomPlayer)
+                    //                {
+                    //                    var val = CustomPlayer.health == value;
+                    //                    if (!not)
+                    //                        obj.gameObject.SetActive(val);
+                    //                    else
+                    //                        obj.gameObject.SetActive(!val);
+                    //                }
+                    //                else
+                    //                    obj.gameObject.SetActive(false);
+                    //                break;
+                    //            }
+                    //        case 7:
+                    //            {
+                    //                if (CustomPlayer)
+                    //                {
+                    //                    var val = CustomPlayer.health > value;
+                    //                    if (!not)
+                    //                        obj.gameObject.SetActive(val);
+                    //                    else
+                    //                        obj.gameObject.SetActive(!val);
+                    //                }
+                    //                else
+                    //                    obj.gameObject.SetActive(false);
+                    //                break;
+                    //            }
+                    //        case 8:
+                    //            {
+                    //                if (CustomPlayer)
+                    //                {
+                    //                    bool val = Input.GetKey(GetKeyCode((int)value));
+                    //                    if (!not)
+                    //                        obj.gameObject.SetActive(val);
+                    //                    else
+                    //                        obj.gameObject.SetActive(!val);
+                    //                }
+                    //                else
+                    //                    obj.gameObject.SetActive(false);
+                    //                break;
+                    //            }
+                    //    }
+                    //}
 
                     int col = (int)obj.values["Color"];
                     string hex = (string)obj.values["Custom Color"];
@@ -2353,6 +2357,29 @@ namespace RTFunctions.Functions.Components.Player
                         ((MeshRenderer)obj.values["MeshRenderer"]).material.color = GetColor(col, alpha, hex);
                     }
                 }
+        }
+
+        public void UpdateVisibility(CustomGameObject customGameObject)
+        {
+            if (customGameObject.gameObject != null)
+            {
+                Func<PlayerModel.CustomObject.Visiblity, bool> visibilityFunc = (x =>
+                {
+                    return
+                    x.command == "isBoosting" && (!x.not && isBoosting || x.not && !isBoosting) ||
+                    x.command == "isTakingHit" && (!x.not && isTakingHit || x.not && !isTakingHit) ||
+                    x.command == "isZenMode" && (!x.not && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0 || x.not && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) != 0) ||
+                    x.command == "isHealthPercentageGreater" && (!x.not && (float)CustomPlayer.health / (float)initialHealthCount * 100f >= x.value || x.not && (float)CustomPlayer.health / (float)initialHealthCount * 100f < x.value) ||
+                    x.command == "isHealthGreaterEquals" && (!x.not && CustomPlayer.health >= x.value || x.not && CustomPlayer.health < x.value) ||
+                    x.command == "isHealthEquals" && (!x.not && CustomPlayer.health == x.value || x.not && CustomPlayer.health != x.value) ||
+                    x.command == "isHealthGreater" && (!x.not && CustomPlayer.health > x.value || x.not && CustomPlayer.health <= x.value) ||
+                    x.command == "isPressingKey" && (!x.not && Input.GetKey(GetKeyCode((int)x.value)) || x.not && !Input.GetKey(GetKeyCode((int)x.value)));
+                });
+
+                customGameObject.gameObject.SetActive(customGameObject.customObject.visibilitySettings.Count < 1 && customGameObject.customObject.active || customGameObject.customObject.visibilitySettings.Count > 0 &&
+                    (!customGameObject.customObject.requireAll && customGameObject.customObject.visibilitySettings.Any(visibilityFunc) ||
+                customGameObject.customObject.visibilitySettings.All(visibilityFunc)));
+            }
         }
 
         public void UpdateTail(int _health, Vector3 _pos)
@@ -2402,18 +2429,15 @@ namespace RTFunctions.Functions.Components.Player
             {
                 for (int i = 0; i < healthObjects.Count; i++)
                 {
-                    if (i < _health && (bool)currentModel.values["GUI Health Active"] && (int)currentModel.values["GUI Health Mode"] == 0)
-                        healthObjects[i].gameObject.SetActive(true);
-                    else
-                        healthObjects[i].gameObject.SetActive(false);
+                    healthObjects[i].gameObject.SetActive(i < _health && currentModel.guiPart.active && currentModel.guiPart.mode == PlayerModel.GUI.GUIHealthMode.Images);
                 }
             }
 
             var text = health.GetComponent<Text>();
-            if ((bool)currentModel.values["GUI Health Active"] && ((int)currentModel.values["GUI Health Mode"] == 1 || (int)currentModel.values["GUI Health Mode"] == 2))
+            if (currentModel.guiPart.active && (currentModel.guiPart.mode == PlayerModel.GUI.GUIHealthMode.Text || currentModel.guiPart.mode == PlayerModel.GUI.GUIHealthMode.EqualsBar))
             {
                 text.enabled = true;
-                if ((int)currentModel.values["GUI Health Mode"] == 1)
+                if (currentModel.guiPart.mode == PlayerModel.GUI.GUIHealthMode.Text)
                     text.text = _health.ToString();
                 else
                     text.text = FontManager.TextTranslater.ConvertHealthToEquals(_health, initialHealthCount);
@@ -2422,7 +2446,7 @@ namespace RTFunctions.Functions.Components.Player
             {
                 text.enabled = false;
             }
-            if ((bool)currentModel.values["GUI Health Active"] && (int)currentModel.values["GUI Health Mode"] == 3)
+            if (currentModel.guiPart.active && currentModel.guiPart.mode == PlayerModel.GUI.GUIHealthMode.Bar)
             {
                 barBaseIm.gameObject.SetActive(true);
                 var e = (float)_health / (float)initialHealthCount;
@@ -2454,13 +2478,13 @@ namespace RTFunctions.Functions.Components.Player
 
             var currentModel = PlayerModel;
 
-            if (!currentModel.values.ContainsKey("Pulse Active") || !(bool)currentModel.values["Pulse Active"])
+            if (!currentModel.pulsePart.active)
                 return;
 
             var player = playerObjects["RB Parent"].gameObject;
 
-            int s = Mathf.Clamp(((Vector2Int)currentModel.values["Pulse Shape"]).x, 0, ObjectManager.inst.objectPrefabs.Count - 1);
-            int so = Mathf.Clamp(((Vector2Int)currentModel.values["Pulse Shape"]).y, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
+            int s = Mathf.Clamp(currentModel.pulsePart.shape.type, 0, ObjectManager.inst.objectPrefabs.Count - 1);
+            int so = Mathf.Clamp(currentModel.pulsePart.shape.option, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
 
             var objcopy = ObjectManager.inst.objectPrefabs[s].options[so];
             if (s == 4 || s == 6)
@@ -2470,34 +2494,22 @@ namespace RTFunctions.Functions.Components.Player
 
             var pulse = Instantiate(objcopy);
             pulse.transform.SetParent(ObjectManager.inst.objectParent.transform);
-            pulse.transform.localScale = new Vector3(((Vector2)currentModel.values["Pulse Start Scale"]).x, ((Vector2)currentModel.values["Pulse Start Scale"]).y, 1f);
+            pulse.transform.localScale = new Vector3(currentModel.pulsePart.startScale.x, currentModel.pulsePart.startScale.y, 1f);
             pulse.transform.position = player.transform.position;
-            pulse.transform.GetChild(0).localPosition = new Vector3(((Vector2)currentModel.values["Pulse Start Position"]).x, ((Vector2)currentModel.values["Pulse Start Position"]).y, (float)currentModel.values["Pulse Depth"]);
-            pulse.transform.GetChild(0).localRotation = Quaternion.Euler(new Vector3(0f, 0f, (float)currentModel.values["Pulse Start Rotation"]));
+            pulse.transform.GetChild(0).localPosition = new Vector3(currentModel.pulsePart.startPosition.x, currentModel.pulsePart.startPosition.y, currentModel.pulsePart.depth);
+            pulse.transform.GetChild(0).localRotation = Quaternion.Euler(new Vector3(0f, 0f, currentModel.pulsePart.startRotation));
 
-            if ((bool)currentModel.values["Pulse Rotate to Head"])
+            if (currentModel.pulsePart.rotateToHead)
             {
                 pulse.transform.localRotation = player.transform.localRotation;
             }
 
             //Destroy
             {
-                if (pulse.transform.GetChild(0).GetComponent<SelectObjectInEditor>())
-                {
-                    Destroy(pulse.transform.GetChild(0).GetComponent<SelectObjectInEditor>());
-                }
-                if (pulse.transform.GetChild(0).GetComponent<BoxCollider2D>())
-                {
-                    Destroy(pulse.transform.GetChild(0).GetComponent<BoxCollider2D>());
-                }
-                if (pulse.transform.GetChild(0).GetComponent<PolygonCollider2D>())
-                {
-                    Destroy(pulse.transform.GetChild(0).GetComponent<PolygonCollider2D>());
-                }
-                if (pulse.transform.GetChild(0).gameObject.GetComponentByName("RTObject"))
-                {
-                    Destroy(pulse.transform.GetChild(0).gameObject.GetComponentByName("RTObject"));
-                }
+                Destroy(pulse.transform.GetChild(0).GetComponent<SelectObjectInEditor>());
+                Destroy(pulse.transform.GetChild(0).GetComponent<BoxCollider2D>());
+                Destroy(pulse.transform.GetChild(0).GetComponent<PolygonCollider2D>());
+                Destroy(pulse.transform.GetChild(0).gameObject.GetComponent<RTObject>());
             }
 
             var obj = new PlayerObject("Pulse", pulse.transform.GetChild(0).gameObject);
@@ -2506,10 +2518,10 @@ namespace RTFunctions.Functions.Components.Player
             obj.values.Add("MeshRenderer", pulseRenderer);
             obj.values.Add("Opacity", 0f);
             obj.values.Add("ColorTween", 0f);
-            obj.values.Add("StartColor", (int)currentModel.values["Pulse Start Color"]);
-            obj.values.Add("EndColor", (int)currentModel.values["Pulse End Color"]);
-            obj.values.Add("StartCustomColor", (string)currentModel.values["Pulse Start Custom Color"]);
-            obj.values.Add("EndCustomColor", (string)currentModel.values["Pulse End Custom Color"]);
+            obj.values.Add("StartColor", currentModel.pulsePart.startColor);
+            obj.values.Add("EndColor", currentModel.pulsePart.endColor);
+            obj.values.Add("StartCustomColor", currentModel.pulsePart.startCustomColor);
+            obj.values.Add("EndCustomColor", currentModel.pulsePart.endCustomColor);
 
             boosts.Add(obj);
 
@@ -2518,22 +2530,22 @@ namespace RTFunctions.Functions.Components.Player
             pulseRenderer.material.shader = ((MeshRenderer)playerObjects["Head"].values["MeshRenderer"]).material.shader;
             Color colorBase = ((MeshRenderer)playerObjects["Head"].values["MeshRenderer"]).material.color;
 
-            int easingPos = (int)currentModel.values["Pulse Easing Position"];
-            int easingSca = (int)currentModel.values["Pulse Easing Scale"];
-            int easingRot = (int)currentModel.values["Pulse Easing Rotation"];
-            int easingOpa = (int)currentModel.values["Pulse Easing Opacity"];
-            int easingCol = (int)currentModel.values["Pulse Easing Color"];
+            int easingPos = currentModel.pulsePart.easingPosition;
+            int easingSca = currentModel.pulsePart.easingScale;
+            int easingRot = currentModel.pulsePart.easingRotation;
+            int easingOpa = currentModel.pulsePart.easingOpacity;
+            int easingCol = currentModel.pulsePart.easingColor;
 
-            float duration = Mathf.Clamp((float)currentModel.values["Pulse Duration"], 0.001f, 20f) / RTHelpers.Pitch;
+            float duration = Mathf.Clamp(currentModel.pulsePart.duration, 0.001f, 20f) / RTHelpers.Pitch;
 
-            pulse.transform.GetChild(0).DOLocalMove(new Vector3(((Vector2)currentModel.values["Pulse End Position"]).x, ((Vector2)currentModel.values["Pulse End Position"]).y, (float)currentModel.values["Pulse Depth"]), duration).SetEase(DataManager.inst.AnimationList[easingPos].Animation);
-            var tweenScale = pulse.transform.DOScale(new Vector3(((Vector2)currentModel.values["Pulse End Scale"]).x, ((Vector2)currentModel.values["Pulse End Scale"]).y, 1f), duration).SetEase(DataManager.inst.AnimationList[easingSca].Animation);
-            pulse.transform.GetChild(0).DOLocalRotate(new Vector3(0f, 0f, (float)currentModel.values["Pulse End Rotation"]), duration).SetEase(DataManager.inst.AnimationList[easingRot].Animation);
+            pulse.transform.GetChild(0).DOLocalMove(new Vector3(currentModel.pulsePart.endPosition.x, currentModel.pulsePart.endPosition.y, currentModel.pulsePart.depth), duration).SetEase(DataManager.inst.AnimationList[easingPos].Animation);
+            var tweenScale = pulse.transform.DOScale(new Vector3(currentModel.pulsePart.endScale.x, currentModel.pulsePart.endScale.y, 1f), duration).SetEase(DataManager.inst.AnimationList[easingSca].Animation);
+            pulse.transform.GetChild(0).DOLocalRotate(new Vector3(0f, 0f, currentModel.pulsePart.endRotation), duration).SetEase(DataManager.inst.AnimationList[easingRot].Animation);
 
             DOTween.To(delegate (float x)
             {
                 obj.values["Opacity"] = x;
-            }, (float)currentModel.values["Pulse Start Opacity"], (float)currentModel.values["Pulse End Opacity"], duration).SetEase(DataManager.inst.AnimationList[easingOpa].Animation);
+            }, currentModel.pulsePart.startOpacity, currentModel.pulsePart.endOpacity, duration).SetEase(DataManager.inst.AnimationList[easingOpa].Animation);
             DOTween.To(delegate (float x)
             {
                 obj.values["ColorTween"] = x;
@@ -2595,7 +2607,7 @@ namespace RTFunctions.Functions.Components.Player
         {
             var currentModel = PlayerModel;
 
-            if (currentModel == null || !currentModel.values.ContainsKey("Bullet Active") || !(bool)currentModel.values["Bullet Active"])
+            if (currentModel == null || !currentModel.bulletPart.active)
                 return;
 
             if (PlayShootSound)
@@ -2605,8 +2617,8 @@ namespace RTFunctions.Functions.Components.Player
 
             var player = playerObjects["RB Parent"].gameObject;
 
-            int s = Mathf.Clamp(((Vector2Int)currentModel.values["Bullet Shape"]).x, 0, ObjectManager.inst.objectPrefabs.Count - 1);
-            int so = Mathf.Clamp(((Vector2Int)currentModel.values["Bullet Shape"]).y, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
+            int s = Mathf.Clamp(currentModel.bulletPart.shape.type, 0, ObjectManager.inst.objectPrefabs.Count - 1);
+            int so = Mathf.Clamp(currentModel.bulletPart.shape.option, 0, ObjectManager.inst.objectPrefabs[s].options.Count - 1);
 
             var objcopy = ObjectManager.inst.objectPrefabs[s].options[so];
             if (s == 4 || s == 6)
@@ -2616,17 +2628,17 @@ namespace RTFunctions.Functions.Components.Player
 
             var pulse = Instantiate(objcopy);
             pulse.transform.SetParent(ObjectManager.inst.objectParent.transform);
-            pulse.transform.localScale = new Vector3(((Vector2)currentModel.values["Bullet Start Scale"]).x, ((Vector2)currentModel.values["Bullet Start Scale"]).y, 1f);
+            pulse.transform.localScale = new Vector3(currentModel.bulletPart.startScale.x, currentModel.bulletPart.startScale.y, 1f);
 
-            var vec = new Vector3(((Vector2)currentModel.values["Bullet Origin"]).x, ((Vector2)currentModel.values["Bullet Origin"]).y, 0f);
+            var vec = new Vector3(currentModel.bulletPart.origin.x, currentModel.bulletPart.origin.y, 0f);
             if (rotateMode == RotateMode.FlipX && lastMovement.x < 0f)
                 vec.x = -vec.x;
 
             pulse.transform.position = player.transform.position + vec;
-            pulse.transform.GetChild(0).localPosition = new Vector3(((Vector2)currentModel.values["Bullet Start Position"]).x, ((Vector2)currentModel.values["Bullet Start Position"]).y, (float)currentModel.values["Bullet Depth"]);
-            pulse.transform.GetChild(0).localRotation = Quaternion.Euler(new Vector3(0f, 0f, (float)currentModel.values["Bullet Start Rotation"]));
+            pulse.transform.GetChild(0).localPosition = new Vector3(currentModel.bulletPart.startPosition.x, currentModel.bulletPart.startPosition.y, currentModel.bulletPart.depth);
+            pulse.transform.GetChild(0).localRotation = Quaternion.Euler(new Vector3(0f, 0f, currentModel.bulletPart.startRotation));
 
-            if (!AllowPlayersToTakeBulletDamage || !(bool)currentModel.values["Bullet Hurt Players"])
+            if (!AllowPlayersToTakeBulletDamage || !currentModel.bulletPart.hurtPlayers)
             {
                 pulse.tag = "Helper";
                 pulse.transform.GetChild(0).tag = "Helper";
@@ -2634,7 +2646,7 @@ namespace RTFunctions.Functions.Components.Player
 
             pulse.transform.GetChild(0).gameObject.name = "bullet (Player " + (playerIndex + 1).ToString() + ")";
 
-            float speed = Mathf.Clamp((float)currentModel.values["Bullet Speed Amount"], 0.001f, 20f) / RTHelpers.Pitch;
+            float speed = Mathf.Clamp(currentModel.bulletPart.speed, 0.001f, 20f) / RTHelpers.Pitch;
             var b = pulse.AddComponent<Bullet>();
             b.speed = speed;
             b.player = this;
@@ -2644,14 +2656,8 @@ namespace RTFunctions.Functions.Components.Player
 
             //Destroy
             {
-                if (pulse.transform.GetChild(0).GetComponent<SelectObjectInEditor>())
-                {
-                    Destroy(pulse.transform.GetChild(0).GetComponent<SelectObjectInEditor>());
-                }
-                if (pulse.transform.GetChild(0).gameObject.GetComponentByName("RTObject"))
-                {
-                    Destroy(pulse.transform.GetChild(0).gameObject.GetComponentByName("RTObject"));
-                }
+                Destroy(pulse.transform.GetChild(0).GetComponent<SelectObjectInEditor>());
+                Destroy(pulse.transform.GetChild(0).GetComponent<RTObject>());
             }
 
             var obj = new PlayerObject("Bullet", pulse.transform.GetChild(0).gameObject);
@@ -2660,10 +2666,10 @@ namespace RTFunctions.Functions.Components.Player
             obj.values.Add("MeshRenderer", pulseRenderer);
             obj.values.Add("Opacity", 0f);
             obj.values.Add("ColorTween", 0f);
-            obj.values.Add("StartColor", (int)currentModel.values["Bullet Start Color"]);
-            obj.values.Add("EndColor", (int)currentModel.values["Bullet End Color"]);
-            obj.values.Add("StartCustomColor", (string)currentModel.values["Bullet Start Custom Color"]);
-            obj.values.Add("EndCustomColor", (string)currentModel.values["Bullet End Custom Color"]);
+            obj.values.Add("StartColor", currentModel.bulletPart.startColor);
+            obj.values.Add("EndColor", currentModel.bulletPart.endColor);
+            obj.values.Add("StartCustomColor", currentModel.bulletPart.startCustomColor);
+            obj.values.Add("EndCustomColor", currentModel.bulletPart.endCustomColor);
 
             boosts.Add(obj);
 
@@ -2681,32 +2687,29 @@ namespace RTFunctions.Functions.Components.Player
 
             var bulletCollider = pulse.transform.GetChild(0).gameObject.AddComponent<BulletCollider>();
             bulletCollider.rb = (Rigidbody2D)playerObjects["RB Parent"].values["Rigidbody2D"];
-            if (currentModel.values.ContainsKey("Bullet AutoKill"))
-            {
-                bulletCollider.kill = (bool)currentModel.values["Bullet AutoKill"];
-            }
+            bulletCollider.kill = currentModel.bulletPart.autoKill;
             bulletCollider.player = this;
             bulletCollider.playerObject = obj;
 
-            int easingPos = (int)currentModel.values["Bullet Easing Position"];
-            int easingSca = (int)currentModel.values["Bullet Easing Scale"];
-            int easingRot = (int)currentModel.values["Bullet Easing Rotation"];
-            int easingOpa = (int)currentModel.values["Bullet Easing Opacity"];
-            int easingCol = (int)currentModel.values["Bullet Easing Color"];
+            int easingPos = currentModel.bulletPart.easingPosition;
+            int easingSca = currentModel.bulletPart.easingScale;
+            int easingRot = currentModel.bulletPart.easingRotation;
+            int easingOpa = currentModel.bulletPart.easingOpacity;
+            int easingCol = currentModel.bulletPart.easingColor;
 
-            float posDuration = Mathf.Clamp((float)currentModel.values["Bullet Duration Position"], 0.001f, 20f) / RTHelpers.Pitch;
-            float scaDuration = Mathf.Clamp((float)currentModel.values["Bullet Duration Scale"], 0.001f, 20f) / RTHelpers.Pitch;
-            float rotDuration = Mathf.Clamp((float)currentModel.values["Bullet Duration Rotation"], 0.001f, 20f) / RTHelpers.Pitch;
-            float lifeTime = Mathf.Clamp((float)currentModel.values["Bullet Lifetime"], 0.001f, 20f) / RTHelpers.Pitch;
+            float posDuration = Mathf.Clamp(currentModel.bulletPart.durationPosition, 0.001f, 20f) / RTHelpers.Pitch;
+            float scaDuration = Mathf.Clamp(currentModel.bulletPart.durationScale, 0.001f, 20f) / RTHelpers.Pitch;
+            float rotDuration = Mathf.Clamp(currentModel.bulletPart.durationScale, 0.001f, 20f) / RTHelpers.Pitch;
+            float lifeTime = Mathf.Clamp(currentModel.bulletPart.lifeTime, 0.001f, 20f) / RTHelpers.Pitch;
 
-            pulse.transform.GetChild(0).DOLocalMove(new Vector3(((Vector2)currentModel.values["Bullet End Position"]).x, ((Vector2)currentModel.values["Bullet End Position"]).y, (float)currentModel.values["Bullet Depth"]), posDuration).SetEase(DataManager.inst.AnimationList[easingPos].Animation);
-            pulse.transform.DOScale(new Vector3(((Vector2)currentModel.values["Bullet End Scale"]).x, ((Vector2)currentModel.values["Bullet End Scale"]).y, 1f), scaDuration).SetEase(DataManager.inst.AnimationList[easingSca].Animation);
-            pulse.transform.GetChild(0).DOLocalRotate(new Vector3(0f, 0f, (float)currentModel.values["Bullet End Rotation"]), rotDuration).SetEase(DataManager.inst.AnimationList[easingRot].Animation);
+            pulse.transform.GetChild(0).DOLocalMove(new Vector3(currentModel.bulletPart.endPosition.x, currentModel.bulletPart.endPosition.y, currentModel.bulletPart.depth), posDuration).SetEase(DataManager.inst.AnimationList[easingPos].Animation);
+            pulse.transform.DOScale(new Vector3(currentModel.bulletPart.endScale.x, currentModel.bulletPart.endScale.y, 1f), scaDuration).SetEase(DataManager.inst.AnimationList[easingSca].Animation);
+            pulse.transform.GetChild(0).DOLocalRotate(new Vector3(0f, 0f, currentModel.bulletPart.endRotation), rotDuration).SetEase(DataManager.inst.AnimationList[easingRot].Animation);
 
             DOTween.To(delegate (float x)
             {
                 obj.values["Opacity"] = x;
-            }, (float)currentModel.values["Bullet Start Opacity"], (float)currentModel.values["Bullet End Opacity"], posDuration).SetEase(DataManager.inst.AnimationList[easingOpa].Animation);
+            }, currentModel.bulletPart.startOpacity, currentModel.bulletPart.endOpacity, posDuration).SetEase(DataManager.inst.AnimationList[easingOpa].Animation);
             DOTween.To(delegate (float x)
             {
                 obj.values["ColorTween"] = x;
@@ -2736,7 +2739,7 @@ namespace RTFunctions.Functions.Components.Player
             var currentModel = PlayerModel;
             if (currentModel != null)
             {
-                var delay = (float)currentModel.values["Bullet Delay Amount"];
+                var delay = currentModel.bulletPart.delay;
                 yield return new WaitForSeconds(delay);
             }
             canShoot = true;
@@ -2945,8 +2948,8 @@ namespace RTFunctions.Functions.Components.Player
 
         #region Objects
 
-        public Dictionary<string, PlayerObject> customObjects = new Dictionary<string, PlayerObject>();
         public Dictionary<string, PlayerObject> playerObjects = new Dictionary<string, PlayerObject>();
+        public Dictionary<string, CustomGameObject> customObjects = new Dictionary<string, CustomGameObject>();
 
         public class PlayerObject
         {
@@ -2966,6 +2969,7 @@ namespace RTFunctions.Functions.Components.Player
                 values.Add("Rotation", 0f);
                 values.Add("Color", 0);
             }
+
             public PlayerObject(string _name, Dictionary<string, object> _values, GameObject _gm)
             {
                 name = _name;
@@ -2977,6 +2981,26 @@ namespace RTFunctions.Functions.Components.Player
             public GameObject gameObject;
 
             public Dictionary<string, object> values;
+        }
+
+        public class CustomGameObject : PlayerObject
+        {
+            public CustomGameObject() : base()
+            {
+
+            }
+
+            public CustomGameObject(string name, GameObject gm) : base(name, gm)
+            {
+
+            }
+
+            public CustomGameObject(string name, Dictionary<string, object> values, GameObject gm) : base(name, values, gm)
+            {
+
+            }
+
+            public PlayerModel.CustomObject customObject;
         }
 
         public List<MovementPath> path = new List<MovementPath>();
