@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Text;
 
 using UnityEngine;
 
@@ -143,6 +144,8 @@ namespace RTFunctions.Functions.IO
 			}
 		}
 
+		public static string BytesToString(byte[] bytes) => Encoding.UTF8.GetString(bytes);
+
 		public static float[] ConvertByteToFloat(byte[] array, int length = 4)
 		{
 			float[] floatArr = new float[array.Length / length];
@@ -282,7 +285,7 @@ namespace RTFunctions.Functions.IO
 
 			public static Texture2D GetZipImage(string path, int file)
 			{
-				var bytes = GetZipData(path, file);
+				var bytes = GetZipBytes(path, file);
 
 				var mem = new MemoryStream(bytes);
 
@@ -321,10 +324,10 @@ namespace RTFunctions.Functions.IO
 			//	return clip;
 			//}
 
-			// Only supports .zip for now
+			// Only supports .wav for now
 			public static AudioClip GetZipAudioClip(string path, int file)
 			{
-				var bytes = GetZipData(path, file);
+				var bytes = GetZipBytes(path, file);
 
 				return GetAudioWAV(bytes, "ZipClip");
 
@@ -338,7 +341,7 @@ namespace RTFunctions.Functions.IO
 				//}
 			}
 
-			public static byte[] GetZipData(string path, int file)
+			public static byte[] GetZipBytes(string path, int file)
 			{
 				var archive = ZipFile.OpenRead(path);
 				var stream = archive.Entries[file].Open();
@@ -346,6 +349,8 @@ namespace RTFunctions.Functions.IO
 				var bytes = ReadBytes(stream);
 
 				stream.Close();
+				archive.Dispose();
+				archive = null;
 
 				return bytes;
 			}
