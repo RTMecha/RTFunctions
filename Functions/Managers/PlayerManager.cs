@@ -21,6 +21,11 @@ namespace RTFunctions.Functions.Managers
         void Awake()
         {
             inst = this;
+
+            for (int i = 0; i < 5; i++)
+            {
+                PlayerModels.Add(i.ToString(), null);
+            }
         }
 
         public static bool LoadFromGlobalPlayersInArcade { get; set; }
@@ -205,7 +210,7 @@ namespace RTFunctions.Functions.Managers
             customPlayer.active = true;
         }
 
-        public static void SpawnPlayer(PlayerModel playerModel, Transform transform, int index, Vector3 pos)
+        public static GameObject SpawnPlayer(PlayerModel playerModel, Transform transform, int index, Vector3 pos)
         {
             var gameObject = GameManager.inst.PlayerPrefabs[0].Duplicate(transform, "Player");
             gameObject.layer = 8;
@@ -225,7 +230,7 @@ namespace RTFunctions.Functions.Managers
             player.PlayerModel = playerModel;
             player.playerIndex = index;
 
-            if (GameManager.inst.players.activeSelf)
+            if (transform.gameObject.activeInHierarchy)
                 player.UpdatePlayer();
             else
                 player.playerNeedsUpdating = true;
@@ -237,6 +242,8 @@ namespace RTFunctions.Functions.Managers
                     path.pos = new Vector3(pos.x, pos.y);
                 }
             }
+
+            return gameObject;
         }
 
         public static void RespawnPlayers()
