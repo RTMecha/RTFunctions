@@ -16,6 +16,8 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
         public readonly TextMeshPro TextMeshPro;
         readonly float opacity;
 
+        public string Text { get; set; }
+
         public TextObject(GameObject gameObject, Transform top, float opacity, string text)
         {
             GameObject = gameObject;
@@ -27,7 +29,8 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
 
             TextMeshPro = gameObject.GetComponent<TextMeshPro>();
             TextMeshPro.enabled = true;
-            TextMeshPro.text = text;
+            Text = text;
+            SetText(Text);
         }
 
         public void SetText(string text)
