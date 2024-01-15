@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 using UnityEngine;
 
@@ -177,12 +178,27 @@ namespace RTFunctions.Functions.Optimization.Objects
             var shape = Mathf.Clamp(beatmapObject.shape, 0, ObjectManager.inst.objectPrefabs.Count - 1);
             var shapeOption = Mathf.Clamp(beatmapObject.shapeOption, 0, ObjectManager.inst.objectPrefabs[shape].options.Count - 1);
 
-            var baseObject = Object.Instantiate(ObjectManager.inst.objectPrefabs[shape].options[shapeOption], parent == null ? ObjectManager.inst.objectParent.transform : parent.transform);
+            GameObject baseObject = Object.Instantiate(ObjectManager.inst.objectPrefabs[shape].options[shapeOption], parent == null ? ObjectManager.inst.objectParent.transform : parent.transform);
+
+            if (shape == 9)
+            {
+                baseObject.GetComponent<Components.Player.RTPlayer>().PlayerModel = ObjectManager.inst.objectPrefabs[shape].options[shapeOption].GetComponent<Components.Player.RTPlayer>().PlayerModel;
+            }
+
+            //if (shape != 9)
+            //    baseObject = Object.Instantiate(ObjectManager.inst.objectPrefabs[shape].options[shapeOption], parent == null ? ObjectManager.inst.objectParent.transform : parent.transform);
+            //else
+            //    baseObject = PlayerManager.SpawnPlayer(PlayerManager.PlayerModels.ElementAt(shapeOption).Value, parent == null ? ObjectManager.inst.objectParent.transform : parent.transform,
+            //        beatmapObject.events.Count > 3 && beatmapObject.events[3].Count > 0 ? (int)beatmapObject.events[3][0].eventValues[0] : 0, Vector3.zero);
             baseObject.transform.localScale = Vector3.one;
 
-            var visualObject = baseObject.transform.GetChild(0).gameObject;
+            var visualObject = baseObject.transform.GetChild(shape == 9 ? 1 : 0).gameObject;
             visualObject.transform.localPosition = new Vector3(beatmapObject.origin.x, beatmapObject.origin.y, beatmapObject.depth * 0.1f);
-            visualObject.name = "Visual [ " + beatmapObject.name + " ]";
+            if (shape != 9)
+                visualObject.name = "Visual [ " + beatmapObject.name + " ]";
+
+            if (shape == 9)
+                baseObject.SetActive(true);
 
             try
             {
@@ -336,6 +352,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 VisualObject visual =
                     beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text) :
                     beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text) :
+                    beatmapObject.shape == 9 ? new PlayerObject(visualObject, top.transform) :
                     new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid);
 
                 try
