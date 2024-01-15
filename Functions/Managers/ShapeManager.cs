@@ -8,6 +8,7 @@ using UnityEngine;
 using SimpleJSON;
 
 using RTFunctions.Functions.IO;
+using RTFunctions.Functions.Data.Player;
 
 namespace RTFunctions.Functions.Managers
 {
@@ -232,7 +233,39 @@ namespace RTFunctions.Functions.Managers
                 }
             }
 
+            StartCoroutine(SetupPlayerShapes());
+        }
+
+        public IEnumerator SetupPlayerShapes()
+        {
+            if (ObjectManager.inst.objectPrefabs.Count != 10)
+            {
+                var objectPrefab = new ObjectManager.ObjectPrefabHolder();
+                objectPrefab.options = new List<GameObject>();
+
+                while (!GameManager.inst || GameManager.inst.PlayerPrefabs == null || GameManager.inst.PlayerPrefabs.Length < 1 || GameManager.inst.PlayerPrefabs[0] == null)
+                    yield return null;
+
+                var parent = new GameObject("Player Prefabs");
+                parent.SetActive(false);
+
+                for (int i = 0; i < PlayerModel.DefaultModels.Count; i++)
+                {
+                    var gameObject = PlayerManager.SpawnPlayer(PlayerModel.DefaultModels[i], parent.transform, 0, Vector3.zero);
+                    gameObject.SetActive(false);
+                    objectPrefab.options.Add(gameObject);
+
+                    if (!PlayerManager.PlayerModels.ContainsKey(PlayerModel.DefaultModels[i].basePart.id))
+                        PlayerManager.PlayerModels.Add(PlayerModel.DefaultModels[i].basePart.id, PlayerModel.DefaultModels[i]);
+                    else
+                        PlayerManager.PlayerModels[PlayerModel.DefaultModels[i].basePart.id] = PlayerModel.DefaultModels[i];
+                }
+
+                ObjectManager.inst.objectPrefabs.Add(objectPrefab);
+            }
+
             loadedShapes = true;
+            yield break;
         }
 
         IEnumerator LoadIcons()
