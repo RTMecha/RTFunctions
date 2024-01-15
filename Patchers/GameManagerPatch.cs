@@ -88,22 +88,6 @@ namespace RTFunctions.Patchers
                 },
             };
 
-            var pm1 = new PlayerModel(__instance.PlayerPrefabs[0]);
-            var pm2 = new PlayerModel(__instance.PlayerPrefabs[1]);
-
-            pm1.values["Base ID"] = "0";
-            pm2.values["Base ID"] = "1";
-
-            if (!PlayerManager.PlayerModels.ContainsKey("0"))
-                PlayerManager.PlayerModels.Add("0", pm1);
-            else
-                PlayerManager.PlayerModels["0"] = pm1;
-
-            if (!PlayerManager.PlayerModels.ContainsKey("1"))
-                PlayerManager.PlayerModels.Add("1", pm2);
-            else
-                PlayerManager.PlayerModels["1"] = pm1;
-
             //if (EditorManager.inst != null || PlayerManager.LoadFromGlobalPlayersInArcade)
             //    PlayerManager.LoadGlobalModels?.Invoke();
             //else
