@@ -83,6 +83,8 @@ namespace RTFunctions.Patchers
 
             AnimationManager.Init();
 
+            RTVideoManager.Init();
+
             // Test to see if this is even necessary. If not, then feel free to remove this.
             //EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
             //EnumPatcher.AddEnumValue<DataManager.GameData.BackgroundObject.ReactiveType>("CUSTOM");
