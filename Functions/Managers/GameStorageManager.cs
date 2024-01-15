@@ -17,6 +17,10 @@ namespace RTFunctions.Functions.Managers
             inst = this;
             perspectiveCam = GameManager.inst.CameraPerspective.GetComponent<Camera>();
             postProcessLayer = Camera.main.gameObject.GetComponent<PostProcessLayer>();
+            if (RTVideoManager.inst)
+            {
+                RTVideoManager.inst.SetCamera(perspectiveCam);
+            }
         }
 
         public Camera perspectiveCam;
