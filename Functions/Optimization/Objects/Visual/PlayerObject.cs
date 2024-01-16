@@ -5,7 +5,7 @@ using RTFunctions.Functions.Components.Player;
 namespace RTFunctions.Functions.Optimization.Objects.Visual
 {
     /// <summary>
-    /// Class for special player objects. (WIP)
+    /// Class for special player objects.
     /// </summary>
     public class PlayerObject : VisualObject
     {
