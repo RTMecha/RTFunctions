@@ -182,7 +182,13 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             if (shape == 9)
             {
-                baseObject.GetComponent<Components.Player.RTPlayer>().PlayerModel = ObjectManager.inst.objectPrefabs[shape].options[shapeOption].GetComponent<Components.Player.RTPlayer>().PlayerModel;
+                var rtPlayer = baseObject.GetComponent<Components.Player.RTPlayer>();
+                rtPlayer.PlayerModel = ObjectManager.inst.objectPrefabs[shape].options[shapeOption].GetComponent<Components.Player.RTPlayer>().PlayerModel;
+                rtPlayer.playerIndex = beatmapObject.events.Count > 3 && beatmapObject.events[3].Count > 0 && beatmapObject.events[3][0].eventValues.Length > 0 ? (int)beatmapObject.events[3][0].eventValues[0] : 0;
+                if (beatmapObject is Data.BeatmapObject moddedObject && moddedObject.tags != null && moddedObject.tags.Has(x => x == "DontRotate"))
+                {
+                    rtPlayer.CanRotate = false;
+                }
             }
 
             //if (shape != 9)
@@ -348,7 +354,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 // 4 = text object
                 // 6 = image object
-                // 9 = player object (Implement soon)
+                // 9 = player object
                 VisualObject visual =
                     beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text) :
                     beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text) :
