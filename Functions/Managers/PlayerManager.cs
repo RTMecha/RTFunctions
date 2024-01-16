@@ -284,11 +284,12 @@ namespace RTFunctions.Functions.Managers
 
         public static void AssignPlayerModels()
         {
-            for (int i = 0; i < Players.Count; i++)
-            {
-                if (PlayerModelsIndex.Count > i && PlayerModels.ContainsKey(PlayerModelsIndex[i]))
-                    Players[i].CurrentPlayerModel = PlayerModelsIndex[i];
-            }
+            if (Players.Count > 0)
+                for (int i = 0; i < Players.Count; i++)
+                {
+                    if (PlayerModelsIndex.Count > i && PlayerModels.ContainsKey(PlayerModelsIndex[i]) && Players[i] != null)
+                        Players[i].CurrentPlayerModel = PlayerModelsIndex[i];
+                }
         }
     }
 }
