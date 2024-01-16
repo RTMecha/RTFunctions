@@ -701,7 +701,7 @@ namespace RTFunctions.Functions.Components.Player
                 var cameraToViewportPoint = Camera.main.WorldToViewportPoint(player.transform.position);
                 cameraToViewportPoint.x = Mathf.Clamp(cameraToViewportPoint.x, 0f, 1f);
                 cameraToViewportPoint.y = Mathf.Clamp(cameraToViewportPoint.y, 0f, 1f);
-                if (Camera.main.orthographicSize > 0f && (!includeNegativeZoom || Camera.main.orthographicSize < 0f))
+                if (Camera.main.orthographicSize > 0f && (!includeNegativeZoom || Camera.main.orthographicSize < 0f) && CustomPlayer)
                 {
                     float maxDistanceDelta = Time.deltaTime * 1500f;
                     player.transform.position = Vector3.MoveTowards(lastPos, Camera.main.ViewportToWorldPoint(cameraToViewportPoint), maxDistanceDelta);
