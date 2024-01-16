@@ -136,6 +136,11 @@ namespace RTFunctions.Functions.Data.Player
                     alphaPlayer.basePart.name = "Alpha";
                     alphaPlayer.guiPart.active = true;
                     alphaPlayer.guiPart.mode = GUI.GUIHealthMode.Images;
+                    alphaPlayer.headPart.scale = new Vector2(1.1f, 1f);
+                    alphaPlayer.headPart.Trail.emitting = true;
+                    alphaPlayer.headPart.Trail.time = 0.3f;
+                    alphaPlayer.headPart.Trail.startWidth = 1f;
+                    alphaPlayer.headPart.Trail.endWidth = 1f;
 
                     for (int i = 0; i < alphaPlayer.tailParts.Count; i++)
                     {
