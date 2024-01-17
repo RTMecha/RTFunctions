@@ -285,6 +285,7 @@ namespace RTFunctions.Functions.Data.Player
             jn["gui"] = guiPart.ToJSON();
             jn["face"]["position"] = FacePosition.ToJSON();
             jn["face"]["con_active"] = FaceControlActive.ToString();
+            jn["head"] = headPart.ToJSON();
             jn["boost"] = boostPart.ToJSON();
             jn["pulse"] = pulsePart.ToJSON();
             jn["bullet"] = bulletPart.ToJSON();
@@ -2039,6 +2040,8 @@ namespace RTFunctions.Functions.Data.Player
             {
                 var jn = JSON.Parse("{}");
 
+                jn["active"] = active.ToString();
+
                 if (shape.type != 0)
                     jn["s"] = shape.type.ToString();
                 if (shape.option != 0)
@@ -2054,7 +2057,7 @@ namespace RTFunctions.Functions.Data.Player
 
                 jn["col"]["x"] = color.ToString();
 
-                if (color == 28 && customColor != "FFFFFF")
+                if (color == 24 && customColor != "FFFFFF")
                     jn["col"]["hex"] = customColor;
 
                 if (opacity != 1f)
@@ -2128,10 +2131,10 @@ namespace RTFunctions.Functions.Data.Player
                     trail.endColor = jn["c"]["end"].AsInt;
                 
                 if (jn["c"] != null && !string.IsNullOrEmpty(jn["c"]["starthex"]))
-                    trail.startCustomColor = jn["c"]["hex_start"];
+                    trail.startCustomColor = jn["c"]["starthex"];
                 
                 if (jn["c"] != null && !string.IsNullOrEmpty(jn["c"]["endhex"]))
-                    trail.endCustomColor = jn["c"]["hex_end"];
+                    trail.endCustomColor = jn["c"]["starthex"];
                 
                 if (jn["o"] != null && !string.IsNullOrEmpty(jn["o"]["start"]))
                     trail.startOpacity = jn["o"]["start"].AsFloat;
@@ -3150,9 +3153,9 @@ namespace RTFunctions.Functions.Data.Player
                 for (int i = 0; i < jn["visible"].Count; i++)
                 {
                     var visiblity = new Visiblity();
-                    visiblity.command = jn["cmd"];
-                    visiblity.not = jn["not"].AsBool;
-                    visiblity.value = jn["val"].AsFloat;
+                    visiblity.command = jn["visible"][i]["cmd"];
+                    visiblity.not = jn["visible"][i]["not"].AsBool;
+                    visiblity.value = jn["visible"][i]["val"].AsFloat;
                     customObject.visibilitySettings.Add(visiblity);
                 }
                 
@@ -3178,7 +3181,7 @@ namespace RTFunctions.Functions.Data.Player
 
                 jn["col"]["x"] = color.ToString();
 
-                if (color == 28 && customColor != "FFFFFF")
+                if (color == 24 && customColor != "FFFFFF")
                     jn["col"]["hex"] = customColor;
 
                 if (opacity != 1f)
