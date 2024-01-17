@@ -990,6 +990,272 @@ namespace RTFunctions.Functions.Managers
                     }
                 return s;
             }
+
+            public static string AlphabetBinaryEncrypt(string c)
+            {
+                var t = c;
+                var str = "";
+
+                foreach (var ch in t)
+                {
+                    var pl = ch.ToString();
+                    pl = AlphabetBinaryEncryptChar(ch.ToString());
+                    str += pl + " ";
+                }
+                return str;
+            }
+
+            public static string AlphabetBinaryEncryptChar(string c) => alphabetLowercase.Contains(c.ToLower()) ? binary[alphabetLowercase.IndexOf(c.ToLower())] : c;
+
+            public static string AlphabetByteEncrypt(string c)
+            {
+                var t = c;
+                var str = "";
+
+                foreach (var ch in c.ToLower())
+                {
+                    var pl = ch.ToString();
+                    pl = AlphabetByteEncryptChar(ch);
+                    str += pl + " ";
+                }
+                return str;
+            }
+
+            public static string AlphabetByteEncryptChar(char c) => ((byte)c).ToString();
+
+            public static string AlphabetKevinEncrypt(string c)
+            {
+                var t = c;
+                var str = "";
+
+                foreach (var ch in t)
+                {
+                    var pl = ch.ToString();
+                    pl = AlphabetKevinEncryptChar(ch.ToString());
+                    str += pl;
+                }
+                return str;
+            }
+
+            public static string AlphabetKevinEncryptChar(string c) => alphabetLowercase.Contains(c.ToLower()) ? kevin[alphabetLowercase.IndexOf(c.ToLower())] : c;
+
+            public static string AlphabetA1Z26Encrypt(string c)
+            {
+                var t = c;
+                var str = "";
+                foreach (var ch in t)
+                {
+                    var pl = ch.ToString();
+                    pl = AlphabetA1Z26EncryptChar(ch.ToString());
+                    str += pl + " ";
+                }
+                return str;
+            }
+
+            public static string AlphabetA1Z26EncryptChar(string c) => alphabetLowercase.Contains(c.ToLower()) ? (alphabetLowercase.IndexOf(c.ToLower()) + 1).ToString() : c;
+
+            public static string AlphabetCaesarEncrypt(string c, int offset = 3)
+            {
+                var t = c;
+                var str = "";
+                foreach (var ch in t)
+                {
+                    var pl = ch.ToString();
+                    pl = AlphabetCaesarEncryptChar(ch.ToString(), offset);
+                    str += pl;
+                }
+                return str;
+            }
+
+            public static string AlphabetCaesarEncryptChar(string c, int offset = 3)
+            {
+                var t = c;
+
+                if (alphabetLowercase.Contains(t))
+                {
+                    var index = alphabetLowercase.IndexOf(t) - offset;
+                    if (index < 0)
+                        index += 26;
+
+                    if (index < alphabetLowercase.Count && index >= 0)
+                    {
+                        return alphabetLowercase[index];
+                    }
+                }
+
+                if (alphabetUppercase.Contains(t))
+                {
+                    var index = alphabetUppercase.IndexOf(t) - offset;
+                    if (index < 0)
+                        index += 26;
+
+                    if (index < alphabetUppercase.Count && index >= 0)
+                    {
+                        return alphabetUppercase[index];
+                    }
+                }
+
+                return t;
+            }
+
+            public static string AlphabetAtbashEncrypt(string c)
+            {
+                var t = c;
+                var str = "";
+                foreach (var ch in t)
+                {
+                    var pl = ch.ToString();
+                    pl = AlphabetAtbashEncryptChar(ch.ToString());
+                    str += pl;
+                }
+                return str;
+            }
+
+            public static string AlphabetAtbashEncryptChar(string c)
+            {
+                var t = c;
+
+                if (alphabetLowercase.Contains(t))
+                {
+                    var index = -(alphabetLowercase.IndexOf(t) - alphabetLowercase.Count + 1);
+                    if (index < alphabetLowercase.Count && index >= 0)
+                    {
+                        return alphabetLowercase[index];
+                    }
+                }
+
+                if (alphabetUppercase.Contains(t))
+                {
+                    var index = -(alphabetUppercase.IndexOf(t) - alphabetUppercase.Count + 1);
+                    if (index < alphabetUppercase.Count && index >= 0)
+                    {
+                        return alphabetUppercase[index];
+                    }
+                }
+
+                return t;
+            }
+
+            public static List<string> alphabetLowercase = new List<string>
+            {
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "f",
+                "g",
+                "h",
+                "i",
+                "j",
+                "k",
+                "l",
+                "m",
+                "n",
+                "o",
+                "p",
+                "q",
+                "r",
+                "s",
+                "t",
+                "u",
+                "v",
+                "w",
+                "x",
+                "y",
+                "z"
+            };
+
+            public static List<string> alphabetUppercase = new List<string>
+            {
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G",
+                "H",
+                "I",
+                "J",
+                "K",
+                "L",
+                "M",
+                "N",
+                "O",
+                "P",
+                "Q",
+                "R",
+                "S",
+                "T",
+                "U",
+                "V",
+                "W",
+                "X",
+                "Y",
+                "Z"
+            };
+
+            public static List<string> kevin = new List<string>
+            {
+                "@",
+                "|}",
+                "(",
+                "|)",
+                "[-",
+                "T-",
+                "&",
+                "|-|",
+                "!",
+                "_/",
+                "|<",
+                "|",
+                "^^",
+                "^",
+                "0",
+                "/>",
+                "\\<",
+                "|-",
+                "5",
+                "-|-",
+                "(_)",
+                "\\/",
+                "\\/\\/",
+                "*",
+                "-/",
+                "-/_"
+            };
+
+            public static List<string> binary = new List<string>
+            {
+                "01100001", // a
+			    "01100010", // b
+			    "01100011", // c
+			    "01100100", // d
+			    "01100101", // e
+			    "01100110", // f
+			    "01100111", // g
+			    "01101000", // h
+			    "01001001", // i
+			    "01001001", // i
+			    "01001010", // j
+			    "01001011", // k
+			    "01001100", // l
+			    "01001101", // m
+			    "01001110", // n
+			    "01001111", // o
+			    "01010000", // p
+			    "01010001", // q
+			    "01010010", // r
+			    "01010011", // s
+			    "01010100", // t
+			    "01010101", // u
+			    "01010110", // v
+			    "01010111", // w
+			    "01011000", // x
+			    "01011001", // y
+			    "01011010", // z
+		    };
         }
     }
 }
