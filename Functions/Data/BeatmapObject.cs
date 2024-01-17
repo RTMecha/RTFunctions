@@ -103,7 +103,17 @@ namespace RTFunctions.Functions.Data
 
 		public string parentAdditive = "000";
 
-        public List<Modifier> modifiers = new List<Modifier>();
+		public List<string> tags = new List<string>();
+
+		public new int Depth
+		{
+			get => depth;
+			set => depth = value;
+		}
+
+		public bool background;
+
+		public List<Modifier> modifiers = new List<Modifier>();
         public List<Component> components = new List<Component>();
 
 		public ParticleSystem particleSystem;
@@ -121,14 +131,6 @@ namespace RTFunctions.Functions.Data
         public string stringVariable = "";
 
 		public string originalID;
-
-		public List<string> tags = new List<string>();
-
-		public new int Depth
-        {
-			get => depth;
-			set => depth = value;
-        }
 
 		public bool Alive
         {
