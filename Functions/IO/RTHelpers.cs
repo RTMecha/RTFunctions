@@ -971,6 +971,49 @@ namespace RTFunctions.Functions.IO
 
 		public static bool SearchString(string a, string searchTerm) => a.ToLower().Contains(searchTerm.ToLower()) || string.IsNullOrEmpty(searchTerm);
 
+		public static string GetURL(int type, int site, string link)
+        {
+			bool isInstances = type == 0;
+
+			string result;
+			if (isInstances)
+            {
+				if (InstanceLinks[site].linkFormat.Contains("{1}"))
+                {
+					var split = link.Split(',');
+					result = string.Format(InstanceLinks[site].linkFormat, split[0], split[1]);
+				}
+				else
+				{
+					result = string.Format(InstanceLinks[site].linkFormat, link);
+				}
+			}
+			else
+            {
+				result = UserLinks[site].linkFormat;
+			}
+
+			return result;
+        }
+
+		public static List<DataManager.LinkType> InstanceLinks => new List<DataManager.LinkType>
+		{
+			new DataManager.LinkType("Spotify", "https://open.spotify.com/artist/{0}"),
+			new DataManager.LinkType("SoundCloud", "https://soundcloud.com/{0}"),
+			new DataManager.LinkType("Bandcamp", "https://{0}.bandcamp.com/{1}"),
+			new DataManager.LinkType("YouTube", "https://youtube.com/watch?v={0}"),
+			new DataManager.LinkType("Newgrounds", "https://newgrounds.com/audio/listen/{0}"),
+		};
+
+		public static List<DataManager.LinkType> UserLinks => new List<DataManager.LinkType>
+		{
+			new DataManager.LinkType("Spotify", "https://open.spotify.com/artist/{0}"),
+			new DataManager.LinkType("SoundCloud", "https://soundcloud.com/{0}"),
+			new DataManager.LinkType("Bandcamp", "https://{0}.bandcamp.com"),
+			new DataManager.LinkType("YouTube", "https://youtube.com/c/{0}"),
+			new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/"),
+		};
+
 		/// <summary>
 		/// Assigns both Keyboard and Controller to actions.
 		/// </summary>
@@ -1026,317 +1069,5 @@ namespace RTFunctions.Functions.IO
 			myGameActions.Escape.AddDefaultBinding(new Key[] { Key.Escape });
 			return myGameActions;
 		}
-
-		#region Cipher Encryptions because heck it
-
-		public static string AlphabetBinaryEncrypt(string c)
-		{
-			var t = c;
-			var str = "";
-
-			foreach (var ch in t)
-			{
-				var pl = ch.ToString();
-				pl = AlphabetBinaryEncryptChar(ch.ToString());
-				str += pl + " ";
-			}
-			return str;
-		}
-
-		public static string AlphabetBinaryEncryptChar(string c)
-		{
-			var t = c;
-
-			if (alphabetLowercase.Contains(t.ToLower()))
-			{
-				return binary[alphabetLowercase.IndexOf(t.ToLower())];
-			}
-
-			return t;
-		}
-
-		public static string AlphabetByteEncrypt(string c)
-		{
-			var t = c;
-			var str = "";
-
-			foreach (var ch in t)
-			{
-				var pl = ch.ToString();
-				pl = AlphabetByteEncryptChar(ch.ToString());
-				str += pl + " ";
-			}
-			return str;
-		}
-
-		public static string AlphabetByteEncryptChar(string c)
-		{
-			var t = c;
-
-			char ch = t.ToLower()[0];
-
-			if (alphabetLowercase.Contains(t.ToLower()))
-			{
-				return ((byte)ch).ToString();
-			}
-
-			return t;
-		}
-		
-		public static string AlphabetKevinEncrypt(string c)
-		{
-			var t = c;
-			var str = "";
-
-			foreach (var ch in t)
-			{
-				var pl = ch.ToString();
-				pl = AlphabetKevinEncryptChar(ch.ToString());
-				str += pl;
-			}
-			return str;
-		}
-
-		public static string AlphabetKevinEncryptChar(string c)
-		{
-			var t = c;
-
-			if (alphabetLowercase.Contains(t.ToLower()))
-			{
-				return kevin[alphabetLowercase.IndexOf(t.ToLower())];
-			}
-
-			return t;
-		}
-
-		public static string AlphabetA1Z26Encrypt(string c)
-		{
-			var t = c;
-			var str = "";
-			foreach (var ch in t)
-			{
-				var pl = ch.ToString();
-				pl = AlphabetA1Z26EncryptChar(ch.ToString());
-				str += pl + " ";
-			}
-			return str;
-		}
-
-		public static string AlphabetA1Z26EncryptChar(string c)
-		{
-			var t = c;
-
-			if (alphabetLowercase.Contains(t.ToLower()))
-			{
-				return (alphabetLowercase.IndexOf(t.ToLower()) + 1).ToString();
-			}
-
-			return t;
-		}
-
-		public static string AlphabetCaesarEncrypt(string c)
-		{
-			var t = c;
-			var str = "";
-			foreach (var ch in t)
-			{
-				var pl = ch.ToString();
-				pl = AlphabetCaesarEncryptChar(ch.ToString());
-				str += pl;
-			}
-			return str;
-		}
-
-		public static string AlphabetCaesarEncryptChar(string c)
-		{
-			var t = c;
-
-			if (alphabetLowercase.Contains(t))
-            {
-				var index = alphabetLowercase.IndexOf(t) - 3;
-				if (index < 0)
-					index += 26;
-
-				if (index < alphabetLowercase.Count && index >= 0)
-				{
-					return alphabetLowercase[index];
-				}
-			}
-
-			if (alphabetUppercase.Contains(t))
-            {
-				var index = alphabetUppercase.IndexOf(t) - 3;
-				if (index < 0)
-					index += 26;
-
-				if (index < alphabetUppercase.Count && index >= 0)
-				{
-					return alphabetUppercase[index];
-				}
-			}
-
-			return t;
-		}
-
-		public static string AlphabetAtbashEncrypt(string c)
-        {
-			var t = c;
-			var str = "";
-			foreach (var ch in t)
-            {
-				var pl = ch.ToString();
-                pl = AlphabetAtbashEncryptChar(ch.ToString());
-				str += pl;
-            }
-			return str;
-        }
-
-		public static string AlphabetAtbashEncryptChar(string c)
-        {
-			var t = c;
-
-			if (alphabetLowercase.Contains(t))
-            {
-				var index = -(alphabetLowercase.IndexOf(t) - alphabetLowercase.Count + 1);
-				if (index < alphabetLowercase.Count && index >= 0)
-                {
-					return alphabetLowercase[index];
-                }
-            }
-
-			if (alphabetUppercase.Contains(t))
-            {
-				var index = -(alphabetUppercase.IndexOf(t) - alphabetUppercase.Count + 1);
-				if (index < alphabetUppercase.Count && index >= 0)
-                {
-					return alphabetUppercase[index];
-                }
-            }
-
-			return t;
-        }
-
-		public static List<string> alphabetLowercase = new List<string>
-		{
-			"a",
-			"b",
-			"c",
-			"d",
-			"e",
-			"f",
-			"g",
-			"h",
-			"i",
-			"j",
-			"k",
-			"l",
-			"m",
-			"n",
-			"o",
-			"p",
-			"q",
-			"r",
-			"s",
-			"t",
-			"u",
-			"v",
-			"w",
-			"x",
-			"y",
-			"z"
-		};
-
-		public static List<string> alphabetUppercase = new List<string>
-		{
-			"A",
-			"B",
-			"C",
-			"D",
-			"E",
-			"F",
-			"G",
-			"H",
-			"I",
-			"J",
-			"K",
-			"L",
-			"M",
-			"N",
-			"O",
-			"P",
-			"Q",
-			"R",
-			"S",
-			"T",
-			"U",
-			"V",
-			"W",
-			"X",
-			"Y",
-			"Z"
-		};
-
-		public static List<string> kevin = new List<string>
-		{
-			"@",
-			"|}",
-			"(",
-			"|)",
-			"[-",
-			"T-",
-			"&",
-			"|-|",
-			"!",
-			"_/",
-			"|<",
-			"|",
-			"^^",
-			"^",
-			"0",
-			"/>",
-			"\\<",
-			"|-",
-			"5",
-			"-|-",
-			"(_)",
-			"\\/",
-			"\\/\\/",
-			"*",
-			"-/",
-			"-/_"
-		};
-
-		public static List<string> binary = new List<string>
-		{
-			"01100001", // a
-			"01100010", // b
-			"01100011", // c
-			"01100100", // d
-			"01100101", // e
-			"01100110", // f
-			"01100111", // g
-			"01101000", // h
-			"01001001", // i
-			"01001001", // i
-			"01001010", // j
-			"01001011", // k
-			"01001100", // l
-			"01001101", // m
-			"01001110", // n
-			"01001111", // o
-			"01010000", // p
-			"01010001", // q
-			"01010010", // r
-			"01010011", // s
-			"01010100", // t
-			"01010101", // u
-			"01010110", // v
-			"01010111", // w
-			"01011000", // x
-			"01011001", // y
-			"01011010", // z
-		};
-
-        #endregion
     }
 }
