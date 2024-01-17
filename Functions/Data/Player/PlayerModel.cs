@@ -3219,15 +3219,15 @@ namespace RTFunctions.Functions.Data.Player
 
             public int parent;
 
-            public float positionOffset;
+            public float positionOffset = 1f;
 
-            public float scaleOffset;
+            public float scaleOffset = 1f;
 
-            public float rotationOffset;
+            public float rotationOffset = 1f;
 
-            public bool scaleParent;
+            public bool scaleParent = true;
 
-            public bool rotationParent;
+            public bool rotationParent = true;
 
             public bool requireAll;
 
