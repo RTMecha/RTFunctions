@@ -363,7 +363,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 try
                 {
-                    if (EditorManager.inst && !beatmapObject.fromPrefab)
+                    if (EditorManager.inst && (!beatmapObject.fromPrefab || shape != 9))
                     {
                         var obj = visualObject.AddComponent<RTObject>();
                         obj.SetObject((Data.BeatmapObject)beatmapObject);
