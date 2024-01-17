@@ -22,7 +22,7 @@ namespace RTFunctions.Functions.Managers
 			Background // Renders at a set spot.
         }
 
-		public RenderType renderType = RenderType.Camera;
+		public RenderType renderType = RenderType.Background;
 
 		public VideoPlayer videoPlayer;
 
@@ -51,7 +51,7 @@ namespace RTFunctions.Functions.Managers
 			videoObject.transform.SetParent(SystemManager.inst.transform);
 			videoPlayer = videoObject.AddComponent<VideoPlayer>();
 			videoPlayer.targetCamera = Camera.main;
-			videoPlayer.renderMode = FunctionsPlugin.VideoBackgroundRenderType.Value == RenderType.Camera ? VideoRenderMode.CameraFarPlane : VideoRenderMode.MaterialOverride;
+			videoPlayer.renderMode = renderType == RenderType.Camera ? VideoRenderMode.CameraFarPlane : VideoRenderMode.MaterialOverride;
 			videoPlayer.source = VideoSource.VideoClip;
 			videoPlayer.targetCameraAlpha = 1f;
 			videoPlayer.timeSource = VideoTimeSource.GameTimeSource;
@@ -160,7 +160,7 @@ namespace RTFunctions.Functions.Managers
 			}
 
 			Debug.Log($"{className}Playing Video from {url}");
-			videoTexture?.SetActive(FunctionsPlugin.VideoBackgroundRenderType.Value == RenderType.Background);
+			videoTexture?.SetActive(renderType == RenderType.Background);
 			videoPlayer.enabled = true;
 			videoPlayer.targetCameraAlpha = alpha;
 			videoPlayer.source = VideoSource.Url;
