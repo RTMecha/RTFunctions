@@ -17,6 +17,8 @@ namespace RTFunctions.Functions.Managers
             inst = this;
             perspectiveCam = GameManager.inst.CameraPerspective.GetComponent<Camera>();
             postProcessLayer = Camera.main.gameObject.GetComponent<PostProcessLayer>();
+            extraBG = GameObject.Find("ExtraBG").transform;
+            video = extraBG.GetChild(0);
             if (RTVideoManager.inst)
             {
                 RTVideoManager.inst.SetCamera(perspectiveCam);
@@ -25,5 +27,7 @@ namespace RTFunctions.Functions.Managers
 
         public Camera perspectiveCam;
         public PostProcessLayer postProcessLayer;
+        public Transform extraBG;
+        public Transform video;
     }
 }
