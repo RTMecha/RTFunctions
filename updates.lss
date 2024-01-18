@@ -1,3 +1,9 @@
+1.9.0 > [Jan 18, 2024]
+- Reworked a ton of player data so it's more consistent with the other data.
+- Video backgrounds are back! But only usable in the editor for now, since they were really annoying to implement. Though, I do plan on adding two new event keyframe types for this thing so you can animate it around lol
+- Added Player Shape. Only has default models right now, but will have the custom ones if I can figure that out.
+- Planning some more Beatmap Object features, such as Render Layer (Foreground & Background) and Object Tags.
+- Added Zen Mode in Editor true or false for EditorManagement to set with its configs.
 1.8.10 > [Jan 13, 2024]
 - Added Tags to the internal data for Beatmap Objects. This will be used for ObjectModifiers and some editor stuff when I fully implement this.
 - Added Autokill Type and Autokill Offset to Prefab Objects. Now you can have every object in a Prefab Object autokill at a specific time, assuming they're still alive then.
@@ -67,3 +73,81 @@ Keep in mind homing is still early stage so it might not work the best in some w
 - Added new parent settings.
 - Added Low Detail Mode for objects.
 - Tons of optimizations and bug fixes.
+1.6.1 > [Nov 2, 2023]
+- Patch release for testing PA Launcher.
+1.6.0 > [Oct 25, 2023]
+- Added a new read / write system I'm planning on using for future updates to other mods.
+- Added a Level Combiner for EditorManagement to use.
+1.5.5 > [Oct 21, 2023]
+- Added animation system for level coders to use.
+1.5.4 > [Oct 21, 2023]
+- Fixed YouTube linktype (now that the YouTube link formatting has been updated).
+- Fixed 3D rotation conflict with reactive rotation.
+1.5.3 > [Oct 16, 2023]
+- Fixed an issue with 3D rotation for background objects.
+- Added some values (like Solid ObjectType and Custom ReactiveType) to this mod rather than ObjectModifiers.
+- Moved Image Object functionality to this mod. You still need CustomShapes to use it, however.
+- Hopefully fixed some bugs with objects having their parents set to nothing, causing them to just appear at 0, 0 (it's especially noticeable when it happens to a text object, as the text will be set to "IDK")
+1.5.2 > [Oct 13, 2023]
+- Added Fade Color to Background Objects.
+- Added X and Y rotation to Background Objects.
+- Fixed random scale Y not being set issue.
+1.5.1 > [Oct 12, 2023]
+- Extended original background system complete with custom shapes (only up to triangle exist rn), custom reactive settings, Z scale and iterations (how many shades a bg has)
+- Moved Camera parenting code to here. (originally from ObjectModifiers)
+- Created a new shape system.
+- Slowly figuring out prefab modifiers.
+1.5.0 > [oct 9, 2023]
+- Completely integrated the Catalyst Object Optimization system so levels should be a lot smoother now :D
+Huge thanks to Reimnop for allowing me to use their optimized object system.
+1.4.0 > [Sep 19, 2023]
+- Added downloading files over network, laying the groundwork for a future online arcade system.
+- Added a Code Evaluator which converts text into workable code. (Based on UnityExplorer https://github.com/sinai-dev/UnityExplorer and RuntimeUnityEditor https://github.com/ManlyMarco/RuntimeUnityEditor)
+- Added Controller Rumble / Vibrate config option.
+1.3.2 > [Sep 10, 2023]
+- Added Prefab Repeating. (This always existed in the prefab object code but went unused. It repeats every object in the prefab by a set time offset and a set count.)
+- Trying to fix the Objects storage system so it doesn't lag out levels like Feral and Black Box Warrior.
+- Added Catalyst animation system.
+1.3.1 > [Aug 28, 2023]
+- Added EventsCore type since some mods need it.
+1.3.0 > [Aug 28, 2023]
+- Moved some code around, so all of my mods will need to be updated to use.
+- Fixed some bugs and added some internal UI stuff.
+1.2.3 > [Aug 18, 2023]
+- Added a screenshot notification letting you know a screenshot was taken.
+- Added a bunch of BepInEx configs that allow you to modify the usual PA settings anywhere! (Volume, Resolution, etc)
+1.2.2 > [Aug 16, 2023]
+- Fixed an issue with upgrading unmodded levels.
+- QuickElement Effects loading bug now fixed.
+1.2.1 > [Aug 11, 2023]
+- Added a mod compatibility class to share data between each mod.
+1.2.0 > [Aug 11, 2023]
+- Custom QuickElements located in the beatmaps/quickelements folder can now be loaded. Two example files and a list of the default quickelements have been provided. (hopefully)
+1.1.2 > [Aug 4, 2023]
+- Added EventsCore loading.
+- Started working on QuickElements loading.
+1.1.1 > [Jul 23, 2023]
+- Fixed child tree missing bug.
+1.1.0 > [Jul 18, 2023]
+- Added QuickElement stuff.
+- Added more compatibility for mods.
+- Fixed a bug with prefabs and copied objects not saving opacity values.
+- Added escaping the pause menu with the escape button.
+- Added secret encryption thingies.
+- Game now runs in background.
+- Added two key config options that open the respective Project Arrhythmia folder (application folder / appdata locallow folder).
+1.0.5 > [Jul 15, 2023]
+- Screen scale fix for CreativePlayers. Will be implementing this to other mods later so they can use it.
+1.0.4 > [Jul 13, 2023]
+- Fixed hexagon collision.
+1.0.3 > [Jul 13, 2023]
+- Ignore the last RTFunctions update, THIS is more optimized!
+1.0.2 > [Jul 13, 2023]
+- Optimized Object Storage.
+1.0.1 > [Jul 11, 2023]
+- Removed objects listing for now since it didn't quite work that well. I'll rework it later so it works better and so my other mods can use it to be better optimized.
+- Fixed an issue with Arcade Game Speed being increased every time, should now update once.
+- Hexagons had their collisions set to solid, so I fixed that. This wasn't patched so unfortunately it was not fixed.
+1.0.0 > [Jul 10, 2023]
+- Moved all base functionality and loading functionality to this mod.
+- Added extra game speeds: 0.1x, 2.0x, 3.0x.
