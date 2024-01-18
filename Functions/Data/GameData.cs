@@ -317,6 +317,8 @@ namespace RTFunctions.Functions.Data
 			"player",
 			"follow_player",
 			"audio",
+			//"vidbg_p",
+			//"vidbg",
 		};
 		
 		public static List<BaseEventKeyframe> DefaultKeyframes = new List<BaseEventKeyframe>
@@ -550,6 +552,35 @@ namespace RTFunctions.Functions.Data
                 },
 				id = LSText.randomNumString(8),
 			}, // Audio
+			//new Data.EventKeyframe
+            //{
+            //    eventTime = 0f,
+            //    eventValues = new float[6]
+            //    {
+            //        0f, // Position X
+            //        0f, // Position Y
+            //        0f, // Position Z (make sure to set this to whatever the actual Extra BG position is)
+            //        1f, // Scale X
+            //        1f, // Scale Y
+            //        0f, // Rotation
+            //    },
+            //    id = LSText.randomNumString(8),
+            //}, // Video BG Parent
+			//new Data.EventKeyframe
+            //{
+            //    eventTime = 0f,
+            //    eventValues = new float[7]
+            //    {
+            //        0f, // Position X
+            //        0f, // Position Y
+            //        0f, // Position Z (make sure to set this to whatever the actual video position is)
+            //        1f, // Scale X
+            //        1f, // Scale Y
+            //        0f, // Rotation
+            //        0f, // Render Layer (Foreground / Background)
+            //    },
+            //    id = LSText.randomNumString(8),
+            //}, // Video BG
 		};
 
         public static bool SaveOpacityToThemes { get; set; } = false;

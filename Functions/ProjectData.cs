@@ -512,9 +512,20 @@ namespace RTFunctions.Functions
 					if (jn["audio"] != null)
 						for (int i = 0; i < jn["audio"].Count; i++)
 							allEvents[25].Add(EventKeyframe.Parse(jn["audio"][i], 2));
+
+					//allEvents.Add(new List<BaseEventKeyframe>());
+					//if (jn["vidbg_off"] != null)
+					//	for (int i = 0; i < jn["vidbg_p"].Count; i++)
+					//		allEvents[26].Add(EventKeyframe.Parse(jn["vidbg_off"], 6));
+
+					//allEvents.Add(new List<BaseEventKeyframe>());
+					//if (jn["vidbg"] != null)
+					//	for (int i = 0; i < jn["vidbg"].Count; i++)
+					//		allEvents[27].Add(EventKeyframe.Parse(jn["vidbg"], 7));
 				}
 
 				ClampEventListValues(allEvents, ModCompatibility.mods.ContainsKey("EventsCore") ? 26 : 10);
+				//ClampEventListValues(allEvents, ModCompatibility.mods.ContainsKey("EventsCore") ? 28 : 10);
 
 				if (orderTime)
 					allEvents.ForEach(x => x = x.OrderBy(x => x.eventTime).ToList());
