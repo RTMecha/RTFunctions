@@ -92,6 +92,7 @@ namespace RTFunctions
 		public static ConfigEntry<bool> DiscordShowLevel { get; set; }
 
 		public static ConfigEntry<bool> EnableVideoBackground { get; set; }
+		public static ConfigEntry<bool> RunInBackground { get; set; }
 		//public static ConfigEntry<RTVideoManager.RenderType> VideoBackgroundRenderType { get; set; }
 
 		#endregion
@@ -346,6 +347,7 @@ namespace RTFunctions
 			ScreenshotsPath = Config.Bind("Game", "Screenshot Path", "screenshots", "The path to save screenshots to.");
 			ScreenshotKey = Config.Bind("Game", "Screenshot Key", KeyCode.P, "The key to press to take a screenshot.");
 			AntiAliasing = Config.Bind("Game", "Anti-Aliasing", true, "If antialiasing is on or not.");
+			RunInBackground = Config.Bind("Game", "Run In Background", true, "If you want the game to continue playing when minimized.");
 			IncreasedClipPlanes = Config.Bind("Game", "Camera Clip Planes", true, "Increases the clip panes to a very high amount, allowing for object render depth to go really high or really low.");
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
 			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F3, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
@@ -510,8 +512,7 @@ namespace RTFunctions
 			RTHelpers.screenScale = (float)Screen.width / 1920f;
 			RTHelpers.screenScaleInverse = 1f / RTHelpers.screenScale;
 
-			if (!Application.runInBackground)
-				Application.runInBackground = true;
+			Application.runInBackground = RunInBackground.Value;
 
 			if (!LSHelpers.IsUsingInputField())
 			{
