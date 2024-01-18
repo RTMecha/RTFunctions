@@ -37,6 +37,7 @@ namespace RTFunctions.Functions.Components.Player
         //player-complete/trail/2
         //player-complete/trail/3
 
+        public static bool ZenModeInEditor { get; set; }
         public static bool ZenEditorIncludesSolid { get; set; }
         public static bool ShowNameTags { get; set; }
 
@@ -1309,25 +1310,25 @@ namespace RTFunctions.Functions.Components.Player
 
         public void OnChildTriggerEnter(Collider2D _other)
         {
-            if (CanTakeDamage && !isBoosting && CollisionCheck(_other))
+            if (CanTakeDamage && (EditorManager.inst == null || !ZenModeInEditor) && !isBoosting && CollisionCheck(_other))
                 PlayerHit();
         }
 
         public void OnChildTriggerEnterMesh(Collider _other)
         {
-            if (CanTakeDamage && !isBoosting && CollisionCheck(_other))
+            if (CanTakeDamage && (EditorManager.inst == null || !ZenModeInEditor) && !isBoosting && CollisionCheck(_other))
                 PlayerHit();
         }
 
         public void OnChildTriggerStay(Collider2D _other)
         {
-            if (CanTakeDamage && CollisionCheck(_other))
+            if (CanTakeDamage && (EditorManager.inst == null || !ZenModeInEditor) && CollisionCheck(_other))
                 PlayerHit();
         }
 
         public void OnChildTriggerStayMesh(Collider _other)
         {
-            if (CanTakeDamage && CollisionCheck(_other))
+            if (CanTakeDamage && (EditorManager.inst == null || !ZenModeInEditor) && CollisionCheck(_other))
                 PlayerHit();
         }
 
