@@ -19,9 +19,14 @@ namespace RTFunctions.Functions.Managers
             postProcessLayer = Camera.main.gameObject.GetComponent<PostProcessLayer>();
             extraBG = GameObject.Find("ExtraBG").transform;
             video = extraBG.GetChild(0);
-            if (RTVideoManager.inst)
+
+            try
             {
-                RTVideoManager.inst.SetCamera(perspectiveCam);
+                bgMaterial = BackgroundManager.inst.backgroundPrefab.GetComponent<MeshRenderer>().material;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex.ToString());
             }
         }
 
@@ -29,5 +34,6 @@ namespace RTFunctions.Functions.Managers
         public PostProcessLayer postProcessLayer;
         public Transform extraBG;
         public Transform video;
+        public Material bgMaterial;
     }
 }
