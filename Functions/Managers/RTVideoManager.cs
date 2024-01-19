@@ -50,10 +50,10 @@ namespace RTFunctions.Functions.Managers
 			var videoObject = new GameObject("VideoPlayer");
 			videoObject.transform.SetParent(SystemManager.inst.transform);
 			videoPlayer = videoObject.AddComponent<VideoPlayer>();
-			videoPlayer.targetCamera = Camera.main;
+			//videoPlayer.targetCamera = Camera.main;
 			videoPlayer.renderMode = renderType == RenderType.Camera ? VideoRenderMode.CameraFarPlane : VideoRenderMode.MaterialOverride;
 			videoPlayer.source = VideoSource.VideoClip;
-			videoPlayer.targetCameraAlpha = 1f;
+			//videoPlayer.targetCameraAlpha = 1f;
 			videoPlayer.timeSource = VideoTimeSource.GameTimeSource;
 			videoPlayer.audioOutputMode = VideoAudioOutputMode.None;
 			videoPlayer.isLooping = false;
@@ -99,12 +99,6 @@ namespace RTFunctions.Functions.Managers
 			prevTime = AudioManager.inst.CurrentAudioSource.time;
 			prevPitch = AudioManager.inst.CurrentAudioSource.pitch;
 		}
-
-		public void SetCamera(Camera camera)
-        {
-			videoPlayer.targetCamera = camera;
-			camera.cullingMask = -1;
-        }
 
 		public void SetType(RenderType renderType)
 		{
