@@ -1,3 +1,6 @@
+1.9.1 > [Jan 19, 2024]
+- Fully implemented Render Types (Foreground / Background), so objects can now be rendered in the 3D BG layer.
+- Fixed a bug with Video BG that caused objects to double render in both FG and BG.
 1.9.0 > [Jan 18, 2024]
 - Reworked a ton of player data so it's more consistent with the other data.
 - Video backgrounds are back! But only usable in the editor for now, since they were really annoying to implement. Though, I do plan on adding two new event keyframe types for this thing so you can animate it around lol
