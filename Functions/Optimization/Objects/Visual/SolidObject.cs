@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+using RTFunctions.Functions.Managers;
+
 namespace RTFunctions.Functions.Optimization.Objects.Visual
 {
     /// <summary>
@@ -15,7 +17,7 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
         Material material;
         readonly float opacity;
 
-        public SolidObject(GameObject gameObject, Transform top, float opacity, bool hasCollider, bool solid = false)
+        public SolidObject(GameObject gameObject, Transform top, float opacity, bool hasCollider, bool solid = false, bool background = false)
         {
             GameObject = gameObject;
             Top = top;
@@ -24,6 +26,11 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
 
             Renderer = gameObject.GetComponent<Renderer>();
             Renderer.enabled = true;
+            if (background)
+            {
+                GameObject.layer = 9;
+                Renderer.material = GameStorageManager.inst.bgMaterial;
+            }
             material = Renderer.material;
 
             Collider = gameObject.GetComponent<Collider2D>();

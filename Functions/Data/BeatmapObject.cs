@@ -314,7 +314,8 @@ namespace RTFunctions.Functions.Data
 				integerVariable = copyVariables ? orig.integerVariable : 0,
 				floatVariable = copyVariables ? orig.floatVariable : 0f,
 				stringVariable = copyVariables ? orig.stringVariable : "",
-				tags = orig.tags.Clone()
+				tags = orig.tags.Clone(),
+				background = orig.background
 			};
 
 			for (int i = 0; i < beatmapObject.events.Count; i++)
@@ -523,6 +524,9 @@ namespace RTFunctions.Functions.Data
 			if (jn["d"] != null)
 				beatmapObject.depth = jn["d"].AsInt;
 
+			if (jn["rdt"] != null)
+				beatmapObject.background = jn["rdt"].AsInt == 1;
+
 			if (jn["empty"] != null)
 				beatmapObject.objectType = jn["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal;
 			else if (jn["h"] != null)
@@ -624,6 +628,7 @@ namespace RTFunctions.Functions.Data
 			jn["p"] = parent.ToString();
 
 			jn["d"] = Depth.ToString();
+			jn["rdt"] = (background ? 1 : 0).ToString();
 
 			if (LDM)
 				jn["ldm"] = LDM.ToString();

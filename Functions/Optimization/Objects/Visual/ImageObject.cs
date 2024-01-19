@@ -23,7 +23,7 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
 
         public string Path { get; set; }
 
-        public ImageObject(GameObject gameObject, Transform top, float opacity, string text)
+        public ImageObject(GameObject gameObject, Transform top, float opacity, string text, bool background)
         {
             GameObject = gameObject;
             Top = top;
@@ -31,6 +31,12 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
 
             if (GameObject.TryGetComponent(out Renderer renderer))
                 Renderer = renderer;
+
+            if (background)
+            {
+                GameObject.layer = 9;
+                //Renderer.material = GameStorageManager.inst.bgMaterial;
+            }
 
             if (Renderer)
                 material = Renderer.material;

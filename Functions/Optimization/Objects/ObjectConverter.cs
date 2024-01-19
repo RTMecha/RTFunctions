@@ -351,15 +351,16 @@ namespace RTFunctions.Functions.Optimization.Objects
                                    beatmapObject.objectType == ObjectType.Decoration;
 
                 bool isSolid = beatmapObject.objectType == (ObjectType)4;
+                bool isBackground = beatmapObject is Data.BeatmapObject moddedObject1 && moddedObject1.background;
 
                 // 4 = text object
                 // 6 = image object
                 // 9 = player object
                 VisualObject visual =
-                    beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text) :
-                    beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text) :
+                    beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground) :
+                    beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground) :
                     beatmapObject.shape == 9 ? new PlayerObject(visualObject, top.transform) :
-                    new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid);
+                    new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid, isBackground);
 
                 try
                 {

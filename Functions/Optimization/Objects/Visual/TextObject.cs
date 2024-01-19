@@ -18,7 +18,7 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
 
         public string Text { get; set; }
 
-        public TextObject(GameObject gameObject, Transform top, float opacity, string text)
+        public TextObject(GameObject gameObject, Transform top, float opacity, string text, bool background)
         {
             GameObject = gameObject;
             Top = top;
@@ -26,6 +26,12 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
 
             if (GameObject.TryGetComponent(out Renderer renderer))
                 Renderer = renderer;
+
+            if (background)
+            {
+                GameObject.layer = 9;
+                //Renderer.material = GameStorageManager.inst.bgMaterial;
+            }
 
             TextMeshPro = gameObject.GetComponent<TextMeshPro>();
             TextMeshPro.enabled = true;
