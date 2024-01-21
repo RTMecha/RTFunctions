@@ -130,6 +130,10 @@ namespace RTFunctions.Functions.Data
         public float floatVariable;
         public string stringVariable = "";
 
+		public Vector3 reactivePositionOffset = Vector3.zero;
+		public Vector3 reactiveScaleOffset = Vector3.zero;
+		public float reactiveRotationOffset = 0f;
+
 		public string originalID;
 
 		public bool Alive

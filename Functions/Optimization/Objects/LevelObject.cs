@@ -318,7 +318,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 {
                     if (parentObject.Position3DSequence != null)
                     {
-                        var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset));
+                        var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset)) + parentObject.BeatmapObject.reactivePositionOffset;
 
                         float z = depth * 0.0005f + (value.z / 10f);
 
@@ -334,7 +334,8 @@ namespace RTFunctions.Functions.Optimization.Objects
                 // If last parent is scale parented, animate scale
                 if (animateScale)
                 {
-                    var value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - (scaleOffset + scaleAddedOffset));
+                    var r = parentObject.BeatmapObject.reactiveScaleOffset + parentObject.BeatmapObject.reactiveScaleOffset;
+                    var value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - (scaleOffset + scaleAddedOffset)) + new Vector2(r.x, r.y);
                     parentObject.Transform.localScale = new Vector3(value.x * scaleParallax, value.y * scaleParallax, 1.0f);
                 }
 
@@ -342,7 +343,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 if (animateRotation)
                 {
                     parentObject.Transform.localRotation = Quaternion.AngleAxis(
-                        parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - (rotationOffset + rotationAddedOffset)) * rotationParallax,
+                        (parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - (rotationOffset + rotationAddedOffset)) + parentObject.BeatmapObject.reactiveRotationOffset) * rotationParallax,
                         Vector3.forward);
                 }
 

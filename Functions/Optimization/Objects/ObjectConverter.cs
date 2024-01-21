@@ -206,6 +206,13 @@ namespace RTFunctions.Functions.Optimization.Objects
             if (shape == 9)
                 baseObject.SetActive(true);
 
+            if (beatmapObject is Data.BeatmapObject modObject)
+            {
+                modObject.reactivePositionOffset = Vector3.zero;
+                modObject.reactiveScaleOffset = Vector3.zero;
+                modObject.reactiveRotationOffset = 0f;
+            }
+
             try
             {
 
@@ -479,7 +486,8 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                         GameObject = gameObject,
                         Transform = gameObject.transform,
-                        ID = beatmapObject.id
+                        ID = beatmapObject.id,
+                        BeatmapObject = (Data.BeatmapObject)beatmapObject
                     };
                 else
                 {
@@ -517,7 +525,9 @@ namespace RTFunctions.Functions.Optimization.Objects
                         ParentParallaxRotation = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parallaxSettings[2] : 1f,
 
                         GameObject = gameObject,
-                        Transform = gameObject.transform
+                        Transform = gameObject.transform,
+                        ID = beatmapObject.id,
+                        BeatmapObject = (Data.BeatmapObject)beatmapObject
                     };
                 } // In case the CashedSequence is null, set defaults.
             }

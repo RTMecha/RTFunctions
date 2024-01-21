@@ -32,5 +32,6 @@ namespace RTFunctions.Functions.Optimization.Objects
         public GameObject GameObject { get; set; }
         public Transform Transform { get; set; }
         public string ID { get; set; }
+        public Data.BeatmapObject BeatmapObject { get; set; }
     }
 }
