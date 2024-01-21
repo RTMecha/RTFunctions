@@ -418,6 +418,8 @@ namespace RTFunctions.Functions.Components.Player
                 {
                     var superTrail = new GameObject("super-trail");
                     superTrail.transform.SetParent(head.transform);
+                    superTrail.transform.localPosition = Vector3.zero;
+                    superTrail.transform.localScale = Vector3.one;
                     superTrail.layer = 8;
 
                     var trailRenderer = superTrail.AddComponent<TrailRenderer>();
@@ -432,6 +434,8 @@ namespace RTFunctions.Functions.Components.Player
                 {
                     var superParticles = new GameObject("super-particles");
                     superParticles.transform.SetParent(head.transform);
+                    superParticles.transform.localPosition = Vector3.zero;
+                    superParticles.transform.localScale = Vector3.one;
                     superParticles.layer = 8;
 
                     var particleSystem = superParticles.AddComponent<ParticleSystem>();
@@ -460,6 +464,8 @@ namespace RTFunctions.Functions.Components.Player
                 {
                     var superTrail = new GameObject("boost-trail");
                     superTrail.transform.SetParent(boost.transform.parent);
+                    superTrail.transform.localPosition = Vector3.zero;
+                    superTrail.transform.localScale = Vector3.one;
                     superTrail.layer = 8;
 
                     var trailRenderer = superTrail.AddComponent<TrailRenderer>();
@@ -474,6 +480,8 @@ namespace RTFunctions.Functions.Components.Player
                 {
                     var superParticles = new GameObject("boost-particles");
                     superParticles.transform.SetParent(boost.transform.parent);
+                    superParticles.transform.localPosition = Vector3.zero;
+                    superParticles.transform.localScale = Vector3.one;
                     superParticles.layer = 8;
 
                     var particleSystem = superParticles.AddComponent<ParticleSystem>();
@@ -505,6 +513,8 @@ namespace RTFunctions.Functions.Components.Player
                     {
                         var superParticles = new GameObject("tail-particles");
                         superParticles.transform.SetParent(playerObjects[string.Format("Tail {0} Base", i)].gameObject.transform);
+                        superParticles.transform.localPosition = Vector3.zero;
+                        superParticles.transform.localScale = Vector3.one;
                         superParticles.layer = 8;
 
                         var particleSystem = superParticles.AddComponent<ParticleSystem>();
