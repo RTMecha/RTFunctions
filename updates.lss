@@ -1,3 +1,5 @@
+1.9.2 > [Jan 22, 2024]
+- Objects rendered in the background now have their Z position set so you can actually see it when you change an object's render type.
 1.9.1 > [Jan 19, 2024]
 - Fully implemented Render Types (Foreground / Background), so objects can now be rendered in the 3D BG layer.
 - Fixed a bug with Video BG that caused objects to double render in both FG and BG.
