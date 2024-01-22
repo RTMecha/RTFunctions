@@ -115,78 +115,6 @@ namespace RTFunctions.Functions.Optimization.Objects
             }
         }
 
-        public LevelObject(string _id, float startTime, float killTime, Sequence<Color> colorSequence, float depth, List<LevelParentObject> parentObjects, VisualObject visualObject, Sequence<float> _os, Sequence<float> _hs, Sequence<float> _ss, Sequence<float> _vs)
-        {
-            ID = _id;
-            StartTime = startTime;
-            KillTime = killTime;
-            this.colorSequence = colorSequence;
-            this.depth = depth;
-            this.parentObjects = parentObjects;
-            this.visualObject = visualObject;
-            opacitySequence = _os;
-            hueSequence = _hs;
-            satSequence = _ss;
-            valSequence = _vs;
-
-            try
-            {
-                //var list = new List<Transform>();
-                //var tf1 = visualObject.GameObject.transform;
-
-                //while (tf1.parent != null && tf1.parent.gameObject.name != "GameObjects")
-                //{
-                //    tf1 = tf1.parent;
-                //}
-
-                //list.Add(tf1);
-
-                //while (tf1.childCount != 0 && tf1.GetChild(0) != null)
-                //{
-                //    tf1 = tf1.GetChild(0);
-                //    list.Add(tf1);
-                //}
-
-                //transformChain = list;
-
-                this.parentObjects.Reverse();
-
-                transformChain.Add(this.parentObjects[0].Transform.parent);
-
-                transformChain.AddRange(this.parentObjects.Select(x => x.Transform));
-
-                this.parentObjects.Reverse();
-
-                if (this.visualObject != null && this.visualObject.GameObject)
-                    transformChain.Add(this.visualObject.GameObject.transform);
-
-                topPositionOffset = transformChain[0].localPosition;
-                topScaleOffset = transformChain[0].localScale;
-                topRotationOffset = transformChain[0].localRotation.eulerAngles;
-
-                var pc = beatmapObject.GetParentChain();
-
-                if (pc != null && pc.Count > 0)
-                {
-                    var beatmapParent = (Data.BeatmapObject)pc[pc.Count - 1];
-
-                    cameraParent = beatmapParent.parent == "CAMERA_PARENT";
-
-                    positionParent = beatmapParent.GetParentType(0);
-                    scaleParent = beatmapParent.GetParentType(1);
-                    rotationParent = beatmapParent.GetParentType(2);
-
-                    positionParentOffset = beatmapParent.parallaxSettings[0];
-                    scaleParentOffset = beatmapParent.parallaxSettings[1];
-                    rotationParentOffset = beatmapParent.parallaxSettings[2];
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"{Updater.className}a\n{ex}");
-            }
-        }
-
         public void SetActive(bool active)
         {
             if (parentObjects.Count > 0)
@@ -219,14 +147,6 @@ namespace RTFunctions.Functions.Optimization.Objects
                 a = -a;
 
                 float b = a >= 0f && a <= 1f ? color.a * a : color.a;
-                //if (a >= 0f && a <= 1f)
-                //{
-                //    b = color.a * a;
-                //}
-                //else
-                //{
-                //    b = color.a;
-                //}
 
                 visualObject.SetColor(LSFunctions.LSColors.fadeColor(ChangeColorHSV(color, hue, sat, val), b));
             }
@@ -240,14 +160,6 @@ namespace RTFunctions.Functions.Optimization.Objects
                 a = -a;
 
                 float b = a >= 0f && a <= 1f ? color.a * a : color.a;
-                //if (a >= 0f && a <= 1f)
-                //{
-                //    b = color.a * a;
-                //}
-                //else
-                //{
-                //    b = color.a;
-                //}
 
                 visualObject.SetColor(LSFunctions.LSColors.fadeColor(color, b));
             }
@@ -263,10 +175,13 @@ namespace RTFunctions.Functions.Optimization.Objects
                 var x = EventManager.inst.cam.transform.position.x;
                 var y = EventManager.inst.cam.transform.position.y;
 
-                transformChain[0].localPosition = (new Vector3(x, y, 0f) * positionParentOffset) + prefabOffsetPosition + topPositionOffset;
+                transformChain[0].localPosition = (new Vector3(x, y, 0f) * positionParentOffset)
+                    + new Vector3(prefabOffsetPosition.x, prefabOffsetPosition.y, beatmapObject.background ? 20f : 0f)
+                    + topPositionOffset;
             }
             else
-                transformChain[0].localPosition = prefabOffsetPosition + topPositionOffset;
+                transformChain[0].localPosition = new Vector3(prefabOffsetPosition.x, prefabOffsetPosition.y, beatmapObject.background ? 20f : 0f)
+                    + topPositionOffset;
 
             if (scaleParent && cameraParent)
             {
