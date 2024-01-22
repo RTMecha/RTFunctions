@@ -23,10 +23,11 @@ namespace RTFunctions.Patchers
 			float scaleZ = backgroundObject.zscale;
 			int depth = backgroundObject.depth;
 
-			var gameObject = Instantiate(__instance.backgroundPrefab, new Vector3(__0.pos.x, __0.pos.y, 32f + backgroundObject.layer * 10f), Quaternion.identity);
+			var gameObject = Instantiate(__instance.backgroundPrefab);
 			gameObject.name = __0.name;
 			gameObject.layer = 9;
 			gameObject.transform.SetParent(__instance.backgroundParent);
+			gameObject.transform.localPosition = new Vector3(__0.pos.x, __0.pos.y, 32f + backgroundObject.layer * 10f);
 			gameObject.transform.localScale = new Vector3(__0.scale.x, __0.scale.y, scaleZ);
 			gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, __0.rot));
 
