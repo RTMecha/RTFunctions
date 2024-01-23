@@ -39,6 +39,7 @@ namespace RTFunctions.Functions.Animation
         };
 
         public static EaseFunction GetEaseFunction(string name) => EaseLookup[name];
+        public static bool HasEaseFunction(string name) => EaseLookup.ContainsKey(name);
 
         const float PI = 3.14159265359f;
         const float PI2 = PI / 2;
