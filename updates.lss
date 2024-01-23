@@ -1,3 +1,7 @@
+1.9.3 > [Jan 23, 2024]
+- Added position, scale and rotation offsets to objects, specifically for ObjectModifiers usage.
+- Changed the way text objects update their text, fixing a bug with an ObjectModifiers modifier.
+- Players that already exist now have their model updated when the model ID is changed.
 1.9.2 > [Jan 22, 2024]
 - Objects rendered in the background now have their Z position set so you can actually see it when you change an object's render type.
 1.9.1 > [Jan 19, 2024]
