@@ -233,7 +233,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 {
                     if (parentObject.Position3DSequence != null)
                     {
-                        var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset)) + parentObject.BeatmapObject.reactivePositionOffset;
+                        var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset)) + parentObject.BeatmapObject.reactivePositionOffset + parentObject.BeatmapObject.positionOffset;
 
                         float z = depth * 0.0005f + (value.z / 10f);
 
@@ -249,17 +249,18 @@ namespace RTFunctions.Functions.Optimization.Objects
                 // If last parent is scale parented, animate scale
                 if (animateScale)
                 {
-                    var r = parentObject.BeatmapObject.reactiveScaleOffset + parentObject.BeatmapObject.reactiveScaleOffset;
+                    var r = parentObject.BeatmapObject.reactiveScaleOffset + parentObject.BeatmapObject.reactiveScaleOffset + parentObject.BeatmapObject.scaleOffset;
                     var value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - (scaleOffset + scaleAddedOffset)) + new Vector2(r.x, r.y);
-                    parentObject.Transform.localScale = new Vector3(value.x * scaleParallax, value.y * scaleParallax, 1.0f);
+                    parentObject.Transform.localScale = new Vector3(value.x * scaleParallax, value.y * scaleParallax, 1.0f + parentObject.BeatmapObject.scaleOffset.z);
                 }
 
                 // If last parent is rotation parented, animate rotation
                 if (animateRotation)
                 {
-                    parentObject.Transform.localRotation = Quaternion.AngleAxis(
+                    var value = Quaternion.AngleAxis(
                         (parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - (rotationOffset + rotationAddedOffset)) + parentObject.BeatmapObject.reactiveRotationOffset) * rotationParallax,
                         Vector3.forward);
+                    parentObject.Transform.localRotation = Quaternion.Euler(value.eulerAngles + parentObject.BeatmapObject.rotationOffset);
                 }
 
                 // Cache parent values to use for next parent

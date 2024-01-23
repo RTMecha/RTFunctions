@@ -134,6 +134,10 @@ namespace RTFunctions.Functions.Data
 		public Vector3 reactiveScaleOffset = Vector3.zero;
 		public float reactiveRotationOffset = 0f;
 
+		public Vector3 positionOffset = Vector3.zero;
+		public Vector3 scaleOffset = Vector3.zero;
+		public Vector3 rotationOffset = Vector3.zero;
+
 		public string originalID;
 
 		public bool Alive

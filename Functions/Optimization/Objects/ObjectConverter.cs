@@ -206,13 +206,6 @@ namespace RTFunctions.Functions.Optimization.Objects
             if (shape == 9)
                 baseObject.SetActive(true);
 
-            if (beatmapObject is Data.BeatmapObject modObject)
-            {
-                modObject.reactivePositionOffset = Vector3.zero;
-                modObject.reactiveScaleOffset = Vector3.zero;
-                modObject.reactiveRotationOffset = 0f;
-            }
-
             try
             {
 

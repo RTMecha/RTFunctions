@@ -790,6 +790,16 @@ namespace RTFunctions.Functions.Optimization
         {
             string id = bm.id;
 
+            if (bm is BeatmapObject modObject)
+            {
+                modObject.reactivePositionOffset = Vector3.zero;
+                modObject.reactiveScaleOffset = Vector3.zero;
+                modObject.reactiveRotationOffset = 0f;
+                modObject.positionOffset = Vector3.zero;
+                modObject.scaleOffset = Vector3.zero;
+                modObject.rotationOffset = Vector3.zero;
+            }
+
             // Recursing updating.
             foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
             {
