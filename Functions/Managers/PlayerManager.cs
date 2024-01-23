@@ -288,7 +288,11 @@ namespace RTFunctions.Functions.Managers
                 for (int i = 0; i < Players.Count; i++)
                 {
                     if (PlayerModelsIndex.Count > i && PlayerModels.ContainsKey(PlayerModelsIndex[i]) && Players[i] != null)
+                    {
                         Players[i].CurrentPlayerModel = PlayerModelsIndex[i];
+                        if (Players[i].Player)
+                            Players[i].Player.PlayerModel = Players[i].PlayerModel;
+                    }
                 }
         }
     }
