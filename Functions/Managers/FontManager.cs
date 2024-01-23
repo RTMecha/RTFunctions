@@ -58,12 +58,13 @@ namespace RTFunctions.Functions.Managers
                 {
                     if (beatmapObject.shape == 4 && beatmapObject.TimeWithinLifespan() && Updater.TryGetObject(beatmapObject, out LevelObject levelObject) && ((TextObject)levelObject.visualObject).TextMeshPro)
                     {
-                        var tmp = ((TextObject)levelObject.visualObject).TextMeshPro;
+                        var visualObject = ((TextObject)levelObject.visualObject);
+                        var tmp = visualObject.TextMeshPro;
 
                         var currentAudioTime = AudioManager.inst.CurrentAudioSource.time;
                         var currentAudioLength = AudioManager.inst.CurrentAudioSource.clip.length;
 
-                        var str = beatmapObject.text;
+                        var str = visualObject.Text;
 
                         #region Audio
 
@@ -445,8 +446,7 @@ namespace RTFunctions.Functions.Managers
 
                         #endregion
 
-                        if (tmp)
-                            tmp.text = str;
+                        visualObject.SetText(str);
                     }
                 }
             }
