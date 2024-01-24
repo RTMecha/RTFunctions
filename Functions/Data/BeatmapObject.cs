@@ -322,7 +322,7 @@ namespace RTFunctions.Functions.Data
 				integerVariable = copyVariables ? orig.integerVariable : 0,
 				floatVariable = copyVariables ? orig.floatVariable : 0f,
 				stringVariable = copyVariables ? orig.stringVariable : "",
-				tags = orig.tags.Clone(),
+				tags = orig.tags.Count > 0 ? orig.tags.Clone() : new List<string>(),
 				background = orig.background
 			};
 
@@ -331,7 +331,7 @@ namespace RTFunctions.Functions.Data
 				beatmapObject.events[i].AddRange(orig.events[i].Select(x => EventKeyframe.DeepCopy((EventKeyframe)x)));
             }
 
-			beatmapObject.modifiers = orig.modifiers.Select(x => Modifier.DeepCopy(x, beatmapObject)).ToList();
+			beatmapObject.modifiers = orig.modifiers.Count > 0 ? orig.modifiers.Select(x => Modifier.DeepCopy(x, beatmapObject)).ToList() : new List<Modifier>();
 			return beatmapObject;
 		}
 
