@@ -1,3 +1,6 @@
+1.9.4 > [Jan 25, 2024]
+- Fixed a bug with generating prefab objects that sometimes broke the game.
+- Text updating now includes <themeObject=0>, <themeBGs=0>, <themeFX=0>, <themePlayers=0>, <themeBG>, <themeGUI> and <themeTail> formatting, so you can now have specific parts of a text object use a specific color while still allowing it to update the color.
 1.9.3 > [Jan 23, 2024]
 - Added position, scale and rotation offsets to objects, specifically for ObjectModifiers usage.
 - Changed the way text objects update their text, fixing a bug with an ObjectModifiers modifier.
