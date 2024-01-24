@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 
+using LSFunctions;
+
 using TMPro;
 
 using RTFunctions.Functions.Data;
@@ -379,56 +381,69 @@ namespace RTFunctions.Functions.Managers
 
                         #region Theme
 
-                        //for (int i = 0; i < GameManager.inst.LiveTheme.objectColors.Count; i++)
-                        //{
-                        //    if (str.Contains("<themeObject=" + i.ToString() + ">"))
-                        //    {
-                        //        str = str.Replace("<themeObject=" + i.ToString() + ">", "<#" + LSFunctions.LSColors.ColorToHex(GameManager.inst.LiveTheme.objectColors[i]) + ">");
-                        //    }
-                        //}
+                        // We do a try catch due to an error.
+                        try
+                        {
+                            {
+                                var matchCollection = Regex.Matches(str, "<themeObject=(.*?)>");
 
-                        //{
-                        //    var regex = new Regex(@"<themeObject=(.*?)>");
-                        //    var match = regex.Match(beatmapObject.text);
+                                foreach (var obj in matchCollection)
+                                {
+                                    var match = (Match)obj;
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetObjColor(int.Parse(match.Groups[1].ToString())))}>");
+                                }
+                            }
 
-                        //    if (match.Success && int.TryParse(match.Groups[1].ToString(), out int theme))
-                        //    {
-                        //        theme = Mathf.Clamp(theme, 0, GameManager.inst.LiveTheme.objectColors.Count - 1);
-                        //        str = str.Replace("<themeObject=" + match.Groups[1].ToString() + ">", "<#" + LSFunctions.LSColors.ColorToHex(GameManager.inst.LiveTheme.objectColors[theme]) + ">");
-                        //    }
-                        //}
+                            {
+                                var matchCollection = Regex.Matches(str, "<themeBGs=(.*?)>");
 
-                        //{
-                        //    var regex = new Regex(@"<themeBGs=(.*?)>");
-                        //    var match = regex.Match(beatmapObject.text);
+                                foreach (var obj in matchCollection)
+                                {
+                                    var match = (Match)obj;
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetBGColor(int.Parse(match.Groups[1].ToString())))}>");
+                                }
+                            }
 
-                        //    if (match.Success && int.TryParse(match.Groups[1].ToString(), out int theme))
-                        //    {
-                        //        theme = Mathf.Clamp(theme, 0, GameManager.inst.LiveTheme.backgroundColors.Count - 1);
-                        //        str = str.Replace("<themeBGs=" + match.Groups[1].ToString() + ">", "<#" + LSFunctions.LSColors.ColorToHex(GameManager.inst.LiveTheme.backgroundColors[theme]) + ">");
-                        //    }
-                        //}
+                            {
+                                var matchCollection = Regex.Matches(str, "<themeFX=(.*?)>");
 
-                        //{
-                        //    var regex = new Regex(@"<themePlayers=(.*?)>");
-                        //    var match = regex.Match(beatmapObject.text);
+                                foreach (var obj in matchCollection)
+                                {
+                                    var match = (Match)obj;
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetFXColor(int.Parse(match.Groups[1].ToString())))}>");
+                                }
+                            }
 
-                        //    if (match.Success && int.TryParse(match.Groups[1].ToString(), out int theme))
-                        //    {
-                        //        theme = Mathf.Clamp(theme, 0, GameManager.inst.LiveTheme.playerColors.Count - 1);
-                        //        str = str.Replace("<themePlayers=" + match.Groups[1].ToString() + ">", "<#" + LSFunctions.LSColors.ColorToHex(GameManager.inst.LiveTheme.playerColors[theme]) + ">");
-                        //    }
-                        //}
+                            {
+                                var matchCollection = Regex.Matches(str, "<themePlayers=(.*?)>");
 
-                        //if (beatmapObject.text.Contains("<themeBG>"))
-                        //{
-                        //    str = str.Replace("<themeBG>", LSFunctions.LSColors.ColorToHex(GameManager.inst.LiveTheme.backgroundColor));
-                        //}
+                                foreach (var obj in matchCollection)
+                                {
+                                    var match = (Match)obj;
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetPlayerColor(int.Parse(match.Groups[1].ToString())))}>");
+                                }
+                            }
 
-                        //if (beatmapObject.text.Contains("<themeGUI>"))
-                        //{
-                        //    str = str.Replace("<themeGUI>", LSFunctions.LSColors.ColorToHex(GameManager.inst.LiveTheme.guiColor));
-                        //}
+                            if (beatmapObject.text.Contains("<themeBG>"))
+                            {
+                                str = str.Replace("<themeBG>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.backgroundColor));
+                            }
+
+                            if (beatmapObject.text.Contains("<themeGUI>"))
+                            {
+                                str = str.Replace("<themeGUI>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiColor));
+                            }
+
+                            if (beatmapObject.text.Contains("<themeTail>"))
+                            {
+                                str = str.Replace("<themeTail>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiAccentColor));
+                            }
+
+                        }
+                        catch
+                        {
+
+                        }
 
                         #endregion
 
@@ -438,9 +453,19 @@ namespace RTFunctions.Functions.Managers
                             var regex = new Regex(@"<modifierVariable=(.*?)>");
                             var match = regex.Match(beatmapObject.text);
 
-                            if (match.Success)
+                            if (match.Success && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.name == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
                             {
-                                str = str.Replace("<modifierVariable=" + match.Groups[1].ToString() + ">", ((BeatmapObject)DataManager.inst.gameData.beatmapObjects.Find(x => x.name == match.Groups[1].ToString())).integerVariable.ToString());
+                                str = str.Replace("<modifierVariable=" + match.Groups[1].ToString() + ">", ((BeatmapObject)other).integerVariable.ToString());
+                            }
+                        }
+                        
+                        {
+                            var regex = new Regex(@"<modifierVariableID=(.*?)>");
+                            var match = regex.Match(beatmapObject.text);
+
+                            if (match.Success && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
+                            {
+                                str = str.Replace("<modifierVariableID=" + match.Groups[1].ToString() + ">", ((BeatmapObject)other).integerVariable.ToString());
                             }
                         }
 
