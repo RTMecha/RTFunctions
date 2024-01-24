@@ -595,18 +595,12 @@ namespace RTFunctions.Functions.Optimization
 
             // Checks if prefab exists.
             bool prefabExists = DataManager.inst.gameData.prefabs.FindIndex(x => x.ID == __0.prefabID) != -1;
-            if (!prefabExists)
+            if (string.IsNullOrEmpty(__0.prefabID) || !prefabExists)
             {
                 DataManager.inst.gameData.prefabObjects.RemoveAll(x => x.prefabID == __0.prefabID);
-            }
-
-            //if (!(!string.IsNullOrEmpty(__0.prefabID) && prefabExists))
-            //{
-            //    return;
-            //}
-
-            if (string.IsNullOrEmpty(__0.prefabID) || !prefabExists)
+                //Debug.LogError($"{className}Prefab does not exist, so removing prefab objects.");
                 return;
+            }
 
             float t = 1f;
 
@@ -618,58 +612,64 @@ namespace RTFunctions.Functions.Optimization
             var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == __0.prefabID);
 
             var list = new List<BeatmapObject>();
-            for (int i = 0; i < __0.RepeatCount + 1; i++)
-            {
-                // ids = new Dictionary<string, string>();
-
-                var ids = prefab.objects.ToDictionary(x => x.id, x => LSFunctions.LSText.randomString(16));
-
-                //foreach (var beatmapObject in prefab.objects)
-                //{
-                //    string value = LSFunctions.LSText.randomString(16);
-                //    ids.Add(beatmapObject.id, value);
-                //}
-
-                string iD = __0.ID;
-                foreach (var beatmapObj in prefab.objects)
+            if (prefab.objects.Count > 0)
+                for (int i = 0; i < __0.RepeatCount + 1; i++)
                 {
-                    var beatmapObject = BeatmapObject.DeepCopy((BeatmapObject)beatmapObj, false);
-                    if (ids.ContainsKey(beatmapObj.id))
-                        beatmapObject.id = ids[beatmapObj.id];
+                    var ids = prefab.objects.ToDictionary(x => x.id, x => LSFunctions.LSText.randomString(16));
 
-                    if (ids.ContainsKey(beatmapObj.parent))
-                        beatmapObject.parent = ids[beatmapObj.parent];
-                    else if (DataManager.inst.gameData.beatmapObjects.FindIndex(x => x.id == beatmapObj.parent) == -1)
-                        beatmapObject.parent = "";
-
-                    beatmapObject.active = false;
-                    beatmapObject.fromPrefab = true;
-                    beatmapObject.prefabInstanceID = iD;
-
-                    //beatmapObject.StartTime = __0.StartTime + prefab.Offset + (beatmapObject.StartTime + timeToAdd) * prefabObject.speed;
-
-                    beatmapObject.StartTime = __0.StartTime + prefab.Offset + (beatmapObject.StartTime + timeToAdd) / Mathf.Clamp(prefabObject.speed, 0.1f, MaxFastSpeed);
-
-                    for (int j = 0; j < beatmapObject.events.Count; j++)
+                    string iD = __0.ID;
+                    foreach (var beatmapObj in prefab.objects)
                     {
-                        beatmapObject.events[i].ForEach(x => x.eventTime /= Mathf.Clamp(prefabObject.speed, 0.1f, MaxFastSpeed));
+                        var beatmapObject = BeatmapObject.DeepCopy((BeatmapObject)beatmapObj, false);
+                        try
+                        {
+                            if (ids.ContainsKey(beatmapObj.id))
+                                beatmapObject.id = ids[beatmapObj.id];
+
+                            if (ids.ContainsKey(beatmapObj.parent))
+                                beatmapObject.parent = ids[beatmapObj.parent];
+                            else if (DataManager.inst.gameData.beatmapObjects.FindIndex(x => x.id == beatmapObj.parent) == -1)
+                                beatmapObject.parent = "";
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Debug.LogError($"{className}Failed to set object ID.\n{ex}");
+                        }
+
+                        beatmapObject.active = false;
+                        beatmapObject.fromPrefab = true;
+                        beatmapObject.prefabInstanceID = iD;
+
+                        beatmapObject.StartTime = __0.StartTime + prefab.Offset + (beatmapObject.StartTime + timeToAdd) / Mathf.Clamp(prefabObject.speed, 0.1f, MaxFastSpeed);
+
+                        try
+                        {
+                            if (beatmapObject.events.Count > 0)
+                                for (int j = 0; j < beatmapObject.events.Count; j++)
+                                {
+                                    beatmapObject.events[j].ForEach(x => x.eventTime /= Mathf.Clamp(prefabObject.speed, 0.1f, MaxFastSpeed));
+                                }
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Debug.LogError($"{className}Failed to set event speed.\n{ex}");
+                        }
+
+                        if (prefabObject.autoKillType != PrefabObject.AutoKillType.Regular && __0.StartTime + prefab.Offset + beatmapObject.GetObjectLifeLength(_oldStyle: true) > prefabObject.autoKillOffset)
+                        {
+                            beatmapObject.autoKillType = ObjectAutoKillType.SongTime;
+                            beatmapObject.autoKillOffset = prefabObject.autoKillType == PrefabObject.AutoKillType.StartTimeOffset ? prefabObject.StartTime + prefab.Offset + prefabObject.autoKillOffset : prefabObject.autoKillOffset;
+                        }
+
+                        beatmapObject.prefabID = __0.prefabID;
+
+                        beatmapObject.originalID = beatmapObj.id;
+                        DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
+                        list.Add(beatmapObject);
                     }
 
-                    if (prefabObject.autoKillType != PrefabObject.AutoKillType.Regular && __0.StartTime + prefab.Offset + beatmapObject.GetObjectLifeLength(_oldStyle: true) > prefabObject.autoKillOffset)
-                    {
-                        beatmapObject.autoKillType = ObjectAutoKillType.SongTime;
-                        beatmapObject.autoKillOffset = prefabObject.autoKillType == PrefabObject.AutoKillType.StartTimeOffset ? prefabObject.StartTime + prefab.Offset + prefabObject.autoKillOffset : prefabObject.autoKillOffset;
-                    }
-
-                    beatmapObject.prefabID = __0.prefabID;
-
-                    beatmapObject.originalID = beatmapObj.id;
-                    DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
-                    list.Add(beatmapObject);
+                    timeToAdd += t;
                 }
-
-                timeToAdd += t;
-            }
 
             foreach (var bm in list)
             {
