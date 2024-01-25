@@ -644,7 +644,7 @@ namespace RTFunctions.Functions.Optimization
 
                         try
                         {
-                            if (beatmapObject.events.Count > 0)
+                            if (beatmapObject.events.Count > 0 && prefabObject.speed != 1f)
                                 for (int j = 0; j < beatmapObject.events.Count; j++)
                                 {
                                     beatmapObject.events[j].ForEach(x => x.eventTime /= Mathf.Clamp(prefabObject.speed, 0.1f, MaxFastSpeed));
