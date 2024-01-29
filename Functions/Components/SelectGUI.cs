@@ -11,7 +11,7 @@ namespace RTFunctions.Functions.Components
 
         public Vector3 ogPos;
         public Transform target;
-        public float scale = 1.05f;
+        public float scale = 1.03f;
 
         public static bool DragGUI { get; set; }
         public bool OverrideDrag { get; set; }
