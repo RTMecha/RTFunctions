@@ -591,19 +591,22 @@ namespace RTFunctions
 			return false;
 		}
 
-		[HarmonyPatch(typeof(SceneManager), "LoadScene", new Type[] { typeof(string), typeof(string), typeof(bool) })]
+		[HarmonyPatch(typeof(SceneManager), "DisplayLoadingScreen", new Type[] { typeof(string), typeof(bool) })]
 		[HarmonyPrefix]
-		static bool LoadScenePrefix(string _scene, string _loadingAudio, bool _showLoading = true)
+		static bool LoadScenePrefix(ref IEnumerator __result, string __0)
 		{
-			if (_scene == "Editor" && !ModCompatibility.EditorManagementInstalled)
-			{
-				Popup("Cannot enter editor without EditorManagement installed!", new Color(0.8976f, 0.2f, 0.2f, 1f), "<b>Error!</b>", 1.8f);
-				return false;
-			}
+			bool editor = __0 == "Editor" && !ModCompatibility.EditorManagementInstalled;
+			bool arcade = __0 == "Input Select" && !ModCompatibility.ArcadiaCustomsInstalled;
 
-			if (_scene == "Arcade Select" && !ModCompatibility.ArcadiaCustomsInstalled)
+			if (editor || arcade)
 			{
-				Popup("Cannot enter arcade without ArcadiaCustoms installed!", new Color(0.8976f, 0.2f, 0.2f, 1f), "<b>Error!</b>", 1.8f);
+				string sc = editor ? "editor" : "arcade";
+				string mod = editor ? "EditorManagement" : "ArcadiaCustoms";
+
+				Popup($"Cannot enter {sc} without {mod} installed!", new Color(0.8976f, 0.2f, 0.2f, 1f), "<b>Error!</b>", 3f);
+				if (ArcadeManager.inst && ArcadeManager.inst.ic)
+					ArcadeManager.inst.ic.SwitchBranch("main_menu");
+				__result = Empty();
 				return false;
 			}
 
@@ -626,12 +629,26 @@ namespace RTFunctions
 
 		#endregion
 
-		public static void Popup(string dialogue, Color bar, string title, float time = 2f)
+		public static IEnumerator Empty()
+        {
+			yield break;
+        }
+
+		public static string currentPopupID;
+		public static GameObject currentPopup;
+		public static void Popup(string dialogue, Color bar, string title, float time = 2f, bool destroyPrevious = true)
 		{
+			if (destroyPrevious && currentPopup)
+            {
+				if (AnimationManager.inst.animations.Has(x => x.id == currentPopupID))
+					AnimationManager.inst.RemoveID(currentPopupID);
+				Destroy(currentPopup);
+
+			}
+
 			var inter = new GameObject("Canvas");
+			currentPopup = inter;
 			inter.transform.localScale = Vector3.one * RTHelpers.screenScale;
-			//inter.AddComponent<SpriteManager>();
-			//menuUI = inter;
 			var interfaceRT = inter.AddComponent<RectTransform>();
 			interfaceRT.anchoredPosition = new Vector2(960f, 540f);
 			interfaceRT.sizeDelta = new Vector2(1920f, 1080f);
@@ -656,7 +673,7 @@ namespace RTFunctions
 
 			var imageObj = new GameObject("image");
 			imageObj.transform.SetParent(inter.transform);
-			imageObj.transform.localScale = Vector3.one;
+			imageObj.transform.localScale = Vector3.zero;
 
 			var imageRT = imageObj.AddComponent<RectTransform>();
 			imageRT.anchoredPosition = new Vector2(0f, 0f);
@@ -695,6 +712,7 @@ namespace RTFunctions
 			titleTextObj.transform.localScale = Vector3.one;
 
 			var titleTextRT = titleTextObj.AddComponent<RectTransform>();
+			titleTextRT.anchoredPosition = Vector2.zero;
 			titleTextRT.sizeDelta = new Vector2(590f, 32f);
 
 			var titleText = titleTextObj.AddComponent<Text>();
@@ -702,17 +720,19 @@ namespace RTFunctions
 			titleText.font = FontManager.inst.Inconsolata;
 			titleText.fontSize = 20;
 			titleText.text = title;
-			titleText.color = LSColors.ContrastColor(bar);
+			titleText.color = RTHelpers.InvertColorHue(RTHelpers.InvertColorValue(bar));
 
 			var animation = new AnimationManager.Animation("Popup Notification");
+			currentPopupID = animation.id;
 			animation.floatAnimations = new List<AnimationManager.Animation.AnimationObject<float>>
 				{
 					new AnimationManager.Animation.AnimationObject<float>(new List<IKeyframe<float>>
 					{
-						new FloatKeyframe(0f, 1f, Ease.Linear),
-						new FloatKeyframe(time, 1f, Ease.Linear),
-						new FloatKeyframe(time + 0.5f, 0f, Ease.BackIn),
-						new FloatKeyframe(time + 0.6f, 0f, Ease.Linear),
+						new FloatKeyframe(0f, 0f, Ease.Linear),
+						new FloatKeyframe(0.2f, 1f, Ease.BackOut),
+						new FloatKeyframe(time + 0.2f, 1f, Ease.Linear),
+						new FloatKeyframe(time + 0.7f, 0f, Ease.BackIn),
+						new FloatKeyframe(time + 0.8f, 0f, Ease.Linear),
 					}, delegate (float x)
 					{
 						imageObj.transform.localScale = new Vector3(x, x, x);
