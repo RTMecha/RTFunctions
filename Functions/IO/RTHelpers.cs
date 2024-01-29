@@ -969,7 +969,7 @@ namespace RTFunctions.Functions.IO
 			return false;
 		}
 
-		public static bool SearchString(string a, string searchTerm) => a.ToLower().Contains(searchTerm.ToLower()) || string.IsNullOrEmpty(searchTerm);
+		public static bool SearchString(string a, string searchTerm) => string.IsNullOrEmpty(searchTerm) || a.ToLower().Contains(searchTerm.ToLower());
 
 		public static string GetURL(int type, int site, string link)
         {
