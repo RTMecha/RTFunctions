@@ -591,10 +591,142 @@ namespace RTFunctions
 			return false;
 		}
 
+		[HarmonyPatch(typeof(SceneManager), "LoadScene", new Type[] { typeof(string), typeof(string), typeof(bool) })]
+		[HarmonyPrefix]
+		static bool LoadScenePrefix(string _scene, string _loadingAudio, bool _showLoading = true)
+		{
+			if (_scene == "Editor" && !ModCompatibility.EditorManagementInstalled)
+			{
+				Popup("Cannot enter editor without EditorManagement installed!", new Color(0.8976f, 0.2f, 0.2f, 1f), "<b>Error!</b>", 1.8f);
+				return false;
+			}
+
+			if (_scene == "Arcade Select" && !ModCompatibility.ArcadiaCustomsInstalled)
+			{
+				Popup("Cannot enter arcade without ArcadiaCustoms installed!", new Color(0.8976f, 0.2f, 0.2f, 1f), "<b>Error!</b>", 1.8f);
+				return false;
+			}
+
+			return true;
+		}
+
+		[HarmonyPatch(typeof(FileManager), "LoadImageFileRaw", MethodType.Enumerator)]
+		[HarmonyTranspiler]
+		static IEnumerable<CodeInstruction> LoadImageFileRawTranspiler(IEnumerable<CodeInstruction> instructions)
+        {
+			var match = new CodeMatcher(instructions).Start();
+
+			match = match.RemoveInstructionsInRange(108, 120);
+
+			return match.InstructionEnumeration();
+        }
+
 		public static Action<GameManager> EventsCoreGameThemePrefix { get; set; }
 		public static Action<EventManager, float> EventsCoreUpdateThemePrefix { get; set; }
 
 		#endregion
+
+		public static void Popup(string dialogue, Color bar, string title, float time = 2f)
+		{
+			var inter = new GameObject("Canvas");
+			inter.transform.localScale = Vector3.one * RTHelpers.screenScale;
+			//inter.AddComponent<SpriteManager>();
+			//menuUI = inter;
+			var interfaceRT = inter.AddComponent<RectTransform>();
+			interfaceRT.anchoredPosition = new Vector2(960f, 540f);
+			interfaceRT.sizeDelta = new Vector2(1920f, 1080f);
+			interfaceRT.pivot = new Vector2(0.5f, 0.5f);
+			interfaceRT.anchorMin = Vector2.zero;
+			interfaceRT.anchorMax = Vector2.zero;
+
+			var canvas = inter.AddComponent<Canvas>();
+			canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.None;
+			canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.TexCoord1;
+			canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.Tangent;
+			canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.Normal;
+			canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+			canvas.scaleFactor = RTHelpers.screenScale;
+			canvas.sortingOrder = 1000;
+
+			var canvasScaler = inter.AddComponent<CanvasScaler>();
+			canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+			canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
+
+			inter.AddComponent<GraphicRaycaster>();
+
+			var imageObj = new GameObject("image");
+			imageObj.transform.SetParent(inter.transform);
+			imageObj.transform.localScale = Vector3.one;
+
+			var imageRT = imageObj.AddComponent<RectTransform>();
+			imageRT.anchoredPosition = new Vector2(0f, 0f);
+			imageRT.sizeDelta = new Vector2(610f, 250f);
+
+			var im = imageObj.AddComponent<Image>();
+			im.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+
+			var textObj = new GameObject("text");
+			textObj.transform.SetParent(imageObj.transform);
+			textObj.transform.localScale = Vector3.one;
+
+			var textRT = textObj.AddComponent<RectTransform>();
+			textRT.anchoredPosition = new Vector2(0f, 0f);
+			textRT.sizeDelta = new Vector2(590f, 250f);
+
+			var text = textObj.AddComponent<Text>();
+			text.font = FontManager.inst.Inconsolata;
+			text.text = dialogue;
+			text.fontSize = 20;
+			text.alignment = TextAnchor.MiddleCenter;
+
+			var top = new GameObject("top");
+			top.transform.SetParent(imageRT);
+			top.transform.localScale = Vector3.one;
+
+			var topRT = top.AddComponent<RectTransform>();
+			topRT.anchoredPosition = new Vector2(0f, 110f);
+			topRT.sizeDelta = new Vector2(610f, 32f);
+
+			var topImage = top.AddComponent<Image>();
+			topImage.color = bar;
+
+			var titleTextObj = new GameObject("text");
+			titleTextObj.transform.SetParent(topRT);
+			titleTextObj.transform.localScale = Vector3.one;
+
+			var titleTextRT = titleTextObj.AddComponent<RectTransform>();
+			titleTextRT.sizeDelta = new Vector2(590f, 32f);
+
+			var titleText = titleTextObj.AddComponent<Text>();
+			titleText.alignment = TextAnchor.MiddleLeft;
+			titleText.font = FontManager.inst.Inconsolata;
+			titleText.fontSize = 20;
+			titleText.text = title;
+			titleText.color = LSColors.ContrastColor(bar);
+
+			var animation = new AnimationManager.Animation("Popup Notification");
+			animation.floatAnimations = new List<AnimationManager.Animation.AnimationObject<float>>
+				{
+					new AnimationManager.Animation.AnimationObject<float>(new List<IKeyframe<float>>
+					{
+						new FloatKeyframe(0f, 1f, Ease.Linear),
+						new FloatKeyframe(time, 1f, Ease.Linear),
+						new FloatKeyframe(time + 0.5f, 0f, Ease.BackIn),
+						new FloatKeyframe(time + 0.6f, 0f, Ease.Linear),
+					}, delegate (float x)
+					{
+						imageObj.transform.localScale = new Vector3(x, x, x);
+					}),
+				};
+			animation.onComplete = delegate ()
+			{
+				Destroy(inter);
+
+				AnimationManager.inst.RemoveID(animation.id);
+			};
+
+			AnimationManager.inst?.Play(animation);
+		}
 
 		public static void TakeScreenshot()
 		{
