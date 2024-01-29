@@ -61,7 +61,14 @@ namespace RTFunctions.Functions
 			#endregion
 
 			//ProjectData.Combiner.Combine(RTFile.ApplicationDirectory + "beatmaps/editor/Classic Arrhythmia/Combine 1/level.lsb", RTFile.ApplicationDirectory + "beatmaps/editor/Classic Arrhythmia/Combine 2/level.lsb", RTFile.ApplicationDirectory + "beatmaps/editor/Classic Arrhythmia/Combined/level.lsb");
-			public static void Combine(string path1, string path2, string saveTo)
+			/// <summary>
+			/// Combines two levels from two paths and saves the combined GameData to a specified path.
+			/// </summary>
+			/// <param name="path1">First path to level to combine.</param>
+			/// <param name="path2">Second path to level to combine.</param>
+			/// <param name="saveTo">Path to save combined GameData to.</param>
+			/// <param name="onSave">Action to perform when save is finished.</param>
+			public static void Combine(string path1, string path2, string saveTo, Action onSave)
 			{
 				if (!RTFile.FileExists(path1) || !RTFile.FileExists(path2))
 					return;
@@ -70,19 +77,42 @@ namespace RTFunctions.Functions
 				if (!RTFile.DirectoryExists(directory))
 					Directory.CreateDirectory(directory);
 
-				//if (!RTFile.FileExists(saveTo))
-				//	File.Create(saveTo);
+				var files1 = Directory.GetFiles(Path.GetDirectoryName(path1));
+				var files2 = Directory.GetFiles(Path.GetDirectoryName(path2));
 
-				if (RTFile.FileExists(Path.GetDirectoryName(path1) + "/level.ogg") && !RTFile.FileExists(directory + "/level.ogg"))
-					File.Copy(Path.GetDirectoryName(path1) + "/level.ogg", directory + "/level.ogg");
-				if (RTFile.FileExists(Path.GetDirectoryName(path1) + "/level.jpg") && !RTFile.FileExists(directory + "/level.jpg"))
-					File.Copy(Path.GetDirectoryName(path1) + "/level.jpg", directory + "/level.jpg");
-				if (RTFile.FileExists(Path.GetDirectoryName(path1) + "/metadata.lsb") && !RTFile.FileExists(directory + "/metadata.lsb"))
-					File.Copy(Path.GetDirectoryName(path1) + "/metadata.lsb", directory + "/metadata.lsb");
+				foreach (var file in files1)
+                {
+					string dir = Path.GetDirectoryName(file);
+					if (!RTFile.DirectoryExists(dir))
+                    {
+						Directory.CreateDirectory(dir);
+                    }
 
-				FunctionsPlugin.inst.StartCoroutine(Writer.SaveData(saveTo, Combine(path1, path2)));
+					if (Path.GetFileName(file) != "level.lsb" && !RTFile.FileExists(file.Replace(Path.GetDirectoryName(path1), directory)))
+						File.Copy(file, file.Replace(Path.GetDirectoryName(path1), directory));
+                }
+				
+				foreach (var file in files2)
+                {
+					string dir = Path.GetDirectoryName(file);
+					if (!RTFile.DirectoryExists(dir))
+                    {
+						Directory.CreateDirectory(dir);
+					}
+
+					if (Path.GetFileName(file) != "level.lsb" && !RTFile.FileExists(file.Replace(Path.GetDirectoryName(path2), directory)))
+						File.Copy(file, file.Replace(Path.GetDirectoryName(path2), directory));
+                }
+
+				FunctionsPlugin.inst.StartCoroutine(Writer.SaveData(saveTo, Combine(path1, path2), onSave));
 			}
 
+			/// <summary>
+			/// Reads level.lsb from two paths, parses them and combines them.
+			/// </summary>
+			/// <param name="path1">First path to level to combine.</param>
+			/// <param name="path2">Second path to level to combine.</param>
+			/// <returns>Combined GameData</returns>
 			public static GameData Combine(string path1, string path2)
 			{
 				if (!RTFile.FileExists(path1) || !RTFile.FileExists(path2))
@@ -91,146 +121,213 @@ namespace RTFunctions.Functions
 				return Combine(JSON.Parse(FileManager.inst.LoadJSONFileRaw(path1)), JSON.Parse(FileManager.inst.LoadJSONFileRaw(path2)));
 			}
 
+			/// <summary>
+			/// Parses two JSONNodes and combines them.
+			/// </summary>
+			/// <param name="jn">First level to combine.</param>
+			/// <param name="jn32">Second level to combine.</param>
+			/// <returns>Combined GameData.</returns>
 			public static GameData Combine(JSONNode jn, JSONNode jn32)
             {
                 var gameData = new GameData();
 
 				#region Markers
 
-				if (addFirstMarkers)
-					for (int i = 0; i < jn["markers"].Count; i++)
-						gameData.beatmapData.markers.Add(Reader.ParseMarker(jn["markers"][i]));
-				
-				if (addSecondMarkers)
-					for (int i = 0; i < jn32["markers"].Count; i++)
-						gameData.beatmapData.markers.Add(Reader.ParseMarker(jn32["markers"][i]));
+				gameData.beatmapData = new LevelBeatmapData();
+				gameData.beatmapData.markers = new List<BaseMarker>();
 
-				gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
+                try
+				{
+					if (addFirstMarkers)
+						for (int i = 0; i < jn["markers"].Count; i++)
+							gameData.beatmapData.markers.Add(Reader.ParseMarker(jn["markers"][i]));
 
-                #endregion
+					if (addSecondMarkers)
+						for (int i = 0; i < jn32["markers"].Count; i++)
+							gameData.beatmapData.markers.Add(Reader.ParseMarker(jn32["markers"][i]));
 
-                #region Checkpoints
+					gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
+				}
+				catch (Exception ex)
+                {
+					Debug.LogError($"{FunctionsPlugin.className}Markers parse exception: {ex}");
+                }
 
-				if (addFirstCheckpoints)
-					for (int i = 0; i < jn["checkpoints"].Count; i++)
-						gameData.beatmapData.checkpoints.Add(Reader.ParseCheckpoint(jn["checkpoints"][i]));
+				#endregion
 
-				if (addSecondCheckpoints)
-					for (int i = 0; i < jn32["checkpoints"].Count; i++)
+				#region Checkpoints
+
+				gameData.beatmapData.checkpoints = new List<BaseCheckpoint>();
+
+				try
+				{
+					if (addFirstCheckpoints)
+						for (int i = 0; i < jn["checkpoints"].Count; i++)
+							gameData.beatmapData.checkpoints.Add(Reader.ParseCheckpoint(jn["checkpoints"][i]));
+
+					if (addSecondCheckpoints)
+						for (int i = 0; i < jn32["checkpoints"].Count; i++)
+						{
+							var checkpoint = Reader.ParseCheckpoint(jn32["checkpoints"][i]);
+							if (gameData.beatmapData.checkpoints.Find(x => x.time == checkpoint.time) == null)
+								gameData.beatmapData.checkpoints.Add(checkpoint);
+						}
+
+					gameData.beatmapData.checkpoints = gameData.beatmapData.checkpoints.OrderBy(x => x.time).ToList();
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"{FunctionsPlugin.className}Checkpoints parse exception: {ex}");
+				}
+
+				#endregion
+
+				#region Prefabs
+
+				try
+				{
+					for (int i = 0; i < jn["prefabs"].Count; i++)
 					{
-						var checkpoint = Reader.ParseCheckpoint(jn32["checkpoints"][i]);
-						if (gameData.beatmapData.checkpoints.Find(x => x.time == checkpoint.time) == null)
-							gameData.beatmapData.checkpoints.Add(checkpoint);
+						var prefab = Prefab.Parse(jn["prefabs"][i]);
+						if (gameData.prefabs.Find(x => x.ID == prefab.ID) == null)
+							gameData.prefabs.Add(prefab);
 					}
 
-				gameData.beatmapData.checkpoints = gameData.beatmapData.checkpoints.OrderBy(x => x.time).ToList();
-
-                #endregion
-
-                #region Prefabs
-
-				for (int i = 0; i < jn["prefabs"].Count; i++)
-                {
-					var prefab = Prefab.Parse(jn["prefabs"][i]);
-					if (gameData.prefabs.Find(x => x.ID == prefab.ID) == null)
-						gameData.prefabs.Add(prefab);
-                }
-				
-				for (int i = 0; i < jn32["prefabs"].Count; i++)
-                {
-					var prefab = Prefab.Parse(jn32["prefabs"][i]);
-					if (gameData.prefabs.Find(x => x.ID == prefab.ID) == null)
-						gameData.prefabs.Add(prefab);
-                }
-
-                #endregion
-				
-                #region PrefabObjects
-
-				for (int i = 0; i < jn["prefab_objects"].Count; i++)
-                {
-					var prefab = PrefabObject.Parse(jn["prefab_objects"][i]);
-					if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
-						gameData.prefabObjects.Add(prefab);
-                }
-				
-				for (int i = 0; i < jn32["prefab_objects"].Count; i++)
-                {
-					var prefab = PrefabObject.Parse(jn32["prefabs"][i]);
-					if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
-						gameData.prefabObjects.Add(prefab);
-                }
-
-                #endregion
-
-                #region Themes
-
-                for (int i = 0; i < jn["themes"].Count; i++)
-					if (!gameData.beatmapThemes.ContainsKey(jn["themes"][i]["id"]))
-						gameData.beatmapThemes.Add(jn["themes"][i]["id"], Reader.ParseBeatmapTheme(jn["themes"][i], FileType.LS));
-
-				for (int i = 0; i < jn32["themes"].Count; i++)
-					if (!gameData.beatmapThemes.ContainsKey(jn32["themes"][i]["id"]))
-						gameData.beatmapThemes.Add(jn32["themes"][i]["id"], Reader.ParseBeatmapTheme(jn32["themes"][i], FileType.LS));
-
-                #endregion
-
-                #region Objects
-
-                for (int i = 0; i < jn["beatmap_objects"].Count; i++)
-					gameData.beatmapObjects.Add(BeatmapObject.Parse(jn["beatmap_objects"][i]));
-
-				for (int i = 0; i < jn32["beatmap_objects"].Count; i++)
+					for (int i = 0; i < jn32["prefabs"].Count; i++)
+					{
+						var prefab = Prefab.Parse(jn32["prefabs"][i]);
+						if (gameData.prefabs.Find(x => x.ID == prefab.ID) == null)
+							gameData.prefabs.Add(prefab);
+					}
+				}
+				catch (Exception ex)
 				{
-					var beatmapObject = BeatmapObject.Parse(jn32["beatmap_objects"][i]);
+					Debug.LogError($"{FunctionsPlugin.className}Prefabs parse exception: {ex}");
+				}
 
-					if (!objectsWithMatchingIDAddKeyframes)
-						gameData.beatmapObjects.Add(beatmapObject);
-					else if (gameData.beatmapObjects.TryFind(x => x.id == beatmapObject.id, out BaseBeatmapObject modObject))
-                    {
-						for (int j = 0; j < modObject.events.Count; j++)
-                        {
-							beatmapObject.events[j].RemoveAt(0);
-							modObject.events[j].AddRange(beatmapObject.events[j]);
+				#endregion
+
+				#region PrefabObjects
+
+				try
+				{
+					for (int i = 0; i < jn["prefab_objects"].Count; i++)
+					{
+						var prefab = PrefabObject.Parse(jn["prefab_objects"][i]);
+						if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
+							gameData.prefabObjects.Add(prefab);
+					}
+
+					for (int i = 0; i < jn32["prefab_objects"].Count; i++)
+					{
+						var prefab = PrefabObject.Parse(jn32["prefab_objects"][i]);
+						if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
+							gameData.prefabObjects.Add(prefab);
+					}
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"{FunctionsPlugin.className}Prefab Objects parse exception: {ex}");
+				}
+
+				#endregion
+
+				#region Themes
+
+				try
+				{
+					for (int i = 0; i < jn["themes"].Count; i++)
+						if (!gameData.beatmapThemes.ContainsKey(jn["themes"][i]["id"]))
+							gameData.beatmapThemes.Add(jn["themes"][i]["id"], Reader.ParseBeatmapTheme(jn["themes"][i], FileType.LS));
+
+					for (int i = 0; i < jn32["themes"].Count; i++)
+						if (!gameData.beatmapThemes.ContainsKey(jn32["themes"][i]["id"]))
+							gameData.beatmapThemes.Add(jn32["themes"][i]["id"], Reader.ParseBeatmapTheme(jn32["themes"][i], FileType.LS));
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"{FunctionsPlugin.className}Themes parse exception: {ex}");
+				}
+
+				#endregion
+
+				#region Objects
+
+				try
+				{
+					for (int i = 0; i < jn["beatmap_objects"].Count; i++)
+						gameData.beatmapObjects.Add(BeatmapObject.Parse(jn["beatmap_objects"][i]));
+
+					for (int i = 0; i < jn32["beatmap_objects"].Count; i++)
+					{
+						var beatmapObject = BeatmapObject.Parse(jn32["beatmap_objects"][i]);
+
+						if (!objectsWithMatchingIDAddKeyframes)
+							gameData.beatmapObjects.Add(beatmapObject);
+						else if (gameData.beatmapObjects.TryFind(x => x.id == beatmapObject.id, out BaseBeatmapObject modObject))
+						{
+							for (int j = 0; j < modObject.events.Count; j++)
+							{
+								beatmapObject.events[j].RemoveAt(0);
+								modObject.events[j].AddRange(beatmapObject.events[j]);
+							}
 						}
-                    }
-					else
-						gameData.beatmapObjects.Add(beatmapObject);
+						else
+							gameData.beatmapObjects.Add(beatmapObject);
+					}
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"{FunctionsPlugin.className}Beatmap Objects parse exception: {ex}");
 				}
 
 				#endregion
 
 				#region Backgrounds
 
-				for (int i = 0; i < jn["bg_objects"].Count; i++)
-					gameData.backgroundObjects.Add(BackgroundObject.Parse(jn["bg_objects"][i]));
-				
-				for (int i = 0; i < jn32["bg_objects"].Count; i++)
-					gameData.backgroundObjects.Add(BackgroundObject.Parse(jn32["bg_objects"][i]));
+				try
+				{
+					for (int i = 0; i < jn["bg_objects"].Count; i++)
+						gameData.backgroundObjects.Add(BackgroundObject.Parse(jn["bg_objects"][i]));
 
-                #endregion
-
-                #region Events
-
-                gameData.eventObjects.allEvents = new List<List<BaseEventKeyframe>>();
-
-				var l = Reader.ParseEventkeyframes(jn["events"]);
-				var l32 = Reader.ParseEventkeyframes(jn32["events"]);
-
-				for (int i = 0; i < l.Count; i++)
-                {
-					if (!prioritizeFirstEvents)
-						l[i].RemoveAt(0);
-
-					gameData.eventObjects.allEvents.Add(l[i]);
+					for (int i = 0; i < jn32["bg_objects"].Count; i++)
+						gameData.backgroundObjects.Add(BackgroundObject.Parse(jn32["bg_objects"][i]));
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"{FunctionsPlugin.className}Background Objects parse exception: {ex}");
 				}
 
-				for (int i = 0; i < l32.Count; i++)
-                {
-					if (prioritizeFirstEvents)
-						l32[i].RemoveAt(0);
+				#endregion
 
-					gameData.eventObjects.allEvents[i].AddRange(l32[i]);
+				#region Events
+
+				try
+				{
+					gameData.eventObjects.allEvents = new List<List<BaseEventKeyframe>>();
+
+					var l = Reader.ParseEventkeyframes(jn["events"]);
+					var l32 = Reader.ParseEventkeyframes(jn32["events"]);
+
+					for (int i = 0; i < l.Count; i++)
+					{
+						if (!prioritizeFirstEvents)
+							l[i].RemoveAt(0);
+
+						gameData.eventObjects.allEvents.Add(l[i]);
+					}
+
+					for (int i = 0; i < l32.Count; i++)
+					{
+						if (prioritizeFirstEvents)
+							l32[i].RemoveAt(0);
+
+						gameData.eventObjects.allEvents[i].AddRange(l32[i]);
+					}
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"{FunctionsPlugin.className}Events parse exception: {ex}");
 				}
 
                 //foreach (var kflist in gameData.eventObjects.allEvents)
@@ -242,6 +339,138 @@ namespace RTFunctions.Functions
 
                 return gameData;
 			}
+
+			/// <summary>
+			/// Combines multiple GameDatas together.
+			/// </summary>
+			/// <param name="gameDatas">Array of GameData to combine together.</param>
+			/// <returns>Combined GameData.</returns>
+			public static GameData Combine(params GameData[] gameDatas)
+            {
+				var baseData = new GameData();
+				baseData.beatmapData = new LevelBeatmapData();
+				baseData.beatmapData.editorData = new LevelEditorData();
+				baseData.beatmapData.levelData = new DataManager.GameData.BeatmapData.LevelData();
+
+				if (gameDatas != null && gameDatas.Length > 0)
+					for (int i = 0; i < gameDatas.Length; i++)
+					{
+						if (gameDatas[i].beatmapData != null && baseData.beatmapData != null)
+                        {
+							if (baseData.beatmapData.checkpoints == null)
+								baseData.beatmapData.checkpoints = new List<BaseCheckpoint>();
+							if (baseData.beatmapData.markers == null)
+								baseData.beatmapData.markers = new List<BaseMarker>();
+
+							baseData.beatmapData.checkpoints.AddRange(gameDatas[i].beatmapData.checkpoints.Where(x => !baseData.beatmapData.checkpoints.Has(y => y.time == x.time)));
+							baseData.beatmapData.markers.AddRange(gameDatas[i].beatmapData.markers.Where(x => !baseData.beatmapData.markers.Has(y => y.time == x.time)));
+						}
+
+						if (baseData.beatmapObjects == null)
+							baseData.beatmapObjects = new List<BaseBeatmapObject>();
+
+						baseData.beatmapObjects.AddRange(gameDatas[i].BeatmapObjects.Where(x => !baseData.BeatmapObjects.Has(y => y.id == x.id)));
+
+						if (baseData.prefabObjects == null)
+							baseData.prefabObjects = new List<DataManager.GameData.PrefabObject>();
+
+						baseData.prefabObjects.AddRange(gameDatas[i].prefabObjects.Where(x => !baseData.prefabObjects.Has(y => y.ID == x.ID)));
+
+						if (baseData.prefabs == null)
+							baseData.prefabs = new List<BasePrefab>();
+
+						baseData.prefabs.AddRange(gameDatas[i].prefabs.Where(x => !baseData.prefabs.Has(y => y.ID == x.ID)));
+
+						baseData.backgroundObjects.AddRange(gameDatas[i].BackgroundObjects.Where(x => !baseData.BackgroundObjects.Has(y =>
+						{
+							return y.active == x.active &&
+									y.color == x.color &&
+									y.depth == x.depth &&
+									y.drawFade == x.drawFade &&
+									y.FadeColor == x.FadeColor &&
+									y.layer == x.layer &&
+									y.name == x.name &&
+									y.pos == x.pos &&
+									y.reactive == x.reactive &&
+									y.reactiveCol == x.reactiveCol &&
+									y.reactiveColIntensity == x.reactiveColIntensity &&
+									y.reactiveColSample == x.reactiveColSample &&
+									y.reactiveIncludesZ == x.reactiveIncludesZ &&
+									y.reactivePosIntensity == x.reactivePosIntensity &&
+									y.reactivePosSamples == x.reactivePosSamples &&
+									y.reactiveRotIntensity == x.reactiveRotIntensity &&
+									y.reactiveRotSample == x.reactiveRotSample &&
+									y.reactiveScaIntensity == x.reactiveScaIntensity &&
+									y.reactiveScale == x.reactiveScale &&
+									y.reactiveScaSamples == x.reactiveScaSamples &&
+									y.reactiveSize == x.reactiveSize &&
+									y.reactiveType == x.reactiveType &&
+									y.reactiveZIntensity == x.reactiveZIntensity &&
+									y.reactiveZSample == x.reactiveZSample &&
+									y.rot == x.rot &&
+									y.rotation == x.rotation &&
+									y.scale == x.scale &&
+									y.text == x.text &&
+									y.zscale == x.zscale;
+						})));
+
+						if (baseData.eventObjects == null)
+							baseData.eventObjects = new DataManager.GameData.EventObjects();
+
+						for (int j = 0; j < gameDatas[i].eventObjects.allEvents.Count; j++)
+                        {
+							if (baseData.eventObjects.allEvents.Count <= j)
+								baseData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+
+							baseData.eventObjects.allEvents[j].AddRange(gameDatas[i].eventObjects.allEvents[j].Where(x => !baseData.eventObjects.allEvents[j].Has(y => y.eventTime != x.eventTime)));
+                        }
+
+						foreach (var beatmapTheme in gameDatas[i].beatmapThemes)
+                        {
+							if (!baseData.beatmapThemes.ContainsKey(beatmapTheme.Key))
+								baseData.beatmapThemes.Add(beatmapTheme.Key, beatmapTheme.Value);
+                        }
+
+						// Clearing
+						{
+							for (int j = 0; j < gameDatas[i].beatmapData.checkpoints.Count; j++)
+								gameDatas[i].beatmapData.checkpoints[j] = null;
+							gameDatas[i].beatmapData.checkpoints.Clear();
+
+							for (int j = 0; j < gameDatas[i].beatmapData.markers.Count; j++)
+								gameDatas[i].beatmapData.markers[j] = null;
+							gameDatas[i].beatmapData.markers.Clear();
+							
+							for (int j = 0; j < gameDatas[i].beatmapObjects.Count; j++)
+								gameDatas[i].beatmapObjects[j] = null;
+							gameDatas[i].beatmapObjects.Clear();
+							
+							for (int j = 0; j < gameDatas[i].backgroundObjects.Count; j++)
+								gameDatas[i].backgroundObjects[j] = null;
+							gameDatas[i].backgroundObjects.Clear();
+							
+							for (int j = 0; j < gameDatas[i].prefabObjects.Count; j++)
+								gameDatas[i].prefabObjects[j] = null;
+							gameDatas[i].prefabObjects.Clear();
+							
+							for (int j = 0; j < gameDatas[i].prefabs.Count; j++)
+								gameDatas[i].prefabs[j] = null;
+							gameDatas[i].prefabs.Clear();
+							
+							gameDatas[i].beatmapThemes.Clear();
+
+							for (int j = 0; j < gameDatas[i].eventObjects.allEvents.Count; j++)
+								gameDatas[i].eventObjects.allEvents[j] = null;
+							gameDatas[i].eventObjects.allEvents.Clear();
+
+							gameDatas[i] = null;
+						}
+					}
+
+				gameDatas = null;
+
+				return baseData;
+            }
         }
 
 		public static class Reader
@@ -592,13 +821,7 @@ namespace RTFunctions.Functions
 
 		public static class Writer
         {
-			public static Action onSave;
-			public static Action addedOnSave = delegate ()
-			{
-				// Empty delegate to add
-			};
-
-			public static IEnumerator SaveData(string _path, GameData _data)
+			public static IEnumerator SaveData(string _path, GameData _data, Action onSave = null)
 			{
 				Debug.Log("Saving Beatmap");
 				var jn = JSON.Parse("{}");
