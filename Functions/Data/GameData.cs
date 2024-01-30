@@ -59,29 +59,26 @@ namespace RTFunctions.Functions.Data
 			beatmapData.checkpoints = orig.beatmapData.checkpoints.Select(x => BeatmapData.Checkpoint.DeepCopy(x)).ToList();
 			beatmapData.markers = orig.beatmapData.markers.Select(x => new BeatmapData.Marker(x.active, x.name, x.desc, x.color, x.time)).ToList();
 
-			//beatmapData.checkpoints = new List<BeatmapData.Checkpoint>((from checkpoint in orig.beatmapData.checkpoints
-			//															select new BeatmapData.Checkpoint
-			//															{
-			//																active = false,
-			//																name = checkpoint.name,
-			//																pos = checkpoint.pos,
-			//																time = checkpoint.time
-			//															}).ToList());
-			//beatmapData.markers = new List<BeatmapData.Marker>((from marker in orig.beatmapData.markers
-			//													select new BeatmapData.Marker
-			//													{
-			//														active = false,
-			//														time = marker.time,
-			//														name = marker.name,
-			//														color = marker.color,
-			//														desc = marker.desc
-			//													}).ToList());
 			gameData.beatmapData = beatmapData;
 			gameData.beatmapObjects = new List<BaseBeatmapObject>((from obj in orig.beatmapObjects
 																   select Data.BeatmapObject.DeepCopy((Data.BeatmapObject)obj, false)).ToList());
 			gameData.backgroundObjects = new List<BaseBackgroundObject>((from obj in orig.backgroundObjects
 																		 select Data.BackgroundObject.DeepCopy((Data.BackgroundObject)obj)).ToList());
 			gameData.eventObjects = EventObjects.DeepCopy(orig.eventObjects);
+			return gameData;
+		}
+
+		public static GameData ParseVG(JSONNode jn, bool parseThemes = true)
+        {
+			var gameData = new GameData();
+
+			gameData.beatmapData = new LevelBeatmapData();
+
+			//gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
+
+			for (int i = 0; i < jn["objects"].Count; i++)
+				gameData.beatmapObjects.Add(Data.BeatmapObject.ParseVG(jn["objects"][i]));
+
 			return gameData;
 		}
 

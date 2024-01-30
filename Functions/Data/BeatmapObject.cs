@@ -335,7 +335,134 @@ namespace RTFunctions.Functions.Data
 			return beatmapObject;
 		}
 
-        public static BeatmapObject Parse(JSONNode jn)
+		public static BeatmapObject ParseVG(JSONNode jn)
+		{
+			var beatmapObject = new BeatmapObject();
+
+			var events = new List<List<BaseEventKeyframe>>();
+			events.Add(new List<BaseEventKeyframe>());
+			events.Add(new List<BaseEventKeyframe>());
+			events.Add(new List<BaseEventKeyframe>());
+			events.Add(new List<BaseEventKeyframe>());
+
+			if (jn["e"] != null)
+            {
+				for (int i = 0; i < events.Count; i++)
+                {
+					for (int j = 0; j < jn["e"][i]["k"].Count; j++)
+                    {
+						var eventKeyframe = new EventKeyframe();
+						var kfjn = jn["e"][i]["k"][j];
+
+						eventKeyframe.id = LSText.randomNumString(8);
+
+						eventKeyframe.eventTime = kfjn["t"].AsFloat;
+
+						if (kfjn["ct"] != null)
+							eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+						int indexLength = i == 0 ? 3 : i == 1 ? 2 : i == 2 ? 1 : 5;
+						var array = new float[indexLength];
+						for (int k = 0; k < indexLength; k++)
+                        {
+							if (kfjn["ev"].Count > k)
+								array[k] = kfjn["ev"][k].AsFloat;
+						}
+						eventKeyframe.SetEventValues(array);
+
+						eventKeyframe.random = kfjn["r"].AsInt;
+
+						var randomArray = new float[4];
+						for (int k = 0; k < 4; k++)
+						{
+							if (kfjn["er"].Count > k)
+								randomArray[k] = kfjn["er"][k].AsFloat;
+						}
+						eventKeyframe.SetEventRandomValues(randomArray);
+
+						eventKeyframe.relative = i == 2;
+
+						eventKeyframe.active = false;
+						events[i].Add(eventKeyframe);
+					}
+				}
+            }
+
+			beatmapObject.events = events;
+
+			beatmapObject.id = jn["id"] != null ? jn["id"] : LSText.randomString(16);
+
+			if (jn["pre_iid"] != null)
+				beatmapObject.prefabInstanceID = jn["pre_iid"];
+
+			if (jn["pre_id"] != null)
+				beatmapObject.prefabID = jn["pre_id"];
+
+			if (jn["p_id"] != null)
+				beatmapObject.parent = jn["p_id"];
+
+			if (jn["p_t"] != null)
+				beatmapObject.parentType = jn["pt"];
+
+			if (jn["p_o"] != null)
+			{
+				beatmapObject.parentOffsets = new List<float>(from n in jn["p_o"].AsArray.Children
+															  select n.AsFloat).ToList();
+			}
+
+			if (jn["ot"] != null)
+			{
+				var ot = jn["ot"].AsInt;
+
+				beatmapObject.objectType = ot == 5 ? ObjectType.Decoration : ot == 6 ? ObjectType.Empty : ObjectType.Normal;
+			}
+
+			if (jn["st"] != null)
+				beatmapObject.startTime = jn["st"].AsFloat;
+
+			if (jn["n"] != null)
+				beatmapObject.name = jn["n"];
+
+			if (jn["d"] != null)
+				beatmapObject.depth = jn["d"].AsInt;
+
+			if (jn["s"] != null)
+				beatmapObject.shape = jn["s"].AsInt;
+
+			if (jn["shape"] != null)
+				beatmapObject.shape = jn["shape"].AsInt;
+
+			if (jn["so"] != null)
+				beatmapObject.shapeOption = jn["so"].AsInt;
+
+			if (jn["text"] != null)
+				beatmapObject.text = jn["text"];
+
+			if (jn["ak_t"] != null)
+				beatmapObject.autoKillType = (AutoKillType)jn["ak_t"].AsInt;
+
+			if (jn["ak_o"] != null)
+				beatmapObject.autoKillOffset = jn["ak_o"].AsFloat;
+
+			if (jn["o"] != null)
+				beatmapObject.origin = new Vector2(jn["o"]["x"].AsFloat, jn["o"]["y"].AsFloat);
+
+			if (jn["ed"]["lk"] != null)
+				beatmapObject.editorData.locked = jn["ed"]["lk"].AsBool;
+
+			if (jn["ed"]["co"] != null)
+				beatmapObject.editorData.collapse = jn["ed"]["co"].AsBool;
+
+			if (jn["ed"]["b"] != null)
+				beatmapObject.editorData.Bin = jn["ed"]["b"].AsInt;
+
+			if (jn["ed"]["l"] != null)
+				beatmapObject.editorData.layer = Mathf.Clamp(jn["ed"]["l"].AsInt, 0, int.MaxValue);
+
+			return beatmapObject;
+		}
+
+		public static BeatmapObject Parse(JSONNode jn)
 		{
 			var beatmapObject = new BeatmapObject();
 
@@ -578,10 +705,10 @@ namespace RTFunctions.Functions.Data
 			if (jn["o"] != null)
 				beatmapObject.origin = new Vector2(jn["o"]["x"].AsFloat, jn["o"]["y"].AsFloat);
 
-			if (jn["ed"]["bin"] != null)
+			if (jn["ed"]["locked"] != null)
 				beatmapObject.editorData.locked = jn["ed"]["locked"].AsBool;
 
-			if (jn["ed"]["bin"] != null)
+			if (jn["ed"]["shrink"] != null)
 				beatmapObject.editorData.collapse = jn["ed"]["shrink"].AsBool;
 
 			if (jn["ed"]["bin"] != null)
