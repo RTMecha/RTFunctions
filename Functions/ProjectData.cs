@@ -137,27 +137,27 @@ namespace RTFunctions.Functions
 				gameData.beatmapData.markers = new List<BaseMarker>();
 
                 try
-				{
-					if (addFirstMarkers)
-						for (int i = 0; i < jn["markers"].Count; i++)
-							gameData.beatmapData.markers.Add(Reader.ParseMarker(jn["markers"][i]));
-
-					if (addSecondMarkers)
-						for (int i = 0; i < jn32["markers"].Count; i++)
-							gameData.beatmapData.markers.Add(Reader.ParseMarker(jn32["markers"][i]));
-
-					gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
-				}
-				catch (Exception ex)
                 {
-					Debug.LogError($"{FunctionsPlugin.className}Markers parse exception: {ex}");
+                    if (addFirstMarkers)
+                        for (int i = 0; i < jn["ed"]["markers"].Count; i++)
+                            gameData.beatmapData.markers.Add(Reader.ParseMarker(jn["ed"]["markers"][i]));
+
+                    if (addSecondMarkers)
+                        for (int i = 0; i < jn32["ed"]["markers"].Count; i++)
+                            gameData.beatmapData.markers.Add(Reader.ParseMarker(jn32["ed"]["markers"][i]));
+
+                    gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"{FunctionsPlugin.className}Markers parse exception: {ex}");
                 }
 
-				#endregion
+                #endregion
 
-				#region Checkpoints
+                #region Checkpoints
 
-				gameData.beatmapData.checkpoints = new List<BaseCheckpoint>();
+                gameData.beatmapData.checkpoints = new List<BaseCheckpoint>();
 
 				try
 				{
