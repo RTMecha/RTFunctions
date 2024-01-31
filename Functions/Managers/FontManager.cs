@@ -947,7 +947,31 @@ namespace RTFunctions.Functions.Managers
                     }
                 case "wingding.ttf":
                     {
-                        return "Wingding";
+                        return "Wingdings";
+                    }
+                case "18vag rounded m bold.ttf":
+                    {
+                        return "VAG Rounded";
+                    }
+                case "ldfcomicsans-jj7l.ttf":
+                    {
+                        return "Comic Sans";
+                    }
+                case "ldfcomicsansbold-zgma.ttf":
+                    {
+                        return "Comic Sans Bold";
+                    }
+                case "ldfcomicsanshairline-5pml.ttf":
+                    {
+                        return "Comic Sans Hairline";
+                    }
+                case "ldfcomicsanslight-6dzo.ttf":
+                    {
+                        return "Comic Sans Light";
+                    }
+                case "undertale-wingdings.ttf":
+                    {
+                        return "Determination Wingdings";
                     }
             }
             return _name1;
