@@ -589,7 +589,7 @@ namespace RTFunctions.Functions.Optimization
             }
         }
         public static float MaxFastSpeed => 1000f;
-        public static void AddPrefabToLevel(BasePrefabObject __0)
+        public static void AddPrefabToLevel(BasePrefabObject __0, bool update = true)
         {
             var prefabObject = (PrefabObject)__0;
 
@@ -671,10 +671,11 @@ namespace RTFunctions.Functions.Optimization
                     timeToAdd += t;
                 }
 
-            foreach (var bm in list)
-            {
-                UpdateProcessor(bm);
-            }
+            if (update)
+                foreach (var bm in list)
+                {
+                    UpdateProcessor(bm);
+                }
             list.Clear();
             list = null;
         }
@@ -881,7 +882,7 @@ namespace RTFunctions.Functions.Optimization
                         gameObject = gameObject.transform.parent.gameObject;
 
                     // Remove GameObject.
-                    UnityEngine.Object.Destroy(gameObject);
+                    Object.Destroy(gameObject);
                     objects.Remove(iLevelObject);
                 }
 
@@ -943,14 +944,16 @@ namespace RTFunctions.Functions.Optimization
                 var objects = level.objects;
 
                 level.objects.Clear();
+                levelProcessor.converter.beatmapObjects.Clear();
 
                 // Delete all the "GameObjects" children.
                 LSFunctions.LSHelpers.DeleteChildren(GameObject.Find("GameObjects").transform);
 
                 // Removing and reinserting prefabs.
                 DataManager.inst.gameData.beatmapObjects.RemoveAll(x => x.fromPrefab);
-                for (int i = 0; i < DataManager.inst.gameData.prefabObjects.Count; i++)
-                    ObjectManager.inst.AddPrefabToLevel(DataManager.inst.gameData.prefabObjects[i]);
+                if (restart)
+                    for (int i = 0; i < DataManager.inst.gameData.prefabObjects.Count; i++)
+                        AddPrefabToLevel(DataManager.inst.gameData.prefabObjects[i], false);
 
                 // End and restart.
                 GameManagerPatch.EndInvoke();
