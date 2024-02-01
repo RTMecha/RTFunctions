@@ -112,7 +112,7 @@ namespace RTFunctions.Functions.Components
 
 		public void GenerateDraggers()
 		{
-			if (!EditorManager.inst || !Selected)
+			if (!Enabled || !EditorManager.inst || !Selected)
 				return;
 
 			if (!rotator)
