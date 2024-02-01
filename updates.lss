@@ -1,3 +1,9 @@
+1.9.5 > [Feb 1, 2024]
+- You can no longer enter editor / arcade without EditorManagement / ArcadiaCustoms.
+- Preparing for VG to LS and LS to VC converting.
+- Added new fonts VAG Rounded, Comic Sans and Determination Wingdings.
+- Fixed a bug with Prefab Objects when updating everything that caused objects to become orphaned.
+- Optimized timeline color updating.
 1.9.4 > [Jan 25, 2024]
 - Fixed a bug with generating prefab objects that sometimes broke the game.
 - Text updating now includes <themeObject=0>, <themeBGs=0>, <themeFX=0>, <themePlayers=0>, <themeBG>, <themeGUI> and <themeTail> formatting, so you can now have specific parts of a text object use a specific color while still allowing it to update the color.
