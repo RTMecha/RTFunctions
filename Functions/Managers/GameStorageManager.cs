@@ -28,8 +28,18 @@ namespace RTFunctions.Functions.Managers
             {
                 Debug.LogError(ex.ToString());
             }
+
+            timelinePlayer = GameManager.inst.timeline.transform.Find("Base/position").GetComponent<Image>();
+            timelineLeftCap = GameManager.inst.timeline.transform.Find("Base/Image").GetComponent<Image>();
+            timelineRightCap = GameManager.inst.timeline.transform.Find("Base/Image 1").GetComponent<Image>();
+            timelineLine = GameManager.inst.timeline.transform.Find("Base").GetComponent<Image>();
         }
 
+        public Image timelinePlayer;
+        public Image timelineLine;
+        public Image timelineLeftCap;
+        public Image timelineRightCap;
+        public List<Image> checkpointImages = new List<Image>();
         public Camera perspectiveCam;
         public PostProcessLayer postProcessLayer;
         public Transform extraBG;

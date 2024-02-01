@@ -10,6 +10,7 @@ using UnityEngine.UI;
 using TMPro;
 using LSFunctions;
 
+using RTFunctions.Functions;
 using RTFunctions.Functions.Animation;
 using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.IO;
@@ -24,6 +25,8 @@ namespace RTFunctions.Patchers
     [HarmonyPatch(typeof(GameManager))]
     public class GameManagerPatch : MonoBehaviour
     {
+        public static GameManager Instance { get => GameManager.inst; set => GameManager.inst = value; }
+
         public static event LevelEventHandler LevelStart;
         public static event LevelEventHandler LevelEnd;
 
@@ -257,11 +260,25 @@ namespace RTFunctions.Patchers
                 var beatmapTheme = RTHelpers.BeatmapTheme;
                 GameStorageManager.inst.perspectiveCam.backgroundColor = beatmapTheme.backgroundColor;
 
-                var componentsInChildren = __instance.timeline.GetComponentsInChildren<Image>();
-                for (int i = 0; i < componentsInChildren.Length; i++)
+                if (GameStorageManager.inst)
                 {
-                    componentsInChildren[i].color = beatmapTheme.guiColor;
+                    if (GameStorageManager.inst.checkpointImages.Count > 0)
+                        foreach (var image in GameStorageManager.inst.checkpointImages)
+                        {
+                            image.color = beatmapTheme.guiColor;
+                        }
+
+                    GameStorageManager.inst.timelinePlayer.color = beatmapTheme.guiColor;
+                    GameStorageManager.inst.timelineLeftCap.color = beatmapTheme.guiColor;
+                    GameStorageManager.inst.timelineRightCap.color = beatmapTheme.guiColor;
+                    GameStorageManager.inst.timelineLine.color = beatmapTheme.guiColor;
                 }
+
+                //var componentsInChildren = __instance.timeline.GetComponentsInChildren<Image>();
+                //for (int i = 0; i < componentsInChildren.Length; i++)
+                //{
+                //    componentsInChildren[i].color = beatmapTheme.guiColor;
+                //}
 
                 if (EditorManager.inst == null && AudioManager.inst.CurrentAudioSource.time < 15f)
                 {
@@ -353,6 +370,33 @@ namespace RTFunctions.Patchers
                 __instance.menuUI.GetComponentInChildren<Image>().enabled = false;
                 AudioManager.inst.CurrentAudioSource.UnPause();
                 __instance.gameState = GameManager.State.Playing;
+            }
+            return false;
+        }
+
+        [HarmonyPatch("UpdateTimeline")]
+        [HarmonyPrefix]
+        static bool UpdateTimelinePrefix()
+        {
+            if (Instance.timeline && AudioManager.inst.CurrentAudioSource.clip != null && DataManager.inst.gameData.beatmapData != null)
+            {
+                if (GameStorageManager.inst)
+                    GameStorageManager.inst.checkpointImages.Clear();
+
+                LSHelpers.DeleteChildren(Instance.timeline.transform.Find("elements"), true);
+                foreach (var checkpoint in DataManager.inst.gameData.beatmapData.checkpoints)
+                {
+                    if (checkpoint.time > 0.5f)
+                    {
+                        var gameObject = Instantiate(Instance.checkpointPrefab);
+                        gameObject.name = string.Concat(new object[] { "Checkpoint [", checkpoint.name, "] - [", checkpoint.time, "]" });
+                        gameObject.transform.SetParent(Instance.timeline.transform.Find("elements"));
+                        float num = checkpoint.time * 400f / AudioManager.inst.CurrentAudioSource.clip.length;
+                        gameObject.transform.AsRT().anchoredPosition = new Vector2(num, 0f);
+                        if (GameStorageManager.inst)
+                            GameStorageManager.inst.checkpointImages.Add(gameObject.GetComponent<Image>());
+                    }
+                }
             }
             return false;
         }
