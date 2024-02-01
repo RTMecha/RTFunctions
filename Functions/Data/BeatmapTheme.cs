@@ -162,103 +162,155 @@ namespace RTFunctions.Functions.Data
 			return colors;
 		}
 
+		public static int IDLength => 10;
+		public static string DefaultName { get; set; } = "New Theme";
+
+		public static Color DefaultBGColor { get; set; } = LSColors.gray900;
+		public static Color DefaultGUIColor { get; set; } = LSColors.white;
+		public static Color DefaultTailColor { get; set; } = LSColors.white;
+
+		public static List<Color> DefaultPlayerColors { get; set; } = new List<Color>
+		{
+			LSColors.HexToColor("E57373"),
+			LSColors.HexToColor("64B5F6"),
+			LSColors.HexToColor("81C784"),
+			LSColors.HexToColor("FFB74D"),
+		};
+		public static List<Color> DefaultObjectColors { get; set; } = new List<Color>
+		{
+			LSColors.gray100,
+			LSColors.gray200,
+			LSColors.gray300,
+			LSColors.gray400,
+			LSColors.gray500,
+			LSColors.gray600,
+			LSColors.gray700,
+			LSColors.gray800,
+			LSColors.gray900,
+			LSColors.gray100,
+			LSColors.gray200,
+			LSColors.gray300,
+			LSColors.gray400,
+			LSColors.gray500,
+			LSColors.gray600,
+			LSColors.gray700,
+			LSColors.gray800,
+			LSColors.gray900,
+		};
+		public static List<Color> DefaulBackgroundColors { get; set; } = new List<Color>
+		{
+			LSColors.pink100,
+			LSColors.pink200,
+			LSColors.pink300,
+			LSColors.pink400,
+			LSColors.pink500,
+			LSColors.pink600,
+			LSColors.pink700,
+			LSColors.pink800,
+			LSColors.pink900,
+			LSColors.pink100,
+			LSColors.pink200,
+			LSColors.pink300,
+			LSColors.pink400,
+			LSColors.pink500,
+			LSColors.pink600,
+			LSColors.pink700,
+			LSColors.pink800,
+			LSColors.pink900,
+		};
+		public static List<Color> DefaultEffectColors { get; set; } = new List<Color>
+		{
+			LSColors.gray100,
+			LSColors.gray200,
+			LSColors.gray300,
+			LSColors.gray400,
+			LSColors.gray500,
+			LSColors.gray600,
+			LSColors.gray700,
+			LSColors.gray800,
+			LSColors.gray900,
+			LSColors.gray100,
+			LSColors.gray200,
+			LSColors.gray300,
+			LSColors.gray400,
+			LSColors.gray500,
+			LSColors.gray600,
+			LSColors.gray700,
+			LSColors.gray800,
+			LSColors.gray900,
+		};
+
 		public new void ClearBeatmap()
 		{
 			playerColors.Clear();
 			objectColors.Clear();
 			backgroundColors.Clear();
-			id = LSText.randomNumString(6);
-			//name = ConfigEntries.TemplateThemeName.Value;
-			//guiColor = ConfigEntries.TemplateThemeGUIColor.Value;
-			//backgroundColor = ConfigEntries.TemplateThemeBGColor.Value;
-			//playerColors.Add(ConfigEntries.TemplateThemePlayerColor1.Value);
-			//playerColors.Add(ConfigEntries.TemplateThemePlayerColor2.Value);
-			//playerColors.Add(ConfigEntries.TemplateThemePlayerColor3.Value);
-			//playerColors.Add(ConfigEntries.TemplateThemePlayerColor4.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor1.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor2.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor3.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor4.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor5.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor6.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor7.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor8.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor9.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor1.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor2.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor3.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor4.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor5.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor6.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor7.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor8.Value);
-			//objectColors.Add(ConfigEntries.TemplateThemeOBJColor9.Value);
-			//backgroundColors.Add(ConfigEntries.TemplateThemeBGColor1.Value);
-			//backgroundColors.Add(ConfigEntries.TemplateThemeBGColor2.Value);
-			//backgroundColors.Add(ConfigEntries.TemplateThemeBGColor3.Value);
-			//backgroundColors.Add(ConfigEntries.TemplateThemeBGColor4.Value);
-			//backgroundColors.Add(ConfigEntries.TemplateThemeBGColor5.Value);
-			//backgroundColors.Add(ConfigEntries.TemplateThemeBGColor6.Value);
-			//backgroundColors.Add(ConfigEntries.TemplateThemeBGColor7.Value);
-			//backgroundColors.Add(ConfigEntries.TemplateThemeBGColor8.Value);
-			//backgroundColors.Add(ConfigEntries.TemplateThemeBGColor9.Value);
+			id = LSText.randomNumString(IDLength);
+			name = DefaultName;
+			backgroundColor = new Color(DefaultBGColor.r, DefaultBGColor.g, DefaultBGColor.b, DefaultBGColor.a);
+			guiColor = new Color(DefaultGUIColor.r, DefaultGUIColor.g, DefaultGUIColor.b, DefaultGUIColor.a);
+			guiAccentColor = new Color(DefaultTailColor.r, DefaultTailColor.g, DefaultTailColor.b, DefaultTailColor.a);
 
-			name = "New Theme";
-			guiColor = LSColors.white;
-			guiAccentColor = LSColors.white;
-			backgroundColor = LSColors.gray900;
-			playerColors.Add(LSColors.HexToColor("E57373"));
-			playerColors.Add(LSColors.HexToColor("64B5F6"));
-			playerColors.Add(LSColors.HexToColor("81C784"));
-			playerColors.Add(LSColors.HexToColor("FFB74D"));
+			playerColors.AddRange(DefaultPlayerColors.Select(x => new Color(x.r, x.g, x.b, x.a)));
+			objectColors.AddRange(DefaultObjectColors.Select(x => new Color(x.r, x.g, x.b, x.a)));
+			backgroundColors.AddRange(DefaulBackgroundColors.Select(x => new Color(x.r, x.g, x.b, x.a)));
+			effectColors.AddRange(DefaultEffectColors.Select(x => new Color(x.r, x.g, x.b, x.a)));
 
-			objectColors.Add(LSColors.gray100);
-			objectColors.Add(LSColors.gray200);
-			objectColors.Add(LSColors.gray300);
-			objectColors.Add(LSColors.gray400);
-			objectColors.Add(LSColors.gray500);
-			objectColors.Add(LSColors.gray600);
-			objectColors.Add(LSColors.gray700);
-			objectColors.Add(LSColors.gray800);
-			objectColors.Add(LSColors.gray900);
-			objectColors.Add(LSColors.gray100);
-			objectColors.Add(LSColors.gray200);
-			objectColors.Add(LSColors.gray300);
-			objectColors.Add(LSColors.gray400);
-			objectColors.Add(LSColors.gray500);
-			objectColors.Add(LSColors.gray600);
-			objectColors.Add(LSColors.gray700);
-			objectColors.Add(LSColors.gray800);
-			objectColors.Add(LSColors.gray900);
+			//guiColor = LSColors.white;
+			//guiAccentColor = LSColors.white;
+			//backgroundColor = LSColors.gray900;
+			//playerColors.Add(LSColors.HexToColor("E57373"));
+			//playerColors.Add(LSColors.HexToColor("64B5F6"));
+			//playerColors.Add(LSColors.HexToColor("81C784"));
+			//playerColors.Add(LSColors.HexToColor("FFB74D"));
 
-			effectColors.Add(LSColors.gray100);
-			effectColors.Add(LSColors.gray200);
-			effectColors.Add(LSColors.gray300);
-			effectColors.Add(LSColors.gray400);
-			effectColors.Add(LSColors.gray500);
-			effectColors.Add(LSColors.gray600);
-			effectColors.Add(LSColors.gray700);
-			effectColors.Add(LSColors.gray800);
-			effectColors.Add(LSColors.gray900);
-			effectColors.Add(LSColors.gray100);
-			effectColors.Add(LSColors.gray200);
-			effectColors.Add(LSColors.gray300);
-			effectColors.Add(LSColors.gray400);
-			effectColors.Add(LSColors.gray500);
-			effectColors.Add(LSColors.gray600);
-			effectColors.Add(LSColors.gray700);
-			effectColors.Add(LSColors.gray800);
-			effectColors.Add(LSColors.gray900);
+			//objectColors.Add(LSColors.gray100);
+			//objectColors.Add(LSColors.gray200);
+			//objectColors.Add(LSColors.gray300);
+			//objectColors.Add(LSColors.gray400);
+			//objectColors.Add(LSColors.gray500);
+			//objectColors.Add(LSColors.gray600);
+			//objectColors.Add(LSColors.gray700);
+			//objectColors.Add(LSColors.gray800);
+			//objectColors.Add(LSColors.gray900);
+			//objectColors.Add(LSColors.gray100);
+			//objectColors.Add(LSColors.gray200);
+			//objectColors.Add(LSColors.gray300);
+			//objectColors.Add(LSColors.gray400);
+			//objectColors.Add(LSColors.gray500);
+			//objectColors.Add(LSColors.gray600);
+			//objectColors.Add(LSColors.gray700);
+			//objectColors.Add(LSColors.gray800);
+			//objectColors.Add(LSColors.gray900);
 
-			backgroundColors.Add(LSColors.pink100);
-			backgroundColors.Add(LSColors.pink200);
-			backgroundColors.Add(LSColors.pink300);
-			backgroundColors.Add(LSColors.pink400);
-			backgroundColors.Add(LSColors.pink500);
-			backgroundColors.Add(LSColors.pink600);
-			backgroundColors.Add(LSColors.pink700);
-			backgroundColors.Add(LSColors.pink800);
-			backgroundColors.Add(LSColors.pink900);
+			//effectColors.Add(LSColors.gray100);
+			//effectColors.Add(LSColors.gray200);
+			//effectColors.Add(LSColors.gray300);
+			//effectColors.Add(LSColors.gray400);
+			//effectColors.Add(LSColors.gray500);
+			//effectColors.Add(LSColors.gray600);
+			//effectColors.Add(LSColors.gray700);
+			//effectColors.Add(LSColors.gray800);
+			//effectColors.Add(LSColors.gray900);
+			//effectColors.Add(LSColors.gray100);
+			//effectColors.Add(LSColors.gray200);
+			//effectColors.Add(LSColors.gray300);
+			//effectColors.Add(LSColors.gray400);
+			//effectColors.Add(LSColors.gray500);
+			//effectColors.Add(LSColors.gray600);
+			//effectColors.Add(LSColors.gray700);
+			//effectColors.Add(LSColors.gray800);
+			//effectColors.Add(LSColors.gray900);
+
+			//backgroundColors.Add(LSColors.pink100);
+			//backgroundColors.Add(LSColors.pink200);
+			//backgroundColors.Add(LSColors.pink300);
+			//backgroundColors.Add(LSColors.pink400);
+			//backgroundColors.Add(LSColors.pink500);
+			//backgroundColors.Add(LSColors.pink600);
+			//backgroundColors.Add(LSColors.pink700);
+			//backgroundColors.Add(LSColors.pink800);
+			//backgroundColors.Add(LSColors.pink900);
 		}
 
 		public void Lerp(BeatmapTheme _start, BeatmapTheme _end, float _val)
