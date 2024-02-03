@@ -347,43 +347,131 @@ namespace RTFunctions.Functions.Data
 
 			if (jn["e"] != null)
             {
-				for (int i = 0; i < events.Count; i++)
-                {
-					for (int j = 0; j < jn["e"][i]["k"].Count; j++)
+				// Position
+				{
+					for (int j = 0; j < jn["e"][0]["k"].Count; j++)
                     {
 						var eventKeyframe = new EventKeyframe();
-						var kfjn = jn["e"][i]["k"][j];
+						var kfjn = jn["e"][0]["k"][j];
 
 						eventKeyframe.id = LSText.randomNumString(8);
 
 						eventKeyframe.eventTime = kfjn["t"].AsFloat;
 
-						if (kfjn["ct"] != null)
+						if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
 							eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
 
-						int indexLength = i == 0 ? 3 : i == 1 ? 2 : i == 2 ? 1 : 5;
-						var array = new float[indexLength];
-						for (int k = 0; k < indexLength; k++)
-                        {
-							if (kfjn["ev"].Count > k)
-								array[k] = kfjn["ev"][k].AsFloat;
-						}
-						eventKeyframe.SetEventValues(array);
+						eventKeyframe.SetEventValues(
+							kfjn["ev"][0].AsFloat,
+							kfjn["ev"][1].AsFloat,
+							0f);
 
 						eventKeyframe.random = kfjn["r"].AsInt;
 
-						var randomArray = new float[4];
-						for (int k = 0; k < 4; k++)
-						{
-							if (kfjn["er"].Count > k)
-								randomArray[k] = kfjn["er"][k].AsFloat;
-						}
-						eventKeyframe.SetEventRandomValues(randomArray);
+						eventKeyframe.SetEventRandomValues(
+							kfjn["er"][0].AsFloat,
+							kfjn["er"][1].AsFloat,
+							kfjn["er"][2].AsFloat);
 
-						eventKeyframe.relative = i == 2;
-
+						eventKeyframe.relative = false;
 						eventKeyframe.active = false;
-						events[i].Add(eventKeyframe);
+						events[0].Add(eventKeyframe);
+					}
+				}
+				
+				// Scale
+				{
+					for (int j = 0; j < jn["e"][1]["k"].Count; j++)
+                    {
+						var eventKeyframe = new EventKeyframe();
+						var kfjn = jn["e"][1]["k"][j];
+
+						eventKeyframe.id = LSText.randomNumString(8);
+
+						eventKeyframe.eventTime = kfjn["t"].AsFloat;
+
+						if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+							eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+						eventKeyframe.SetEventValues(
+							kfjn["ev"][0].AsFloat,
+							kfjn["ev"][1].AsFloat);
+
+						eventKeyframe.random = kfjn["r"].AsInt;
+
+						eventKeyframe.SetEventRandomValues(
+							kfjn["er"][0].AsFloat,
+							kfjn["er"][1].AsFloat,
+							kfjn["er"][2].AsFloat);
+
+						eventKeyframe.relative = false;
+						eventKeyframe.active = false;
+						events[1].Add(eventKeyframe);
+					}
+				}
+
+				// Rotation
+				{
+					for (int j = 0; j < jn["e"][2]["k"].Count; j++)
+					{
+						var eventKeyframe = new EventKeyframe();
+						var kfjn = jn["e"][2]["k"][j];
+
+						eventKeyframe.id = LSText.randomNumString(8);
+
+						eventKeyframe.eventTime = kfjn["t"].AsFloat;
+
+						if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+							eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+						eventKeyframe.SetEventValues(
+							kfjn["ev"][0].AsFloat);
+
+						eventKeyframe.random = kfjn["r"].AsInt;
+
+						eventKeyframe.SetEventRandomValues(
+							kfjn["er"][0].AsFloat,
+							kfjn["er"][1].AsFloat,
+							kfjn["er"][2].AsFloat);
+
+						eventKeyframe.relative = true;
+						eventKeyframe.active = false;
+						events[2].Add(eventKeyframe);
+					}
+				}
+
+				// Color
+				{
+					for (int j = 0; j < jn["e"][3]["k"].Count; j++)
+                    {
+						var eventKeyframe = new EventKeyframe();
+						var kfjn = jn["e"][3]["k"][j];
+
+						eventKeyframe.id = LSText.randomNumString(8);
+
+						eventKeyframe.eventTime = kfjn["t"].AsFloat;
+
+						if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+							eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+						eventKeyframe.SetEventValues(
+							kfjn["ev"][0].AsFloat,
+							-(kfjn["ev"][1].AsFloat / 100f) + 1f,
+							0f,
+							0f,
+							0f);
+
+						eventKeyframe.random = kfjn["r"].AsInt;
+
+						eventKeyframe.SetEventRandomValues(
+							kfjn["er"][0].AsFloat,
+							kfjn["er"][1].AsFloat,
+							kfjn["er"][2].AsFloat,
+							0f);
+
+						eventKeyframe.relative = false;
+						eventKeyframe.active = false;
+						events[3].Add(eventKeyframe);
 					}
 				}
             }
@@ -402,7 +490,7 @@ namespace RTFunctions.Functions.Data
 				beatmapObject.parent = jn["p_id"];
 
 			if (jn["p_t"] != null)
-				beatmapObject.parentType = jn["pt"];
+				beatmapObject.parentType = jn["p_t"];
 
 			if (jn["p_o"] != null)
 			{
@@ -429,9 +517,6 @@ namespace RTFunctions.Functions.Data
 			if (jn["s"] != null)
 				beatmapObject.shape = jn["s"].AsInt;
 
-			if (jn["shape"] != null)
-				beatmapObject.shape = jn["shape"].AsInt;
-
 			if (jn["so"] != null)
 				beatmapObject.shapeOption = jn["so"].AsInt;
 
@@ -447,17 +532,20 @@ namespace RTFunctions.Functions.Data
 			if (jn["o"] != null)
 				beatmapObject.origin = new Vector2(jn["o"]["x"].AsFloat, jn["o"]["y"].AsFloat);
 
-			if (jn["ed"]["lk"] != null)
-				beatmapObject.editorData.locked = jn["ed"]["lk"].AsBool;
+			if (jn["ed"] != null)
+			{
+				if (jn["ed"]["lk"] != null)
+					beatmapObject.editorData.locked = jn["ed"]["lk"].AsBool;
 
-			if (jn["ed"]["co"] != null)
-				beatmapObject.editorData.collapse = jn["ed"]["co"].AsBool;
+				if (jn["ed"]["co"] != null)
+					beatmapObject.editorData.collapse = jn["ed"]["co"].AsBool;
 
-			if (jn["ed"]["b"] != null)
-				beatmapObject.editorData.Bin = jn["ed"]["b"].AsInt;
+				if (jn["ed"]["b"] != null)
+					beatmapObject.editorData.Bin = jn["ed"]["b"].AsInt;
 
-			if (jn["ed"]["l"] != null)
-				beatmapObject.editorData.layer = Mathf.Clamp(jn["ed"]["l"].AsInt, 0, int.MaxValue);
+				if (jn["ed"]["l"] != null)
+					beatmapObject.editorData.layer = Mathf.Clamp(jn["ed"]["l"].AsInt, 0, int.MaxValue);
+			}
 
 			return beatmapObject;
 		}
@@ -727,6 +815,140 @@ namespace RTFunctions.Functions.Data
 			return beatmapObject;
 		}
 
+		public JSONNode ToJSONVG()
+		{
+			var jn = JSON.Parse("{}");
+
+			jn["id"] = id;
+			if (!string.IsNullOrEmpty(prefabID))
+				jn["pre_id"] = prefabID;
+
+			if (!string.IsNullOrEmpty(prefabInstanceID))
+				jn["pre_iid"] = prefabInstanceID;
+
+			if (GetParentType() != "101")
+				jn["p_t"] = GetParentType();
+
+			if (getParentOffsets().FindIndex(x => x != 0f) != -1)
+			{
+				int num4 = 0;
+				foreach (float num5 in getParentOffsets())
+				{
+					jn["p_o"][num4] = num5;
+					num4++;
+				}
+			}
+
+			if (!string.IsNullOrEmpty(parent))
+				jn["p_id"] = parent;
+
+			jn["d"] = depth;
+
+			jn["st"] = StartTime;
+
+			if (!string.IsNullOrEmpty(name))
+				jn["n"] = name;
+
+			jn["ot"] = (int)objectType;
+			jn["ak_t"] = (int)autoKillType;
+			jn["ak_o"] = autoKillOffset;
+
+			if (shape != 0)
+				jn["s"] = shape;
+
+			if (shapeOption != 0)
+				jn["so"] = shapeOption;
+
+			if (!string.IsNullOrEmpty(text))
+				jn["text"] = text;
+
+			jn["o"]["x"] = origin.x;
+			jn["o"]["y"] = origin.y;
+			if (editorData.locked)
+				jn["ed"]["locked"] = editorData.locked.ToString();
+			if (editorData.collapse)
+				jn["ed"]["shrink"] = editorData.collapse.ToString();
+
+			jn["ed"]["bin"] = editorData.Bin.ToString();
+			jn["ed"]["layer"] = editorData.layer.ToString();
+
+			if (editorData.locked)
+				jn["ed"]["lk"] = editorData.locked;
+
+			if (editorData.collapse)
+				jn["ed"]["co"] = editorData.collapse;
+
+				jn["ed"]["b"] = editorData.Bin;
+			
+				jn["ed"]["l"].AsInt = Mathf.Clamp(editorData.layer, 0, 5);
+
+			// Events
+            {
+				// Position
+				for (int j = 0; j < events[0].Count; j++)
+				{
+					var eventKeyframe = events[0][j];
+					jn["e"][0]["k"][j]["t"] = eventKeyframe.eventTime;
+					jn["e"][0]["k"][j]["ct"] = eventKeyframe.curveType.Name;
+
+					jn["e"][0]["k"][j]["ev"][0] = eventKeyframe.eventValues[0];
+					jn["e"][0]["k"][j]["ev"][1] = eventKeyframe.eventValues[1];
+
+					jn["e"][0]["k"][j]["r"] = eventKeyframe.random;
+
+					jn["e"][0]["k"][j]["er"][0] = eventKeyframe.eventRandomValues[0];
+					jn["e"][0]["k"][j]["er"][1] = eventKeyframe.eventRandomValues[1];
+					jn["e"][0]["k"][j]["er"][2] = eventKeyframe.eventRandomValues[2];
+				}
+
+				// Scale
+				for (int j = 0; j < events[1].Count; j++)
+				{
+					var eventKeyframe = events[1][j];
+					jn["e"][1]["k"][j]["t"] = eventKeyframe.eventTime;
+					jn["e"][1]["k"][j]["ct"] = eventKeyframe.curveType.Name;
+
+					jn["e"][1]["k"][j]["ev"][0] = eventKeyframe.eventValues[0];
+					jn["e"][1]["k"][j]["ev"][1] = eventKeyframe.eventValues[1];
+
+					jn["e"][1]["k"][j]["r"] = eventKeyframe.random;
+
+					jn["e"][1]["k"][j]["er"][0] = eventKeyframe.eventRandomValues[0];
+					jn["e"][1]["k"][j]["er"][1] = eventKeyframe.eventRandomValues[1];
+					jn["e"][1]["k"][j]["er"][2] = eventKeyframe.eventRandomValues[2];
+				}
+
+				// Rotation
+				for (int j = 0; j < events[2].Count; j++)
+				{
+					var eventKeyframe = events[2][j];
+					jn["e"][2]["k"][j]["t"] = eventKeyframe.eventTime;
+					jn["e"][2]["k"][j]["ct"] = eventKeyframe.curveType.Name;
+
+					jn["e"][2]["k"][j]["ev"][0] = eventKeyframe.eventValues[0];
+
+					jn["e"][2]["k"][j]["r"] = eventKeyframe.random;
+
+					jn["e"][2]["k"][j]["er"][0] = eventKeyframe.eventRandomValues[0];
+					jn["e"][2]["k"][j]["er"][1] = eventKeyframe.eventRandomValues[1];
+					jn["e"][2]["k"][j]["er"][2] = eventKeyframe.eventRandomValues[2];
+				}
+
+				// Color
+				for (int j = 0; j < events[3].Count; j++)
+				{
+					var eventKeyframe = events[3][j];
+					jn["e"][3]["k"][j]["t"] = eventKeyframe.eventTime;
+					jn["e"][3]["k"][j]["ct"] = eventKeyframe.curveType.Name;
+
+					jn["e"][3]["k"][j]["ev"][0] = Mathf.Clamp(eventKeyframe.eventValues[0], 0, 8);
+					jn["e"][3]["k"][j]["ev"][1] = (-eventKeyframe.eventValues[1] + 1f) * 100f;
+				}
+			}
+
+			return jn;
+		}
+
 		public JSONNode ToJSON()
         {
 			var jn = JSON.Parse("{}");
@@ -760,9 +982,9 @@ namespace RTFunctions.Functions.Data
 			if (parentAdditive != "000")
 				jn["pa"] = parentAdditive;
 
-			jn["p"] = parent.ToString();
+			jn["p"] = parent;
 
-			jn["d"] = Depth.ToString();
+			jn["d"] = depth.ToString();
 			jn["rdt"] = (background ? 1 : 0).ToString();
 
 			if (LDM)

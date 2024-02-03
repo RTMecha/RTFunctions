@@ -93,6 +93,25 @@ namespace RTFunctions.Functions.Data
             Type = og.Type
         };
 
+        public static Prefab ParseVG(JSONNode jn)
+        {
+            var beatmapObjects = new List<BaseBeatmapObject>();
+            for (int i = 0; i < jn["objs"].Count; i++)
+                beatmapObjects.Add(BeatmapObject.ParseVG(jn["objs"][i]));
+
+            return new Prefab
+            {
+                ID = jn["id"] == null ? LSText.randomString(16) : jn["id"],
+                MainObjectID = LSText.randomString(16),
+                Name = jn["n"],
+                Type = jn["type"].AsInt,
+                Offset = -jn["o"].AsFloat,
+                objects = beatmapObjects,
+                prefabObjects = new List<BasePrefabObject>(),
+                description = jn["description"],
+            };
+        }
+
         public static Prefab Parse(JSONNode jn)
         {
             var beatmapObjects = new List<BaseBeatmapObject>();
@@ -116,9 +135,26 @@ namespace RTFunctions.Functions.Data
             };
         }
 
+        public JSONNode ToJSONVG()
+        {
+            var jn = JSON.Parse("{}");
+            jn["n"] = Name;
+            jn["type"] = Type;
+
+            jn["o"] = -Offset;
+
+            jn["description"] = description;
+
+            for (int i = 0; i < objects.Count; i++)
+                if (objects[i] != null)
+                    jn["objs"][i] = ((BeatmapObject)objects[i]).ToJSONVG();
+
+            return jn;
+        }
+
         public JSONNode ToJSON()
         {
-            JSONNode jn = JSON.Parse("{}");
+            var jn = JSON.Parse("{}");
             jn["name"] = Name;
             jn["type"] = Type.ToString();
             jn["offset"] = Offset.ToString();
@@ -132,12 +168,11 @@ namespace RTFunctions.Functions.Data
             jn["desc"] = description == null ? "" : description;
 
             for (int i = 0; i < objects.Count; i++)
-                if (objects[i] != null)
-                    jn["objects"][i] = ((BeatmapObject)objects[i]).ToJSON();
+                jn["objects"][i] = ((BeatmapObject)objects[i]).ToJSON();
 
-            for (int i = 0; i < prefabObjects.Count; i++)
-                if (prefabObjects[i] != null)
-                    jn["prefab_objects"][i] = ((PrefabObject)prefabObjects[i]).ToJSON();
+            if (prefabObjects != null && prefabObjects.Count > 0)
+                for (int i = 0; i < prefabObjects.Count; i++)
+                        jn["prefab_objects"][i] = ((PrefabObject)prefabObjects[i]).ToJSON();
             return jn;
         }
 

@@ -53,6 +53,68 @@ namespace RTFunctions.Functions.Data
 			return beatmapTheme;
 		}
 
+		public static BeatmapTheme ParseVG(JSONNode jn)
+		{
+			var beatmapTheme = new BeatmapTheme();
+
+			beatmapTheme.id = jn["id"] != null ? jn["id"] : LSText.randomNumString(IDLength);
+
+			beatmapTheme.name = jn["name"] != null ? jn["name"] : "name your themes!";
+
+			beatmapTheme.guiColor = jn["base_gui"] != null ? LSColors.HexToColor(jn["base_gui"]) : LSColors.gray800;
+
+			beatmapTheme.guiAccentColor = jn["base_gui_accent"] != null ? LSColors.HexToColor(jn["base_gui_accent"]) : beatmapTheme.guiColor;
+
+			beatmapTheme.backgroundColor = jn["base_bg"] != null ? LSColors.HexToColor(jn["base_bg"]) : LSColors.gray100;
+
+			beatmapTheme.playerColors = jn["pla"] != null ? SetColors(jn["pla"], 4, "Player Hex code does not exist for some reason") : new List<Color>
+			{
+				LSColors.HexToColorAlpha("E57373FF"),
+				LSColors.HexToColorAlpha("64B5F6FF"),
+				LSColors.HexToColorAlpha("81C784FF"),
+				LSColors.HexToColorAlpha("FFB74DFF"),
+			};
+
+			beatmapTheme.objectColors = jn["obj"] != null ? SetColors(jn["obj"], 18) : new List<Color>
+			{
+				LSColors.pink100,
+				LSColors.pink200,
+				LSColors.pink300,
+				LSColors.pink400,
+				LSColors.pink500,
+				LSColors.pink600,
+				LSColors.pink700,
+				LSColors.pink800,
+				LSColors.pink900,
+				LSColors.pink100,
+				LSColors.pink200,
+				LSColors.pink300,
+				LSColors.pink400,
+				LSColors.pink500,
+				LSColors.pink600,
+				LSColors.pink700,
+				LSColors.pink800,
+				LSColors.pink900,
+			};
+
+			beatmapTheme.backgroundColors = jn["bg"] != null ? SetColors(jn["bg"], 9, "BG Hex code does not exist for some reason") : new List<Color>
+			{
+				LSColors.gray100,
+				LSColors.gray200,
+				LSColors.gray300,
+				LSColors.gray400,
+				LSColors.gray500,
+				LSColors.gray600,
+				LSColors.gray700,
+				LSColors.gray800,
+				LSColors.gray900,
+			};
+
+			beatmapTheme.effectColors = jn["fx"] != null ? SetColors(jn["fx"], 18) : beatmapTheme.objectColors.Clone();
+
+			return beatmapTheme;
+		}
+
 		public static BeatmapTheme Parse(JSONNode jn)
 		{
 			var beatmapTheme = new BeatmapTheme();
@@ -63,7 +125,7 @@ namespace RTFunctions.Functions.Data
 
 			beatmapTheme.guiColor = jn["gui"] != null ? ((string)jn["gui"]).Length == 8 ? LSColors.HexToColorAlpha(jn["gui"]) : LSColors.HexToColor(jn["gui"]) : LSColors.gray800;
 
-			beatmapTheme.guiAccentColor = jn["gui_ex"] != null ? ((string)jn["gui_ex"]).Length == 8 ? LSColors.HexToColorAlpha(jn["gui_ex"]) : LSColors.HexToColorAlpha(jn["gui_ex"]) : beatmapTheme.guiColor;
+			beatmapTheme.guiAccentColor = jn["gui_ex"] != null ? ((string)jn["gui_ex"]).Length == 8 ? LSColors.HexToColor(jn["gui_ex"]) : LSColors.HexToColorAlpha(jn["gui_ex"]) : beatmapTheme.guiColor;
 
 			beatmapTheme.backgroundColor = jn["bg"] != null ? LSColors.HexToColor(jn["bg"]) : LSColors.gray100;
 
@@ -115,6 +177,30 @@ namespace RTFunctions.Functions.Data
             return beatmapTheme;
 		}
 
+		public JSONNode ToJSONVG()
+		{
+			var jn = JSON.Parse("{}");
+
+			jn["name"] = name;
+			jn["base_gui_accent"] = LSColors.ColorToHex(guiAccentColor);
+			jn["base_gui"] = LSColors.ColorToHex(guiColor);
+			jn["base_bg"] = LSColors.ColorToHex(backgroundColor);
+
+			for (int i = 0; i < 4; i++)
+				jn["pla"][i] = LSColors.ColorToHex(playerColors[i]);
+
+			for (int i = 0; i < 9; i++)
+				jn["obj"][i] = LSColors.ColorToHex(objectColors[i]);
+
+			for (int i = 0; i < 9; i++)
+				jn["bg"][i] = LSColors.ColorToHex(backgroundColors[i]);
+
+			for (int i = 0; i < 9; i++)
+				jn["fx"][i] = LSColors.ColorToHex(effectColors[i]);
+
+			return jn;
+		}
+
 		public JSONNode ToJSON()
         {
 			var jn = JSON.Parse("{}");
@@ -162,7 +248,7 @@ namespace RTFunctions.Functions.Data
 			return colors;
 		}
 
-		public static int IDLength => 10;
+		public static int IDLength => 7;
 		public static string DefaultName { get; set; } = "New Theme";
 
 		public static Color DefaultBGColor { get; set; } = LSColors.gray900;
