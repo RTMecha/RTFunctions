@@ -1,3 +1,6 @@
+1.9.6 > [Feb 5, 2024]
+- Fixed a logging error.
+- Mostly implemented VG to LS and LS to VG conversion.
 1.9.5 > [Feb 1, 2024]
 - You can no longer enter editor / arcade without EditorManagement / ArcadiaCustoms.
 - Preparing for VG to LS and LS to VC converting.
