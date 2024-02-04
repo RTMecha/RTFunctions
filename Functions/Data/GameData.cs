@@ -563,26 +563,21 @@ namespace RTFunctions.Functions.Data
 			Dictionary<string, string> idsConverter = new Dictionary<string, string>();
 
 			int themeIndex = 0;
-			if (DataManager.inst.CustomBeatmapThemes.Count > 0)
-				foreach (var beatmapTheme in DataManager.inst.CustomBeatmapThemes.Select(x => x as BeatmapTheme))
+			var themes = DataManager.inst.CustomBeatmapThemes.Select(x => x as BeatmapTheme).Where(x => eventObjects.allEvents[4].Has(y => int.TryParse(x.id, out int id) && id == y.eventValues[0]));
+			if (themes.Count() > 0)
+				foreach (var beatmapTheme in themes)
 				{
-					if (eventObjects.allEvents[4].Has(x => int.TryParse(beatmapTheme.id, out int id) && id == x.eventValues[0]))
+					beatmapTheme.VGID = LSText.randomString(16);
+
+					if (!idsConverter.ContainsKey(Parser.TryParse(beatmapTheme.id, 0f).ToString()))
 					{
-						beatmapTheme.VGID = LSText.randomString(16);
-
-						if (!idsConverter.ContainsKey(Parser.TryParse(beatmapTheme.id, 0f).ToString()))
-						{
-							idsConverter.Add(Parser.TryParse(beatmapTheme.id, 0f).ToString(), beatmapTheme.VGID);
-						}
-
-						jn["themes"][themeIndex] = beatmapTheme.ToJSONVG();
+						idsConverter.Add(Parser.TryParse(beatmapTheme.id, 0f).ToString(), beatmapTheme.VGID);
 					}
+
+					jn["themes"][themeIndex] = beatmapTheme.ToJSONVG();
 					themeIndex++;
 				}
 			else
-				jn["themes"] = new JSONArray();
-
-			if (themeIndex == 0)
 				jn["themes"] = new JSONArray();
 
 			if (beatmapData.markers.Count > 0)
@@ -709,6 +704,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][10][i]["ev"][1] = eventKeyframe.eventValues[1];
 					jn["events"][10][i]["ev"][2] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[2], 0f, 9f);
 					jn["events"][10][i]["ev"][3] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[3], 0f, 9f);
+					jn["events"][10][i]["ev"][4] = eventKeyframe.eventValues[4];
 				}
 
 				jn["events"][11][0]["ct"] = "Linear";
