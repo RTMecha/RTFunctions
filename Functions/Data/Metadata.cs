@@ -355,7 +355,7 @@ namespace RTFunctions.Functions.Data
 			jn["song"]["preview_length"] = song.previewLength;
 
 			jn["beatmap"]["date_edited"] = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
-			jn["beatmap"]["game_version"] = beatmap.game_version;
+			jn["beatmap"]["game_version"] = "24.1.7";
 
 			return jn;
 		}

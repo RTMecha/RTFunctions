@@ -76,7 +76,7 @@ namespace RTFunctions.Functions.Data
 			var gameData = new GameData();
 
 			Debug.Log($"{FunctionsPlugin.className}Parsing BeatmapData");
-			gameData.beatmapData = LevelBeatmapData.Parse(jn);
+			gameData.beatmapData = LevelBeatmapData.ParseVG(jn);
 
 			gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
 
@@ -212,8 +212,8 @@ namespace RTFunctions.Functions.Data
 
 				eventKeyframe.eventTime = kfjn["t"].AsFloat;
 				// Since theme keyframes use random string IDs as their value instead of numbers (wtf), we have to convert the new IDs to numbers.
-				if (!string.IsNullOrEmpty(kfjn["ev"][0]) && idConversion.ContainsKey(kfjn["ev"][0]))
-					eventKeyframe.SetEventValues(Parser.TryParse(idConversion[kfjn["ev"][0]], 0f));
+				if (!string.IsNullOrEmpty(kfjn["evs"][0]) && idConversion.ContainsKey(kfjn["evs"][0]))
+					eventKeyframe.SetEventValues(Parser.TryParse(idConversion[kfjn["evs"][0]], 0f));
 				else
 					eventKeyframe.SetEventValues(0f);
 
@@ -521,6 +521,15 @@ namespace RTFunctions.Functions.Data
 			jn["editor"]["preview"]["cam_zoom_offset"] = 0f;
 			jn["editor"]["preview"]["cam_zoom_offset_color"] = 0;
 
+			for (int i = 0; i < 6; i++)
+				jn["editor_prefab_spawn"][i] = new JSONObject();
+
+			for (int i = 1; i < 6; i++)
+			{
+				jn["parallax_settings"]["l"][i - 1]["d"] = 100 * i;
+				jn["parallax_settings"]["l"][i - 1]["c"] = 1 * i;
+			}
+
 			for (int i = 0; i < beatmapData.checkpoints.Count; i++)
             {
 				var checkpoint = beatmapData.checkpoints[i];
@@ -532,34 +541,60 @@ namespace RTFunctions.Functions.Data
 
 			for (int i = 0; i < beatmapObjects.Count; i++)
             {
-				jn["objects"] = ((Data.BeatmapObject)beatmapObjects[i]).ToJSONVG();
+				jn["objects"][i] = ((Data.BeatmapObject)beatmapObjects[i]).ToJSONVG();
             }
 
-			for (int i = 0; i < prefabObjects.Count; i++)
-            {
-				jn["prefab_objects"] = ((Data.PrefabObject)prefabObjects[i]).ToJSONVG();
-            }
-			
-			for (int i = 0; i < prefabs.Count; i++)
-            {
-				jn["prefabs"] = ((Data.Prefab)prefabs[i]).ToJSONVG();
-            }
+			if (prefabObjects.Count > 0)
+				for (int i = 0; i < prefabObjects.Count; i++)
+				{
+					jn["prefab_objects"][i] = ((Data.PrefabObject)prefabObjects[i]).ToJSONVG();
+				}
+			else
+				jn["prefab_objects"] = new JSONArray();
+
+			if (prefabs.Count > 0)
+				for (int i = 0; i < prefabs.Count; i++)
+				{
+					jn["prefabs"][i] = ((Data.Prefab)prefabs[i]).ToJSONVG();
+				}
+			else
+				jn["prefabs"] = new JSONArray();
+
+			Dictionary<string, string> idsConverter = new Dictionary<string, string>();
 
 			int themeIndex = 0;
-			foreach (var beatmapTheme in DataManager.inst.CustomBeatmapThemes.Select(x => x as BeatmapTheme))
-			{
-				if (eventObjects.allEvents[4].Has(x => int.TryParse(beatmapTheme.id, out int id) && id == x.eventValues[0]))
-					jn["themes"][themeIndex] = beatmapTheme.ToJSONVG();
-				themeIndex++;
-			}
+			if (DataManager.inst.CustomBeatmapThemes.Count > 0)
+				foreach (var beatmapTheme in DataManager.inst.CustomBeatmapThemes.Select(x => x as BeatmapTheme))
+				{
+					if (eventObjects.allEvents[4].Has(x => int.TryParse(beatmapTheme.id, out int id) && id == x.eventValues[0]))
+					{
+						beatmapTheme.VGID = LSText.randomString(16);
 
-			for (int i = 0; i < beatmapData.markers.Count; i++)
-            {
-				jn["markers"][i] = beatmapData.markers[i].ToJSONVG();
-            }
+						if (!idsConverter.ContainsKey(Parser.TryParse(beatmapTheme.id, 0f).ToString()))
+						{
+							idsConverter.Add(Parser.TryParse(beatmapTheme.id, 0f).ToString(), beatmapTheme.VGID);
+						}
+
+						jn["themes"][themeIndex] = beatmapTheme.ToJSONVG();
+					}
+					themeIndex++;
+				}
+			else
+				jn["themes"] = new JSONArray();
+
+			if (themeIndex == 0)
+				jn["themes"] = new JSONArray();
+
+			if (beatmapData.markers.Count > 0)
+				for (int i = 0; i < beatmapData.markers.Count; i++)
+				{
+					jn["markers"][i] = beatmapData.markers[i].ToJSONVG();
+				}
+			else
+				jn["markers"] = new JSONArray();
 
 			// Event Handlers
-            {
+			{
                 // Move
 				for (int i = 0; i < eventObjects.allEvents[0].Count; i++)
 				{
@@ -603,7 +638,7 @@ namespace RTFunctions.Functions.Data
 					var eventKeyframe = eventObjects.allEvents[4][i];
 					jn["events"][4][i]["ct"] = eventKeyframe.curveType.Name;
 					jn["events"][4][i]["t"] = eventKeyframe.eventTime;
-					jn["events"][4][i]["ev"][0] = eventKeyframe.eventValues[0];
+					jn["events"][4][i]["evs"][0] = idsConverter.ContainsKey(eventKeyframe.eventValues[0].ToString()) ? idsConverter[eventKeyframe.eventValues[0].ToString()] : eventKeyframe.eventValues[0].ToString();
 				}
 
                 // Chroma
@@ -661,6 +696,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][9][i]["ev"][0] = eventKeyframe.eventValues[0];
 					jn["events"][9][i]["ev"][1] = eventKeyframe.eventValues[1];
 					jn["events"][9][i]["ev"][2] = eventKeyframe.eventValues[2];
+					jn["events"][9][i]["ev"][3] = 1f;
 				}
 
 				// Gradient
@@ -675,21 +711,21 @@ namespace RTFunctions.Functions.Data
 					jn["events"][10][i]["ev"][3] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[3], 0f, 9f);
 				}
 
+				jn["events"][11][0]["ct"] = "Linear";
+				jn["events"][11][0]["t"] = 0f;
+				jn["events"][11][0]["ev"][0] = 0f;
+				jn["events"][11][0]["ev"][1] = 0f;
+				jn["events"][11][0]["ev"][2] = 0f;
+
 				// Hueshift
 				for (int i = 0; i < eventObjects.allEvents[10].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[10][i];
-					jn["events"][11][i]["ct"] = eventKeyframe.curveType.Name;
-					jn["events"][11][i]["t"] = eventKeyframe.eventTime;
-					jn["events"][11][i]["ev"][0] = eventKeyframe.eventValues[0];
+					jn["events"][12][i]["ct"] = eventKeyframe.curveType.Name;
+					jn["events"][12][i]["t"] = eventKeyframe.eventTime;
+					jn["events"][12][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-				jn["events"][12][0]["ct"] = "Linear";
-				jn["events"][12][0]["t"] = 0f;
-				jn["events"][12][0]["ev"][0] = 0f;
-				jn["events"][12][0]["ev"][1] = 0f;
-				jn["events"][12][0]["ev"][2] = 0f;
-				
 				jn["events"][13][0]["ct"] = "Linear";
 				jn["events"][13][0]["t"] = 0f;
 				jn["events"][13][0]["ev"][0] = 0f;

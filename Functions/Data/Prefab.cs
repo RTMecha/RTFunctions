@@ -75,7 +75,7 @@ namespace RTFunctions.Functions.Data
 
         public string description;
 
-        public DataManager.PrefabType PrefabType => DataManager.inst.PrefabTypes[Type];
+        public PrefabType PrefabType => Type > 0 && Type < DataManager.inst.PrefabTypes.Count ? (PrefabType)DataManager.inst.PrefabTypes[Type] : PrefabType.InvalidType;
         public Color TypeColor => PrefabType.Color;
         public string TypeName => PrefabType.Name;
 
@@ -139,6 +139,8 @@ namespace RTFunctions.Functions.Data
         {
             var jn = JSON.Parse("{}");
             jn["n"] = Name;
+            if (ID != null)
+                jn["id"] = ID;
             jn["type"] = Type;
 
             jn["o"] = -Offset;

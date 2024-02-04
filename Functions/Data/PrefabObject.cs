@@ -301,12 +301,15 @@ namespace RTFunctions.Functions.Data
 
             jn["ed"] = ((ObjectEditorData)editorData).ToJSONVG();
 
+            jn["e"][0]["ct"] = "Linear";
             jn["e"][0]["ev"][0] = events[0].eventValues[0];
             jn["e"][0]["ev"][1] = events[0].eventValues[1];
 
+            jn["e"][1]["ct"] = "Linear";
             jn["e"][1]["ev"][0] = events[1].eventValues[0];
             jn["e"][1]["ev"][1] = events[1].eventValues[1];
 
+            jn["e"][2]["ct"] = "Linear";
             jn["e"][2]["ev"][0] = events[2].eventValues[0];
 
             jn["t"] = StartTime;
