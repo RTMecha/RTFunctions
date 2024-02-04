@@ -185,6 +185,8 @@ namespace RTFunctions.Functions.Data
 			var jn = JSON.Parse("{}");
 
 			jn["name"] = name;
+			if (!string.IsNullOrEmpty(VGID))
+				jn["id"] = VGID;
 			jn["base_gui_accent"] = LSColors.ColorToHex(guiAccentColor);
 			jn["base_gui"] = LSColors.ColorToHex(guiColor);
 			jn["base_bg"] = LSColors.ColorToHex(backgroundColor);
