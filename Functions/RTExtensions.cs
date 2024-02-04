@@ -699,6 +699,19 @@ namespace RTFunctions.Functions
 
 		#region JSON
 
+		public static JSONNode ToJSONVG(this DataManager.GameData.BeatmapData.Marker marker)
+		{
+			var jn = JSON.Parse("{}");
+
+			jn["ID"] = LSText.randomString(16);
+
+			jn["n"] = marker.name;
+			jn["d"] = marker.desc;
+			jn["c"] = marker.color;
+			jn["t"] = marker.time;
+
+			return jn;
+		}
 		public static JSONNode ToJSON(this Vector2 vector2)
         {
 			var jn = JSON.Parse("{}");

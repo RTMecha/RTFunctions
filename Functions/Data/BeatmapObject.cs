@@ -456,7 +456,7 @@ namespace RTFunctions.Functions.Data
 
 						eventKeyframe.SetEventValues(
 							kfjn["ev"][0].AsFloat,
-							-(kfjn["ev"][1].AsFloat / 100f) + 1f,
+							kfjn["ev"].Count == 1 ? 0f : (-(kfjn["ev"][1].AsFloat / 100f) + 1f),
 							0f,
 							0f,
 							0f);
@@ -502,7 +502,7 @@ namespace RTFunctions.Functions.Data
 			{
 				var ot = jn["ot"].AsInt;
 
-				beatmapObject.objectType = ot == 5 ? ObjectType.Decoration : ot == 6 ? ObjectType.Empty : ObjectType.Normal;
+				beatmapObject.objectType = ot == 4 ? ObjectType.Normal : ot == 5 ? ObjectType.Decoration : ot == 6 ? ObjectType.Empty : (ObjectType)ot;
 			}
 
 			if (jn["st"] != null)
@@ -534,17 +534,7 @@ namespace RTFunctions.Functions.Data
 
 			if (jn["ed"] != null)
 			{
-				if (jn["ed"]["lk"] != null)
-					beatmapObject.editorData.locked = jn["ed"]["lk"].AsBool;
-
-				if (jn["ed"]["co"] != null)
-					beatmapObject.editorData.collapse = jn["ed"]["co"].AsBool;
-
-				if (jn["ed"]["b"] != null)
-					beatmapObject.editorData.Bin = jn["ed"]["b"].AsInt;
-
-				if (jn["ed"]["l"] != null)
-					beatmapObject.editorData.layer = Mathf.Clamp(jn["ed"]["l"].AsInt, 0, int.MaxValue);
+				beatmapObject.editorData = ObjectEditorData.ParseVG(jn["ed"]);
 			}
 
 			return beatmapObject;
@@ -864,13 +854,6 @@ namespace RTFunctions.Functions.Data
 
 			jn["o"]["x"] = origin.x;
 			jn["o"]["y"] = origin.y;
-			if (editorData.locked)
-				jn["ed"]["locked"] = editorData.locked.ToString();
-			if (editorData.collapse)
-				jn["ed"]["shrink"] = editorData.collapse.ToString();
-
-			jn["ed"]["bin"] = editorData.Bin.ToString();
-			jn["ed"]["layer"] = editorData.layer.ToString();
 
 			if (editorData.locked)
 				jn["ed"]["lk"] = editorData.locked;

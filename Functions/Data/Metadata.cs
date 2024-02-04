@@ -76,6 +76,129 @@ namespace RTFunctions.Functions.Data
             collectionID = orig.collectionID,
         };
 
+		public static Metadata ParseVG(JSONNode jn)
+        {
+			Metadata result;
+            try
+			{
+				string name = "Artist Name";
+				int linkType = 0;
+				string link = "kaixomusic";
+				try
+				{
+					if (!string.IsNullOrEmpty(jn["artist"]["name"]))
+						name = jn["artist"]["name"];
+					if (!string.IsNullOrEmpty(jn["artist"]["link_type"]))
+						linkType = jn["artist"]["link_type"].AsInt;
+					if (!string.IsNullOrEmpty(jn["artist"]["link"]))
+						link = jn["artist"]["link"];
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"Artist Error: {ex}");
+				}
+
+				var artist = new LevelArtist(name, linkType, link);
+
+				string steam_name = "Mecha";
+				int steam_id = -1;
+				string creatorLink = "";
+				int creatorLinkType = 0;
+
+				try
+				{
+					if (!string.IsNullOrEmpty(jn["creator"]["steam_name"]))
+						steam_name = jn["creator"]["steam_name"];
+					if (!string.IsNullOrEmpty(jn["creator"]["steam_id"]))
+						steam_id = jn["creator"]["steam_id"].AsInt;
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"Creator Error: {ex}");
+				}
+
+				var creator = new LevelCreator(steam_name, steam_id, creatorLink, creatorLinkType);
+
+				string title = "Pyrolysis";
+				int difficulty = 2;
+				string description = "This is the default description!";
+				float bpm = 120f;
+				float time = 60f;
+				float previewStart = 0f;
+				float previewLength = 30f;
+
+				string[] tags = new string[]
+				{
+				};
+
+				try
+				{
+					if (!string.IsNullOrEmpty(jn["song"]["title"]))
+						title = jn["song"]["title"];
+					if (!string.IsNullOrEmpty(jn["song"]["difficulty"]))
+						difficulty = jn["song"]["difficulty"].AsInt;
+					if (!string.IsNullOrEmpty(jn["song"]["description"]))
+						description = jn["song"]["description"];
+					if (!string.IsNullOrEmpty(jn["song"]["bpm"]))
+						bpm = jn["song"]["bpm"].AsFloat;
+					if (!string.IsNullOrEmpty(jn["song"]["time"]))
+						time = jn["song"]["time"].AsFloat;
+					if (!string.IsNullOrEmpty(jn["song"]["preview_start"]))
+						previewStart = jn["song"]["preview_start"].AsFloat;
+					if (!string.IsNullOrEmpty(jn["song"]["preview_length"]))
+						previewLength = jn["song"]["preview_length"].AsFloat;
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"Song Error: {ex}");
+				}
+
+
+				var song = new LevelSong(title, difficulty, description, bpm, time, previewStart, previewLength, tags);
+
+				string gameVersion = ProjectArrhythmia.GameVersion.ToString();
+				string dateEdited = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
+				string dateCreated = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
+				int workshopID = -1;
+				int num = 0;
+				string beatmapID = LSFunctions.LSText.randomString(16);
+
+				try
+				{
+					if (!string.IsNullOrEmpty(jn["beatmap"]["game_version"]))
+						gameVersion = jn["beatmap"]["game_version"];
+					if (!string.IsNullOrEmpty(jn["beatmap"]["date_edited"]))
+						dateEdited = jn["beatmap"]["date_edited"];
+					if (!string.IsNullOrEmpty(jn["beatmap"]["date_created"]))
+						dateCreated = jn["beatmap"]["date_created"];
+					if (!string.IsNullOrEmpty(jn["beatmap"]["version_number"]))
+						num = jn["beatmap"]["version_number"].AsInt;
+					if (!string.IsNullOrEmpty(jn["beatmap"]["workshop_id"]))
+						workshopID = jn["beatmap"]["workshop_id"].AsInt;
+					if (!string.IsNullOrEmpty(jn["beatmap"]["beatmap_id"]))
+						beatmapID = jn["beatmap"]["beatmap_id"];
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"Beatmap Error: {ex}");
+				}
+
+				var beatmap = new LevelBeatmap(dateEdited, dateCreated, gameVersion, num, workshopID.ToString());
+
+				result = new Metadata(artist, creator, song, beatmap);
+			}
+            catch (Exception ex)
+			{
+				var artist2 = new LevelArtist("Corrupted", 0, "");
+				var creator2 = new LevelCreator(SteamWrapper.inst.user.displayName, SteamWrapper.inst.user.id, "", 0);
+				var song2 = new LevelSong("Corrupt Metadata", 0, "", 140f, 100f, -1f, -1f, new string[] { "Corrupted" });
+				var beatmap2 = new LevelBeatmap("", "", ProjectArrhythmia.GameVersion.ToString(), 0, "-1");
+				result = new Metadata(artist2, creator2, song2, beatmap2);
+				Debug.LogError($"{DataManager.inst.className}Something went wrong with parsing metadata!\n{ex}");
+			}
+			return result;
+        }
+
         public static Metadata Parse(JSONNode jn)
         {
 			Metadata result;
@@ -210,6 +333,31 @@ namespace RTFunctions.Functions.Data
 				Debug.LogError($"{DataManager.inst.className}Something went wrong with parsing metadata!");
 			}
 			return result;
+		}
+
+		public JSONNode ToJSONVG()
+		{
+			var jn = JSON.Parse("{}");
+
+			jn["artist"]["name"] = artist.Name;
+			jn["artist"]["link"] = artist.Link;
+			jn["artist"]["link_type"] = artist.LinkType;
+
+			jn["creator"]["steam_name"] = creator.steam_name;
+			jn["creator"]["steam_id"] = creator.steam_id;
+
+			jn["song"]["title"] = song.title;
+			jn["song"]["difficulty"] = song.difficulty;
+			jn["song"]["description"] = song.description;
+			jn["song"]["bpm"] = song.BPM;
+			jn["song"]["time"] = song.time;
+			jn["song"]["preview_start"] = song.previewStart;
+			jn["song"]["preview_length"] = song.previewLength;
+
+			jn["beatmap"]["date_edited"] = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
+			jn["beatmap"]["game_version"] = beatmap.game_version;
+
+			return jn;
 		}
 
 		public JSONNode ToJSON()

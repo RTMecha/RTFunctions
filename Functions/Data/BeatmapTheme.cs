@@ -18,6 +18,8 @@ namespace RTFunctions.Functions.Data
 
 		public List<Color> effectColors = new List<Color>();
 
+		public string VGID { get; set; }
+
         #region Methods
 
         public static BeatmapTheme DeepCopy(BeatmapTheme orig, bool _copyID = false)
@@ -57,7 +59,8 @@ namespace RTFunctions.Functions.Data
 		{
 			var beatmapTheme = new BeatmapTheme();
 
-			beatmapTheme.id = jn["id"] != null ? jn["id"] : LSText.randomNumString(IDLength);
+			beatmapTheme.id = LSText.randomNumString(IDLength);
+			beatmapTheme.VGID = jn["id"] != null ? jn["id"] : "";
 
 			beatmapTheme.name = jn["name"] != null ? jn["name"] : "name your themes!";
 

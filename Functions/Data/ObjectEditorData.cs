@@ -37,20 +37,40 @@ namespace RTFunctions.Functions.Data
             locked = orig.locked
         };
 
+        public static ObjectEditorData ParseVG(JSONNode jn) => new ObjectEditorData
+        {
+            Bin = jn["b"] == null ? 0 : jn["b"].AsInt,
+            layer = jn["l"] == null ? 0 : Mathf.Clamp(jn["l"].AsInt, 0, int.MaxValue),
+            locked = jn["lk"] == null ? false : jn["lk"].AsBool,
+            collapse = jn["co"] == null ? false : jn["co"].AsBool,
+        };
+
         public static ObjectEditorData Parse(JSONNode jn) => new ObjectEditorData
         {
             Bin = jn["bin"] == null ? 0 : jn["bin"].AsInt,
-            Layer = jn["layer"] == null ? 0 : jn["layer"].AsInt,
+            layer = jn["layer"] == null ? 0 : Mathf.Clamp(jn["layer"].AsInt, 0, int.MaxValue),
             collapse = jn["shrink"] == null ? jn["collapse"] == null ? false : jn["collapse"].AsBool : jn["shrink"].AsBool,
             locked = jn["locked"] == null ? false : jn["locked"].AsBool,
         };
+
+        public JSONNode ToJSONVG()
+        {
+            var jn = JSON.Parse("{}");
+
+            jn["lk"] = locked;
+            jn["co"] = collapse;
+            jn["b"] = Bin;
+            jn["l"] = layer;
+
+            return jn;
+        }
 
         public JSONNode ToJSON()
         {
             var jn = JSON.Parse("{}");
 
             jn["bin"] = Bin.ToString();
-            jn["layer"] = Layer.ToString();
+            jn["layer"] = layer.ToString();
             if (collapse)
                 jn["collapse"] = collapse.ToString();
             if (locked)

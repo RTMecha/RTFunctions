@@ -13,6 +13,31 @@ namespace RTFunctions.Functions.Data
 
         }
 
+		public static LevelBeatmapData ParseVG(JSONNode jn)
+        {
+			var beatmapData = new LevelBeatmapData();
+
+			beatmapData.editorData = new LevelEditorData();
+
+			beatmapData.markers = new List<Marker>();
+
+			for (int i = 0; i < jn["markers"].Count; i++)
+            {
+				var jnmarker = jn["markers"][i];
+
+				var name = jnmarker["n"] == null ? "Marker" : (string)jnmarker["n"];
+
+				var desc = jnmarker["d"] == null ? "" : (string)jnmarker["d"];
+
+				var col = jnmarker["c"].AsInt;
+
+				var time = jnmarker["t"].AsFloat;
+
+				beatmapData.markers.Add(new Marker(true, name, desc, col, time));
+			}
+			return beatmapData;
+        }
+
         public static LevelBeatmapData Parse(JSONNode jn)
         {
             var beatmapData = new LevelBeatmapData();
@@ -20,7 +45,6 @@ namespace RTFunctions.Functions.Data
             beatmapData.editorData = LevelEditorData.Parse(jn["ed"]);
 
 			beatmapData.markers = new List<Marker>();
-			beatmapData.markers.Clear();
 			for (int i = 0; i < jn["ed"]["markers"].Count; i++)
 			{
 				bool asBool = jn["ed"]["markers"][i]["active"].AsBool;
@@ -45,22 +69,20 @@ namespace RTFunctions.Functions.Data
 			return beatmapData;
         }
 
-		public JSONNode ToJSON()
+        public JSONNode ToJSON()
         {
-			var jn = JSON.Parse("{}");
-
-			jn["ed"] = ((LevelEditorData)editorData).ToJSON();
+			var jn = ((LevelEditorData)editorData).ToJSON();
 
 			for (int i = 0; i < markers.Count; i++)
             {
-				jn["ed"]["markers"][i]["active"] = markers[i].active;
-				jn["ed"]["markers"][i]["name"] = markers[i].name;
-				jn["ed"]["markers"][i]["desc"] = markers[i].desc;
-				jn["ed"]["markers"][i]["col"] = markers[i].color;
-				jn["ed"]["markers"][i]["t"] = markers[i].time;
+				jn["markers"][i]["active"] = markers[i].active;
+				jn["markers"][i]["name"] = markers[i].name;
+				jn["markers"][i]["desc"] = markers[i].desc;
+				jn["markers"][i]["col"] = markers[i].color;
+				jn["markers"][i]["t"] = markers[i].time;
             }
 
 			return jn;
         }
-    }
+	}
 }

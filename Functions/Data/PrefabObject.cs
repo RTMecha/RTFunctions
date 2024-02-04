@@ -89,6 +89,97 @@ namespace RTFunctions.Functions.Data
             return prefabObject;
         }
 
+        public static PrefabObject ParseVG(JSONNode jn)
+        {
+            var prefabObject = new PrefabObject();
+
+            prefabObject.ID = jn["id"];
+            prefabObject.prefabID = jn["pid"];
+            prefabObject.StartTime = jn["t"] == null ? jn["st"].AsFloat : jn["t"].AsFloat;
+
+            prefabObject.editorData = ObjectEditorData.ParseVG(jn["ed"]);
+
+            prefabObject.events.Clear();
+
+            if (jn["e"] != null)
+            {
+                try
+                {
+                    prefabObject.events.Add(new EventKeyframe
+                    {
+                        eventValues = new float[2]
+                        {
+                            jn["e"][0]["ev"][0].AsFloat,
+                            jn["e"][0]["ev"][1].AsFloat,
+                        }
+                    });
+                }
+                catch (System.Exception)
+                {
+                    prefabObject.events.Add(new EventKeyframe
+                    {
+                        eventValues = new float[2]
+                        {
+                            0f,
+                            0f,
+                        }
+                    });
+                }
+
+                try
+                {
+                    prefabObject.events.Add(new EventKeyframe
+                    {
+                        eventValues = new float[2]
+                        {
+                            jn["e"][1]["ev"][0].AsFloat,
+                            jn["e"][1]["ev"][1].AsFloat,
+                        }
+                    });
+                }
+                catch (System.Exception)
+                {
+                    prefabObject.events.Add(new EventKeyframe
+                    {
+                        eventValues = new float[2]
+                        {
+                            0f,
+                            0f,
+                        }
+                    });
+                }
+
+                try
+                {
+                    prefabObject.events.Add(new EventKeyframe
+                    {
+                        eventValues = new float[1]
+                        {
+                            jn["e"][1]["ev"][0].AsFloat,
+                        }
+                    });
+                }
+                catch (System.Exception)
+                {
+                    prefabObject.events.Add(new EventKeyframe
+                    {
+                        eventValues = new float[1]
+                        {
+                            0f,
+                        }
+                    });
+                }
+            }
+            else
+            {
+                prefabObject.events.Add(new EventKeyframe(0f, new float[2] { 0f, 0f }, new float[3] { 0f, 0f, 0f }));
+                prefabObject.events.Add(new EventKeyframe(0f, new float[2] { 0f, 0f }, new float[3] { 0f, 0f, 0f }));
+                prefabObject.events.Add(new EventKeyframe(0f, new float[1] { 0f }, new float[3] { 0f, 0f, 0f }));
+            }
+
+            return prefabObject;
+        }
+
         public static PrefabObject Parse(JSONNode jn)
         {
             var prefabObject = new PrefabObject();
@@ -112,15 +203,6 @@ namespace RTFunctions.Functions.Data
 
             if (jn["ako"] != null)
                 prefabObject.autoKillOffset = jn["ako"].AsFloat;
-
-            //if (jn["ed"]["locked"] != null)
-            //    prefabObject.editorData.locked = jn["ed"]["locked"].AsBool;
-            //if (jn["ed"]["shrink"] != null)
-            //    prefabObject.editorData.collapse = jn["ed"]["shrink"].AsBool;
-            //if (jn["ed"]["bin"] != null)
-            //    prefabObject.editorData.Bin = jn["ed"]["bin"].AsInt;
-            //if (jn["ed"]["layer"] != null)
-            //    prefabObject.editorData.Layer = jn["ed"]["layer"].AsInt;
 
             prefabObject.editorData = ObjectEditorData.Parse(jn["ed"]);
 
@@ -208,6 +290,28 @@ namespace RTFunctions.Functions.Data
                 };
             }
             return prefabObject;
+        }
+
+        public JSONNode ToJSONVG()
+        {
+            var jn = JSON.Parse("{}");
+
+            jn["id"] = ID;
+            jn["pid"] = prefabID;
+
+            jn["ed"] = ((ObjectEditorData)editorData).ToJSONVG();
+
+            jn["e"][0]["ev"][0] = events[0].eventValues[0];
+            jn["e"][0]["ev"][1] = events[0].eventValues[1];
+
+            jn["e"][1]["ev"][0] = events[1].eventValues[0];
+            jn["e"][1]["ev"][1] = events[1].eventValues[1];
+
+            jn["e"][2]["ev"][0] = events[2].eventValues[0];
+
+            jn["t"] = StartTime;
+
+            return jn;
         }
 
         public JSONNode ToJSON()
