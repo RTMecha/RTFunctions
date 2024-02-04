@@ -165,6 +165,8 @@ namespace RTFunctions.Functions.Managers
 
             PlayerManager.LoadLocalModels?.Invoke();
 
+            PlayerManager.AssignPlayerModels();
+
             GameManager.inst.introAnimator.SetTrigger("play");
             GameManager.inst.SpawnPlayers(DataManager.inst.gameData.beatmapData.checkpoints[0].pos);
 
