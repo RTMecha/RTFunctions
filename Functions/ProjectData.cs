@@ -422,7 +422,7 @@ namespace RTFunctions.Functions
 							if (baseData.eventObjects.allEvents.Count <= j)
 								baseData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 
-							baseData.eventObjects.allEvents[j].AddRange(gameDatas[i].eventObjects.allEvents[j].Where(x => !baseData.eventObjects.allEvents[j].Has(y => y.eventTime != x.eventTime)));
+							baseData.eventObjects.allEvents[j].AddRange(gameDatas[i].eventObjects.allEvents[j].Where(x => !baseData.eventObjects.allEvents[j].Has(y => y.eventTime == x.eventTime)));
                         }
 
 						foreach (var beatmapTheme in gameDatas[i].beatmapThemes)
