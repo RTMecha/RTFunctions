@@ -10,6 +10,7 @@ using LSFunctions;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Optimization;
+using System.IO;
 
 namespace RTFunctions.Functions.Managers
 {
@@ -142,8 +143,27 @@ namespace RTFunctions.Functions.Managers
 
             Debug.Log($"{className}Setting Camera sizes...");
 
-            GameManager.inst.Camera.GetComponent<Camera>().rect = new Rect(0f, 0f, 1f, 1f);
-            GameManager.inst.CameraPerspective.GetComponent<Camera>().rect = new Rect(0f, 0f, 1f, 1f);
+            if (RTFile.FileExists(level.path + "bg.mp4") && FunctionsPlugin.EnableVideoBackground.Value)
+            {
+                RTVideoManager.inst.Play(level.path + "bg.mp4", 1f);
+                while (!RTVideoManager.inst.videoPlayer.isPrepared)
+                    yield return null;
+            }
+            else if (RTFile.FileExists(level.path + "bg.mov") && FunctionsPlugin.EnableVideoBackground.Value)
+            {
+                RTVideoManager.inst.Play(level.path + "bg.mov", 1f);
+                while (!RTVideoManager.inst.videoPlayer.isPrepared)
+                    yield return null;
+            }
+            else
+            {
+                RTVideoManager.inst.Stop();
+            }
+
+            EventManager.inst.cam.rect = new Rect(0f, 0f, 1f, 1f);
+            EventManager.inst.camPer.rect = new Rect(0f, 0f, 1f, 1f);
+            //GameManager.inst.Camera.GetComponent<Camera>().rect = new Rect(0f, 0f, 1f, 1f);
+            //GameManager.inst.CameraPerspective.GetComponent<Camera>().rect = new Rect(0f, 0f, 1f, 1f);
 
             Debug.Log($"{className}Updating checkpoints...");
 
@@ -287,6 +307,110 @@ namespace RTFunctions.Functions.Managers
                 _json = _json.Replace("\"shape_option\"", "\"so\"");
             }
             return _json;
+        }
+
+        public void UpgradeProgress()
+        {
+            if (!RTFile.FileExists(RTFile.ApplicationDirectory + "profile/saves.les") && RTFile.FileExists(RTFile.ApplicationDirectory + "settings/save.lss"))
+            {
+                var decryptedJSON = LSEncryption.DecryptText(RTFile.ReadFromFile(RTFile.ApplicationDirectory + "settings/saves.lss"), SaveManager.inst.encryptionKey);
+
+            }
+        }
+
+        public void SaveProgress()
+        {
+            var jn = JSON.Parse("{}");
+            for (int i = 0; i < Saves.Count; i++)
+            {
+                jn["lvl"][i] = Saves[i].ToJSON();
+            }
+
+            if (RTFile.DirectoryExists(RTFile.ApplicationDirectory + "profile"))
+                Directory.CreateDirectory(RTFile.ApplicationDirectory + "profile");
+
+            var json = jn.ToString();
+            json = LSEncryption.EncryptText(json, SaveManager.inst.encryptionKey);
+            RTFile.WriteToFile(RTFile.ApplicationDirectory + "profile/saves.les", json);
+        }
+
+        public void LoadProgress()
+        {
+            if (!RTFile.FileExists(RTFile.ApplicationDirectory + "profile/saves.les"))
+                return;
+
+            string decryptedJSON = LSEncryption.DecryptText(RTFile.ReadFromFile(RTFile.ApplicationDirectory + "profile/saves.les"), SaveManager.inst.encryptionKey);
+
+            var jn = JSON.Parse(decryptedJSON);
+
+            for (int i = 0; i < jn["lvl"].Count; i++)
+            {
+                Saves.Add(PlayerData.Parse(jn["lvl"][i]));
+            }
+        }
+        
+        public PlayerData GetPlayerData(string id) => Saves.Find(x => x.ID == id);
+
+        public List<PlayerData> Saves { get; set; } = new List<PlayerData>();
+        public class PlayerData
+        {
+            public string ID { get; set; }
+            public bool Completed { get; set; }
+            public int Hits { get; set; }
+            public int Deaths { get; set; }
+            public int Boosts { get; set; }
+            public int PlayedTimes { get; set; }
+            public float TimeInLevel { get; set; }
+            public float Percentage { get; set; }
+            public float LevelLength { get; set; }
+
+            public void Update()
+            {
+                if (Hits > GameManager.inst.hits.Count)
+                    Hits = GameManager.inst.hits.Count;
+
+                if (Deaths > GameManager.inst.deaths.Count)
+                    Deaths = GameManager.inst.deaths.Count;
+
+                var l = AudioManager.inst.CurrentAudioSource.clip.length;
+                if (LevelLength != l)
+                    LevelLength = l;
+
+                float calc = AudioManager.inst.CurrentAudioSource.time / AudioManager.inst.CurrentAudioSource.clip.length * 100f;
+
+                if (Percentage < calc)
+                    Percentage = calc;
+            }
+
+            public static PlayerData Parse(JSONNode jn)
+            {
+                var playerData = new PlayerData();
+                playerData.ID = jn["id"];
+                playerData.Completed = jn["c"].AsBool;
+                playerData.Hits = jn["h"].AsInt;
+                playerData.Deaths = jn["d"].AsInt;
+                playerData.Boosts = jn["b"].AsInt;
+                playerData.PlayedTimes = jn["pt"].AsInt;
+                playerData.TimeInLevel = jn["t"].AsFloat;
+                playerData.Percentage = jn["p"].AsFloat;
+                playerData.LevelLength = jn["l"].AsFloat;
+                return playerData;
+            }
+
+            public JSONNode ToJSON()
+            {
+                var jn = JSON.Parse("{}");
+                jn["id"] = ID;
+                jn["c"] = Completed.ToString();
+                jn["h"] = Hits.ToString();
+                jn["d"] = Deaths.ToString();
+                jn["b"] = Boosts.ToString();
+                jn["pt"] = PlayedTimes.ToString();
+                jn["t"] = TimeInLevel.ToString();
+                jn["p"] = Percentage.ToString();
+                jn["l"] = LevelLength.ToString();
+                return jn;
+            }
         }
     }
 }
