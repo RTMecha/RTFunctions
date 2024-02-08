@@ -1,3 +1,6 @@
+1.9.8 > [Feb 8, 2024]
+- Cleaned up some event parsing code.
+- Levels in the game scene should now load the Video BG.
 1.9.7 > [Feb 5, 2024]
 - Fixed a bug with combiner that caused it to not combine event keyframes.
 1.9.6 > [Feb 5, 2024]
