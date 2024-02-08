@@ -540,6 +540,9 @@ namespace RTFunctions.Functions.IO
             object ret = null;
             compiledMethod.Invoke(ref ret);
         }
+
+        public static bool Validate(string str) =>
+                !str.Contains("File.") && !str.Contains("FileManager") && !str.Contains("System.IO") && !str.Contains("WebClient") && !str.Contains("HttpClient");
     }
 
     public class ScriptEvaluator : Evaluator, IDisposable
