@@ -45,5 +45,7 @@ namespace RTFunctions.Functions.Managers
         public Transform extraBG;
         public Transform video;
         public Material bgMaterial;
+
+        public Dictionary<string, object> assets = new Dictionary<string, object>();
     }
 }
