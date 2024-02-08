@@ -71,7 +71,7 @@ namespace RTFunctions.Functions.Data
             relative = eventKeyframe.relative,
         };
 
-        public static EventKeyframe Parse(JSONNode jn, int valueCount)
+        public static EventKeyframe Parse(JSONNode jn, int type, int valueCount)
         {
             var eventKeyframe = new EventKeyframe();
 
@@ -88,7 +88,7 @@ namespace RTFunctions.Functions.Data
                     eventValues.Add(jn[axis[i]].AsFloat);
 
             while (eventValues.Count < valueCount)
-                eventValues.Add(0f);
+                eventValues.Add(GameData.DefaultKeyframes[type].eventValues[eventValues.Count]);
 
             while (eventValues.Count > valueCount)
                 eventValues.RemoveAt(eventValues.Count - 1);

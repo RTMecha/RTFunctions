@@ -377,7 +377,7 @@ namespace RTFunctions.Functions.Data
             }
 
 			Debug.Log($"{FunctionsPlugin.className}Checking keyframe counts");
-			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, ModCompatibility.mods.ContainsKey("EventsCore") ? 26 : 10);
+			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
 			return gameData;
 		}
 
@@ -497,13 +497,18 @@ namespace RTFunctions.Functions.Data
 			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Events...");
 			#region Events
 
-			gameData.eventObjects.allEvents = ProjectData.Reader.ParseEventkeyframes(jn["events"], true);
-
-			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, ModCompatibility.mods.ContainsKey("EventsCore") ? 26 : 10);
+			gameData.eventObjects.allEvents = ProjectData.Reader.ParseEventkeyframes(jn["events"], false);
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Making sure the events meet the requirement...");
+			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
 			#endregion
+
+			UnityEngine.Debug.Log($"{DataManager.inst.className}Completed parsing!");
 
 			return gameData;
 		}
+
+		// Previously 26, now 33
+		public static int EventCount => ModCompatibility.mods.ContainsKey("EventsCore") ? DefaultKeyframes.Count : 10;
 
 		public JSONNode ToJSONVG()
         {
@@ -756,7 +761,6 @@ namespace RTFunctions.Functions.Data
 			jn["level_data"]["background_color"] = _data.beatmapData.levelData.backgroundColor.ToString();
 			jn["level_data"]["follow_player"] = _data.beatmapData.levelData.followPlayer.ToString();
 			jn["level_data"]["show_intro"] = _data.beatmapData.levelData.showIntro.ToString();
-			jn["level_data"]["bg_zoom"] = RTHelpers.perspectiveZoom.ToString();
 
 			for (int i = 0; i < prefabs.Count; i++)
 				jn["prefabs"][i] = ((Data.Prefab)prefabs[i]).ToJSON();
@@ -841,9 +845,14 @@ namespace RTFunctions.Functions.Data
 			"player",
 			"follow_player",
 			"audio",
-			//"vidbg_p",
-			//"vidbg",
-		};
+            "vidbg_p",
+            "vidbg",
+			"sharp",
+			"bars",
+			"danger",
+			"xyrot",
+			"camdepth",
+        };
 		
 		public static List<BaseEventKeyframe> DefaultKeyframes = new List<BaseEventKeyframe>
 		{
@@ -869,11 +878,13 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[3]
+				eventValues = new float[5]
                 {
 					0f, // Shake Intensity
 					1f, // Shake X
 					1f, // Shake Y
+					1f, // Shake Interpolation
+					1f, // Shake Speed
                 },
 				id = LSText.randomNumString(8),
 			}, // Shake
@@ -1018,7 +1029,10 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[1] { 18f },
+				eventValues = new float[1]
+				{
+					18f
+				},
 				id = LSText.randomNumString(8),
 			}, // BG
 			new Data.EventKeyframe
@@ -1076,35 +1090,91 @@ namespace RTFunctions.Functions.Data
                 },
 				id = LSText.randomNumString(8),
 			}, // Audio
-			//new Data.EventKeyframe
-            //{
-            //    eventTime = 0f,
-            //    eventValues = new float[6]
-            //    {
-            //        0f, // Position X
-            //        0f, // Position Y
-            //        0f, // Position Z (make sure to set this to whatever the actual Extra BG position is)
-            //        1f, // Scale X
-            //        1f, // Scale Y
-            //        0f, // Rotation
-            //    },
-            //    id = LSText.randomNumString(8),
-            //}, // Video BG Parent
-			//new Data.EventKeyframe
-            //{
-            //    eventTime = 0f,
-            //    eventValues = new float[7]
-            //    {
-            //        0f, // Position X
-            //        0f, // Position Y
-            //        0f, // Position Z (make sure to set this to whatever the actual video position is)
-            //        1f, // Scale X
-            //        1f, // Scale Y
-            //        0f, // Rotation
-            //        0f, // Render Layer (Foreground / Background)
-            //    },
-            //    id = LSText.randomNumString(8),
-            //}, // Video BG
+			new Data.EventKeyframe
+            {
+                eventTime = 0f,
+                eventValues = new float[9]
+                {
+                    0f, // Position X
+                    0f, // Position Y
+                    0f, // Position Z
+                    1f, // Scale X
+                    1f, // Scale Y
+                    1f, // Scale Z
+                    0f, // Rotation X
+                    0f, // Rotation Y
+                    0f, // Rotation Z
+                },
+                id = LSText.randomNumString(8),
+            }, // Video BG Parent
+			new Data.EventKeyframe
+            {
+                eventTime = 0f,
+                eventValues = new float[10]
+                {
+                    0f, // Position X
+                    0f, // Position Y
+                    120f, // Position Z
+                    240f, // Scale X
+                    135f, // Scale Y
+                    1f, // Scale Z
+                    0f, // Rotation X
+                    0f, // Rotation Y
+                    0f, // Rotation Z
+                    0f, // Render Layer (Foreground / Background)
+                },
+                id = LSText.randomNumString(8),
+            }, // Video BG
+			new Data.EventKeyframe
+            {
+                eventTime = 0f,
+                eventValues = new float[1]
+                {
+                    0f, // Sharpen Amount
+                },
+                id = LSText.randomNumString(8),
+            }, // Sharpen
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[2]
+				{
+					0f, // Amount
+					0f, // Mode
+                },
+				id = LSText.randomNumString(8),
+			}, // Bars
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[3]
+				{
+					0f, // Intensity
+					0f, // Size
+					18f, // Color
+                },
+				id = LSText.randomNumString(8),
+			}, // Danger
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[2]
+				{
+					0f, // X
+					0f, // Y
+                },
+				id = LSText.randomNumString(8),
+			}, // 3D Rotation
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[2]
+				{
+					0f, // Z
+					0f, // Perspective
+                },
+				id = LSText.randomNumString(8),
+			}, // Camera Depth
 		};
 
         public static bool SaveOpacityToThemes { get; set; } = false;

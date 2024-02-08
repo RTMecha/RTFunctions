@@ -60,286 +60,6 @@ namespace RTFunctions.Functions
 
 			#endregion
 
-			//ProjectData.Combiner.Combine(RTFile.ApplicationDirectory + "beatmaps/editor/Classic Arrhythmia/Combine 1/level.lsb", RTFile.ApplicationDirectory + "beatmaps/editor/Classic Arrhythmia/Combine 2/level.lsb", RTFile.ApplicationDirectory + "beatmaps/editor/Classic Arrhythmia/Combined/level.lsb");
-			/// <summary>
-			/// Combines two levels from two paths and saves the combined GameData to a specified path.
-			/// </summary>
-			/// <param name="path1">First path to level to combine.</param>
-			/// <param name="path2">Second path to level to combine.</param>
-			/// <param name="saveTo">Path to save combined GameData to.</param>
-			/// <param name="onSave">Action to perform when save is finished.</param>
-			public static void Combine(string path1, string path2, string saveTo, Action onSave)
-			{
-				if (!RTFile.FileExists(path1) || !RTFile.FileExists(path2))
-					return;
-
-				var directory = Path.GetDirectoryName(saveTo);
-				if (!RTFile.DirectoryExists(directory))
-					Directory.CreateDirectory(directory);
-
-				var files1 = Directory.GetFiles(Path.GetDirectoryName(path1));
-				var files2 = Directory.GetFiles(Path.GetDirectoryName(path2));
-
-				foreach (var file in files1)
-                {
-					string dir = Path.GetDirectoryName(file);
-					if (!RTFile.DirectoryExists(dir))
-                    {
-						Directory.CreateDirectory(dir);
-                    }
-
-					if (Path.GetFileName(file) != "level.lsb" && !RTFile.FileExists(file.Replace(Path.GetDirectoryName(path1), directory)))
-						File.Copy(file, file.Replace(Path.GetDirectoryName(path1), directory));
-                }
-				
-				foreach (var file in files2)
-                {
-					string dir = Path.GetDirectoryName(file);
-					if (!RTFile.DirectoryExists(dir))
-                    {
-						Directory.CreateDirectory(dir);
-					}
-
-					if (Path.GetFileName(file) != "level.lsb" && !RTFile.FileExists(file.Replace(Path.GetDirectoryName(path2), directory)))
-						File.Copy(file, file.Replace(Path.GetDirectoryName(path2), directory));
-                }
-
-				FunctionsPlugin.inst.StartCoroutine(Writer.SaveData(saveTo, Combine(path1, path2), onSave));
-			}
-
-			/// <summary>
-			/// Reads level.lsb from two paths, parses them and combines them.
-			/// </summary>
-			/// <param name="path1">First path to level to combine.</param>
-			/// <param name="path2">Second path to level to combine.</param>
-			/// <returns>Combined GameData</returns>
-			public static GameData Combine(string path1, string path2)
-			{
-				if (!RTFile.FileExists(path1) || !RTFile.FileExists(path2))
-					return null;
-
-				return Combine(JSON.Parse(FileManager.inst.LoadJSONFileRaw(path1)), JSON.Parse(FileManager.inst.LoadJSONFileRaw(path2)));
-			}
-
-			/// <summary>
-			/// Parses two JSONNodes and combines them.
-			/// </summary>
-			/// <param name="jn">First level to combine.</param>
-			/// <param name="jn32">Second level to combine.</param>
-			/// <returns>Combined GameData.</returns>
-			public static GameData Combine(JSONNode jn, JSONNode jn32)
-            {
-                var gameData = new GameData();
-
-				#region Markers
-
-				gameData.beatmapData = new LevelBeatmapData();
-				gameData.beatmapData.markers = new List<BaseMarker>();
-
-                try
-                {
-                    if (addFirstMarkers)
-                        for (int i = 0; i < jn["ed"]["markers"].Count; i++)
-                            gameData.beatmapData.markers.Add(Reader.ParseMarker(jn["ed"]["markers"][i]));
-
-                    if (addSecondMarkers)
-                        for (int i = 0; i < jn32["ed"]["markers"].Count; i++)
-                            gameData.beatmapData.markers.Add(Reader.ParseMarker(jn32["ed"]["markers"][i]));
-
-                    gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"{FunctionsPlugin.className}Markers parse exception: {ex}");
-                }
-
-                #endregion
-
-                #region Checkpoints
-
-                gameData.beatmapData.checkpoints = new List<BaseCheckpoint>();
-
-				try
-				{
-					if (addFirstCheckpoints)
-						for (int i = 0; i < jn["checkpoints"].Count; i++)
-							gameData.beatmapData.checkpoints.Add(Reader.ParseCheckpoint(jn["checkpoints"][i]));
-
-					if (addSecondCheckpoints)
-						for (int i = 0; i < jn32["checkpoints"].Count; i++)
-						{
-							var checkpoint = Reader.ParseCheckpoint(jn32["checkpoints"][i]);
-							if (gameData.beatmapData.checkpoints.Find(x => x.time == checkpoint.time) == null)
-								gameData.beatmapData.checkpoints.Add(checkpoint);
-						}
-
-					gameData.beatmapData.checkpoints = gameData.beatmapData.checkpoints.OrderBy(x => x.time).ToList();
-				}
-				catch (Exception ex)
-				{
-					Debug.LogError($"{FunctionsPlugin.className}Checkpoints parse exception: {ex}");
-				}
-
-				#endregion
-
-				#region Prefabs
-
-				try
-				{
-					for (int i = 0; i < jn["prefabs"].Count; i++)
-					{
-						var prefab = Prefab.Parse(jn["prefabs"][i]);
-						if (gameData.prefabs.Find(x => x.ID == prefab.ID) == null)
-							gameData.prefabs.Add(prefab);
-					}
-
-					for (int i = 0; i < jn32["prefabs"].Count; i++)
-					{
-						var prefab = Prefab.Parse(jn32["prefabs"][i]);
-						if (gameData.prefabs.Find(x => x.ID == prefab.ID) == null)
-							gameData.prefabs.Add(prefab);
-					}
-				}
-				catch (Exception ex)
-				{
-					Debug.LogError($"{FunctionsPlugin.className}Prefabs parse exception: {ex}");
-				}
-
-				#endregion
-
-				#region PrefabObjects
-
-				try
-				{
-					for (int i = 0; i < jn["prefab_objects"].Count; i++)
-					{
-						var prefab = PrefabObject.Parse(jn["prefab_objects"][i]);
-						if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
-							gameData.prefabObjects.Add(prefab);
-					}
-
-					for (int i = 0; i < jn32["prefab_objects"].Count; i++)
-					{
-						var prefab = PrefabObject.Parse(jn32["prefab_objects"][i]);
-						if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
-							gameData.prefabObjects.Add(prefab);
-					}
-				}
-				catch (Exception ex)
-				{
-					Debug.LogError($"{FunctionsPlugin.className}Prefab Objects parse exception: {ex}");
-				}
-
-				#endregion
-
-				#region Themes
-
-				try
-				{
-					for (int i = 0; i < jn["themes"].Count; i++)
-						if (!gameData.beatmapThemes.ContainsKey(jn["themes"][i]["id"]))
-							gameData.beatmapThemes.Add(jn["themes"][i]["id"], Reader.ParseBeatmapTheme(jn["themes"][i], FileType.LS));
-
-					for (int i = 0; i < jn32["themes"].Count; i++)
-						if (!gameData.beatmapThemes.ContainsKey(jn32["themes"][i]["id"]))
-							gameData.beatmapThemes.Add(jn32["themes"][i]["id"], Reader.ParseBeatmapTheme(jn32["themes"][i], FileType.LS));
-				}
-				catch (Exception ex)
-				{
-					Debug.LogError($"{FunctionsPlugin.className}Themes parse exception: {ex}");
-				}
-
-				#endregion
-
-				#region Objects
-
-				try
-				{
-					for (int i = 0; i < jn["beatmap_objects"].Count; i++)
-						gameData.beatmapObjects.Add(BeatmapObject.Parse(jn["beatmap_objects"][i]));
-
-					for (int i = 0; i < jn32["beatmap_objects"].Count; i++)
-					{
-						var beatmapObject = BeatmapObject.Parse(jn32["beatmap_objects"][i]);
-
-						if (!objectsWithMatchingIDAddKeyframes)
-							gameData.beatmapObjects.Add(beatmapObject);
-						else if (gameData.beatmapObjects.TryFind(x => x.id == beatmapObject.id, out BaseBeatmapObject modObject))
-						{
-							for (int j = 0; j < modObject.events.Count; j++)
-							{
-								beatmapObject.events[j].RemoveAt(0);
-								modObject.events[j].AddRange(beatmapObject.events[j]);
-							}
-						}
-						else
-							gameData.beatmapObjects.Add(beatmapObject);
-					}
-				}
-				catch (Exception ex)
-				{
-					Debug.LogError($"{FunctionsPlugin.className}Beatmap Objects parse exception: {ex}");
-				}
-
-				#endregion
-
-				#region Backgrounds
-
-				try
-				{
-					for (int i = 0; i < jn["bg_objects"].Count; i++)
-						gameData.backgroundObjects.Add(BackgroundObject.Parse(jn["bg_objects"][i]));
-
-					for (int i = 0; i < jn32["bg_objects"].Count; i++)
-						gameData.backgroundObjects.Add(BackgroundObject.Parse(jn32["bg_objects"][i]));
-				}
-				catch (Exception ex)
-				{
-					Debug.LogError($"{FunctionsPlugin.className}Background Objects parse exception: {ex}");
-				}
-
-				#endregion
-
-				#region Events
-
-				try
-				{
-					gameData.eventObjects.allEvents = new List<List<BaseEventKeyframe>>();
-
-					var l = Reader.ParseEventkeyframes(jn["events"]);
-					var l32 = Reader.ParseEventkeyframes(jn32["events"]);
-
-					for (int i = 0; i < l.Count; i++)
-					{
-						if (!prioritizeFirstEvents)
-							l[i].RemoveAt(0);
-
-						gameData.eventObjects.allEvents.Add(l[i]);
-					}
-
-					for (int i = 0; i < l32.Count; i++)
-					{
-						if (prioritizeFirstEvents)
-							l32[i].RemoveAt(0);
-
-						gameData.eventObjects.allEvents[i].AddRange(l32[i]);
-					}
-				}
-				catch (Exception ex)
-				{
-					Debug.LogError($"{FunctionsPlugin.className}Events parse exception: {ex}");
-				}
-
-                //foreach (var kflist in gameData.eventObjects.allEvents)
-                //{
-                //    kflist.OrderBy(x => x.eventTime);
-                //}
-
-                #endregion
-
-                return gameData;
-			}
-
 			/// <summary>
 			/// Combines multiple GameDatas together.
 			/// </summary>
@@ -505,268 +225,35 @@ namespace RTFunctions.Functions
 				return keyframe;
 			}
 
-			public static BeatmapTheme ParseBeatmapTheme(JSONNode jn, FileType fileType) => fileType == FileType.LS ? BeatmapTheme.Parse(jn) : ParseVGBeatmapTheme(jn);
+			public static BeatmapTheme ParseBeatmapTheme(JSONNode jn, FileType fileType) => fileType == FileType.LS ? BeatmapTheme.Parse(jn) : BeatmapTheme.ParseVG(jn);
 
-			public static BeatmapTheme ParseVGBeatmapTheme(JSONNode jn)
-            {
-				var beatmapTheme = new BeatmapTheme();
-
-				beatmapTheme.id = jn["id"] != null ? jn["id"] : LSText.randomNumString(6);
-				beatmapTheme.name = jn["name"] != null ? jn["name"] : "name your themes!";
-
-				beatmapTheme.playerColors = BeatmapTheme.SetColors(jn["pla"], 4, "Uh oh, something went wrong with converting VG to LS!");
-				beatmapTheme.objectColors = BeatmapTheme.SetColors(jn["obj"], 18, "Uh oh, something went wrong with converting VG to LS!");
-				beatmapTheme.effectColors = BeatmapTheme.SetColors(jn["fx"], 18, "Uh oh, something went wrong with converting VG to LS!");
-				beatmapTheme.backgroundColors = BeatmapTheme.SetColors(jn["fx"], 18, "Uh oh, something went wrong with converting VG to LS!");
-
-				beatmapTheme.backgroundColor = jn["base_bg"] != null ? LSColors.HexToColor(jn["base_bg"]) : LSColors.gray100;
-				beatmapTheme.guiColor = jn["base_gui"] != null ? LSColors.HexToColor(jn["base_gui"]) : LSColors.gray800;
-				beatmapTheme.guiAccentColor = jn["base_gui_accent"] != null ? LSColors.HexToColor(jn["base_gui_accent"]) : LSColors.gray800;
-
-				return beatmapTheme;
-            }
-
-			public static Prefab ParseVGPrefab(JSONNode jn)
-            {
-				var prefab = new Prefab();
-
-				return prefab;
-            }
-
-			public static BeatmapObject ParseVGBeatmapObject(JSONNode jn)
-            {
-				var beatmapObject = new BeatmapObject();
-
-				return beatmapObject;
-            }
-
-			public static List<List<BaseEventKeyframe>> ParseEventkeyframes(JSONNode jn, bool orderTime = false)
+			public static List<List<BaseEventKeyframe>> ParseEventkeyframes(JSONNode jn, bool clamp = true)
 			{
 				var allEvents = new List<List<BaseEventKeyframe>>();
 
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["pos"].Count; i++)
-					allEvents[0].Add(EventKeyframe.Parse(jn["pos"][i], 2));
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["zoom"].Count; i++)
-					allEvents[1].Add(EventKeyframe.Parse(jn["zoom"][i], 1));
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["rot"].Count; i++)
-					allEvents[2].Add(EventKeyframe.Parse(jn["rot"][i], 1));
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["shake"].Count; i++)
-				{
-					var eventKeyframe = EventKeyframe.Parse(jn["shake"][i], 3);
-					if (string.IsNullOrEmpty(jn["shake"][i]["y"]) || string.IsNullOrEmpty(jn["shake"][i]["z"]))
-					{
-						eventKeyframe.SetEventValues(new float[]
-						{
-							jn["shake"][i]["x"].AsFloat,
-							1f,
-							1f,
-						});
-					}
-					allEvents[3].Add(eventKeyframe);
-				}
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["theme"].Count; i++)
-					allEvents[4].Add(EventKeyframe.Parse(jn["theme"][i], 1));
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["chroma"].Count; i++)
-					allEvents[5].Add(EventKeyframe.Parse(jn["chroma"][i], 1));
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["bloom"].Count; i++)
-				{
-					var eventKeyframe = EventKeyframe.Parse(jn["bloom"][i], 5);
-					if (string.IsNullOrEmpty(jn["bloom"][i]["y"]))
-					{
-						eventKeyframe.SetEventValues(new float[]
-						{
-							jn["bloom"][i]["x"].AsFloat,
-							7f,
-							1f,
-							0f,
-							18f
-						});
-					}
-					allEvents[6].Add(eventKeyframe);
-				}
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["vignette"].Count; i++)
-				{
-					var eventKeyframe = EventKeyframe.Parse(jn["vignette"][i], 7);
-					if (string.IsNullOrEmpty(jn["vignette"][i]["x3"]))
-					{
-						eventKeyframe.SetEventValues(new float[]
-						{
-							jn["vignette"][i]["x"].AsFloat,
-							jn["vignette"][i]["y"].AsFloat,
-							jn["vignette"][i]["z"].AsFloat,
-							jn["vignette"][i]["x2"].AsFloat,
-							jn["vignette"][i]["y2"].AsFloat,
-							jn["vignette"][i]["z2"].AsFloat,
-							18f
-						});
-					}
-					allEvents[7].Add(eventKeyframe);
-				}
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["lens"].Count; i++)
-				{
-					var eventKeyframe = EventKeyframe.Parse(jn["lens"][i], 6);
-					if (string.IsNullOrEmpty(jn["lens"][i]["y"]))
-					{
-						eventKeyframe.SetEventValues(new float[]
-						{
-							jn["lens"][i]["x"].AsFloat,
-							0f,
-							0f,
-							1f,
-							1f,
-							1f
-						});
-					}
-					allEvents[8].Add(eventKeyframe);
-				}
-
-				allEvents.Add(new List<BaseEventKeyframe>());
-				for (int i = 0; i < jn["grain"].Count; i++)
-					allEvents[9].Add(EventKeyframe.Parse(jn["grain"][i], 3));
-
-				if (ModCompatibility.mods.ContainsKey("EventsCore"))
+				for (int i = 0; i < GameData.EventCount; i++)
 				{
 					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["cg"] != null)
-						for (int i = 0; i < jn["cg"].Count; i++)
-							allEvents[10].Add(EventKeyframe.Parse(jn["cg"][i], 9));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["rip"] != null)
-						for (int i = 0; i < jn["rip"].Count; i++)
-							allEvents[11].Add(EventKeyframe.Parse(jn["rip"][i], 5));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["rb"] != null)
-						for (int i = 0; i < jn["rb"].Count; i++)
-						allEvents[12].Add(EventKeyframe.Parse(jn["rb"][i], 2));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["cs"] != null)
-						for (int i = 0; i < jn["cs"].Count; i++)
-						allEvents[13].Add(EventKeyframe.Parse(jn["cs"][i], 1));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["offset"] != null)
-						for (int i = 0; i < jn["offset"].Count; i++)
-						allEvents[14].Add(EventKeyframe.Parse(jn["offset"][i], 2));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["grd"] != null)
-						for (int i = 0; i < jn["grd"].Count; i++)
-						allEvents[15].Add(EventKeyframe.Parse(jn["grd"][i], 5));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["dbv"] != null)
-						for (int i = 0; i < jn["dbv"].Count; i++)
-						allEvents[16].Add(EventKeyframe.Parse(jn["dbv"][i], 1));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["scan"] != null)
-						for (int i = 0; i < jn["scan"].Count; i++)
-						allEvents[17].Add(EventKeyframe.Parse(jn["scan"][i], 3));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["blur"] != null)
-						for (int i = 0; i < jn["blur"].Count; i++)
-						allEvents[18].Add(EventKeyframe.Parse(jn["blur"][i], 2));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["pixel"] != null)
-						for (int i = 0; i < jn["pixel"].Count; i++)
-						allEvents[19].Add(EventKeyframe.Parse(jn["pixel"][i], 1));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["bg"] != null)
-						for (int i = 0; i < jn["bg"].Count; i++)
-						allEvents[20].Add(EventKeyframe.Parse(jn["bg"][i], 1));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["invert"] != null)
-						for (int i = 0; i < jn["invert"].Count; i++)
-                            allEvents[21].Add(EventKeyframe.Parse(jn["invert"][i], 1));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["timeline"] != null)
-						for (int i = 0; i < jn["timeline"].Count; i++)
-						allEvents[22].Add(EventKeyframe.Parse(jn["timeline"][i], 7));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["player"] != null)
-						for (int i = 0; i < jn["player"].Count; i++)
-						allEvents[23].Add(EventKeyframe.Parse(jn["player"][i], 4));
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["follow_player"] != null)
-						for (int i = 0; i < jn["follow_player"].Count; i++)
-						{
-							var eventKeyframe = EventKeyframe.Parse(jn["follow_player"][i], 10);
-							if (string.IsNullOrEmpty(jn["follow_player"][i]["z2"]))
-							{
-								eventKeyframe.SetEventValues(new float[]
-								{
-									jn["follow_player"][i]["x"].AsFloat,
-									jn["follow_player"][i]["y"].AsFloat,
-									jn["follow_player"][i]["z"].AsFloat,
-									jn["follow_player"][i]["x2"].AsFloat,
-									jn["follow_player"][i]["y2"].AsFloat,
-									9999f,
-									-9999f,
-									9999f,
-									-9999f,
-									1f
-								});
-							}
-							allEvents[24].Add(eventKeyframe);
-						}
-
-					allEvents.Add(new List<BaseEventKeyframe>());
-					if (jn["audio"] != null)
-						for (int i = 0; i < jn["audio"].Count; i++)
-							allEvents[25].Add(EventKeyframe.Parse(jn["audio"][i], 2));
-
-					//allEvents.Add(new List<BaseEventKeyframe>());
-					//if (jn["vidbg_off"] != null)
-					//	for (int i = 0; i < jn["vidbg_p"].Count; i++)
-					//		allEvents[26].Add(EventKeyframe.Parse(jn["vidbg_off"], 6));
-
-					//allEvents.Add(new List<BaseEventKeyframe>());
-					//if (jn["vidbg"] != null)
-					//	for (int i = 0; i < jn["vidbg"].Count; i++)
-					//		allEvents[27].Add(EventKeyframe.Parse(jn["vidbg"], 7));
+					if (jn[GameData.EventTypes[i]] != null)
+						for (int j = 0; j < jn[GameData.EventTypes[i]].Count; j++)
+						allEvents[i].Add(EventKeyframe.Parse(jn[GameData.EventTypes[i]][j], i, GameData.DefaultKeyframes[i].eventValues.Length));
 				}
 
-				ClampEventListValues(allEvents, ModCompatibility.mods.ContainsKey("EventsCore") ? 26 : 10);
-				//ClampEventListValues(allEvents, ModCompatibility.mods.ContainsKey("EventsCore") ? 28 : 10);
+				if (clamp)
+					ClampEventListValues(allEvents, GameData.EventCount);
 
-				if (orderTime)
-					allEvents.ForEach(x => x = x.OrderBy(x => x.eventTime).ToList());
+				allEvents.ForEach(x => x = x.OrderBy(x => x.eventTime).ToList());
 
 				return allEvents;
             }
 
 			public static void ClampEventListValues(List<List<BaseEventKeyframe>> eventKeyframes, int totalTypes)
             {
+				while (eventKeyframes.Count > totalTypes)
+					eventKeyframes.RemoveAt(eventKeyframes.Count - 1);
+
 				for (int type = 0; type < totalTypes; type++)
-                {
-					//Debug.Log($"{FunctionsPlugin.className}EventKeyframes Count: {eventKeyframes.Count}\nType: {type}");
+				{
 					if (eventKeyframes.Count < type + 1)
 						eventKeyframes.Add(new List<BaseEventKeyframe>());
 
@@ -774,17 +261,17 @@ namespace RTFunctions.Functions
 						eventKeyframes[type].Add(EventKeyframe.DeepCopy((EventKeyframe)GameData.DefaultKeyframes[type]));
 
 					for (int index = 0; index < eventKeyframes[type].Count; index++)
-                    {
-						var array = (float[])eventKeyframes[type][index].eventValues.Clone();
+					{
+						var array = eventKeyframes[type][index].eventValues;
 						if (array.Length != GameData.DefaultKeyframes[type].eventValues.Length)
-                        {
+						{
 							array = new float[GameData.DefaultKeyframes[type].eventValues.Length];
 							for (int i = 0; i < GameData.DefaultKeyframes[type].eventValues.Length; i++)
 								array[i] = i < eventKeyframes[type][index].eventValues.Length ? eventKeyframes[type][index].eventValues[i] : GameData.DefaultKeyframes[type].eventValues[i];
-                        }
+						}
 						eventKeyframes[type][index].eventValues = array;
-                    }
-                }
+					}
+				}
             }
 
 			public static BaseMarker ParseMarker(JSONNode jn)

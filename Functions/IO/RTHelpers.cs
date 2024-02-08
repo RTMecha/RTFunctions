@@ -12,7 +12,6 @@ namespace RTFunctions.Functions.IO
 {
     public static class RTHelpers
 	{
-		public static float perspectiveZoom = 1f;
 		public static string levelVersion = FunctionsPlugin.CurrentVersion.ToString();
 
         public static float screenScale;
