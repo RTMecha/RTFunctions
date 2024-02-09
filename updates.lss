@@ -1,3 +1,5 @@
+1.9.9 > [Feb 10, 2024]
+- Fixed a Prefab Type range bug.
 1.9.8 > [Feb 8, 2024]
 - Cleaned up some event parsing code.
 - Levels in the game scene should now load the Video BG.
