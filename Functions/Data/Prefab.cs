@@ -75,7 +75,7 @@ namespace RTFunctions.Functions.Data
 
         public string description;
 
-        public PrefabType PrefabType => Type > 0 && Type < DataManager.inst.PrefabTypes.Count ? (PrefabType)DataManager.inst.PrefabTypes[Type] : PrefabType.InvalidType;
+        public PrefabType PrefabType => Type >= 0 && Type < DataManager.inst.PrefabTypes.Count ? (PrefabType)DataManager.inst.PrefabTypes[Type] : PrefabType.InvalidType;
         public Color TypeColor => PrefabType.Color;
         public string TypeName => PrefabType.Name;
 
