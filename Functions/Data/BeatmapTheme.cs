@@ -128,17 +128,17 @@ namespace RTFunctions.Functions.Data
 
 			beatmapTheme.guiColor = jn["gui"] != null ? ((string)jn["gui"]).Length == 8 ? LSColors.HexToColorAlpha(jn["gui"]) : LSColors.HexToColor(jn["gui"]) : LSColors.gray800;
 
-			beatmapTheme.guiAccentColor = jn["gui_ex"] != null ? ((string)jn["gui_ex"]).Length == 8 ? LSColors.HexToColor(jn["gui_ex"]) : LSColors.HexToColorAlpha(jn["gui_ex"]) : beatmapTheme.guiColor;
+			beatmapTheme.guiAccentColor = jn["gui_ex"] != null ? ((string)jn["gui_ex"]).Length == 8 ? LSColors.HexToColorAlpha(jn["gui_ex"]) : LSColors.HexToColor(jn["gui_ex"]) : beatmapTheme.guiColor;
 
 			beatmapTheme.backgroundColor = jn["bg"] != null ? LSColors.HexToColor(jn["bg"]) : LSColors.gray100;
 
 			beatmapTheme.playerColors = jn["players"] != null ? SetColors(jn["players"], 4, "Player Hex code does not exist for some reason") : new List<Color>
-				{
-					LSColors.HexToColorAlpha("E57373FF"),
-					LSColors.HexToColorAlpha("64B5F6FF"),
-					LSColors.HexToColorAlpha("81C784FF"),
-					LSColors.HexToColorAlpha("FFB74DFF"),
-				};
+			{
+				LSColors.HexToColorAlpha("E57373FF"),
+				LSColors.HexToColorAlpha("64B5F6FF"),
+				LSColors.HexToColorAlpha("81C784FF"),
+				LSColors.HexToColorAlpha("FFB74DFF"),
+			};
 
 			beatmapTheme.objectColors = jn["objs"] != null ? SetColors(jn["objs"], 18) : new List<Color>
 			{
@@ -163,17 +163,17 @@ namespace RTFunctions.Functions.Data
 			};
 
 			beatmapTheme.backgroundColors = jn["bgs"] != null ? SetColors(jn["bgs"], 9, "BG Hex code does not exist for some reason") : new List<Color>
-				{
-					LSColors.gray100,
-					LSColors.gray200,
-					LSColors.gray300,
-					LSColors.gray400,
-					LSColors.gray500,
-					LSColors.gray600,
-					LSColors.gray700,
-					LSColors.gray800,
-					LSColors.gray900,
-				};
+			{
+				LSColors.gray100,
+				LSColors.gray200,
+				LSColors.gray300,
+				LSColors.gray400,
+				LSColors.gray500,
+				LSColors.gray600,
+				LSColors.gray700,
+				LSColors.gray800,
+				LSColors.gray900,
+			};
 
 			beatmapTheme.effectColors = jn["fx"] != null ? SetColors(jn["fx"], 18) : beatmapTheme.objectColors.Clone();
 
