@@ -35,6 +35,8 @@ namespace RTFunctions.Functions.Managers
 
         public static bool LoadingFromHere { get; set; }
 
+        public static int CurrentLevelMode { get; set; }
+
         public static bool InEditor => EditorManager.inst;
         public static bool InGame => GameManager.inst;
 
@@ -50,6 +52,8 @@ namespace RTFunctions.Functions.Managers
 
         public static bool finished = false;
 
+        public static int BoostCount { get; set; }
+
         public static Action OnLevelEnd { get; set; }
 
         void Awake()
@@ -58,29 +62,20 @@ namespace RTFunctions.Functions.Managers
             Levels = new List<Level>();
             EditorLevels = new List<Level>();
             ArcadeQueue = new List<Level>();
+
+            if (!RTFile.FileExists(RTFile.ApplicationDirectory + "profile/saves.les") && RTFile.FileExists(RTFile.ApplicationDirectory + "settings/save.lss"))
+                UpgradeProgress();
+            else
+                LoadProgress();
         }
 
         void Update()
         {
             if (!InEditor)
                 EditorLevels.Clear();
-        }
 
-        public static void UpdateSavesFile()
-        {
-            var jn = JSON.Parse("{}");
-            for (int i = 0; i < Levels.Count; i++)
-            {
-                jn["arcade"][i]["level_data"]["id"] = Levels[i].id;
-                jn["arcade"][i]["level_data"]["ver"] = Levels[i].playerData.version;
-                jn["arcade"][i]["play_data"]["finished"] = Levels[i].playerData.completed;
-                jn["arcade"][i]["play_data"]["hits"] = Levels[i].playerData.hits;
-                jn["arcade"][i]["play_data"]["deaths"] = Levels[i].playerData.deaths;
-            }
-
-            string text = jn.ToString();
-            text = LSEncryption.EncryptText(text, SaveManager.inst.encryptionKey);
-            FileManager.inst.SaveJSONFile(SaveManager.inst.settingsFilePath, SaveManager.inst.savesFileName, text);
+            if (InEditor && EditorManager.inst.isEditing)
+                BoostCount = 0;
         }
 
         public static IEnumerator Play(Level level)
@@ -111,9 +106,10 @@ namespace RTFunctions.Functions.Managers
             Debug.Log($"{className}Parsing level...");
 
             GameManager.inst.gameState = GameManager.State.Parsing;
-            var rawJSON = RTFile.ReadFromFile(level.path + "level.lsb");
+            var levelMode = level.LevelModes[Mathf.Clamp(CurrentLevelMode, 0, level.LevelModes.Length - 1)];
+            var rawJSON = RTFile.ReadFromFile(level.path + levelMode);
             rawJSON = UpdateBeatmap(rawJSON, level.metadata.beatmap.game_version);
-            DataManager.inst.gameData = GameData.Parse(JSONNode.Parse(rawJSON));
+            DataManager.inst.gameData = levelMode.Contains(".vgd") ? GameData.ParseVG(JSON.Parse(rawJSON)) : GameData.Parse(JSONNode.Parse(rawJSON));
 
             Debug.Log($"{className}Setting paths...");
 
@@ -171,7 +167,7 @@ namespace RTFunctions.Functions.Managers
             GameManager.inst.ResetCheckpoints();
 
             Debug.Log($"{className}Spawning...");
-
+            BoostCount = 0;
             if (InputDataManager.inst.players.Count == 0)
             {
                 var customPlayer = new Data.Player.CustomPlayer(true, 0, null);
@@ -199,7 +195,6 @@ namespace RTFunctions.Functions.Managers
             if (inGame)
                 Updater.UpdateObjects(false);
 
-            //ObjectManager.inst.updateObjects();
             Patchers.ObjectManagerPatch.AddPrefabObjects(ObjectManager.inst);
 
             Patchers.GameManagerPatch.StartInvoke();
@@ -309,16 +304,32 @@ namespace RTFunctions.Functions.Managers
             return _json;
         }
 
-        public void UpgradeProgress()
+        public static void UpgradeProgress()
         {
             if (!RTFile.FileExists(RTFile.ApplicationDirectory + "profile/saves.les") && RTFile.FileExists(RTFile.ApplicationDirectory + "settings/save.lss"))
             {
                 var decryptedJSON = LSEncryption.DecryptText(RTFile.ReadFromFile(RTFile.ApplicationDirectory + "settings/saves.lss"), SaveManager.inst.encryptionKey);
 
+                var jn = JSON.Parse(decryptedJSON);
+
+                for (int i = 0; i < jn["arcade"].Count; i++)
+                {
+                    var js = jn["arcade"][i];
+
+                    Saves.Add(new PlayerData
+                    {
+                        ID = js["level_data"]["id"],
+                        Completed = js["play_data"]["finished"].AsBool,
+                        Hits = js["play_data"]["hits"].AsInt,
+                        Deaths = js["play_data"]["deaths"].AsInt,
+                    });
+                }
+
+                SaveProgress();
             }
         }
 
-        public void SaveProgress()
+        public static void SaveProgress()
         {
             var jn = JSON.Parse("{}");
             for (int i = 0; i < Saves.Count; i++)
@@ -334,10 +345,12 @@ namespace RTFunctions.Functions.Managers
             RTFile.WriteToFile(RTFile.ApplicationDirectory + "profile/saves.les", json);
         }
 
-        public void LoadProgress()
+        public static void LoadProgress()
         {
             if (!RTFile.FileExists(RTFile.ApplicationDirectory + "profile/saves.les"))
                 return;
+
+            Saves.Clear();
 
             string decryptedJSON = LSEncryption.DecryptText(RTFile.ReadFromFile(RTFile.ApplicationDirectory + "profile/saves.les"), SaveManager.inst.encryptionKey);
 
@@ -349,9 +362,9 @@ namespace RTFunctions.Functions.Managers
             }
         }
         
-        public PlayerData GetPlayerData(string id) => Saves.Find(x => x.ID == id);
+        public static PlayerData GetPlayerData(string id) => Saves.Find(x => x.ID == id);
 
-        public List<PlayerData> Saves { get; set; } = new List<PlayerData>();
+        public static List<PlayerData> Saves { get; set; } = new List<PlayerData>();
         public class PlayerData
         {
             public string ID { get; set; }
