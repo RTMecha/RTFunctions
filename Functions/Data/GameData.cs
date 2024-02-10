@@ -129,9 +129,11 @@ namespace RTFunctions.Functions.Data
 			});
 
 			gameData.eventObjects = new EventObjects();
+			gameData.eventObjects.allEvents = new List<List<BaseEventKeyframe>>();
 
-			Debug.Log($"{FunctionsPlugin.className}Parsing Beatmap Themes");
+			Debug.Log($"{FunctionsPlugin.className}Parsing Event Keyframes");
 			// Move
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][0].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -147,8 +149,9 @@ namespace RTFunctions.Functions.Data
 
 				gameData.eventObjects.allEvents[0].Add(eventKeyframe);
 			}
-			
+
 			// Zoom
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][1].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -164,8 +167,9 @@ namespace RTFunctions.Functions.Data
 
 				gameData.eventObjects.allEvents[1].Add(eventKeyframe);
 			}
-			
+
 			// Rotate
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][2].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -181,8 +185,9 @@ namespace RTFunctions.Functions.Data
 
 				gameData.eventObjects.allEvents[2].Add(eventKeyframe);
 			}
-			
+
 			// Shake
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][3].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -198,8 +203,9 @@ namespace RTFunctions.Functions.Data
 
 				gameData.eventObjects.allEvents[3].Add(eventKeyframe);
 			}
-			
+
 			// Theme
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][4].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -219,8 +225,9 @@ namespace RTFunctions.Functions.Data
 
 				gameData.eventObjects.allEvents[4].Add(eventKeyframe);
 			}
-			
+
 			// Chroma
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][5].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -236,8 +243,9 @@ namespace RTFunctions.Functions.Data
 
 				gameData.eventObjects.allEvents[5].Add(eventKeyframe);
 			}
-			
+
 			// Bloom
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][6].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -258,8 +266,9 @@ namespace RTFunctions.Functions.Data
 
 				gameData.eventObjects.allEvents[6].Add(eventKeyframe);
 			}
-			
+
 			// Vignette
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][7].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -275,15 +284,16 @@ namespace RTFunctions.Functions.Data
 					kfjn["ev"][0].AsFloat,
 					kfjn["ev"][1].AsFloat,
 					kfjn["ev"][2].AsFloat,
-					kfjn["ev"][3].AsFloat,
+					1f,
 					kfjn["ev"][4].AsFloat,
 					kfjn["ev"][5].AsFloat,
 					kfjn["ev"][6].AsFloat == 9f ? 18f : kfjn["ev"][6].AsFloat);
 
 				gameData.eventObjects.allEvents[7].Add(eventKeyframe);
 			}
-			
+
 			// Lens
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][8].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -305,8 +315,9 @@ namespace RTFunctions.Functions.Data
 
 				gameData.eventObjects.allEvents[8].Add(eventKeyframe);
 			}
-			
+
 			// Grain
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][9].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -325,8 +336,9 @@ namespace RTFunctions.Functions.Data
 
 				gameData.eventObjects.allEvents[9].Add(eventKeyframe);
 			}
-			
+
 			// Hue
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][12].Count; i++)
             {
 				var eventKeyframe = new Data.EventKeyframe();
@@ -344,12 +356,17 @@ namespace RTFunctions.Functions.Data
 				gameData.eventObjects.allEvents[10].Add(eventKeyframe);
 			}
 
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			gameData.eventObjects.allEvents[11].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[11]));
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			gameData.eventObjects.allEvents[12].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[12]));
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			gameData.eventObjects.allEvents[13].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[13]));
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			gameData.eventObjects.allEvents[14].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[14]));
 
 			// Gradient
+			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 			for (int i = 0; i < jn["events"][10].Count; i++)
 			{
 				var eventKeyframe = new Data.EventKeyframe();
@@ -366,13 +383,14 @@ namespace RTFunctions.Functions.Data
 					kfjn["ev"][1].AsFloat,
 					kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat,
 					kfjn["ev"][3].AsFloat == 9f ? 18f : kfjn["ev"][3].AsFloat,
-					kfjn["ev"][4].AsFloat);
+					kfjn["ev"].Count > 4 ? kfjn["ev"][4].AsFloat : 0f);
 
 				gameData.eventObjects.allEvents[15].Add(eventKeyframe);
 			}
 
 			for (int i = 16; i < DefaultKeyframes.Count; i++)
-            {
+			{
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
 				gameData.eventObjects.allEvents[i].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[i]));
             }
 
