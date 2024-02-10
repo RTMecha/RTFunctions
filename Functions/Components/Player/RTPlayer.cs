@@ -1471,6 +1471,8 @@ namespace RTFunctions.Functions.Components.Player
                     playerObjects["Boost Tail Base"].gameObject.transform.DOScale(Vector3.zero, 0.05f / RTHelpers.Pitch).SetEase(DataManager.inst.AnimationList[2].Animation);
                 }
 
+                LevelManager.BoostCount++;
+
                 EvaluateBoostCode();
             }
         }
@@ -2780,7 +2782,7 @@ namespace RTFunctions.Functions.Components.Player
 
                 string cs = FileManager.inst.LoadJSONFileRaw(path);
 
-                if (!cs.Contains("System.IO.File.") && !cs.Contains("File."))
+                if (RTCode.Validate(cs))
                     RTCode.Evaluate($"{def}{cs}");
             }
         }
@@ -2798,7 +2800,7 @@ namespace RTFunctions.Functions.Components.Player
 
                 string cs = FileManager.inst.LoadJSONFileRaw(path);
 
-                if (!cs.Contains("System.IO.File.") && !cs.Contains("File."))
+                if (RTCode.Validate(cs))
                     RTCode.Evaluate($"{def}{cs}");
             }
         }
@@ -2816,7 +2818,7 @@ namespace RTFunctions.Functions.Components.Player
 
                 string cs = FileManager.inst.LoadJSONFileRaw(path);
 
-                if (!cs.Contains("System.IO.File.") && !cs.Contains("File."))
+                if (RTCode.Validate(cs))
                     RTCode.Evaluate($"{def}{cs}");
             }
         }
@@ -2834,7 +2836,7 @@ namespace RTFunctions.Functions.Components.Player
 
                 string cs = FileManager.inst.LoadJSONFileRaw(path);
 
-                if (!cs.Contains("System.IO.File.") && !cs.Contains("File."))
+                if (RTCode.Validate(cs))
                     RTCode.Evaluate($"{def}{cs}");
             }
         }
