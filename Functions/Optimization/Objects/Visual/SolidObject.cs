@@ -14,10 +14,11 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
         public override Renderer Renderer { get; set; }
         public override Collider2D Collider { get; set; }
 
+        bool opacityCollision;
         Material material;
         readonly float opacity;
 
-        public SolidObject(GameObject gameObject, Transform top, float opacity, bool hasCollider, bool solid = false, bool background = false)
+        public SolidObject(GameObject gameObject, Transform top, float opacity, bool hasCollider, bool solid, bool background, bool opacityCollision)
         {
             GameObject = gameObject;
             Top = top;
@@ -43,8 +44,16 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
                 if (solid)
                     Collider.isTrigger = false;
             }
+
+            this.opacityCollision = opacityCollision;
         }
 
-        public override void SetColor(Color color) => material?.SetColor(new Color(color.r, color.g, color.b, color.a * opacity));
+        public override void SetColor(Color color)
+        {
+            float a = color.a * opacity;
+            material?.SetColor(new Color(color.r, color.g, color.b, a));
+            if (opacityCollision)
+                Collider.enabled = a > 0.99f;
+        }
     }
 }
