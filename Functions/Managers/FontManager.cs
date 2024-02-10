@@ -56,11 +56,12 @@ namespace RTFunctions.Functions.Managers
 
             if (DataManager.inst.gameData != null && DataManager.inst.gameData.beatmapObjects.Count > 0)
             {
-                foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
+                foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects.Where(x =>
+                                x.shape == 4 && x.TimeWithinLifespan() && x.objectType != DataManager.GameData.BeatmapObject.ObjectType.Empty))
                 {
-                    if (beatmapObject.shape == 4 && beatmapObject.TimeWithinLifespan() && Updater.TryGetObject(beatmapObject, out LevelObject levelObject) && ((TextObject)levelObject.visualObject).TextMeshPro)
+                    if (Updater.TryGetObject(beatmapObject, out LevelObject levelObject) && ((TextObject)levelObject.visualObject).TextMeshPro)
                     {
-                        var visualObject = ((TextObject)levelObject.visualObject);
+                        var visualObject = (TextObject)levelObject.visualObject;
                         var tmp = visualObject.TextMeshPro;
 
                         var currentAudioTime = AudioManager.inst.CurrentAudioSource.time;
@@ -265,7 +266,7 @@ namespace RTFunctions.Functions.Managers
                         var phRegex = new Regex(@"<playerHealth=(.*?)>");
                         var phMatch = phRegex.Match(beatmapObject.text);
 
-                        if (phMatch.Success && int.TryParse(phMatch.Groups[1].ToString(), out int num))
+                        if (phMatch.Success && phMatch.Groups.Count > 1 && int.TryParse(phMatch.Groups[1].ToString(), out int num))
                         {
                             if (InputDataManager.inst.players.Count > num)
                             {
@@ -292,7 +293,7 @@ namespace RTFunctions.Functions.Managers
                         var pdRegex = new Regex(@"<playerDeaths=(.*?)>");
                         var pdMatch = pdRegex.Match(beatmapObject.text);
 
-                        if (pdMatch.Success && int.TryParse(pdMatch.Groups[1].ToString(), out int numDeath))
+                        if (pdMatch.Success && pdMatch.Groups.Count > 1 && int.TryParse(pdMatch.Groups[1].ToString(), out int numDeath))
                         {
                             if (InputDataManager.inst.players.Count > numDeath)
                             {
@@ -319,7 +320,7 @@ namespace RTFunctions.Functions.Managers
                         var phiRegex = new Regex(@"<playerHits=(.*?)>");
                         var phiMatch = phiRegex.Match(beatmapObject.text);
 
-                        if (phiMatch.Success && int.TryParse(phiMatch.Groups[1].ToString(), out int numHit))
+                        if (phiMatch.Success && phiMatch.Groups.Count > 1 && int.TryParse(phiMatch.Groups[1].ToString(), out int numHit))
                         {
                             if (InputDataManager.inst.players.Count > numHit)
                             {
@@ -350,7 +351,7 @@ namespace RTFunctions.Functions.Managers
                         var qeRegex = new Regex(@"<quickElement=(.*?)>");
                         var qeMatch = qeRegex.Match(beatmapObject.text);
 
-                        if (qeMatch.Success)
+                        if (qeMatch.Success && qeMatch.Groups.Count > 1)
                         {
                             str = str.Replace("<quickElement=" + qeMatch.Groups[1].ToString() + ">", QuickElementManager.ConvertQuickElement(beatmapObject, qeMatch.Groups[1].ToString()));
                         }
@@ -363,7 +364,7 @@ namespace RTFunctions.Functions.Managers
                             var ratRegex = new Regex(@"<randomText=(.*?)>");
                             var ratMatch = ratRegex.Match(beatmapObject.text);
 
-                            if (ratMatch.Success && int.TryParse(ratMatch.Groups[1].ToString(), out int ratInt))
+                            if (ratMatch.Success && ratMatch.Groups.Count > 1 && int.TryParse(ratMatch.Groups[1].ToString(), out int ratInt))
                             {
                                 str = str.Replace("<randomText=" + ratMatch.Groups[1].ToString() + ">", LSFunctions.LSText.randomString(ratInt));
                             }
@@ -371,7 +372,7 @@ namespace RTFunctions.Functions.Managers
                             var ranRegex = new Regex(@"<randomNumber=(.*?)>");
                             var ranMatch = ranRegex.Match(beatmapObject.text);
 
-                            if (ranMatch.Success && int.TryParse(ranMatch.Groups[1].ToString(), out int ranInt))
+                            if (ranMatch.Success && ratMatch.Groups.Count > 1 && int.TryParse(ranMatch.Groups[1].ToString(), out int ranInt))
                             {
                                 str = str.Replace("<randomNumber=" + ranMatch.Groups[1].ToString() + ">", LSFunctions.LSText.randomNumString(ranInt));
                             }
@@ -381,68 +382,63 @@ namespace RTFunctions.Functions.Managers
 
                         #region Theme
 
-                        // We do a try catch due to an error.
-                        try
                         {
-                            {
-                                var matchCollection = Regex.Matches(str, "<themeObject=(.*?)>");
+                            var matchCollection = Regex.Matches(str, "<themeObject=(.*?)>");
 
-                                foreach (var obj in matchCollection)
-                                {
-                                    var match = (Match)obj;
+                            foreach (var obj in matchCollection)
+                            {
+                                var match = (Match)obj;
+                                if (match.Groups.Count > 1)
                                     str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetObjColor(int.Parse(match.Groups[1].ToString())))}>");
-                                }
                             }
-
-                            {
-                                var matchCollection = Regex.Matches(str, "<themeBGs=(.*?)>");
-
-                                foreach (var obj in matchCollection)
-                                {
-                                    var match = (Match)obj;
-                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetBGColor(int.Parse(match.Groups[1].ToString())))}>");
-                                }
-                            }
-
-                            {
-                                var matchCollection = Regex.Matches(str, "<themeFX=(.*?)>");
-
-                                foreach (var obj in matchCollection)
-                                {
-                                    var match = (Match)obj;
-                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetFXColor(int.Parse(match.Groups[1].ToString())))}>");
-                                }
-                            }
-
-                            {
-                                var matchCollection = Regex.Matches(str, "<themePlayers=(.*?)>");
-
-                                foreach (var obj in matchCollection)
-                                {
-                                    var match = (Match)obj;
-                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetPlayerColor(int.Parse(match.Groups[1].ToString())))}>");
-                                }
-                            }
-
-                            if (beatmapObject.text.Contains("<themeBG>"))
-                            {
-                                str = str.Replace("<themeBG>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.backgroundColor));
-                            }
-
-                            if (beatmapObject.text.Contains("<themeGUI>"))
-                            {
-                                str = str.Replace("<themeGUI>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiColor));
-                            }
-
-                            if (beatmapObject.text.Contains("<themeTail>"))
-                            {
-                                str = str.Replace("<themeTail>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiAccentColor));
-                            }
-
                         }
-                        catch
-                        {
 
+                        {
+                            var matchCollection = Regex.Matches(str, "<themeBGs=(.*?)>");
+
+                            foreach (var obj in matchCollection)
+                            {
+                                var match = (Match)obj;
+                                if (match.Groups.Count > 1)
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetBGColor(int.Parse(match.Groups[1].ToString())))}>");
+                            }
+                        }
+
+                        {
+                            var matchCollection = Regex.Matches(str, "<themeFX=(.*?)>");
+
+                            foreach (var obj in matchCollection)
+                            {
+                                var match = (Match)obj;
+                                if (match.Groups.Count > 1)
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetFXColor(int.Parse(match.Groups[1].ToString())))}>");
+                            }
+                        }
+
+                        {
+                            var matchCollection = Regex.Matches(str, "<themePlayers=(.*?)>");
+
+                            foreach (var obj in matchCollection)
+                            {
+                                var match = (Match)obj;
+                                if (match.Groups.Count > 1)
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetPlayerColor(int.Parse(match.Groups[1].ToString())))}>");
+                            }
+                        }
+
+                        if (beatmapObject.text.Contains("<themeBG>"))
+                        {
+                            str = str.Replace("<themeBG>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.backgroundColor));
+                        }
+
+                        if (beatmapObject.text.Contains("<themeGUI>"))
+                        {
+                            str = str.Replace("<themeGUI>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiColor));
+                        }
+
+                        if (beatmapObject.text.Contains("<themeTail>"))
+                        {
+                            str = str.Replace("<themeTail>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiAccentColor));
                         }
 
                         #endregion
@@ -453,7 +449,7 @@ namespace RTFunctions.Functions.Managers
                             var regex = new Regex(@"<modifierVariable=(.*?)>");
                             var match = regex.Match(beatmapObject.text);
 
-                            if (match.Success && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.name == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
+                            if (match.Success && match.Groups.Count > 1 && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.name == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
                             {
                                 str = str.Replace("<modifierVariable=" + match.Groups[1].ToString() + ">", ((BeatmapObject)other).integerVariable.ToString());
                             }
@@ -463,7 +459,7 @@ namespace RTFunctions.Functions.Managers
                             var regex = new Regex(@"<modifierVariableID=(.*?)>");
                             var match = regex.Match(beatmapObject.text);
 
-                            if (match.Success && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
+                            if (match.Success && match.Groups.Count > 1 && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
                             {
                                 str = str.Replace("<modifierVariableID=" + match.Groups[1].ToString() + ">", ((BeatmapObject)other).integerVariable.ToString());
                             }
