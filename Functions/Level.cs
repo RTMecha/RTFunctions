@@ -20,19 +20,22 @@ namespace RTFunctions.Functions
 
             if (RTFile.FileExists($"{path}metadata.lsb"))
                 metadata = Metadata.Parse(JSON.Parse(RTFile.ReadFromFile($"{path}metadata.lsb")));
+            else if (RTFile.FileExists($"{path}metadata.vgm"))
+                metadata = Metadata.Parse(JSON.Parse(RTFile.ReadFromFile($"{path}metadata.vgm")));
 
-            icon = RTFile.FileExists($"{path}level.jpg") ? SpriteManager.LoadSprite($"{path}level.jpg") : ArcadeManager.inst.defaultImage;
+            icon = RTFile.FileExists($"{path}level.jpg") ? SpriteManager.LoadSprite($"{path}level.jpg") : RTFile.FileExists($"{path}cover.jpg") ? SpriteManager.LoadSprite($"{path}cover.jpg") : ArcadeManager.inst.defaultImage;
 
             if (metadata)
                 id = metadata.LevelBeatmap.beatmap_id;
 
-            if (RTFile.FileExists($"{path}modes.lsb"))
+            if (RTFile.FileExists($"{path}modes.lsms"))
             {
-                var jn = JSON.Parse(RTFile.ReadFromFile($"{path}modes.lsb"));
-                LevelModes = new string[jn["paths"].Count];
-                for (int i = 0; i < jn["paths"].Count; i++)
+                var jn = JSON.Parse(RTFile.ReadFromFile($"{path}modes.lsms"));
+                LevelModes = new string[jn["paths"].Count + 1];
+                LevelModes[0] = RTFile.FileExists($"{path}level.lsb") ? "level.lsb" : "level.vgd";
+                for (int i = 1; i < jn["paths"].Count + 1; i++)
                 {
-                    LevelModes[i] = jn["paths"][i];
+                    LevelModes[i] = jn["paths"][i - 1];
                 }
             }
             else
@@ -64,38 +67,38 @@ namespace RTFunctions.Functions
                     music = audioClip;
                 }));
             }
-            if (RTFile.FileExists(path + "level.wav") && !music)
+            else if (RTFile.FileExists(path + "level.wav") && !music)
             {
                 FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadAudioClip("file://" + path + "level.wav", AudioType.WAV, delegate (AudioClip audioClip)
                 {
                     music = audioClip;
                 }));
             }
+            else if (RTFile.FileExists(path + "level.mp3") && !music)
+            {
+                music = LSFunctions.LSAudio.CreateAudioClipUsingMP3File(path + "level.mp3");
+            }
+            else if (RTFile.FileExists(path + "audio.ogg") && !music)
+            {
+                FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadAudioClip("file://" + path + "audio.ogg", AudioType.OGGVORBIS, delegate (AudioClip audioClip)
+                {
+                    music = audioClip;
+                }));
+            }
+            else if (RTFile.FileExists(path + "audio.wav") && !music)
+            {
+                FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadAudioClip("file://" + path + "audio.wav", AudioType.WAV, delegate (AudioClip audioClip)
+                {
+                    music = audioClip;
+                }));
+            }
+            else if (RTFile.FileExists(path + "audio.mp3") && !music)
+            {
+                music = LSFunctions.LSAudio.CreateAudioClipUsingMP3File(path + "audio.mp3");
+            }
         }
 
-        public PlayerData playerData = new PlayerData();
-        public class PlayerData
-        {
-            public PlayerData()
-            {
-
-            }
-            
-            public PlayerData(int hits, int deaths, int boosts, bool completed, int version)
-            {
-                this.hits = hits;
-                this.deaths = deaths;
-                this.boosts = boosts;
-                this.completed = completed;
-                this.version = version;
-            }
-
-            public int hits = -1;
-            public int deaths = -1;
-            public int boosts = -1;
-            public bool completed;
-            public int version;
-        }
+        public LevelManager.PlayerData playerData;
 
         public override string ToString() => System.IO.Path.GetFileName(path);
     }
