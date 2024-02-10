@@ -297,12 +297,6 @@ namespace RTFunctions.Patchers
                     GameStorageManager.inst.timelineLine.color = beatmapTheme.guiColor;
                 }
 
-                //var componentsInChildren = __instance.timeline.GetComponentsInChildren<Image>();
-                //for (int i = 0; i < componentsInChildren.Length; i++)
-                //{
-                //    componentsInChildren[i].color = beatmapTheme.guiColor;
-                //}
-
                 if (EditorManager.inst == null && AudioManager.inst.CurrentAudioSource.time < 15f)
                 {
                     if (__instance.introTitle.color != beatmapTheme.guiColor)
