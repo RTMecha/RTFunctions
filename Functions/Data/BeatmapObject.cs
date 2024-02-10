@@ -48,7 +48,7 @@ namespace RTFunctions.Functions.Data
 			editorData.collapse = beatmapObject.editorData.collapse;
 			editorData.locked = beatmapObject.editorData.locked;
 			fromPrefab = beatmapObject.fromPrefab;
-			objectType = beatmapObject.objectType;
+			objectType = (ObjectType)beatmapObject.objectType;
 			origin = beatmapObject.origin;
 			prefabID = beatmapObject.prefabID;
 			prefabInstanceID = beatmapObject.prefabInstanceID;
@@ -75,7 +75,7 @@ namespace RTFunctions.Functions.Data
 			editorData.collapse = beatmapObject.editorData.collapse;
 			editorData.locked = beatmapObject.editorData.locked;
 			fromPrefab = beatmapObject.fromPrefab;
-			objectType = beatmapObject.objectType;
+			objectType = (ObjectType)beatmapObject.objectType;
 			origin = beatmapObject.origin;
 			prefabID = beatmapObject.prefabID;
 			prefabInstanceID = beatmapObject.prefabInstanceID;
@@ -110,6 +110,8 @@ namespace RTFunctions.Functions.Data
 			get => depth;
 			set => depth = value;
 		}
+
+		public bool opacityCollision = false;
 
 		public bool background;
 
@@ -283,6 +285,17 @@ namespace RTFunctions.Functions.Data
 			}
 
 			#endregion
+		}
+
+		public new ObjectType objectType;
+
+		public new enum ObjectType
+		{
+			Normal,
+			Helper,
+			Decoration,
+			Empty,
+			Solid
 		}
 
 		#region Methods
@@ -480,6 +493,8 @@ namespace RTFunctions.Functions.Data
 
 			beatmapObject.id = jn["id"] != null ? jn["id"] : LSText.randomString(16);
 
+			beatmapObject.opacityCollision = true;
+
 			if (jn["pre_iid"] != null)
 				beatmapObject.prefabInstanceID = jn["pre_iid"];
 
@@ -487,16 +502,24 @@ namespace RTFunctions.Functions.Data
 				beatmapObject.prefabID = jn["pre_id"];
 
 			if (jn["p_id"] != null)
-				beatmapObject.parent = jn["p_id"];
+			{
+				beatmapObject.parent = jn["p_id"] == "camera" ? "CAMERA_PARENT" : jn["p_id"];
+			}
 
-			if (jn["p_t"] != null)
+			if (jn["p_t"] != null && jn["p_id"] != "camera")
 				beatmapObject.parentType = jn["p_t"];
+			else if (jn["p_id"] == "camera")
+				beatmapObject.parentType = "111";
 
-			if (jn["p_o"] != null)
+			if (jn["p_o"] != null && jn["p_id"] != "camera")
 			{
 				beatmapObject.parentOffsets = new List<float>(from n in jn["p_o"].AsArray.Children
 															  select n.AsFloat).ToList();
 			}
+            else if (jn["p_id"] == "camera")
+            {
+				beatmapObject.parentOffsets = new List<float> { 0f, 0f, 0f };
+            }
 
 			if (jn["ot"] != null)
 			{
@@ -739,6 +762,9 @@ namespace RTFunctions.Functions.Data
 
 			if (jn["rdt"] != null)
 				beatmapObject.background = jn["rdt"].AsInt == 1;
+			
+			if (jn["opcol"] != null)
+				beatmapObject.opacityCollision = jn["opcol"].AsBool;
 
 			if (jn["empty"] != null)
 				beatmapObject.objectType = jn["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal;
@@ -839,7 +865,7 @@ namespace RTFunctions.Functions.Data
 			if (!string.IsNullOrEmpty(name))
 				jn["n"] = name;
 
-			jn["ot"] = (int)objectType;
+			jn["ot"] = (int)objectType == 4 ? 0 : (int)objectType;
 			jn["ak_t"] = (int)autoKillType;
 			jn["ak_o"] = autoKillOffset;
 
@@ -969,6 +995,7 @@ namespace RTFunctions.Functions.Data
 
 			jn["d"] = depth.ToString();
 			jn["rdt"] = (background ? 1 : 0).ToString();
+			jn["opcol"] = opacityCollision.ToString();
 
 			if (LDM)
 				jn["ldm"] = LDM.ToString();

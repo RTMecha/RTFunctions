@@ -52,14 +52,14 @@ namespace RTFunctions.Patchers
 		static bool RemovePlayer(InputDataManager __instance, InputDataManager.CustomPlayer __0)
 		{
 			int index = __0.index;
-			if (__0 is CustomPlayer && (__0 as CustomPlayer).Player)
+			if (__0 is CustomPlayer customPlayer && customPlayer.Player)
 			{
 				__instance.StopControllerRumble(index);
-				(__0 as CustomPlayer).Player.Actions = null;
-				(__0 as CustomPlayer).Player.faceController = null;
-				if ((__0 as CustomPlayer).Player.gameObject != null)
+				customPlayer.Player.Actions = null;
+				customPlayer.Player.faceController = null;
+				if (customPlayer.Player.gameObject)
 				{
-					Destroy((__0 as CustomPlayer).Player.gameObject);
+					Destroy(customPlayer.Player.gameObject);
 				}
 			}
 
@@ -87,7 +87,7 @@ namespace RTFunctions.Patchers
 			{
 				if (__instance.JoinButtonWasPressedOnListener(__instance.joystickListener))
 				{
-					InputDevice activeDevice = InputManager.ActiveDevice;
+					var activeDevice = InputManager.ActiveDevice;
 					if (__instance.ThereIsNoPlayerUsingJoystick(activeDevice))
 						__instance.players.Add(new CustomPlayer(true, __instance.players.Count, activeDevice));
 				}

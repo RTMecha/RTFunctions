@@ -9,16 +9,18 @@ using UnityEngine;
 using RTFunctions.Functions.Animation;
 using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.Components;
+using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.Optimization.Objects.Visual;
 
-using GameData = DataManager.GameData;
-using BeatmapObject = DataManager.GameData.BeatmapObject;
-using EventKeyframe = DataManager.GameData.EventKeyframe;
+using BaseGameData = DataManager.GameData;
+using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 using Object = UnityEngine.Object;
-using ObjectType = DataManager.GameData.BeatmapObject.ObjectType;
+using BaseObjectType = DataManager.GameData.BeatmapObject.ObjectType;
+using ObjectType = RTFunctions.Functions.Data.BeatmapObject.ObjectType;
 
 namespace RTFunctions.Functions.Optimization.Objects
 {
@@ -54,7 +56,7 @@ namespace RTFunctions.Functions.Optimization.Objects
         {
             this.gameData = gameData;
 
-            foreach (var beatmapObject in gameData.beatmapObjects)
+            foreach (var beatmapObject in gameData.BeatmapObjects)
             {
                 if (!beatmapObjects.ContainsKey(beatmapObject.id))
                     beatmapObjects.Add(beatmapObject.id, beatmapObject);
@@ -96,17 +98,14 @@ namespace RTFunctions.Functions.Optimization.Objects
 
         public IEnumerable<ILevelObject> ToLevelObjects()
         {
-            foreach (var beatmapObject in gameData.beatmapObjects)
+            foreach (var beatmapObject in gameData.BeatmapObjects)
             {
-                if (beatmapObject is Data.BeatmapObject bm && VerifyObject(bm))
+                if (VerifyObject(beatmapObject))
                 {
-                    if (beatmapObject is Data.BeatmapObject bm1)
-                    {
-                        if (bm1.levelObject != null && bm1.levelObject.parentObjects != null)
-                            bm1.levelObject.parentObjects.Clear();
-                        if (bm1.levelObject != null)
-                            bm1.levelObject = null;
-                    }
+                    if (beatmapObject.levelObject != null && beatmapObject.levelObject.parentObjects != null)
+                        beatmapObject.levelObject.parentObjects.Clear();
+                    if (beatmapObject.levelObject != null)
+                        beatmapObject.levelObject = null;
                     continue;
                 }
 
@@ -118,7 +117,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 }
                 catch (Exception e)
                 {
-                    StringBuilder stringBuilder = new StringBuilder();
+                    var stringBuilder = new StringBuilder();
                     stringBuilder.AppendLine($"{Updater.className}Failed to convert object '{beatmapObject.id}' to {nameof(LevelObject)}.");
                     stringBuilder.AppendLine($"Exception: {e.Message}");
                     stringBuilder.AppendLine(e.StackTrace);
@@ -131,19 +130,16 @@ namespace RTFunctions.Functions.Optimization.Objects
             }
         }
 
-        public bool VerifyObject(Data.BeatmapObject beatmapObject) => !ShowEmpties && beatmapObject.objectType == ObjectType.Empty || beatmapObject.LDM && FunctionsPlugin.LDM.Value;
+        public bool VerifyObject(BeatmapObject beatmapObject) => !ShowEmpties && beatmapObject.objectType == ObjectType.Empty || beatmapObject.LDM && FunctionsPlugin.LDM.Value;
 
         public ILevelObject ToILevelObject(BeatmapObject beatmapObject)
         {
-            if (beatmapObject is Data.BeatmapObject bm && VerifyObject(bm))
+            if (VerifyObject(beatmapObject))
             {
-                if (beatmapObject is Data.BeatmapObject bm1)
-                {
-                    if (bm1.levelObject != null && bm1.levelObject.parentObjects != null)
-                        bm1.levelObject.parentObjects.Clear();
-                    if (bm1.levelObject != null)
-                        bm1.levelObject = null;
-                }
+                if (beatmapObject.levelObject != null && beatmapObject.levelObject.parentObjects != null)
+                    beatmapObject.levelObject.parentObjects.Clear();
+                if (beatmapObject.levelObject != null)
+                    beatmapObject.levelObject = null;
                 return null;
             }
 
@@ -155,7 +151,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             }
             catch (Exception e)
             {
-                StringBuilder stringBuilder = new StringBuilder();
+                var stringBuilder = new StringBuilder();
                 stringBuilder.AppendLine($"{Updater.className}Failed to convert object '{beatmapObject.id}' to {nameof(LevelObject)}.");
                 stringBuilder.AppendLine($"Exception: {e.Message}");
                 stringBuilder.AppendLine(e.StackTrace);
@@ -185,17 +181,12 @@ namespace RTFunctions.Functions.Optimization.Objects
                 var rtPlayer = baseObject.GetComponent<Components.Player.RTPlayer>();
                 rtPlayer.PlayerModel = ObjectManager.inst.objectPrefabs[shape].options[shapeOption].GetComponent<Components.Player.RTPlayer>().PlayerModel;
                 rtPlayer.playerIndex = beatmapObject.events.Count > 3 && beatmapObject.events[3].Count > 0 && beatmapObject.events[3][0].eventValues.Length > 0 ? (int)beatmapObject.events[3][0].eventValues[0] : 0;
-                if (beatmapObject is Data.BeatmapObject moddedObject && moddedObject.tags != null && moddedObject.tags.Has(x => x == "DontRotate"))
+                if (beatmapObject.tags != null && beatmapObject.tags.Has(x => x == "DontRotate"))
                 {
                     rtPlayer.CanRotate = false;
                 }
             }
 
-            //if (shape != 9)
-            //    baseObject = Object.Instantiate(ObjectManager.inst.objectPrefabs[shape].options[shapeOption], parent == null ? ObjectManager.inst.objectParent.transform : parent.transform);
-            //else
-            //    baseObject = PlayerManager.SpawnPlayer(PlayerManager.PlayerModels.ElementAt(shapeOption).Value, parent == null ? ObjectManager.inst.objectParent.transform : parent.transform,
-            //        beatmapObject.events.Count > 3 && beatmapObject.events[3].Count > 0 ? (int)beatmapObject.events[3][0].eventValues[0] : 0, Vector3.zero);
             baseObject.transform.localScale = Vector3.one;
 
             var visualObject = baseObject.transform.GetChild(shape == 9 ? 1 : 0).gameObject;
@@ -208,7 +199,6 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             try
             {
-
                 int num = 0;
                 if (parentObjects != null)
                     num = parentObjects.Count;
@@ -223,7 +213,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 }
                 catch (Exception e)
                 {
-                    StringBuilder stringBuilder = new StringBuilder();
+                    var stringBuilder = new StringBuilder();
                     stringBuilder.AppendLine($"{Updater.className}Failed to init parent chain for '{beatmapObject.id}'. ParentObjects Null: {parentObjects == null} Count: {num}");
                     stringBuilder.AppendLine($"Exception: {e.Message}");
                     stringBuilder.AppendLine(e.StackTrace);
@@ -237,9 +227,9 @@ namespace RTFunctions.Functions.Optimization.Objects
                 top.transform.SetParent(ObjectManager.inst.objectParent.transform);
                 top.transform.localScale = Vector3.one;
 
-                Vector3 prefabOffsetPosition = Vector3.zero;
-                Vector3 prefabOffsetScale  = Vector3.one;
-                Vector3 prefabOffsetRotation = Vector3.zero;
+                var prefabOffsetPosition = Vector3.zero;
+                var prefabOffsetScale  = Vector3.one;
+                var prefabOffsetRotation = Vector3.zero;
 
                 try
                 {
@@ -282,9 +272,6 @@ namespace RTFunctions.Functions.Optimization.Objects
                         prefabOffsetPosition = pos;
                         prefabOffsetScale = (sca.x > 0f || sca.x < 0f) && (sca.y > 0f || sca.y < 0f) ? sca : Vector3.one;
                         prefabOffsetRotation = rot.eulerAngles;
-                        //top.transform.localPosition = pos;
-                        //top.transform.localScale = (sca.x > 0f || sca.x < 0f) && (sca.y > 0f || sca.y < 0f) ? sca : Vector3.one;
-                        //top.transform.localRotation = rot;
 
                         if (!hasPosX)
                             Debug.LogError($"{Updater.className}PrefabObject does not have Postion X in its' eventValues.\nPossible causes:");
@@ -350,8 +337,8 @@ namespace RTFunctions.Functions.Optimization.Objects
                 bool hasCollider = beatmapObject.objectType == ObjectType.Helper ||
                                    beatmapObject.objectType == ObjectType.Decoration;
 
-                bool isSolid = beatmapObject.objectType == (ObjectType)4;
-                bool isBackground = beatmapObject is Data.BeatmapObject moddedObject1 && moddedObject1.background;
+                bool isSolid = beatmapObject.objectType == ObjectType.Solid;
+                bool isBackground = beatmapObject.background;
 
                 // 4 = text object
                 // 6 = image object
@@ -360,20 +347,20 @@ namespace RTFunctions.Functions.Optimization.Objects
                     beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground) :
                     beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground) :
                     beatmapObject.shape == 9 ? new PlayerObject(visualObject, top.transform) :
-                    new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid, isBackground);
+                    new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid, isBackground, beatmapObject.opacityCollision);
 
                 try
                 {
                     if (EditorManager.inst && (!beatmapObject.fromPrefab || shape != 9))
                     {
                         var obj = visualObject.AddComponent<RTObject>();
-                        obj.SetObject((Data.BeatmapObject)beatmapObject);
-                        ((Data.BeatmapObject)beatmapObject).RTObject = obj;
+                        obj.SetObject(beatmapObject);
+                        beatmapObject.RTObject = obj;
                     }
                 }
                 catch (Exception e)
                 {
-                    StringBuilder stringBuilder = new StringBuilder();
+                    var stringBuilder = new StringBuilder();
                     stringBuilder.AppendLine($"{Updater.className}Failed to generate FunctionObject for {beatmapObject.id} (Editor)");
                     stringBuilder.AppendLine($"Exception: {e.Message}");
                     stringBuilder.AppendLine(e.StackTrace);
@@ -384,7 +371,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 Object.Destroy(visualObject.GetComponent<SelectObjectInEditor>());
 
                 var levelObject = new LevelObject(
-                    (Data.BeatmapObject)beatmapObject,
+                    beatmapObject,
                     cachedSequences[beatmapObject.id].ColorSequence,
                     parentObjects, visual,
                     cachedSequences[beatmapObject.id].OpacitySequence,
@@ -395,7 +382,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 levelObject.SetActive(false);
 
-                ((Data.BeatmapObject)beatmapObject).levelObject = levelObject;
+                beatmapObject.levelObject = levelObject;
 
                 return levelObject;
             }
@@ -413,14 +400,14 @@ namespace RTFunctions.Functions.Optimization.Objects
 
         GameObject InitParentChain(BeatmapObject beatmapObject, List<LevelParentObject> parentObjects)
         {
-            GameObject gameObject = new GameObject(beatmapObject.name);
+            var gameObject = new GameObject(beatmapObject.name);
 
             parentObjects.Add(InitLevelParentObject(beatmapObject, gameObject));
 
             // Has parent - init parent (recursive)
             if (!string.IsNullOrEmpty(beatmapObject.parent) && beatmapObjects.ContainsKey(beatmapObject.parent))
             {
-                GameObject parentObject = InitParentChain(beatmapObjects[beatmapObject.parent], parentObjects);
+                var parentObject = InitParentChain(beatmapObjects[beatmapObject.parent], parentObjects);
 
                 gameObject.transform.SetParent(parentObject.transform);
             }
@@ -440,7 +427,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             }
             catch (Exception e)
             {
-                StringBuilder stringBuilder = new StringBuilder();
+                var stringBuilder = new StringBuilder();
                 stringBuilder.AppendLine($"Failed to init level parent object sequence for '{beatmapObject.id}'.");
                 stringBuilder.AppendLine($"Exception: {e.Message}");
                 stringBuilder.AppendLine(e.StackTrace);
@@ -469,18 +456,18 @@ namespace RTFunctions.Functions.Optimization.Objects
                         ParentOffsetScale = beatmapObject.getParentOffset(1),
                         ParentOffsetRotation = beatmapObject.getParentOffset(2),
 
-                        ParentAdditivePosition = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parentAdditive[0] == '1' : false,
-                        ParentAdditiveScale = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parentAdditive[1] == '1' : false,
-                        ParentAdditiveRotation = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parentAdditive[2] == '1' : false,
+                        ParentAdditivePosition = beatmapObject.parentAdditive[0] == '1',
+                        ParentAdditiveScale = beatmapObject.parentAdditive[1] == '1',
+                        ParentAdditiveRotation = beatmapObject.parentAdditive[2] == '1',
 
-                        ParentParallaxPosition = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parallaxSettings[0] : 1f,
-                        ParentParallaxScale = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parallaxSettings[1] : 1f,
-                        ParentParallaxRotation = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parallaxSettings[2] : 1f,
+                        ParentParallaxPosition = beatmapObject.parallaxSettings[0],
+                        ParentParallaxScale = beatmapObject.parallaxSettings[1],
+                        ParentParallaxRotation = beatmapObject.parallaxSettings[2],
 
                         GameObject = gameObject,
                         Transform = gameObject.transform,
                         ID = beatmapObject.id,
-                        BeatmapObject = (Data.BeatmapObject)beatmapObject
+                        BeatmapObject = beatmapObject
                     };
                 else
                 {
@@ -509,24 +496,24 @@ namespace RTFunctions.Functions.Optimization.Objects
                         ParentOffsetScale = beatmapObject.getParentOffset(1),
                         ParentOffsetRotation = beatmapObject.getParentOffset(2),
 
-                        ParentAdditivePosition = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parentAdditive[0] == '1' : false,
-                        ParentAdditiveScale = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parentAdditive[1] == '1' : false,
-                        ParentAdditiveRotation = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parentAdditive[2] == '1' : false,
+                        ParentAdditivePosition = beatmapObject.parentAdditive[0] == '1',
+                        ParentAdditiveScale = beatmapObject.parentAdditive[1] == '1',
+                        ParentAdditiveRotation = beatmapObject.parentAdditive[2] == '1',
 
-                        ParentParallaxPosition = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parallaxSettings[0] : 1f,
-                        ParentParallaxScale = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parallaxSettings[1] : 1f,
-                        ParentParallaxRotation = beatmapObject is Data.BeatmapObject ? ((Data.BeatmapObject)beatmapObject).parallaxSettings[2] : 1f,
+                        ParentParallaxPosition = beatmapObject.parallaxSettings[0],
+                        ParentParallaxScale = beatmapObject.parallaxSettings[1],
+                        ParentParallaxRotation = beatmapObject.parallaxSettings[2],
 
                         GameObject = gameObject,
                         Transform = gameObject.transform,
                         ID = beatmapObject.id,
-                        BeatmapObject = (Data.BeatmapObject)beatmapObject
+                        BeatmapObject = beatmapObject
                     };
                 } // In case the CashedSequence is null, set defaults.
             }
             catch (Exception e)
             {
-                StringBuilder stringBuilder = new StringBuilder();
+                var stringBuilder = new StringBuilder();
                 stringBuilder.AppendLine($"Failed to init level parent object for '{beatmapObject.id}'.");
                 stringBuilder.AppendLine($"Exception: {e.Message}");
                 stringBuilder.AppendLine(e.StackTrace);
@@ -537,19 +524,19 @@ namespace RTFunctions.Functions.Optimization.Objects
             return levelParentObject;
         }
 
-        public Sequence<Vector3> GetVector3Sequence(List<EventKeyframe> eventKeyframes, Vector3Keyframe defaultKeyframe)
+        public Sequence<Vector3> GetVector3Sequence(List<BaseEventKeyframe> eventKeyframes, Vector3Keyframe defaultKeyframe)
         {
-            List<IKeyframe<Vector3>> keyframes = new List<IKeyframe<Vector3>>(eventKeyframes.Count);
+            var keyframes = new List<IKeyframe<Vector3>>(eventKeyframes.Count);
 
             var currentValue = Vector3.zero;
             IKeyframe<Vector3> currentKeyfame = null;
             int num = 0;
             foreach (var eventKeyframe in eventKeyframes)
             {
-                if (!(eventKeyframe is Data.EventKeyframe))
+                if (!(eventKeyframe is EventKeyframe))
                     continue;
 
-                var kf = (Data.EventKeyframe)eventKeyframe;
+                var kf = (EventKeyframe)eventKeyframe;
                 var value = new Vector3(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1], eventKeyframe.eventValues.Length > 2 ? eventKeyframe.eventValues[2] : 0f);
                 if (eventKeyframe.random != 0 && eventKeyframe.random != 5 && eventKeyframe.random != 6)
                 {
@@ -559,15 +546,6 @@ namespace RTFunctions.Functions.Optimization.Objects
                 }
 
                 currentValue = kf.relative && eventKeyframe.random != 6 ? new Vector3(currentValue.x, currentValue.y, 0f) + value : value;
-
-                //if (eventKeyframe.random != 5)
-                //{
-                //    currentKeyfame = new Vector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
-                //}
-                //else
-                //{
-                //    currentKeyfame = new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
-                //}
 
                 currentKeyfame = eventKeyframe.random == 5 || eventKeyframe.random != 6 && eventKeyframes.Count > num + 1 && eventKeyframes[num + 1].random == 5 ? new StaticVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
                     eventKeyframe.random == 6 ? new DynamicVector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
@@ -585,17 +563,17 @@ namespace RTFunctions.Functions.Optimization.Objects
             return new Sequence<Vector3>(keyframes);
         }
 
-        public Sequence<Vector2> GetVector2Sequence(List<EventKeyframe> eventKeyframes, Vector2Keyframe defaultKeyframe)
+        public Sequence<Vector2> GetVector2Sequence(List<BaseEventKeyframe> eventKeyframes, Vector2Keyframe defaultKeyframe)
         {
             List<IKeyframe<Vector2>> keyframes = new List<IKeyframe<Vector2>>(eventKeyframes.Count);
 
             var currentValue = Vector2.zero;
             foreach (var eventKeyframe in eventKeyframes)
             {
-                if (!(eventKeyframe is Data.EventKeyframe))
+                if (!(eventKeyframe is EventKeyframe))
                     continue;
 
-                var kf = (Data.EventKeyframe)eventKeyframe;
+                var kf = (EventKeyframe)eventKeyframe;
                 var value = new Vector2(eventKeyframe.eventValues[0], eventKeyframe.eventValues[1]);
                 if (eventKeyframe.random != 0 && eventKeyframe.random != 6)
                 {
@@ -612,7 +590,6 @@ namespace RTFunctions.Functions.Optimization.Objects
                 {
                     keyframes.Add(new DynamicVector2Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
                 }
-
             }
 
             // If there is no keyframe, add default
@@ -622,7 +599,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             return new Sequence<Vector2>(keyframes);
         }
 
-        public Sequence<float> GetFloatSequence(List<EventKeyframe> eventKeyframes, int index, FloatKeyframe defaultKeyframe, Sequence<Vector3> vector3Sequence, bool color)
+        public Sequence<float> GetFloatSequence(List<BaseEventKeyframe> eventKeyframes, int index, FloatKeyframe defaultKeyframe, Sequence<Vector3> vector3Sequence, bool color)
         {
             List<IKeyframe<float>> keyframes = new List<IKeyframe<float>>(eventKeyframes.Count);
 
@@ -631,10 +608,10 @@ namespace RTFunctions.Functions.Optimization.Objects
             int num = 0;
             foreach (var eventKeyframe in eventKeyframes)
             {
-                if (!(eventKeyframe is Data.EventKeyframe))
+                if (!(eventKeyframe is EventKeyframe))
                     continue;
 
-                var kf = (Data.EventKeyframe)eventKeyframe;
+                var kf = (EventKeyframe)eventKeyframe;
                 var value = eventKeyframe.random != 0 ? RandomFloatParser(eventKeyframe, index) : eventKeyframe.eventValues[index];
 
                 currentValue = kf.relative && eventKeyframe.random != 6 && !color ? currentValue + value : value;
@@ -655,11 +632,11 @@ namespace RTFunctions.Functions.Optimization.Objects
             return new Sequence<float>(keyframes);
         }
 
-        public Sequence<Color> GetColorSequence(List<EventKeyframe> eventKeyframes, ThemeKeyframe defaultKeyframe, Sequence<Vector3> vector3Sequence)
+        public Sequence<Color> GetColorSequence(List<BaseEventKeyframe> eventKeyframes, ThemeKeyframe defaultKeyframe, Sequence<Vector3> vector3Sequence)
         {
             List<IKeyframe<Color>> keyframes = new List<IKeyframe<Color>>(eventKeyframes.Count);
 
-            foreach (EventKeyframe eventKeyframe in eventKeyframes)
+            foreach (BaseEventKeyframe eventKeyframe in eventKeyframes)
             {
                 int value = (int)eventKeyframe.eventValues[0];
 
@@ -680,7 +657,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             return new Sequence<Color>(keyframes);
         }
 
-        public float RandomFloatParser(EventKeyframe _floatEvent, int index)
+        public float RandomFloatParser(BaseEventKeyframe _floatEvent, int index)
         {
             float result = 0f;
             switch (_floatEvent.random)

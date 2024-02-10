@@ -3,9 +3,10 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
+using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Optimization.Objects;
 
-using GameData = DataManager.GameData;
+using BaseGameData = DataManager.GameData;
 
 namespace RTFunctions.Functions.Optimization.Level
 {

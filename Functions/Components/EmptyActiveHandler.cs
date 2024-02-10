@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using RTFunctions.Functions.Data;
 
 namespace RTFunctions.Functions.Components
 {
@@ -19,7 +20,7 @@ namespace RTFunctions.Functions.Components
 				refObject.bottom.gameObject.SetActive(refObject.Selected && RTObject.Enabled && refObject.CanDrag);
 				refObject.right.gameObject.SetActive(refObject.Selected && RTObject.Enabled && refObject.CanDrag);
 
-				if (refObject.beatmapObject.objectType == DataManager.GameData.BeatmapObject.ObjectType.Empty)
+				if (refObject.beatmapObject.objectType == BeatmapObject.ObjectType.Empty)
 					refObject.gameObject.SetActive(refObject.Selected && RTObject.Enabled && refObject.CanDrag);
 			}
 		}
