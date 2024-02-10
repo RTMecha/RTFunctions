@@ -1,3 +1,6 @@
+1.9.10 > [Feb 11, 2024]
+- Final update until Online Arcade server due to some level systems being reworked in preparation for it.
+- Fixed a bug with tail color in themes not parsing correctly.
 1.9.9 > [Feb 10, 2024]
 - Fixed a Prefab Type range bug.
 1.9.8 > [Feb 8, 2024]
