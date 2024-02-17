@@ -2381,7 +2381,7 @@ namespace RTFunctions.Functions.Components.Player
                     return
                     x.command == "isBoosting" && (!x.not && isBoosting || x.not && !isBoosting) ||
                     x.command == "isTakingHit" && (!x.not && isTakingHit || x.not && !isTakingHit) ||
-                    x.command == "isZenMode" && (!x.not && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0 || x.not && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) != 0) ||
+                    x.command == "isZenMode" && (!x.not && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0 && (EditorManager.inst == null || !ZenModeInEditor) || x.not && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) != 0 && (EditorManager.inst == null || ZenModeInEditor)) ||
                     x.command == "isHealthPercentageGreater" && (!x.not && (float)CustomPlayer.health / (float)initialHealthCount * 100f >= x.value || x.not && (float)CustomPlayer.health / (float)initialHealthCount * 100f < x.value) ||
                     x.command == "isHealthGreaterEquals" && (!x.not && CustomPlayer.health >= x.value || x.not && CustomPlayer.health < x.value) ||
                     x.command == "isHealthEquals" && (!x.not && CustomPlayer.health == x.value || x.not && CustomPlayer.health != x.value) ||
