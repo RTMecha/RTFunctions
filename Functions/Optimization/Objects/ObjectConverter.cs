@@ -345,7 +345,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 // 9 = player object
                 VisualObject visual =
                     beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground) :
-                    beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground) :
+                    beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground, beatmapObject.ImageData) :
                     beatmapObject.shape == 9 ? new PlayerObject(visualObject, top.transform) :
                     new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid, isBackground, beatmapObject.opacityCollision);
 

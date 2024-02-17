@@ -115,6 +115,8 @@ namespace RTFunctions.Functions.Data
 
 		public bool background;
 
+		public byte[] ImageData { get; set; } = null;
+
 		public List<Modifier> modifiers = new List<Modifier>();
         public List<Component> components = new List<Component>();
 
@@ -798,6 +800,15 @@ namespace RTFunctions.Functions.Data
 			if (jn["text"] != null)
 				beatmapObject.text = jn["text"];
 
+			if (jn["img"] != null)
+            {
+				beatmapObject.ImageData = new byte[jn["img"].Count];
+                for (int i = 0; i < jn["img"].Count; i++)
+                {
+                    beatmapObject.ImageData[i] = (byte)jn["img"][i].AsInt;
+                }
+			}
+
 			if (jn["ak"] != null)
 				beatmapObject.autoKillType = jn["ak"].AsBool ? AutoKillType.LastKeyframe : AutoKillType.OldStyleNoAutokill;
 			else if (jn["akt"] != null)
@@ -1017,6 +1028,14 @@ namespace RTFunctions.Functions.Data
 
 			if (!string.IsNullOrEmpty(text))
 				jn["text"] = text;
+
+			if (ImageData != null)
+            {
+                for (int i = 0; i < ImageData.Length; i++)
+                {
+                    jn["img"][i] = ImageData[i];
+                }
+            }
 
 			if (tags != null && tags.Count > 0)
 				for (int i = 0; i < tags.Count; i++)
