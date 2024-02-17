@@ -628,6 +628,12 @@ namespace RTFunctions.Functions.Optimization
 
                         beatmapObject.originalID = beatmapObj.id;
                         DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
+
+                        if (levelProcessor && levelProcessor.converter != null && !levelProcessor.converter.beatmapObjects.ContainsKey(beatmapObject.id))
+                        {
+                            levelProcessor.converter.beatmapObjects.Add(beatmapObject.id, beatmapObject);
+                        }
+
                         list.Add(beatmapObject);
                     }
 
