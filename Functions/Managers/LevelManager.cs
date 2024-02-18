@@ -196,13 +196,14 @@ namespace RTFunctions.Functions.Managers
                 ((Action)ModCompatibility.sharedFunctions["EventsCoreResetOffsets"])?.Invoke();
             }
 
-            if (inGame)
-                Updater.UpdateObjects(false);
+            ObjectManager.inst.updateObjects();
 
-            //ObjectManager.inst.updateObjects();
-            Patchers.ObjectManagerPatch.AddPrefabObjects(ObjectManager.inst);
+            //if (inGame)
+            //    Updater.UpdateObjects(false);
 
-            Patchers.GameManagerPatch.StartInvoke();
+            //Patchers.ObjectManagerPatch.AddPrefabObjects(ObjectManager.inst);
+
+            //Patchers.GameManagerPatch.StartInvoke();
 
             Debug.Log($"{className}Done!");
 
