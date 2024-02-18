@@ -1,3 +1,5 @@
+1.9.12 > [Feb 18, 2024]
+- Another fix for Camera Parent zoom so now it properly offsets from the objects' scale.
 1.9.11 > [Feb 18, 2024]
 - Turns out I should be fine doing some minor bug fixes and QOL before the Arcade Rework.
 - Fixed Event Keyframe relative values not parsing.
