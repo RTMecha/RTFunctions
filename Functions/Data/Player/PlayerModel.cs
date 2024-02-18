@@ -1,13 +1,10 @@
-﻿using System;
+﻿using RTFunctions.Functions.Components.Player;
+using RTFunctions.Functions.Managers;
+using SimpleJSON;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using UnityEngine;
-
-using SimpleJSON;
-
-using RTFunctions.Functions.Components.Player;
-using RTFunctions.Functions.Managers;
 
 namespace RTFunctions.Functions.Data.Player
 {

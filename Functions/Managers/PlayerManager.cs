@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-
-using BepInEx.Configuration;
-
-using UnityEngine;
-using UnityEngine.UI;
-
+﻿using BepInEx.Configuration;
 using RTFunctions.Functions.Components.Player;
 using RTFunctions.Functions.Data.Player;
 using RTFunctions.Functions.IO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace RTFunctions.Functions.Managers
 {

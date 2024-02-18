@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-using UnityEngine;
-
+﻿using RTFunctions.Functions.Managers;
 using SimpleJSON;
-
-using RTFunctions.Functions.Managers;
-
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 using BaseBackground = DataManager.GameData.BackgroundObject;
 
 namespace RTFunctions.Functions.Data

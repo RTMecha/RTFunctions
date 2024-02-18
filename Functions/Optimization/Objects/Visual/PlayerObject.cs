@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
 
-using RTFunctions.Functions.Components.Player;
-
 namespace RTFunctions.Functions.Optimization.Objects.Visual
 {
     /// <summary>

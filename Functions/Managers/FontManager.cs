@@ -1,24 +1,20 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
-using System.IO;
-using System.Text.RegularExpressions;
-
-using UnityEngine;
-using UnityEngine.UI;
-
-using LSFunctions;
-
-using TMPro;
-
+﻿using LSFunctions;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers.Networking;
 using RTFunctions.Functions.Optimization;
 using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.Optimization.Objects.Visual;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace RTFunctions.Functions.Managers
 {

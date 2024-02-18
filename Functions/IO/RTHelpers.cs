@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Text.RegularExpressions;
-
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-
+﻿using InControl;
 using LSFunctions;
-using InControl;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace RTFunctions.Functions.IO
 {

@@ -1,10 +1,8 @@
-﻿using System;
-
-using UnityEngine;
-
+﻿
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Managers.Networking;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Optimization.Objects.Visual
 {

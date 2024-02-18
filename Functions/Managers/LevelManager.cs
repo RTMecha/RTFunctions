@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-
-using UnityEngine;
-
-using SimpleJSON;
-using LSFunctions;
-
+﻿using LSFunctions;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Optimization;
+using SimpleJSON;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Managers
 {

@@ -1,25 +1,18 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
-
-using SimpleJSON;
-using LSFunctions;
-
-using RTFunctions.Functions.IO;
+﻿using LSFunctions;
 using RTFunctions.Functions.Managers;
-
-using BaseGameData = DataManager.GameData;
-
-using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
-
-using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using SimpleJSON;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using BaseBackgroundObject = DataManager.GameData.BackgroundObject;
+using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
 using BaseBeatmapTheme = DataManager.BeatmapTheme;
+using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
+using BaseGameData = DataManager.GameData;
 
 namespace RTFunctions.Functions.Data
 {
-	public class GameData : BaseGameData
+    public class GameData : BaseGameData
 	{
 		public GameData()
 		{

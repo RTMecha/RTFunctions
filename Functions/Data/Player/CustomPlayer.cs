@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
-using UnityEngine.UI;
-
+﻿
 using InControl;
-using XInputDotNetPure;
-
 using RTFunctions.Functions.Components.Player;
 using RTFunctions.Functions.Managers;
-
+using UnityEngine;
+using XInputDotNetPure;
 using BaseCustomPlayer = InputDataManager.CustomPlayer;
 
 namespace RTFunctions.Functions.Data.Player

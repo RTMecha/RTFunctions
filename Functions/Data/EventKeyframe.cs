@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
-
+﻿using LSFunctions;
 using SimpleJSON;
-using LSFunctions;
-
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 
 namespace RTFunctions.Functions.Data

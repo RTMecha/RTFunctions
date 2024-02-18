@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using UnityEngine;
-using UnityEngine.UI;
-
-using InControl;
-using XInputDotNetPure;
-using TMPro;
-using DG.Tweening;
-
+﻿using DG.Tweening;
 using LSFunctions;
-
-using RTFunctions.Functions;
 using RTFunctions.Functions.Data.Player;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using XInputDotNetPure;
 
 namespace RTFunctions.Functions.Components.Player
 {

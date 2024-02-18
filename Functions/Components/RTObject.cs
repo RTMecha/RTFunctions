@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using LSFunctions;
-
+﻿using LSFunctions;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace RTFunctions.Functions.Components
 {
-	/// <summary>
-	/// Component for selecting and dragging objects. Still needs a ton of work though.
-	/// </summary>
+    /// <summary>
+    /// Component for selecting and dragging objects. Still needs a ton of work though.
+    /// </summary>
     public class RTObject : MonoBehaviour
     {
 		public bool CanDrag => ModCompatibility.sharedFunctions.ContainsKey("SelectedObjectCount") && ((int)ModCompatibility.sharedFunctions["SelectedObjectCount"]) < 2;

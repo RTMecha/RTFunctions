@@ -1,7 +1,5 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-
-using RTFunctions.Functions.Optimization.Objects;
+﻿using RTFunctions.Functions.Optimization.Objects;
+using System;
 
 namespace RTFunctions.Functions.Optimization.Level
 {

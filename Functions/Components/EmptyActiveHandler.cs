@@ -1,11 +1,11 @@
-﻿using UnityEngine;
-using RTFunctions.Functions.Data;
+﻿using RTFunctions.Functions.Data;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Components
 {
-	/// <summary>
-	/// Component for handling empty objects.
-	/// </summary>
+    /// <summary>
+    /// Component for handling empty objects.
+    /// </summary>
     public class EmptyActiveHandler : MonoBehaviour
     {
         public RTObject refObject;

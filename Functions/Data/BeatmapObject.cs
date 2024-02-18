@@ -1,22 +1,17 @@
-﻿using System;
+﻿using LSFunctions;
+using RTFunctions.Functions.Components;
+using SimpleJSON;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
 using UnityEngine;
-
-using SimpleJSON;
-using LSFunctions;
-
-using RTFunctions.Functions.Components;
-
-using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
-
 using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 
 namespace RTFunctions.Functions.Data
 {
-	public class BeatmapObject : BaseBeatmapObject
+    public class BeatmapObject : BaseBeatmapObject
 	{
 		public BeatmapObject() : base()
 		{
@@ -116,6 +111,8 @@ namespace RTFunctions.Functions.Data
 		public bool background;
 
 		public byte[] ImageData { get; set; } = null;
+
+		public bool ignoreLifespan = false;
 
 		public List<Modifier> modifiers = new List<Modifier>();
         public List<Component> components = new List<Component>();
@@ -338,7 +335,10 @@ namespace RTFunctions.Functions.Data
 				floatVariable = copyVariables ? orig.floatVariable : 0f,
 				stringVariable = copyVariables ? orig.stringVariable : "",
 				tags = orig.tags.Count > 0 ? orig.tags.Clone() : new List<string>(),
-				background = orig.background
+				background = orig.background,
+				ImageData = orig.ImageData.Copy(),
+				ignoreLifespan = orig.ignoreLifespan,
+				opacityCollision = orig.opacityCollision
 			};
 
 			for (int i = 0; i < beatmapObject.events.Count; i++)
@@ -763,6 +763,9 @@ namespace RTFunctions.Functions.Data
 			
 			if (jn["opcol"] != null)
 				beatmapObject.opacityCollision = jn["opcol"].AsBool;
+			
+			if (jn["iglif"] != null)
+				beatmapObject.ignoreLifespan = jn["iglif"].AsBool;
 
 			if (jn["empty"] != null)
 				beatmapObject.objectType = jn["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal;
@@ -1003,6 +1006,7 @@ namespace RTFunctions.Functions.Data
 			jn["d"] = depth.ToString();
 			jn["rdt"] = (background ? 1 : 0).ToString();
 			jn["opcol"] = opacityCollision.ToString();
+			jn["iglif"] = ignoreLifespan.ToString();
 
 			if (LDM)
 				jn["ldm"] = LDM.ToString();

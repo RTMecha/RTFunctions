@@ -1,25 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-
-using UnityEngine;
-
-using RTFunctions.Functions.Animation;
+﻿using RTFunctions.Functions.Animation;
 using RTFunctions.Functions.Animation.Keyframe;
 using RTFunctions.Functions.Components;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
-using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.Optimization.Objects.Visual;
-
-using BaseGameData = DataManager.GameData;
-using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
 using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 using Object = UnityEngine.Object;
-using BaseObjectType = DataManager.GameData.BeatmapObject.ObjectType;
 using ObjectType = RTFunctions.Functions.Data.BeatmapObject.ObjectType;
 
 namespace RTFunctions.Functions.Optimization.Objects

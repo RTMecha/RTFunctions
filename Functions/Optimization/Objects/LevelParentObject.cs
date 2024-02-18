@@ -1,6 +1,5 @@
-﻿using UnityEngine;
-
-using RTFunctions.Functions.Animation;
+﻿using RTFunctions.Functions.Animation;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Optimization.Objects
 {

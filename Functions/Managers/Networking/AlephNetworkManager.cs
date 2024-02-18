@@ -1,19 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
 using System.Net;
-using System.Net.WebSockets;
 
 using UnityEngine;
-using UnityEngine.Video;
 using UnityEngine.Networking;
-using UnityEngine.Networking.Match;
-
-using SimpleJSON;
-
-using RTFunctions.Functions.IO;
 
 namespace RTFunctions.Functions.Managers.Networking
 {

@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-
-using UnityEngine;
-
+﻿using RTFunctions.Functions.IO;
 using SimpleJSON;
-
-using RTFunctions.Functions.IO;
-
-using BaseMetadata = DataManager.MetaData;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 using BaseArtist = DataManager.MetaData.Artist;
-using BaseCreator = DataManager.MetaData.Creator;
-using BaseSong = DataManager.MetaData.Song;
 using BaseBeatmap = DataManager.MetaData.Beatmap;
+using BaseCreator = DataManager.MetaData.Creator;
+using BaseMetadata = DataManager.MetaData;
+using BaseSong = DataManager.MetaData.Song;
 
 namespace RTFunctions.Functions.Data
 {
@@ -19,7 +15,15 @@ namespace RTFunctions.Functions.Data
     {
 		public MetaData() : base()
         {
-
+            try
+			{
+				artist.Name = "Kaixo";
+				artist.Link = "kaixo";
+			}
+            catch (Exception ex)
+            {
+				Debug.LogError($"{DataManager.inst.className}MetaData error: {ex}");
+            }
         }
 
 		public MetaData(LevelArtist artist, LevelCreator creator, LevelSong song, LevelBeatmap beatmap) : base(artist, creator, song, beatmap)

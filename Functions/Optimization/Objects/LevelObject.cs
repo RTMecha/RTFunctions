@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
-
-using RTFunctions.Functions.Animation;
-
+﻿using RTFunctions.Functions.Animation;
 using RTFunctions.Functions.Optimization.Objects.Visual;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Optimization.Objects
 {

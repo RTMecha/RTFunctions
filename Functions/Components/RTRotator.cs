@@ -1,8 +1,7 @@
-﻿using UnityEngine;
-
-using RTFunctions.Functions.IO;
+﻿using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Components
 {

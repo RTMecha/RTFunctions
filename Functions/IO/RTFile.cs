@@ -11,7 +11,7 @@ using Debug = UnityEngine.Debug;
 
 namespace RTFunctions.Functions.IO
 {
-	public static class RTFile
+    public static class RTFile
 	{
 		public static string ApplicationDirectory => Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/")) + "/";
 

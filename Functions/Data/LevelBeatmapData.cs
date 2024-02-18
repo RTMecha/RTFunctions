@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-
-using SimpleJSON;
-
+﻿using SimpleJSON;
+using System.Collections.Generic;
 using BaseBeatmapData = DataManager.GameData.BeatmapData;
 
 namespace RTFunctions.Functions.Data
