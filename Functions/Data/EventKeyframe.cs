@@ -101,6 +101,9 @@ namespace RTFunctions.Functions.Data
                     eventRandomValues.Add(jn[raxis[i]].AsFloat);
 
             eventKeyframe.random = jn["r"].AsInt;
+
+            eventKeyframe.relative = !string.IsNullOrEmpty(jn["rel"]) && jn["rel"].AsBool;
+
             eventKeyframe.SetEventRandomValues(eventRandomValues.ToArray());
 
             return eventKeyframe;
