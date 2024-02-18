@@ -487,10 +487,10 @@ namespace RTFunctions.Functions.Data
 				beatmapObject.prefabID = jn["pre_id"];
 
 			if (jn["p_id"] != null)
-				beatmapObject.parent = jn["p_id"];
+				beatmapObject.parent = jn["p_id"] == "camera" ? "CAMERA_PARENT" : jn["p_id"];
 
 			if (jn["p_t"] != null)
-				beatmapObject.parentType = jn["p_t"];
+				beatmapObject.parentType = jn["p_id"] == "camera" ? "111" : jn["p_t"];
 
 			if (jn["p_o"] != null)
 			{
@@ -830,7 +830,7 @@ namespace RTFunctions.Functions.Data
 			}
 
 			if (!string.IsNullOrEmpty(parent))
-				jn["p_id"] = parent;
+				jn["p_id"] = parent == "CAMERA_PARENT" ? "camera" : parent;
 
 			jn["d"] = depth;
 
