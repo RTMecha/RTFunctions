@@ -185,34 +185,6 @@ namespace RTFunctions.Functions.Optimization
             }
         }
 
-        //public static void UpdateProcessor(string id, bool recache = true, bool update = true, bool reinsert = true)
-        //{
-        //    var lp = levelProcessor;
-        //    if (lp != null)
-        //    {
-        //        var level = levelProcessor.level;
-        //        var converter = levelProcessor.converter;
-        //        var engine = levelProcessor.engine;
-        //        var objectSpawner = engine.objectSpawner;
-
-        //        if (level != null && converter != null)
-        //        {
-        //            var objects = level.objects;
-
-        //            if (!reinsert)
-        //            {
-        //                recache = true;
-        //                update = true;
-        //            }
-
-        //            if (recache)
-        //                FunctionsPlugin.inst.StartCoroutine(RecacheSequences(id, converter, reinsert));
-        //            if (update)
-        //                FunctionsPlugin.inst.StartCoroutine(UpdateObjects(id, level, objects, converter, objectSpawner, reinsert));
-        //        }
-        //    }
-        //}
-
         /// <summary>
         /// Updates a specific value.
         /// </summary>
@@ -432,16 +404,6 @@ namespace RTFunctions.Functions.Optimization
             if (reinsert)
                 AddPrefabToLevel(prefabObject);
         }
-
-        //public static void RemovePrefab(BasePrefabObject prefabObject)
-        //{
-        //    foreach (var bm in DataManager.inst.gameData.beatmapObjects.Where(x => x.fromPrefab && x.prefabInstanceID == prefabObject.ID))
-        //    {
-        //        UpdateProcessor(bm, reinsert: false);
-        //    }
-
-        //    DataManager.inst.gameData.beatmapObjects.RemoveAll(x => x.prefabInstanceID == prefabObject.ID);
-        //}
 
         /// <summary>
         /// Updates a singled out value of a Prefab Object.
@@ -727,50 +689,6 @@ namespace RTFunctions.Functions.Optimization
             yield break;
         }
 
-        ///// <summary>
-        ///// Recaches all the keyframe sequences related to the BeatmapObject.
-        ///// </summary>
-        ///// <param name="bm"></param>
-        ///// <param name="converter"></param>
-        ///// <param name="reinsert"></param>
-        ///// <returns></returns>
-        //public static IEnumerator RecacheSequences(string id, ObjectConverter converter, bool reinsert = true, bool updateParents = false)
-        //{
-        //    if (converter.cachedSequences.ContainsKey(id))
-        //    {
-        //        converter.cachedSequences[id] = null;
-        //        converter.cachedSequences.Remove(id);
-        //    }
-
-        //    // Recursive recaching.
-        //    foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
-        //    {
-        //        if (beatmapObject.parent == id)
-        //            FunctionsPlugin.inst.StartCoroutine(RecacheSequences(beatmapObject.id, converter, reinsert, updateParents));
-        //    }
-
-        //    if (reinsert && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == id, out BaseBeatmapObject result))
-        //    {
-        //        yield return FunctionsPlugin.inst.StartCoroutine(converter.CacheSequence((BeatmapObject)result));
-
-        //        if (updateParents && TryGetObject(result, out LevelObject levelObject))
-        //        {
-        //            foreach (var levelParent in levelObject.parentObjects)
-        //            {
-        //                if (converter.cachedSequences.ContainsKey(levelParent.ID))
-        //                {
-        //                    var cachedSequences = converter.cachedSequences[levelParent.ID];
-        //                    levelParent.Position3DSequence = cachedSequences.Position3DSequence;
-        //                    levelParent.ScaleSequence = cachedSequences.ScaleSequence;
-        //                    levelParent.RotationSequence = cachedSequences.RotationSequence;
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    yield break;
-        //}
-
         /// <summary>
         /// Removes and recreates the object if it still exists.
         /// </summary>
@@ -839,70 +757,6 @@ namespace RTFunctions.Functions.Optimization
 
             yield break;
         }
-
-        ///// <summary>
-        ///// Removes and recreates the object if it still exists.
-        ///// </summary>
-        ///// <param name="bm"></param>
-        ///// <param name="level"></param>
-        ///// <param name="objects"></param>
-        ///// <param name="converter"></param>
-        ///// <param name="objectSpawner"></param>
-        ///// <param name="reinsert"></param>
-        ///// <returns></returns>
-        //public static IEnumerator UpdateObjects(string id, LevelStorage level, List<ILevelObject> objects, ObjectConverter converter, ObjectSpawner objectSpawner, bool reinsert = true)
-        //{
-        //    // Recursing updating.
-        //    foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
-        //    {
-        //        if (beatmapObject.parent == id)
-        //            FunctionsPlugin.inst.StartCoroutine(UpdateObjects(beatmapObject.id, level, objects, converter, objectSpawner));
-        //    }
-
-        //    // Get ILevelObject related to BeatmapObject.
-        //    var iLevelObject = GetILevelObject(id, objects);
-
-        //    // If ILevelObject is not null, then start destroying.
-        //    if (iLevelObject != null)
-        //    {
-        //        var visualObject = ((LevelObject)iLevelObject).visualObject;
-
-        //        var gameObject = visualObject.GameObject;
-
-        //        if (gameObject != null)
-        //        {
-        //            // Get the top-most parent that isn't the "GameObjects" object.
-        //            while (gameObject.transform.parent.name != "GameObjects" && !gameObject.transform.parent.name.Contains("CAMERA_PARENT ["))
-        //                gameObject = gameObject.transform.parent.gameObject;
-
-        //            // Remove GameObject.
-        //            Object.Destroy(gameObject);
-        //            objects.Remove(iLevelObject);
-        //        }
-
-        //        // Remove BeatmapObject from converter.
-        //        //Managers.Objects.beatmapObjects.Remove(id);
-
-        //        ((LevelObject)iLevelObject).parentObjects.Clear();
-
-        //        iLevelObject = null;
-        //    }
-
-        //    // If the object should be reinserted and it is not null then we reinsert the object.
-        //    if (reinsert && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == id, out BaseBeatmapObject result))
-        //    {
-        //        // It's important that the beatmapObjects Dictionary has a reference to the object.
-        //        if (!converter.beatmapObjects.ContainsKey(id))
-        //            converter.beatmapObjects.Add(id, (BeatmapObject)result);
-
-        //        // Convert object to ILevelObject.
-        //        var ilevelObj = converter.ToILevelObject((BeatmapObject)result);
-        //        if (ilevelObj != null)
-        //            level.InsertObject(ilevelObj);
-        //    }
-
-        //    yield break;
-        //}
 
         /// <summary>
         /// Updates everything and reinitializes the engine.
