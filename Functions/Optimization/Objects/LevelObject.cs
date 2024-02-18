@@ -185,9 +185,9 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             if (scaleParent && cameraParent)
             {
-                float camOrthoZoom = EventManager.inst.cam.orthographicSize / 20f;
+                float camOrthoZoom = EventManager.inst.cam.orthographicSize / 20f - 1f;
 
-                transformChain[0].localScale = (new Vector3(camOrthoZoom, camOrthoZoom, 1f) * scaleParentOffset) + prefabOffsetScale - Vector3.one + topScaleOffset;
+                transformChain[0].localScale = (new Vector3(camOrthoZoom, camOrthoZoom, 1f) * scaleParentOffset) + prefabOffsetScale + topScaleOffset;
             }
             else
                 transformChain[0].localScale = prefabOffsetScale + topScaleOffset;
