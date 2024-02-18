@@ -131,267 +131,295 @@ namespace RTFunctions.Functions.Data
 			gameData.eventObjects = new EventObjects();
 			gameData.eventObjects.allEvents = new List<List<BaseEventKeyframe>>();
 
-			Debug.Log($"{FunctionsPlugin.className}Parsing Event Keyframes");
-			// Move
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][0].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][0][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat, kfjn["ev"][1].AsFloat);
-
-				gameData.eventObjects.allEvents[0].Add(eventKeyframe);
-			}
-
-			// Zoom
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][1].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][1][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[1].Add(eventKeyframe);
-			}
-
-			// Rotate
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][2].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][2][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[2].Add(eventKeyframe);
-			}
-
-			// Shake
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][3].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][3][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[3].Add(eventKeyframe);
-			}
-
-			// Theme
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][4].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][4][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				// Since theme keyframes use random string IDs as their value instead of numbers (wtf), we have to convert the new IDs to numbers.
-				if (!string.IsNullOrEmpty(kfjn["evs"][0]) && idConversion.ContainsKey(kfjn["evs"][0]))
-					eventKeyframe.SetEventValues(Parser.TryParse(idConversion[kfjn["evs"][0]], 0f));
-				else
-					eventKeyframe.SetEventValues(0f);
-
-				gameData.eventObjects.allEvents[4].Add(eventKeyframe);
-			}
-
-			// Chroma
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][5].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][5][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[5].Add(eventKeyframe);
-			}
-
-			// Bloom
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][6].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][6][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					1f,
-					0f,
-					kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat);
-
-				gameData.eventObjects.allEvents[6].Add(eventKeyframe);
-			}
-
-			// Vignette
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][7].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][7][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					kfjn["ev"][2].AsFloat,
-					1f,
-					kfjn["ev"][4].AsFloat,
-					kfjn["ev"][5].AsFloat,
-					kfjn["ev"][6].AsFloat == 9f ? 18f : kfjn["ev"][6].AsFloat);
-
-				gameData.eventObjects.allEvents[7].Add(eventKeyframe);
-			}
-
-			// Lens
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][8].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][8][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					kfjn["ev"][2].AsFloat,
-					1f,
-					1f,
-					1f);
-
-				gameData.eventObjects.allEvents[8].Add(eventKeyframe);
-			}
-
-			// Grain
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][9].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][9][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					kfjn["ev"][2].AsFloat);
-
-				gameData.eventObjects.allEvents[9].Add(eventKeyframe);
-			}
-
-			// Hue
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][12].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][12][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[10].Add(eventKeyframe);
-			}
-
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			gameData.eventObjects.allEvents[11].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[11]));
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			gameData.eventObjects.allEvents[12].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[12]));
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			gameData.eventObjects.allEvents[13].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[13]));
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			gameData.eventObjects.allEvents[14].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[14]));
-
-			// Gradient
-			gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-			for (int i = 0; i < jn["events"][10].Count; i++)
+			string breakContext = "";
+            try
 			{
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][10][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat,
-					kfjn["ev"][3].AsFloat == 9f ? 18f : kfjn["ev"][3].AsFloat,
-					kfjn["ev"].Count > 4 ? kfjn["ev"][4].AsFloat : 0f);
-
-				gameData.eventObjects.allEvents[15].Add(eventKeyframe);
-			}
-
-			for (int i = 16; i < DefaultKeyframes.Count; i++)
-			{
+				Debug.Log($"{FunctionsPlugin.className}Parsing VG Event Keyframes");
+				// Move
+				breakContext = "Move";
 				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-				gameData.eventObjects.allEvents[i].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[i]));
+				for (int i = 0; i < jn["events"][0].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][0][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat, kfjn["ev"][1].AsFloat);
+
+					gameData.eventObjects.allEvents[0].Add(eventKeyframe);
+				}
+
+				// Zoom
+				breakContext = "Zoom";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][1].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][1][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[1].Add(eventKeyframe);
+				}
+
+				// Rotate
+				breakContext = "Rotate";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][2].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][2][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[2].Add(eventKeyframe);
+				}
+
+				// Shake
+				breakContext = "Shake";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][3].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][3][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[3].Add(eventKeyframe);
+				}
+
+				// Theme
+				breakContext = "Theme";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][4].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][4][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					// Since theme keyframes use random string IDs as their value instead of numbers (wtf), we have to convert the new IDs to numbers.
+					if (!string.IsNullOrEmpty(kfjn["evs"][0]) && idConversion.ContainsKey(kfjn["evs"][0]))
+						eventKeyframe.SetEventValues(Parser.TryParse(idConversion[kfjn["evs"][0]], 0f));
+					else
+						eventKeyframe.SetEventValues(0f);
+
+					gameData.eventObjects.allEvents[4].Add(eventKeyframe);
+				}
+
+				// Chroma
+				breakContext = "Chroma";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][5].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][5][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[5].Add(eventKeyframe);
+				}
+
+				// Bloom
+				breakContext = "Bloom";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][6].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][6][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						1f,
+						0f,
+						kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat);
+
+					gameData.eventObjects.allEvents[6].Add(eventKeyframe);
+				}
+
+				// Vignette
+				breakContext = "Vignette";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][7].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][7][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						kfjn["ev"][2].AsFloat,
+						1f,
+						kfjn["ev"][4].AsFloat,
+						kfjn["ev"][5].AsFloat,
+						kfjn["ev"][6].AsFloat == 9f ? 18f : kfjn["ev"][6].AsFloat);
+
+					gameData.eventObjects.allEvents[7].Add(eventKeyframe);
+				}
+
+				// Lens
+				breakContext = "Lens";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][8].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][8][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						kfjn["ev"][2].AsFloat,
+						1f,
+						1f,
+						1f);
+
+					gameData.eventObjects.allEvents[8].Add(eventKeyframe);
+				}
+
+				// Grain
+				breakContext = "Grain";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][9].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][9][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						kfjn["ev"][2].AsFloat);
+
+					gameData.eventObjects.allEvents[9].Add(eventKeyframe);
+				}
+
+				// Hue
+				breakContext = "Hue";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][12].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][12][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[10].Add(eventKeyframe);
+				}
+
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				gameData.eventObjects.allEvents[11].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[11]));
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				gameData.eventObjects.allEvents[12].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[12]));
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				gameData.eventObjects.allEvents[13].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[13]));
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				gameData.eventObjects.allEvents[14].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[14]));
+
+				// Gradient
+				breakContext = "Gradient";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][10].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][10][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat,
+						kfjn["ev"][3].AsFloat == 9f ? 18f : kfjn["ev"][3].AsFloat,
+						kfjn["ev"].Count > 4 ? kfjn["ev"][4].AsFloat : 0f);
+
+					gameData.eventObjects.allEvents[15].Add(eventKeyframe);
+				}
+
+				for (int i = 16; i < DefaultKeyframes.Count; i++)
+				{
+					gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+					gameData.eventObjects.allEvents[i].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[i]));
+				}
+			}
+            catch (System.Exception ex)
+            {
+				EditorManager.inst?.DisplayNotification($"There was an error in parsing VG Event Keyframes. Parsing got caught at {breakContext}", 4f, EditorManager.NotificationType.Error);
+				if (!EditorManager.inst)
+                {
+					Debug.LogError($"There was an error in parsing VG Event Keyframes. Parsing got caught at {breakContext}.\n {ex}");
+				}
+				else
+				{
+					Debug.LogError($"{ex}");
+				}
             }
 
 			Debug.Log($"{FunctionsPlugin.className}Checking keyframe counts");
