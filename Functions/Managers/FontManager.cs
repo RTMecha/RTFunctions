@@ -340,6 +340,11 @@ namespace RTFunctions.Functions.Managers
                             str = str.Replace("<playerHitsAll>", pd.ToString());
                         }
 
+                        if (beatmapObject.text.Contains("<playerBoostCount>"))
+                        {
+                            str = str.Replace("<playerBoostCount>", LevelManager.BoostCount.ToString());
+                        }
+
                         #endregion
 
                         #region QuickElement
