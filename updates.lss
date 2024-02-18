@@ -1,3 +1,9 @@
+1.9.11 > [Feb 18, 2024]
+- Turns out I should be fine doing some minor bug fixes and QOL before the Arcade Rework.
+- Fixed Event Keyframe relative values not parsing.
+- Prefab Objects should now properly update when added to the level.
+- Attempting to make levels load a bit quicker in the arcade, but unsure.
+- Fixed an issue with Camera Parent zoom being scaled up more than it should be.
 1.9.10 > [Feb 11, 2024]
 - Final update until Online Arcade server due to some level systems being reworked in preparation for it.
 - Fixed a bug with tail color in themes not parsing correctly.
