@@ -30,9 +30,9 @@ namespace RTFunctions.Functions.Data
 
 		public Dictionary<string, BaseBeatmapTheme> beatmapThemes = new Dictionary<string, BaseBeatmapTheme>();
 
-        #region Methods
+		#region Methods
 
-        public static GameData DeepCopy(GameData orig)
+		public static GameData DeepCopy(GameData orig)
 		{
 			if (orig.beatmapObjects == null)
 				orig.beatmapObjects = new List<BaseBeatmapObject>();
@@ -72,7 +72,7 @@ namespace RTFunctions.Functions.Data
 		}
 
 		public static GameData ParseVG(JSONNode jn)
-        {
+		{
 			var gameData = new GameData();
 
 			Debug.Log($"{FunctionsPlugin.className}Parsing BeatmapData");
@@ -82,12 +82,12 @@ namespace RTFunctions.Functions.Data
 
 			Debug.Log($"{FunctionsPlugin.className}Parsing Checkpoints");
 			for (int i = 0; i < jn["checkpoints"].Count; i++)
-            {
+			{
 				var name = jn["checkpoints"][i]["n"] == null ? "" : (string)jn["checkpoints"][i]["n"];
 				var time = jn["checkpoints"][i]["t"] == null ? 0f : jn["checkpoints"][i]["t"].AsFloat;
 				var pos = jn["checkpoints"][i]["p"] == null ? Vector2.zero : new Vector2(jn["checkpoints"][i]["p"]["x"] == null ? 0f : jn["checkpoints"][i]["p"]["x"].AsFloat, jn["checkpoints"][i]["p"]["y"] == null ? 0f : jn["checkpoints"][i]["p"]["y"].AsFloat);
 				gameData.beatmapData.checkpoints.Add(new BeatmapData.Checkpoint(true, name, time, pos));
-            }
+			}
 
 			Debug.Log($"{FunctionsPlugin.className}Parsing Objects");
 			for (int i = 0; i < jn["objects"].Count; i++)
@@ -104,7 +104,7 @@ namespace RTFunctions.Functions.Data
 			Dictionary<string, string> idConversion = new Dictionary<string, string>();
 
 			if (jn["themes"] != null)
-            {
+			{
 				Debug.Log($"{FunctionsPlugin.className}Parsing Beatmap Themes");
 				for (int i = 0; i < jn["themes"].Count; i++)
 				{
@@ -129,252 +129,298 @@ namespace RTFunctions.Functions.Data
 			});
 
 			gameData.eventObjects = new EventObjects();
+			gameData.eventObjects.allEvents = new List<List<BaseEventKeyframe>>();
 
-			Debug.Log($"{FunctionsPlugin.className}Parsing Beatmap Themes");
-			// Move
-			for (int i = 0; i < jn["events"][0].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][0][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat, kfjn["ev"][1].AsFloat);
-
-				gameData.eventObjects.allEvents[0].Add(eventKeyframe);
-			}
-			
-			// Zoom
-			for (int i = 0; i < jn["events"][1].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][1][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[1].Add(eventKeyframe);
-			}
-			
-			// Rotate
-			for (int i = 0; i < jn["events"][2].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][2][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[2].Add(eventKeyframe);
-			}
-			
-			// Shake
-			for (int i = 0; i < jn["events"][3].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][3][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[3].Add(eventKeyframe);
-			}
-			
-			// Theme
-			for (int i = 0; i < jn["events"][4].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][4][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				// Since theme keyframes use random string IDs as their value instead of numbers (wtf), we have to convert the new IDs to numbers.
-				if (!string.IsNullOrEmpty(kfjn["evs"][0]) && idConversion.ContainsKey(kfjn["evs"][0]))
-					eventKeyframe.SetEventValues(Parser.TryParse(idConversion[kfjn["evs"][0]], 0f));
-				else
-					eventKeyframe.SetEventValues(0f);
-
-				gameData.eventObjects.allEvents[4].Add(eventKeyframe);
-			}
-			
-			// Chroma
-			for (int i = 0; i < jn["events"][5].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][5][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[5].Add(eventKeyframe);
-			}
-			
-			// Bloom
-			for (int i = 0; i < jn["events"][6].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][6][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					1f,
-					0f,
-					kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat);
-
-				gameData.eventObjects.allEvents[6].Add(eventKeyframe);
-			}
-			
-			// Vignette
-			for (int i = 0; i < jn["events"][7].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][7][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					kfjn["ev"][2].AsFloat,
-					kfjn["ev"][3].AsFloat,
-					kfjn["ev"][4].AsFloat,
-					kfjn["ev"][5].AsFloat,
-					kfjn["ev"][6].AsFloat == 9f ? 18f : kfjn["ev"][6].AsFloat);
-
-				gameData.eventObjects.allEvents[7].Add(eventKeyframe);
-			}
-			
-			// Lens
-			for (int i = 0; i < jn["events"][8].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][8][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					kfjn["ev"][2].AsFloat,
-					1f,
-					1f,
-					1f);
-
-				gameData.eventObjects.allEvents[8].Add(eventKeyframe);
-			}
-			
-			// Grain
-			for (int i = 0; i < jn["events"][9].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][9][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					kfjn["ev"][2].AsFloat);
-
-				gameData.eventObjects.allEvents[9].Add(eventKeyframe);
-			}
-			
-			// Hue
-			for (int i = 0; i < jn["events"][12].Count; i++)
-            {
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][12][i];
-
-				eventKeyframe.id = LSText.randomNumString(8);
-
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
-
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat);
-
-				gameData.eventObjects.allEvents[10].Add(eventKeyframe);
-			}
-
-			gameData.eventObjects.allEvents[11].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[11]));
-			gameData.eventObjects.allEvents[12].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[12]));
-			gameData.eventObjects.allEvents[13].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[13]));
-			gameData.eventObjects.allEvents[14].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[14]));
-
-			// Gradient
-			for (int i = 0; i < jn["events"][10].Count; i++)
+			string breakContext = "";
+			try
 			{
-				var eventKeyframe = new Data.EventKeyframe();
-				var kfjn = jn["events"][10][i];
+				Debug.Log($"{FunctionsPlugin.className}Parsing VG Event Keyframes");
+				// Move
+				breakContext = "Move";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][0].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][0][i];
 
-				eventKeyframe.id = LSText.randomNumString(8);
+					eventKeyframe.id = LSText.randomNumString(8);
 
-				if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
-					eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
 
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat,
-					kfjn["ev"][3].AsFloat == 9f ? 18f : kfjn["ev"][3].AsFloat,
-					kfjn["ev"][4].AsFloat);
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat, kfjn["ev"][1].AsFloat);
 
-				gameData.eventObjects.allEvents[15].Add(eventKeyframe);
+					gameData.eventObjects.allEvents[0].Add(eventKeyframe);
+				}
+
+				// Zoom
+				breakContext = "Zoom";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][1].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][1][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[1].Add(eventKeyframe);
+				}
+
+				// Rotate
+				breakContext = "Rotate";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][2].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][2][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[2].Add(eventKeyframe);
+				}
+
+				// Shake
+				breakContext = "Shake";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][3].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][3][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[3].Add(eventKeyframe);
+				}
+
+				// Theme
+				breakContext = "Theme";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][4].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][4][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					// Since theme keyframes use random string IDs as their value instead of numbers (wtf), we have to convert the new IDs to numbers.
+					if (!string.IsNullOrEmpty(kfjn["evs"][0]) && idConversion.ContainsKey(kfjn["evs"][0]))
+						eventKeyframe.SetEventValues(Parser.TryParse(idConversion[kfjn["evs"][0]], 0f));
+					else
+						eventKeyframe.SetEventValues(0f);
+
+					gameData.eventObjects.allEvents[4].Add(eventKeyframe);
+				}
+
+				// Chroma
+				breakContext = "Chroma";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][5].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][5][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[5].Add(eventKeyframe);
+				}
+
+				// Bloom
+				breakContext = "Bloom";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][6].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][6][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						1f,
+						0f,
+						kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat);
+
+					gameData.eventObjects.allEvents[6].Add(eventKeyframe);
+				}
+
+				// Vignette
+				breakContext = "Vignette";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][7].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][7][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						kfjn["ev"][2].AsFloat,
+						1f,
+						kfjn["ev"][4].AsFloat,
+						kfjn["ev"][5].AsFloat,
+						kfjn["ev"][6].AsFloat == 9f ? 18f : kfjn["ev"][6].AsFloat);
+
+					gameData.eventObjects.allEvents[7].Add(eventKeyframe);
+				}
+
+				// Lens
+				breakContext = "Lens";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][8].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][8][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						kfjn["ev"][2].AsFloat,
+						1f,
+						1f,
+						1f);
+
+					gameData.eventObjects.allEvents[8].Add(eventKeyframe);
+				}
+
+				// Grain
+				breakContext = "Grain";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][9].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][9][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						kfjn["ev"][2].AsFloat);
+
+					gameData.eventObjects.allEvents[9].Add(eventKeyframe);
+				}
+
+				// Hue
+				breakContext = "Hue";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][12].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][12][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat);
+
+					gameData.eventObjects.allEvents[10].Add(eventKeyframe);
+				}
+
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				gameData.eventObjects.allEvents[11].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[11]));
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				gameData.eventObjects.allEvents[12].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[12]));
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				gameData.eventObjects.allEvents[13].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[13]));
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				gameData.eventObjects.allEvents[14].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[14]));
+
+				// Gradient
+				breakContext = "Gradient";
+				gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+				for (int i = 0; i < jn["events"][10].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][10][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat,
+						kfjn["ev"][3].AsFloat == 9f ? 18f : kfjn["ev"][3].AsFloat,
+						kfjn["ev"].Count > 4 ? kfjn["ev"][4].AsFloat : 0f);
+
+					gameData.eventObjects.allEvents[15].Add(eventKeyframe);
+				}
+
+				for (int i = 16; i < DefaultKeyframes.Count; i++)
+				{
+					gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+					gameData.eventObjects.allEvents[i].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[i]));
+				}
 			}
-
-			for (int i = 16; i < DefaultKeyframes.Count; i++)
-            {
-				gameData.eventObjects.allEvents[i].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[i]));
-            }
+			catch (System.Exception ex)
+			{
+				EditorManager.inst?.DisplayNotification($"There was an error in parsing VG Event Keyframes. Parsing got caught at {breakContext}", 4f, EditorManager.NotificationType.Error);
+				if (!EditorManager.inst)
+				{
+					Debug.LogError($"There was an error in parsing VG Event Keyframes. Parsing got caught at {breakContext}.\n {ex}");
+				}
+				else
+				{
+					Debug.LogError($"{ex}");
+				}
+			}
 
 			Debug.Log($"{FunctionsPlugin.className}Checking keyframe counts");
 			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
@@ -511,7 +557,7 @@ namespace RTFunctions.Functions.Data
 		public static int EventCount => ModCompatibility.mods.ContainsKey("EventsCore") ? DefaultKeyframes.Count : 10;
 
 		public JSONNode ToJSONVG()
-        {
+		{
 			var jn = JSON.Parse("{}");
 
 			jn["editor"]["bpm"]["snap"]["objects"] = true;
@@ -536,18 +582,18 @@ namespace RTFunctions.Functions.Data
 			}
 
 			for (int i = 0; i < beatmapData.checkpoints.Count; i++)
-            {
+			{
 				var checkpoint = beatmapData.checkpoints[i];
 				jn["checkpoints"][i]["n"] = checkpoint.name;
 				jn["checkpoints"][i]["t"] = checkpoint.time;
 				jn["checkpoints"][i]["p"]["X"] = checkpoint.pos.x;
 				jn["checkpoints"][i]["p"]["y"] = checkpoint.pos.y;
-            }
+			}
 
 			for (int i = 0; i < beatmapObjects.Count; i++)
-            {
+			{
 				jn["objects"][i] = ((Data.BeatmapObject)beatmapObjects[i]).ToJSONVG();
-            }
+			}
 
 			if (prefabObjects.Count > 0)
 				for (int i = 0; i < prefabObjects.Count; i++)
@@ -595,7 +641,7 @@ namespace RTFunctions.Functions.Data
 
 			// Event Handlers
 			{
-                // Move
+				// Move
 				for (int i = 0; i < eventObjects.allEvents[0].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[0][i];
@@ -605,7 +651,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][0][i]["ev"][1] = eventKeyframe.eventValues[1];
 				}
 
-                // Zoom
+				// Zoom
 				for (int i = 0; i < eventObjects.allEvents[1].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[1][i];
@@ -614,7 +660,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][1][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-                // Rotate
+				// Rotate
 				for (int i = 0; i < eventObjects.allEvents[2].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[2][i];
@@ -623,7 +669,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][2][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-                // Shake
+				// Shake
 				for (int i = 0; i < eventObjects.allEvents[3].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[3][i];
@@ -632,7 +678,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][3][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-                // Themes
+				// Themes
 				for (int i = 0; i < eventObjects.allEvents[4].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[4][i];
@@ -641,7 +687,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][4][i]["evs"][0] = idsConverter.ContainsKey(eventKeyframe.eventValues[0].ToString()) ? idsConverter[eventKeyframe.eventValues[0].ToString()] : eventKeyframe.eventValues[0].ToString();
 				}
 
-                // Chroma
+				// Chroma
 				for (int i = 0; i < eventObjects.allEvents[5].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[5][i];
@@ -650,7 +696,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][5][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-                // Bloom
+				// Bloom
 				for (int i = 0; i < eventObjects.allEvents[6].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[6][i];
@@ -661,7 +707,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][6][i]["ev"][2] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[4], 0f, 9f);
 				}
 
-                // Vignette
+				// Vignette
 				for (int i = 0; i < eventObjects.allEvents[7].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[7][i];
@@ -735,7 +781,7 @@ namespace RTFunctions.Functions.Data
 			}
 
 			return jn;
-        }
+		}
 
 		public JSONNode ToJSON()
 		{
@@ -815,9 +861,9 @@ namespace RTFunctions.Functions.Data
 			return jn;
 		}
 
-        #endregion
+		#endregion
 
-        public static string[] EventTypes => new string[]
+		public static string[] EventTypes => new string[]
 		{
 			"pos",
 			"zoom",
@@ -845,15 +891,15 @@ namespace RTFunctions.Functions.Data
 			"player",
 			"follow_player",
 			"audio",
-            "vidbg_p",
-            "vidbg",
+			"vidbg_p",
+			"vidbg",
 			"sharp",
 			"bars",
 			"danger",
 			"xyrot",
 			"camdepth",
-        };
-		
+		};
+
 		public static List<BaseEventKeyframe> DefaultKeyframes = new List<BaseEventKeyframe>
 		{
 			new Data.EventKeyframe
@@ -879,7 +925,7 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[5]
-                {
+				{
 					0f, // Shake Intensity
 					1f, // Shake X
 					1f, // Shake Y
@@ -917,7 +963,7 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[7]
-                {
+				{
 					0f, // Vignette Intensity
 					0f, // Vignette Smoothness
 					0f, // Vignette Rounded
@@ -932,14 +978,14 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[6]
-                {
+				{
 					0f,
 					0f,
 					0f,
 					1f,
 					1f,
 					1f
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Lens
 			new Data.EventKeyframe
@@ -958,23 +1004,23 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[5]
-                {
+				{
 					0f,
 					0f,
 					1f,
 					0f,
 					0f
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Ripples
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
 				eventValues = new float[2]
-                {
+				{
 					0f,
 					6f
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // RadialBlur
 			new Data.EventKeyframe
@@ -993,13 +1039,13 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[5]
-                {
+				{
 					0f,
 					0f,
 					18f,
 					18f,
 					0f,
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Gradient
 			new Data.EventKeyframe
@@ -1045,7 +1091,7 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[7]
-                {
+				{
 					0f,
 					0f,
 					-342f,
@@ -1066,7 +1112,7 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[10]
-                {
+				{
 					0f,
 					0f,
 					0f,
@@ -1077,25 +1123,25 @@ namespace RTFunctions.Functions.Data
 					9999f,
 					-9999f,
 					1f,
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Follow Player
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
 				eventValues = new float[2]
-                {
+				{
 					1f,
 					1f
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Audio
 			new Data.EventKeyframe
-            {
-                eventTime = 0f,
-                eventValues = new float[9]
-                {
-                    0f, // Position X
+			{
+				eventTime = 0f,
+				eventValues = new float[9]
+				{
+					0f, // Position X
                     0f, // Position Y
                     0f, // Position Z
                     1f, // Scale X
@@ -1105,14 +1151,14 @@ namespace RTFunctions.Functions.Data
                     0f, // Rotation Y
                     0f, // Rotation Z
                 },
-                id = LSText.randomNumString(8),
-            }, // Video BG Parent
+				id = LSText.randomNumString(8),
+			}, // Video BG Parent
 			new Data.EventKeyframe
-            {
-                eventTime = 0f,
-                eventValues = new float[10]
-                {
-                    0f, // Position X
+			{
+				eventTime = 0f,
+				eventValues = new float[10]
+				{
+					0f, // Position X
                     0f, // Position Y
                     120f, // Position Z
                     240f, // Scale X
@@ -1123,17 +1169,17 @@ namespace RTFunctions.Functions.Data
                     0f, // Rotation Z
                     0f, // Render Layer (Foreground / Background)
                 },
-                id = LSText.randomNumString(8),
-            }, // Video BG
+				id = LSText.randomNumString(8),
+			}, // Video BG
 			new Data.EventKeyframe
-            {
-                eventTime = 0f,
-                eventValues = new float[1]
-                {
-                    0f, // Sharpen Amount
+			{
+				eventTime = 0f,
+				eventValues = new float[1]
+				{
+					0f, // Sharpen Amount
                 },
-                id = LSText.randomNumString(8),
-            }, // Sharpen
+				id = LSText.randomNumString(8),
+			}, // Sharpen
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
@@ -1177,26 +1223,26 @@ namespace RTFunctions.Functions.Data
 			}, // Camera Depth
 		};
 
-        public static bool SaveOpacityToThemes { get; set; } = false;
+		public static bool SaveOpacityToThemes { get; set; } = false;
 
 		public List<Data.BeatmapObject> BeatmapObjects
-        {
+		{
 			get => beatmapObjects.Select(x => (Data.BeatmapObject)x).ToList();
 			set
-            {
+			{
 				beatmapObjects.Clear();
 				beatmapObjects.AddRange(value);
-            }
-        }
+			}
+		}
 
 		public List<Data.BackgroundObject> BackgroundObjects
-        {
+		{
 			get => backgroundObjects.Select(x => (Data.BackgroundObject)x).ToList();
 			set
-            {
+			{
 				backgroundObjects.Clear();
 				backgroundObjects.AddRange(value);
-            }
-        }
-    }
+			}
+		}
+	}
 }

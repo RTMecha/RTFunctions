@@ -193,7 +193,7 @@ namespace RTFunctions.Functions.Components
 		}
 
 		void OnMouseDown()
-        {
+		{
 			onMouseDown?.Invoke();
 			if (EditorManager.inst && EditorManager.inst.isEditing && DataManager.inst.gameData.beatmapObjects.Count > 0 && !string.IsNullOrEmpty(id) && !LSHelpers.IsUsingInputField() && !EventSystem.current.IsPointerOverGameObject())
 			{
@@ -202,28 +202,89 @@ namespace RTFunctions.Functions.Components
 				{
 					var mod = ModCompatibility.mods["EditorManagement"];
 
-					TimelineObject timelineObject;
-
-					if (mod.Methods.ContainsKey("GetTimelineObject"))
-						timelineObject = (TimelineObject)mod.Methods["GetTimelineObject"].DynamicInvoke(beatmapObject);
-					else
-						timelineObject = new TimelineObject(beatmapObject);
-
-					if (mod.Methods.ContainsKey("RenderTimelineObjectVoid"))
-						mod.Methods["RenderTimelineObjectVoid"].DynamicInvoke(timelineObject);
-
-					if (!timelineObject.selected)
+					if (!ModCompatibility.sharedFunctions.ContainsKey("ParentPickerActive") || !(bool)ModCompatibility.sharedFunctions["ParentPickerActive"])
 					{
-						if (mod.Methods.ContainsKey("SetCurrentObject") && !Input.GetKey(KeyCode.LeftShift))
-							mod.Methods["SetCurrentObject"].DynamicInvoke(timelineObject, Input.GetKey(KeyCode.LeftAlt));
-						if (mod.Methods.ContainsKey("AddSelectedObject") && Input.GetKey(KeyCode.LeftShift))
-							mod.Methods["AddSelectedObject"].DynamicInvoke(timelineObject);
+						TimelineObject timelineObject;
+
+						if (mod.Methods.ContainsKey("GetTimelineObject"))
+							timelineObject = (TimelineObject)mod.Methods["GetTimelineObject"].DynamicInvoke(beatmapObject);
+						else
+							timelineObject = new TimelineObject(beatmapObject);
+
+						if (mod.Methods.ContainsKey("RenderTimelineObjectVoid"))
+							mod.Methods["RenderTimelineObjectVoid"].DynamicInvoke(timelineObject);
+
+						if (!timelineObject.selected)
+						{
+							EditorManager.inst.ClearDialogs();
+
+							if (mod.Methods.ContainsKey("SetCurrentObject") && !Input.GetKey(KeyCode.LeftShift))
+								mod.Methods["SetCurrentObject"].DynamicInvoke(timelineObject, Input.GetKey(KeyCode.LeftAlt));
+							if (mod.Methods.ContainsKey("AddSelectedObject") && Input.GetKey(KeyCode.LeftShift))
+								mod.Methods["AddSelectedObject"].DynamicInvoke(timelineObject);
+						}
+					}
+
+					if (ModCompatibility.sharedFunctions.ContainsKey("ParentPickerActive")
+						&& (bool)ModCompatibility.sharedFunctions["ParentPickerActive"]
+						&& ModCompatibility.sharedFunctions.ContainsKey("CurrentSelection") && ModCompatibility.sharedFunctions["CurrentSelection"] is TimelineObject
+						 && ModCompatibility.sharedFunctions.ContainsKey("ParentPickerDisable")
+						 && ModCompatibility.sharedFunctions.ContainsKey("RefreshObjectGUI"))
+					{
+						var currentSelection = (TimelineObject)ModCompatibility.sharedFunctions["CurrentSelection"];
+
+						var dictionary = new Dictionary<string, bool>();
+
+						foreach (var obj in DataManager.inst.gameData.beatmapObjects)
+						{
+							bool flag = true;
+							if (!string.IsNullOrEmpty(obj.parent))
+							{
+								string parentID = currentSelection.ID;
+								while (!string.IsNullOrEmpty(parentID))
+								{
+									if (parentID == obj.parent)
+									{
+										flag = false;
+										break;
+									}
+									int num2 = DataManager.inst.gameData.beatmapObjects.FindIndex(x => x.parent == parentID);
+									if (num2 != -1)
+									{
+										parentID = DataManager.inst.gameData.beatmapObjects[num2].id;
+									}
+									else
+									{
+										parentID = null;
+									}
+								}
+							}
+							if (!dictionary.ContainsKey(obj.id))
+								dictionary.Add(obj.id, flag);
+						}
+
+						if (dictionary.ContainsKey(currentSelection.ID))
+							dictionary[currentSelection.ID] = false;
+
+						if (dictionary.ContainsKey(beatmapObject.id) && dictionary[beatmapObject.id])
+						{
+							var bm = currentSelection.GetData<BeatmapObject>();
+							bm.parent = beatmapObject.id;
+							Updater.UpdateProcessor(bm);
+
+							((Action)ModCompatibility.sharedFunctions["ParentPickerDisable"])?.Invoke();
+							((Action<BeatmapObject>)ModCompatibility.sharedFunctions["RefreshObjectGUI"])?.Invoke(bm);
+						}
+						else
+						{
+							EditorManager.inst.DisplayNotification("Cannot set parent to child / self!", 1f, EditorManager.NotificationType.Warning);
+						}
 					}
 				}
 			}
-        }
+		}
 
-        void OnMouseEnter()
+		void OnMouseEnter()
         {
             hovered = true;
 			onMouseEnter?.Invoke();
@@ -342,7 +403,10 @@ namespace RTFunctions.Functions.Components
         void Update()
 		{
 			if (!EditorManager.inst || !EditorManager.inst.isEditing)
+			{
+				hovered = false;
 				return;
+			}
 
 			var m = 0f;
 

@@ -15,22 +15,24 @@ using BaseBeatmap = DataManager.MetaData.Beatmap;
 
 namespace RTFunctions.Functions.Data
 {
-    public class Metadata : BaseMetadata
+    public class MetaData : BaseMetadata
     {
-		public Metadata() : base()
+		public MetaData() : base()
         {
 
         }
 
-		public Metadata(LevelArtist artist, LevelCreator creator, LevelSong song, LevelBeatmap beatmap) : base(artist, creator, song, beatmap)
+		public MetaData(LevelArtist artist, LevelCreator creator, LevelSong song, LevelBeatmap beatmap) : base(artist, creator, song, beatmap)
         {
 
         }
 
-        public Metadata(BaseMetadata metadata)
+        public MetaData(BaseMetadata metadata)
         {
 
         }
+
+		public static MetaData Current => (MetaData)DataManager.inst.metaData;
 
         public string collectionID;
         public int index;
@@ -38,7 +40,7 @@ namespace RTFunctions.Functions.Data
 
         #region Methods
 
-        public static Metadata DeepCopy(Metadata orig) => new Metadata
+        public static MetaData DeepCopy(MetaData orig) => new MetaData
         {
             artist = new LevelArtist
             {
@@ -76,9 +78,9 @@ namespace RTFunctions.Functions.Data
             collectionID = orig.collectionID,
         };
 
-		public static Metadata ParseVG(JSONNode jn)
+		public static MetaData ParseVG(JSONNode jn)
         {
-			Metadata result;
+			MetaData result;
             try
 			{
 				string name = "Artist Name";
@@ -185,7 +187,7 @@ namespace RTFunctions.Functions.Data
 
 				var beatmap = new LevelBeatmap(dateEdited, dateCreated, gameVersion, num, workshopID.ToString());
 
-				result = new Metadata(artist, creator, song, beatmap);
+				result = new MetaData(artist, creator, song, beatmap);
 			}
             catch (Exception ex)
 			{
@@ -193,15 +195,15 @@ namespace RTFunctions.Functions.Data
 				var creator2 = new LevelCreator(SteamWrapper.inst.user.displayName, SteamWrapper.inst.user.id, "", 0);
 				var song2 = new LevelSong("Corrupt Metadata", 0, "", 140f, 100f, -1f, -1f, new string[] { "Corrupted" });
 				var beatmap2 = new LevelBeatmap("", "", ProjectArrhythmia.GameVersion.ToString(), 0, "-1");
-				result = new Metadata(artist2, creator2, song2, beatmap2);
+				result = new MetaData(artist2, creator2, song2, beatmap2);
 				Debug.LogError($"{DataManager.inst.className}Something went wrong with parsing metadata!\n{ex}");
 			}
 			return result;
         }
 
-        public static Metadata Parse(JSONNode jn)
+        public static MetaData Parse(JSONNode jn)
         {
-			Metadata result;
+			MetaData result;
 			try
 			{
 				string name = "Artist Name";
@@ -321,7 +323,7 @@ namespace RTFunctions.Functions.Data
 
 				var beatmap = new LevelBeatmap(dateEdited, dateCreated, gameVersion, num, workshopID.ToString());
 
-				result = new Metadata(artist, creator, song, beatmap);
+				result = new MetaData(artist, creator, song, beatmap);
 			}
 			catch
 			{
@@ -329,7 +331,7 @@ namespace RTFunctions.Functions.Data
 				var creator2 = new LevelCreator(SteamWrapper.inst.user.displayName, SteamWrapper.inst.user.id, "", 0);
 				var song2 = new LevelSong("Corrupt Metadata", 0, "", 140f, 100f, -1f, -1f, new string[] { "Corrupted" });
 				var beatmap2 = new LevelBeatmap("", "", ProjectArrhythmia.GameVersion.ToString(), 0, "-1");
-				result = new Metadata(artist2, creator2, song2, beatmap2);
+				result = new MetaData(artist2, creator2, song2, beatmap2);
 				Debug.LogError($"{DataManager.inst.className}Something went wrong with parsing metadata!");
 			}
 			return result;
@@ -393,7 +395,10 @@ namespace RTFunctions.Functions.Data
 			return jn;
 		}
 
-        #endregion
+		#endregion
+
+		public List<LevelArtist> Artists { get; set; } = new List<LevelArtist>();
+		public List<LevelCreator> Creators { get; set; } = new List<LevelCreator>();
 
         public LevelArtist LevelArtist => (LevelArtist)artist;
         public LevelCreator LevelCreator => (LevelCreator)creator;
@@ -402,9 +407,9 @@ namespace RTFunctions.Functions.Data
 
         #region Operators
 
-        public static implicit operator bool(Metadata exists) => exists != null;
+        public static implicit operator bool(MetaData exists) => exists != null;
 
-		public override bool Equals(object obj) => obj is Metadata && LevelBeatmap.beatmap_id == (obj as Metadata).LevelBeatmap.beatmap_id;
+		public override bool Equals(object obj) => obj is MetaData && LevelBeatmap.beatmap_id == (obj as MetaData).LevelBeatmap.beatmap_id;
 
 		public override string ToString() => $"{LevelBeatmap.beatmap_id}: {artist.Name} - {song.title}";
 

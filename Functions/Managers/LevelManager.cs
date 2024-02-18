@@ -158,8 +158,6 @@ namespace RTFunctions.Functions.Managers
 
             EventManager.inst.cam.rect = new Rect(0f, 0f, 1f, 1f);
             EventManager.inst.camPer.rect = new Rect(0f, 0f, 1f, 1f);
-            //GameManager.inst.Camera.GetComponent<Camera>().rect = new Rect(0f, 0f, 1f, 1f);
-            //GameManager.inst.CameraPerspective.GetComponent<Camera>().rect = new Rect(0f, 0f, 1f, 1f);
 
             Debug.Log($"{className}Updating checkpoints...");
 

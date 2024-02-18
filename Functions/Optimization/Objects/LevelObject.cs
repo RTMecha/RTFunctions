@@ -154,7 +154,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             {
                 Color color = colorSequence.Interpolate(time - StartTime);
                 float opacity = opacitySequence.Interpolate(time - StartTime);
-                
+
                 float a = opacity - 1f;
 
                 a = -a;
@@ -185,7 +185,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             if (scaleParent && cameraParent)
             {
-                float camOrthoZoom = EventManager.inst.cam.orthographicSize / 20f;
+                float camOrthoZoom = EventManager.inst.cam.orthographicSize / 20f - 1f;
 
                 transformChain[0].localScale = (new Vector3(camOrthoZoom, camOrthoZoom, 1f) * scaleParentOffset) + prefabOffsetScale + topScaleOffset;
             }
@@ -271,10 +271,6 @@ namespace RTFunctions.Functions.Optimization.Objects
                 animatePosition = parentObject.ParentAnimatePosition;
                 animateScale = parentObject.ParentAnimateScale;
                 animateRotation = parentObject.ParentAnimateRotation;
-
-                //positionParallax = parentObject.ParentAdditivePosition ? positionParallax + parentObject.ParentParallaxPosition : parentObject.ParentParallaxPosition;
-                //scaleParallax = parentObject.ParentAdditiveScale ? scaleParallax + parentObject.ParentParallaxScale : parentObject.ParentParallaxScale;
-                //rotationParallax = parentObject.ParentAdditiveRotation ? rotationParallax + parentObject.ParentParallaxRotation : parentObject.ParentParallaxRotation;
 
                 positionParallax = parentObject.ParentParallaxPosition;
                 scaleParallax = parentObject.ParentParallaxScale;

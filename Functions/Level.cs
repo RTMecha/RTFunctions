@@ -19,9 +19,9 @@ namespace RTFunctions.Functions
             this.path = path;
 
             if (RTFile.FileExists($"{path}metadata.lsb"))
-                metadata = Metadata.Parse(JSON.Parse(RTFile.ReadFromFile($"{path}metadata.lsb")));
+                metadata = MetaData.Parse(JSON.Parse(RTFile.ReadFromFile($"{path}metadata.lsb")));
             else if (RTFile.FileExists($"{path}metadata.vgm"))
-                metadata = Metadata.Parse(JSON.Parse(RTFile.ReadFromFile($"{path}metadata.vgm")));
+                metadata = MetaData.Parse(JSON.Parse(RTFile.ReadFromFile($"{path}metadata.vgm")));
 
             icon = RTFile.FileExists($"{path}level.jpg") ? SpriteManager.LoadSprite($"{path}level.jpg") : RTFile.FileExists($"{path}cover.jpg") ? SpriteManager.LoadSprite($"{path}cover.jpg") : ArcadeManager.inst.defaultImage;
 
@@ -53,7 +53,7 @@ namespace RTFunctions.Functions
 
         public string id;
 
-        public Metadata metadata;
+        public MetaData metadata;
 
         public int currentMode = 0;
         public string[] LevelModes { get; set; }

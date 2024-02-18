@@ -235,9 +235,9 @@ namespace RTFunctions.Patchers
             JSONNode jn;
             try
             {
-                if (__1 is Functions.Data.Metadata)
+                if (__1 is Functions.Data.MetaData)
                 {
-                    jn = ((Functions.Data.Metadata)__1).ToJSON();
+                    jn = ((Functions.Data.MetaData)__1).ToJSON();
 
                     Debug.Log($"{__instance.className}Saving Metadata Full");
                     RTFile.WriteToFile(__0, jn.ToString());

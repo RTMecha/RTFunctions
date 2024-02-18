@@ -10,17 +10,17 @@ using UnityEngine.Video;
 
 namespace RTFunctions.Functions.Managers
 {
-    public class RTVideoManager : MonoBehaviour
+	public class RTVideoManager : MonoBehaviour
 	{
 		public static RTVideoManager inst;
 
 		public static string className = "[<color=#e65100>RTVideoManager</color>] \n";
 
 		public enum RenderType
-        {
+		{
 			Camera, // Always renders at the camera's resolution and position.
 			Background // Renders at a set spot.
-        }
+		}
 
 		public RenderType renderType = RenderType.Background;
 
@@ -37,23 +37,21 @@ namespace RTFunctions.Functions.Managers
 		bool canUpdate = true;
 
 		public static void Init()
-        {
+		{
 			var gameObject = new GameObject("VideoManager");
 			gameObject.transform.SetParent(SystemManager.inst.transform);
 			gameObject.AddComponent<RTVideoManager>();
-        }
+		}
 
 		void Awake()
-        {
+		{
 			inst = this;
 
 			var videoObject = new GameObject("VideoPlayer");
 			videoObject.transform.SetParent(SystemManager.inst.transform);
 			videoPlayer = videoObject.AddComponent<VideoPlayer>();
-			//videoPlayer.targetCamera = Camera.main;
 			videoPlayer.renderMode = renderType == RenderType.Camera ? VideoRenderMode.CameraFarPlane : VideoRenderMode.MaterialOverride;
 			videoPlayer.source = VideoSource.VideoClip;
-			//videoPlayer.targetCameraAlpha = 1f;
 			videoPlayer.timeSource = VideoTimeSource.GameTimeSource;
 			videoPlayer.audioOutputMode = VideoAudioOutputMode.None;
 			videoPlayer.isLooping = false;
@@ -63,32 +61,8 @@ namespace RTFunctions.Functions.Managers
 		}
 
 		void Update()
-        {
-            //if (videoPlayer != null && videoPlayer.enabled && videoPlayer.isPrepared
-            //    && (prevPlaying != AudioManager.inst.CurrentAudioSource.isPlaying
-            //    || prevTime != AudioManager.inst.CurrentAudioSource.time
-            //    || prevPitch != AudioManager.inst.CurrentAudioSource.pitch))
-            //{
-            //    prevPlaying = AudioManager.inst.CurrentAudioSource.isPlaying;
-            //    prevTime = AudioManager.inst.CurrentAudioSource.time;
-            //    prevPitch = AudioManager.inst.CurrentAudioSource.pitch;
-            //    UpdatedAudioPos?.Invoke(AudioManager.inst.CurrentAudioSource.isPlaying, AudioManager.inst.CurrentAudioSource.time, AudioManager.inst.CurrentAudioSource.pitch);
-            //}
-
-            //if (canUpdate)
-            //{
-            //    float t = AudioManager.inst.CurrentAudioSource.time;
-
-            //    //if (t < videoPlayer.time)
-            //    //    t = -((float)videoPlayer.time) + t;
-
-            //    if (videoPlayer != null && videoPlayer.enabled && videoPlayer.isPrepared)
-            //        UpdatedAudioPos?.Invoke(AudioManager.inst.CurrentAudioSource.isPlaying, t, AudioManager.inst.CurrentAudioSource.pitch);
-            //    prevPlaying = AudioManager.inst.CurrentAudioSource.isPlaying;
-            //    prevTime = t;
-            //    prevPitch = AudioManager.inst.CurrentAudioSource.pitch;
-            //}
-            if (canUpdate && (prevTime != AudioManager.inst.CurrentAudioSource.time || prevPlaying != AudioManager.inst.CurrentAudioSource.isPlaying))
+		{
+			if (canUpdate && (prevTime != AudioManager.inst.CurrentAudioSource.time || prevPlaying != AudioManager.inst.CurrentAudioSource.isPlaying))
 			{
 				if (videoPlayer != null && videoPlayer.enabled && videoPlayer.isPrepared)
 				{
@@ -115,7 +89,6 @@ namespace RTFunctions.Functions.Managers
 
 		void UpdateTime(bool isPlaying, float time, float pitch)
 		{
-			//videoPlayer.playbackSpeed = pitch < 0f ? -pitch : pitch;
 			if (isPlaying)
 			{
 				if (!videoPlayer.isPlaying)
@@ -124,7 +97,7 @@ namespace RTFunctions.Functions.Managers
 
 				videoPlayer.time = time;
 			}
-            else
+			else
 			{
 				videoPlayer.Pause();
 			}
@@ -134,8 +107,14 @@ namespace RTFunctions.Functions.Managers
 		public float currentAlpha;
 		public bool didntPlay = false;
 
-        public void Play(string url, float alpha)
+		public void Play(string url, float alpha)
 		{
+			if (videoPlayer == null)
+			{
+				Debug.LogError($"{className}VideoPlayer does not exist so the set video cannot play.");
+				return;
+			}
+
 			currentURL = url;
 			currentAlpha = alpha;
 
@@ -166,7 +145,12 @@ namespace RTFunctions.Functions.Managers
 		public void Stop()
 		{
 			Debug.Log($"{className}Stopping Video.");
-			videoPlayer.enabled = false;
+			if (videoPlayer)
+				videoPlayer.enabled = false;
+
+			if (videoPlayer == null)
+				Debug.LogError($"{className}VideoPlayer does not exist so it wasn't disabled. Continuing...");
+
 			videoTexture?.SetActive(false);
 		}
 	}
