@@ -542,7 +542,8 @@ namespace RTFunctions.Functions.IO
         }
 
         public static bool Validate(string str) =>
-                !str.Contains("File.") && !str.Contains("FileManager") && !str.Contains("System.IO") && !str.Contains("WebClient") && !str.Contains("HttpClient");
+                FunctionsPlugin.EvaluateCode.Value && !str.Contains("File.") && !str.Contains("FileManager") && !str.Contains("System.IO")
+                && !str.Contains("WebClient") && !str.Contains("HttpClient");
     }
 
     public class ScriptEvaluator : Evaluator, IDisposable
