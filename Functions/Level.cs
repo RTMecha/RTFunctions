@@ -18,12 +18,12 @@ namespace RTFunctions.Functions
         {
             this.path = path;
 
-            if (RTFile.FileExists($"{path}metadata.lsb"))
+            if (RTFile.FileExists($"{path}metadata.vgm"))
+                metadata = MetaData.ParseVG(JSON.Parse(RTFile.ReadFromFile($"{path}metadata.vgm")));
+            else if (RTFile.FileExists($"{path}metadata.lsb"))
                 metadata = MetaData.Parse(JSON.Parse(RTFile.ReadFromFile($"{path}metadata.lsb")));
-            else if (RTFile.FileExists($"{path}metadata.vgm"))
-                metadata = MetaData.Parse(JSON.Parse(RTFile.ReadFromFile($"{path}metadata.vgm")));
 
-            icon = RTFile.FileExists($"{path}level.jpg") ? SpriteManager.LoadSprite($"{path}level.jpg") : RTFile.FileExists($"{path}cover.jpg") ? SpriteManager.LoadSprite($"{path}cover.jpg") : ArcadeManager.inst.defaultImage;
+            icon = RTFile.FileExists($"{path}level.jpg") ? SpriteManager.LoadSprite($"{path}level.jpg") : RTFile.FileExists($"{path}cover.jpg") ? SpriteManager.LoadSprite($"{path}cover.jpg") : SteamWorkshop.inst.defaultSteamImageSprite;
 
             if (metadata)
                 id = metadata.LevelBeatmap.beatmap_id;
@@ -32,7 +32,7 @@ namespace RTFunctions.Functions
             {
                 var jn = JSON.Parse(RTFile.ReadFromFile($"{path}modes.lsms"));
                 LevelModes = new string[jn["paths"].Count + 1];
-                LevelModes[0] = RTFile.FileExists($"{path}level.lsb") ? "level.lsb" : "level.vgd";
+                LevelModes[0] = RTFile.FileExists($"{path}level.vgd") ? "level.vgd" : "level.lsb";
                 for (int i = 1; i < jn["paths"].Count + 1; i++)
                 {
                     LevelModes[i] = jn["paths"][i - 1];
@@ -41,7 +41,7 @@ namespace RTFunctions.Functions
             else
                 LevelModes = new string[1]
                 {
-                    "level.lsb",
+                    RTFile.FileExists($"{path}level.vgd") ? "level.vgd" : "level.lsb",
                 };
         }
 
