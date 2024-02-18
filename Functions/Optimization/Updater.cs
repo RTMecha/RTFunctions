@@ -665,6 +665,8 @@ namespace RTFunctions.Functions.Optimization
 
                         beatmapObject.originalID = beatmapObj.id;
                         DataManager.inst.gameData.beatmapObjects.Add(beatmapObject);
+                        if (levelProcessor && levelProcessor.converter != null && !levelProcessor.converter.beatmapObjects.ContainsKey(beatmapObject.id))
+                            levelProcessor.converter.beatmapObjects.Add(beatmapObject.id, beatmapObject);
                         list.Add(beatmapObject);
                     }
 
@@ -940,6 +942,22 @@ namespace RTFunctions.Functions.Optimization
             // If it is not null then we continue.
             if (levelProcessor != null)
             {
+                if (DataManager.inst.gameData is GameData)
+                {
+                    foreach (var bm in GameData.Current.beatmapObjects)
+                    {
+                        if (bm is BeatmapObject modObject)
+                        {
+                            modObject.reactivePositionOffset = Vector3.zero;
+                            modObject.reactiveScaleOffset = Vector3.zero;
+                            modObject.reactiveRotationOffset = 0f;
+                            modObject.positionOffset = Vector3.zero;
+                            modObject.scaleOffset = Vector3.zero;
+                            modObject.rotationOffset = Vector3.zero;
+                        }
+                    }
+                }
+
                 var level = levelProcessor.level;
                 var objects = level.objects;
 
