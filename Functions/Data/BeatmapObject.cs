@@ -336,7 +336,7 @@ namespace RTFunctions.Functions.Data
 				stringVariable = copyVariables ? orig.stringVariable : "",
 				tags = orig.tags.Count > 0 ? orig.tags.Clone() : new List<string>(),
 				background = orig.background,
-				ImageData = orig.ImageData.Copy(),
+				ImageData = orig.ImageData == null ? null : orig.ImageData.Copy(),
 				ignoreLifespan = orig.ignoreLifespan,
 				opacityCollision = orig.opacityCollision
 			};
@@ -507,7 +507,9 @@ namespace RTFunctions.Functions.Data
 				beatmapObject.parent = jn["p_id"] == "camera" ? "CAMERA_PARENT" : jn["p_id"];
 
 			if (jn["p_t"] != null)
-				beatmapObject.parentType = jn["p_id"] == "camera" ? "111" : jn["p_t"];
+				beatmapObject.parentType = jn["p_t"];
+			if (jn["p_id"] == "camera")
+				beatmapObject.parentType = "111";
 
 			if (jn["p_o"] != null && jn["p_id"] != "camera")
 			{
