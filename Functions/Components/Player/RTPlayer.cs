@@ -46,6 +46,8 @@ namespace RTFunctions.Functions.Components.Player
 
         public static bool AllowPlayersToTakeBulletDamage { get; set; }
 
+        public static bool OutOfBounds { get; set; } = false;
+
         #region Base
 
         public MyGameActions Actions { get; set; }
@@ -666,15 +668,6 @@ namespace RTFunctions.Functions.Components.Player
                     if (!PlayerModel.bulletPart.constant && faceController.Shoot.WasPressed && canShoot ||
                         PlayerModel.bulletPart.constant && faceController.Shoot.IsPressed && canShoot)
                         CreateBullet();
-
-                    //if (!(bool)currentModel.values["Bullet Constant"] && faceController.Shoot.WasPressed && canShoot)
-                    //{
-                    //    CreateBullet();
-                    //}
-                    //if ((bool)currentModel.values["Bullet Constant"] && faceController.Shoot.IsPressed && canShoot)
-                    //{
-                    //    CreateBullet();
-                    //}
                 }
             }
         }
@@ -699,7 +692,7 @@ namespace RTFunctions.Functions.Components.Player
             var player = playerObjects["RB Parent"].gameObject;
 
             // Here we handle the player's bounds to the camera. It is possible to include negative zoom in those bounds but it might not be a good idea since people have already utilized it.
-            if ((!ModCompatibility.sharedFunctions.ContainsKey("EventsCoreEditorOffset") || !(bool)ModCompatibility.sharedFunctions["EventsCoreEditorOffset"]) && GameManager.inst.gameState == GameManager.State.Playing)
+            if (!OutOfBounds && (!ModCompatibility.sharedFunctions.ContainsKey("EventsCoreEditorOffset") || !(bool)ModCompatibility.sharedFunctions["EventsCoreEditorOffset"]) && GameManager.inst.gameState == GameManager.State.Playing)
             {
                 var cameraToViewportPoint = Camera.main.WorldToViewportPoint(player.transform.position);
                 cameraToViewportPoint.x = Mathf.Clamp(cameraToViewportPoint.x, 0f, 1f);
