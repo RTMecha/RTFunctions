@@ -104,6 +104,8 @@ namespace RTFunctions.Functions.Managers
 
             GameManager.inst.gameState = GameManager.State.Parsing;
             var levelMode = level.LevelModes[Mathf.Clamp(CurrentLevelMode, 0, level.LevelModes.Length - 1)];
+            Debug.Log($"{className}Level Mode: {levelMode}...");
+
             var rawJSON = RTFile.ReadFromFile(level.path + levelMode);
             rawJSON = UpdateBeatmap(rawJSON, level.metadata.beatmap.game_version);
             DataManager.inst.gameData = levelMode.Contains(".vgd") ? GameData.ParseVG(JSON.Parse(rawJSON)) : GameData.Parse(JSONNode.Parse(rawJSON));
