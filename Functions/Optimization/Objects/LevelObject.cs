@@ -127,8 +127,8 @@ namespace RTFunctions.Functions.Optimization.Objects
             return LSFunctions.LSColors.ColorFromHSV(num + hue, saturation + sat, value + val);
         }
 
-        bool setparentValues = false;
         float prevStartTime = 0f;
+        List<string> parentChainSet = new List<string>();
 
         public void Interpolate(float time)
         {
@@ -220,14 +220,19 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             if (prevStartTime != beatmapObject.startTime)
             {
-                setparentValues = false;
+                parentChainSet.Clear();
                 prevStartTime = beatmapObject.startTime;
             }
+
+            LevelParentObject currentParent = null;
 
             int num = 0;
             foreach (var parentObject in parentObjects)
             {
-                if (!beatmapObject.spawnOnce || (num == 0 || !setparentValues))
+                if (currentParent == null)
+                    currentParent = parentObject;
+
+                if ((!currentParent.BeatmapObject.spawnOnce || num == 0 || !parentChainSet.Contains(parentObject.ID)))
                 {
                     if (parentObject.ParentAdditivePosition)
                         positionAddedOffset += parentObject.ParentOffsetPosition;
@@ -283,12 +288,15 @@ namespace RTFunctions.Functions.Optimization.Objects
                     positionParallax = parentObject.ParentParallaxPosition;
                     scaleParallax = parentObject.ParentParallaxScale;
                     rotationParallax = parentObject.ParentParallaxRotation;
+
+                    if (currentParent.BeatmapObject.spawnOnce && !parentChainSet.Contains(parentObject.ID))
+                        parentChainSet.Add(parentObject.ID);
                 }
+
+                currentParent = parentObject;
 
                 num++;
             }
-            
-            setparentValues = true;
         }
     }
 }
