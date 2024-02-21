@@ -466,7 +466,7 @@ namespace RTFunctions.Functions.Data
 
 		public static List<DataManager.LinkType> creatorLinkTypes = new List<DataManager.LinkType>
 		{
-			new DataManager.LinkType("Youtube", "https://www.youtube.com/c/{0}"),
+			new DataManager.LinkType("YouTube", "https://www.youtube.com/c/{0}"),
 			new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/"),
 			new DataManager.LinkType("Discord", "https://discord.gg/{0}"),
 			new DataManager.LinkType("Patreon", "https://patreon.com/{0}"),
