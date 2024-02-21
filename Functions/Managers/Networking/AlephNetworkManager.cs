@@ -90,7 +90,7 @@ namespace RTFunctions.Functions.Managers.Networking
         public static IEnumerator UploadBytes(string url, byte[] bytes)
         {
             var form = new WWWForm();
-            form.AddBinaryData("bytes", bytes);
+            form.AddBinaryData("file", bytes);
 
             var www = UnityWebRequest.Post(url, form);
 
@@ -98,9 +98,22 @@ namespace RTFunctions.Functions.Managers.Networking
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
             else
-                Debug.Log("Form upload complete! " + www.downloadHandler.text);
+                Debug.Log($"{className}Form upload complete! {www.downloadHandler.text}");
+        }
+        
+        public static IEnumerator UploadString(string url, string str)
+        {
+            var www = UnityWebRequest.Post(url, str);
+
+            www.certificateHandler = new ForceAcceptAll();
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
+            else
+                Debug.Log($"{className}Form upload complete! {www.downloadHandler.text}");
         }
 
         public static IEnumerator DownloadBytes(string path, Action<float> percentage, Action<byte[]> callback, Action<string> onError)
