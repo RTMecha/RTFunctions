@@ -129,6 +129,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
         float prevStartTime = 0f;
         List<string> parentChainSet = new List<string>();
+        bool spawned = false;
 
         public void Interpolate(float time)
         {
@@ -232,7 +233,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 if (currentParent == null)
                     currentParent = parentObject;
 
-                if ((!currentParent.BeatmapObject.spawnOnce || num == 0 || !parentChainSet.Contains(parentObject.ID)))
+                if ((!currentParent.BeatmapObject.spawnOnce || num == 0 || !parentChainSet.Contains(parentObject.ID) || !spawned))
                 {
                     if (parentObject.ParentAdditivePosition)
                         positionAddedOffset += parentObject.ParentOffsetPosition;
@@ -290,7 +291,10 @@ namespace RTFunctions.Functions.Optimization.Objects
                     rotationParallax = parentObject.ParentParallaxRotation;
 
                     if (currentParent.BeatmapObject.spawnOnce && !parentChainSet.Contains(parentObject.ID))
+                    {
                         parentChainSet.Add(parentObject.ID);
+                        spawned = true;
+                    }
                 }
 
                 currentParent = parentObject;
