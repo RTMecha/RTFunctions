@@ -110,9 +110,9 @@ namespace RTFunctions.Functions.Data
 
 		public bool background;
 
-		public byte[] ImageData { get; set; } = null;
-
 		public bool ignoreLifespan = false;
+
+		public bool spawnOnce = false;
 
 		public List<Modifier> modifiers = new List<Modifier>();
         public List<Component> components = new List<Component>();
@@ -336,9 +336,9 @@ namespace RTFunctions.Functions.Data
 				stringVariable = copyVariables ? orig.stringVariable : "",
 				tags = orig.tags.Count > 0 ? orig.tags.Clone() : new List<string>(),
 				background = orig.background,
-				ImageData = orig.ImageData == null ? null : orig.ImageData.Copy(),
 				ignoreLifespan = orig.ignoreLifespan,
-				opacityCollision = orig.opacityCollision
+				opacityCollision = orig.opacityCollision,
+				spawnOnce = orig.spawnOnce
 			};
 
 			for (int i = 0; i < beatmapObject.events.Count; i++)
@@ -768,6 +768,9 @@ namespace RTFunctions.Functions.Data
 			
 			if (jn["iglif"] != null)
 				beatmapObject.ignoreLifespan = jn["iglif"].AsBool;
+			
+			if (jn["spwnon"] != null)
+				beatmapObject.spawnOnce = jn["spwnon"].AsBool;
 
 			if (jn["empty"] != null)
 				beatmapObject.objectType = jn["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal;
@@ -800,15 +803,6 @@ namespace RTFunctions.Functions.Data
 
 			if (jn["text"] != null)
 				beatmapObject.text = jn["text"];
-
-			if (jn["img"] != null)
-            {
-				beatmapObject.ImageData = new byte[jn["img"].Count];
-                for (int i = 0; i < jn["img"].Count; i++)
-                {
-                    beatmapObject.ImageData[i] = (byte)jn["img"][i].AsInt;
-                }
-			}
 
 			if (jn["ak"] != null)
 				beatmapObject.autoKillType = jn["ak"].AsBool ? AutoKillType.LastKeyframe : AutoKillType.OldStyleNoAutokill;
@@ -1009,6 +1003,7 @@ namespace RTFunctions.Functions.Data
 			jn["rdt"] = (background ? 1 : 0).ToString();
 			jn["opcol"] = opacityCollision.ToString();
 			jn["iglif"] = ignoreLifespan.ToString();
+			jn["spwnon"] = spawnOnce.ToString();
 
 			if (LDM)
 				jn["ldm"] = LDM.ToString();
@@ -1030,14 +1025,6 @@ namespace RTFunctions.Functions.Data
 
 			if (!string.IsNullOrEmpty(text))
 				jn["text"] = text;
-
-			if (ImageData != null)
-            {
-                for (int i = 0; i < ImageData.Length; i++)
-                {
-                    jn["img"][i] = ImageData[i];
-                }
-            }
 
 			if (tags != null && tags.Count > 0)
 				for (int i = 0; i < tags.Count; i++)
