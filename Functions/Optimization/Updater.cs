@@ -563,7 +563,7 @@ namespace RTFunctions.Functions.Optimization
 
             float timeToAdd = 0f;
 
-            var prefab = DataManager.inst.gameData.prefabs.Find(x => x.ID == basePrefabObject.prefabID);
+            var prefab = (Prefab)DataManager.inst.gameData.prefabs.Find(x => x.ID == basePrefabObject.prefabID);
 
             var list = new List<BeatmapObject>();
             if (prefab.objects.Count > 0)
@@ -613,6 +613,11 @@ namespace RTFunctions.Functions.Optimization
                         {
                             beatmapObject.autoKillType = ObjectAutoKillType.SongTime;
                             beatmapObject.autoKillOffset = prefabObject.autoKillType == PrefabObject.AutoKillType.StartTimeOffset ? prefabObject.StartTime + prefab.Offset + prefabObject.autoKillOffset : prefabObject.autoKillOffset;
+                        }
+
+                        if (!Managers.AssetManager.SpriteAssets.ContainsKey(beatmapObject.text) && prefab.SpriteAssets.ContainsKey(beatmapObject.text))
+                        {
+                            Managers.AssetManager.SpriteAssets.Add(beatmapObject.text, prefab.SpriteAssets[beatmapObject.text]);
                         }
 
                         beatmapObject.prefabID = basePrefabObject.prefabID;

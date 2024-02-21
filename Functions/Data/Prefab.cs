@@ -3,6 +3,7 @@ using SimpleJSON;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using RTFunctions.Functions.Managers;
 using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
 using BasePrefab = DataManager.GameData.Prefab;
 using BasePrefabObject = DataManager.GameData.PrefabObject;
@@ -72,23 +73,39 @@ namespace RTFunctions.Functions.Data
 
         public string description;
 
+        public Dictionary<string, Sprite> SpriteAssets { get; set; } = new Dictionary<string, Sprite>();
         public PrefabType PrefabType => Type >= 0 && Type < DataManager.inst.PrefabTypes.Count ? (PrefabType)DataManager.inst.PrefabTypes[Type] : PrefabType.InvalidType;
         public Color TypeColor => PrefabType.Color;
         public string TypeName => PrefabType.Name;
 
         #region Methods
 
-        public static Prefab DeepCopy(Prefab og, bool newID = true) => new Prefab()
+        public static Prefab DeepCopy(Prefab og, bool newID = true)
         {
-            description = og.description,
-            ID = newID ? LSText.randomString(16) : og.ID,
-            MainObjectID = og.MainObjectID,
-            Name = og.Name,
-            objects = og.objects.Clone(),
-            Offset = og.Offset,
-            prefabObjects = og.prefabObjects.Clone(),
-            Type = og.Type
-        };
+            var prefab = new Prefab()
+            {
+                description = og.description,
+                ID = newID ? LSText.randomString(16) : og.ID,
+                MainObjectID = og.MainObjectID,
+                Name = og.Name,
+                Offset = og.Offset,
+                prefabObjects = og.prefabObjects.Clone(),
+                Type = og.Type
+            };
+
+            prefab.objects = new List<BaseBeatmapObject>();
+            prefab.objects.AddRange(og.objects.Select(x => BeatmapObject.DeepCopy((BeatmapObject)x, false)).ToList());
+
+            foreach (var beatmapObject in prefab.objects)
+            {
+                if (!prefab.SpriteAssets.ContainsKey(beatmapObject.text) && og.SpriteAssets.ContainsKey(beatmapObject.text))
+                {
+                    prefab.SpriteAssets.Add(beatmapObject.text, og.SpriteAssets[beatmapObject.text]);
+                }
+            }
+
+            return prefab;
+        }
 
         public static Prefab ParseVG(JSONNode jn)
         {
@@ -119,7 +136,7 @@ namespace RTFunctions.Functions.Data
             for (int k = 0; k < jn["prefab_objects"].Count; k++)
                 prefabObjects.Add(PrefabObject.Parse(jn["prefab_objects"][k]));
 
-            return new Prefab
+            var prefab = new Prefab
             {
                 ID = jn["id"],
                 MainObjectID = jn["main_obj_id"] == null ? LSText.randomString(16) : jn["main_obj_id"],
@@ -130,6 +147,35 @@ namespace RTFunctions.Functions.Data
                 prefabObjects = prefabObjects,
                 description = jn["desc"] == null ? "" : jn["desc"]
             };
+
+            if (jn["assets"] != null && jn["assets"]["spr"] != null)
+            {
+                for (int i = 0; i < jn["assets"]["spr"].Count; i++)
+                {
+                    var name = jn["assets"]["spr"][i]["n"];
+                    var data = jn["assets"]["spr"][i]["d"];
+
+                    if (!prefab.SpriteAssets.ContainsKey(name))
+                    {
+                        byte[] imageData = new byte[data.Count];
+                        for (int j = 0; j < data.Count; j++)
+                        {
+                            imageData[j] = (byte)data[j].AsInt;
+                        }
+
+                        var texture2d = new Texture2D(2, 2, TextureFormat.ARGB32, false);
+                        texture2d.LoadImage(imageData);
+
+                        texture2d.wrapMode = TextureWrapMode.Clamp;
+                        texture2d.filterMode = FilterMode.Point;
+                        texture2d.Apply();
+
+                        prefab.SpriteAssets.Add(name, SpriteManager.CreateSprite(texture2d));
+                    }
+                }
+            }
+
+            return prefab;
         }
 
         public JSONNode ToJSONVG()
@@ -172,6 +218,27 @@ namespace RTFunctions.Functions.Data
             if (prefabObjects != null && prefabObjects.Count > 0)
                 for (int i = 0; i < prefabObjects.Count; i++)
                         jn["prefab_objects"][i] = ((PrefabObject)prefabObjects[i]).ToJSON();
+
+            var spriteAssets = new Dictionary<string, Sprite>();
+
+            foreach (var obj in objects)
+            {
+                if (AssetManager.SpriteAssets.ContainsKey(obj.text) && !spriteAssets.ContainsKey(obj.text))
+                {
+                    spriteAssets.Add(obj.text, AssetManager.SpriteAssets[obj.text]);
+                }
+            }
+
+            for (int i = 0; i < spriteAssets.Count; i++)
+            {
+                jn["assets"]["spr"][i]["n"] = spriteAssets.ElementAt(i).Key;
+                var imageData = spriteAssets.ElementAt(i).Value.texture.EncodeToPNG();
+                for (int j = 0; j < imageData.Length; j++)
+                {
+                    jn["assets"]["spr"][i]["d"][j] = imageData[j];
+                }
+            }
+
             return jn;
         }
 

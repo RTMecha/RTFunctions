@@ -459,31 +459,18 @@ namespace RTFunctions.Functions.Data
 
 			gameData.beatmapData = LevelBeatmapData.Parse(jn);
 
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Markers...");
-			#region Markers
-
-			//if (gameData.beatmapData.markers == null)
-			//	gameData.beatmapData.markers = new List<BeatmapData.Marker>();
-
-			//for (int i = 0; i < jn["ed"]["markers"].Count; i++)
-			//	gameData.beatmapData.markers.Add(ProjectData.Reader.ParseMarker(jn["ed"]["markers"][i]));
+            //Debug.Log($"{DataManager.inst.className}Parsing Markers...");
 
 			gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
 
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Checkpoints...");
-			#region Checkpoints
+            //Debug.Log($"{DataManager.inst.className}Parsing Checkpoints...");
 
 			for (int i = 0; i < jn["checkpoints"].Count; i++)
 				gameData.beatmapData.checkpoints.Add(ProjectData.Reader.ParseCheckpoint(jn["checkpoints"][i]));
 
 			gameData.beatmapData.checkpoints = gameData.beatmapData.checkpoints.OrderBy(x => x.time).ToList();
 
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Prefabs...");
-			#region Prefabs
+            //Debug.Log($"{DataManager.inst.className}Parsing Prefabs...");
 
 			for (int i = 0; i < jn["prefabs"].Count; i++)
 			{
@@ -492,10 +479,7 @@ namespace RTFunctions.Functions.Data
 					gameData.prefabs.Add(prefab);
 			}
 
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing PrefabObjects...");
-			#region PrefabObjects
+            //Debug.Log($"{DataManager.inst.className}Parsing PrefabObjects...");
 
 			for (int i = 0; i < jn["prefab_objects"].Count; i++)
 			{
@@ -504,10 +488,7 @@ namespace RTFunctions.Functions.Data
 					gameData.prefabObjects.Add(prefab);
 			}
 
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BeatmapThemes...");
-			#region Themes
+            //Debug.Log($"{DataManager.inst.className}Parsing BeatmapThemes...");
 
 			if (parseThemes)
 			{
@@ -548,33 +529,53 @@ namespace RTFunctions.Functions.Data
 
 			}
 
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BeatmapObjects...");
-			#region Objects
+            //Debug.Log($"{DataManager.inst.className}Parsing BeatmapObjects...");
 
 			for (int i = 0; i < jn["beatmap_objects"].Count; i++)
 				gameData.beatmapObjects.Add(Data.BeatmapObject.Parse(jn["beatmap_objects"][i]));
 
-			#endregion
+			AssetManager.SpriteAssets.Clear();
+			if (jn["assets"] != null && jn["assets"]["spr"] != null)
+			{
+				for (int i = 0; i < jn["assets"]["spr"].Count; i++)
+				{
+					var name = jn["assets"]["spr"][i]["n"];
+					var data = jn["assets"]["spr"][i]["d"];
 
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BackgroundObjects...");
-			#region Backgrounds
+					if (!AssetManager.SpriteAssets.ContainsKey(name) && gameData.beatmapObjects.Has(x => x.text == name))
+					{
+						byte[] imageData = new byte[data.Count];
+						for (int j = 0; j < data.Count; j++)
+						{
+							imageData[j] = (byte)data[j].AsInt;
+						}
+
+						var texture2d = new Texture2D(2, 2, TextureFormat.ARGB32, false);
+						texture2d.LoadImage(imageData);
+
+						texture2d.wrapMode = TextureWrapMode.Clamp;
+						texture2d.filterMode = FilterMode.Point;
+						texture2d.Apply();
+
+						AssetManager.SpriteAssets.Add(name, SpriteManager.CreateSprite(texture2d));
+					}
+				}
+			}
+
+			//Debug.Log($"{DataManager.inst.className}Parsing BackgroundObjects...");
 
 			for (int i = 0; i < jn["bg_objects"].Count; i++)
 				gameData.backgroundObjects.Add(Data.BackgroundObject.Parse(jn["bg_objects"][i]));
 
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Events...");
-			#region Events
+            //Debug.Log($"{DataManager.inst.className}Parsing Events...");
 
 			gameData.eventObjects.allEvents = ProjectData.Reader.ParseEventkeyframes(jn["events"], false);
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Making sure the events meet the requirement...");
-			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
-			#endregion
 
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Completed parsing!");
+            //Debug.Log($"{DataManager.inst.className}Making sure the events meet the requirement...");
+
+			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
+
+            //Debug.Log($"{DataManager.inst.className}Completed parsing!");
 
 			return gameData;
 		}
@@ -730,7 +731,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][6][i]["t"] = eventKeyframe.eventTime;
 					jn["events"][6][i]["ev"][0] = eventKeyframe.eventValues[0];
 					jn["events"][6][i]["ev"][1] = eventKeyframe.eventValues[1];
-					jn["events"][6][i]["ev"][2] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[4], 0f, 9f);
+					jn["events"][6][i]["ev"][2] = Mathf.Clamp(eventKeyframe.eventValues[4], 0f, 9f);
 				}
 
 				// Vignette
@@ -745,7 +746,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][7][i]["ev"][3] = eventKeyframe.eventValues[3];
 					jn["events"][7][i]["ev"][4] = eventKeyframe.eventValues[4];
 					jn["events"][7][i]["ev"][5] = eventKeyframe.eventValues[5];
-					jn["events"][7][i]["ev"][6] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[6], 0f, 9f);
+					jn["events"][7][i]["ev"][6] = Mathf.Clamp(eventKeyframe.eventValues[6], 0f, 9f);
 				}
 
 				// Lens
@@ -779,8 +780,8 @@ namespace RTFunctions.Functions.Data
 					jn["events"][10][i]["t"] = eventKeyframe.eventTime;
 					jn["events"][10][i]["ev"][0] = eventKeyframe.eventValues[0];
 					jn["events"][10][i]["ev"][1] = eventKeyframe.eventValues[1];
-					jn["events"][10][i]["ev"][2] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[2], 0f, 9f);
-					jn["events"][10][i]["ev"][3] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[3], 0f, 9f);
+					jn["events"][10][i]["ev"][2] = Mathf.Clamp(eventKeyframe.eventValues[2], 0f, 9f);
+					jn["events"][10][i]["ev"][3] = Mathf.Clamp(eventKeyframe.eventValues[3], 0f, 9f);
 					jn["events"][10][i]["ev"][4] = eventKeyframe.eventValues[4];
 				}
 
@@ -818,13 +819,22 @@ namespace RTFunctions.Functions.Data
 			jn["ed"]["timeline_pos"] = AudioManager.inst.CurrentAudioSource.time.ToString();
 			for (int i = 0; i < _data.beatmapData.markers.Count; i++)
 			{
-				//jn["ed"]["markers"][i]["active"] = "True";
 				jn["ed"]["markers"][i]["name"] = _data.beatmapData.markers[i].name.ToString();
 				jn["ed"]["markers"][i]["desc"] = _data.beatmapData.markers[i].desc.ToString();
 				jn["ed"]["markers"][i]["col"] = _data.beatmapData.markers[i].color.ToString();
 				jn["ed"]["markers"][i]["t"] = _data.beatmapData.markers[i].time.ToString();
 			}
 
+			for (int i = 0; i < AssetManager.SpriteAssets.Count; i++)
+            {
+				jn["assets"]["spr"][i]["n"] = AssetManager.SpriteAssets.ElementAt(i).Key;
+				var imageData = AssetManager.SpriteAssets.ElementAt(i).Value.texture.EncodeToPNG();
+				for (int j = 0; j < imageData.Length; j++)
+				{
+					jn["assets"]["spr"][i]["d"][j] = imageData[j];
+				}
+            }
+			
 			for (int i = 0; i < prefabObjects.Count; i++)
 				if (!((Data.PrefabObject)prefabObjects[i]).fromModifier)
 					jn["prefab_objects"][i] = ((Data.PrefabObject)prefabObjects[i]).ToJSON();

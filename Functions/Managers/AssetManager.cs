@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace RTFunctions.Functions.Managers
@@ -14,6 +16,9 @@ namespace RTFunctions.Functions.Managers
         {
             inst = this;
         }
+
+        public static Dictionary<string, Sprite> SpriteAssets { get; set; } = new Dictionary<string, Sprite>();
+        public static Dictionary<string, AudioClip> AudioAssets { get; set; } = new Dictionary<string, AudioClip>();
 
         GameObject stringInput;
         public GameObject StringInput

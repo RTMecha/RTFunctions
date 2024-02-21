@@ -21,7 +21,7 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
 
         public string Path { get; set; }
 
-        public ImageObject(GameObject gameObject, Transform top, float opacity, string text, bool background, byte[] imageData)
+        public ImageObject(GameObject gameObject, Transform top, float opacity, string text, bool background, Sprite imageData)
         {
             GameObject = gameObject;
             Top = top;
@@ -39,18 +39,18 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
             if (Renderer)
                 material = Renderer.material;
 
-            var local = GameObject.transform.localPosition;
+            var local = gameObject.transform.localPosition;
 
             if (imageData != null)
             {
-                var texture2d = new Texture2D(2, 2, TextureFormat.ARGB32, false);
-                texture2d.LoadImage(imageData);
+                //var texture2d = new Texture2D(2, 2, TextureFormat.ARGB32, false);
+                //texture2d.LoadImage(imageData);
 
-                texture2d.wrapMode = TextureWrapMode.Clamp;
-                texture2d.filterMode = FilterMode.Point;
-                texture2d.Apply();
+                //texture2d.wrapMode = TextureWrapMode.Clamp;
+                //texture2d.filterMode = FilterMode.Point;
+                //texture2d.Apply();
 
-                ((SpriteRenderer)Renderer).sprite = SpriteManager.CreateSprite(texture2d);
+                ((SpriteRenderer)Renderer).sprite = imageData;
             }
             else
             {
@@ -63,9 +63,9 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
                     FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadImageTexture("file://" + Path, delegate (Texture2D x)
                     {
                         ((SpriteRenderer)Renderer).sprite = SpriteManager.CreateSprite(x);
-                        GameObject.transform.localPosition = local;
-                        GameObject.transform.localPosition = local;
-                        GameObject.transform.localPosition = local;
+                        gameObject.transform.localPosition = local;
+                        gameObject.transform.localPosition = local;
+                        gameObject.transform.localPosition = local;
                     }, delegate (string onError)
                     {
                         ((SpriteRenderer)Renderer).sprite = ArcadeManager.inst.defaultImage;
