@@ -86,10 +86,8 @@ namespace RTFunctions.Functions.IO
 
 		public static void WriteToFile(string path, string json)
 		{
-			var streamWriter = new StreamWriter(path);
+			using var streamWriter = new StreamWriter(path);
 			streamWriter.Write(json);
-			streamWriter.Flush();
-			streamWriter.Close();
 		}
 
 		public static string ReadFromFile(string path)
@@ -99,9 +97,8 @@ namespace RTFunctions.Functions.IO
 				Debug.LogFormat("{0}Could not load JSON file [{1}]", FunctionsPlugin.className, path);
 				return null;
 			}
-			var streamReader = new StreamReader(path);
-			string result = streamReader.ReadToEnd().ToString();
-			streamReader.Close();
+			using var streamReader = new StreamReader(path);
+			var result = streamReader.ReadToEnd().ToString();
 			return result;
 		}
 
