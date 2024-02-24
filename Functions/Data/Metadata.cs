@@ -13,17 +13,12 @@ namespace RTFunctions.Functions.Data
 {
     public class MetaData : BaseMetadata
     {
-		public MetaData() : base()
-        {
-            try
-			{
-				artist.Name = "Kaixo";
-				artist.Link = "kaixo";
-			}
-            catch (Exception ex)
-            {
-				Debug.LogError($"{DataManager.inst.className}MetaData error: {ex}");
-            }
+		public MetaData()
+		{
+			artist = new LevelArtist();
+			creator = new LevelCreator();
+			song = new LevelSong();
+			beatmap = new LevelBeatmap();
         }
 
 		public MetaData(LevelArtist artist, LevelCreator creator, LevelSong song, LevelBeatmap beatmap) : base(artist, creator, song, beatmap)
@@ -301,7 +296,7 @@ namespace RTFunctions.Functions.Data
 				string gameVersion = ProjectArrhythmia.GameVersion.ToString();
 				string dateEdited = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 				string dateCreated = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
-				int workshopID = -1;
+				string workshopID = "-1";
 				int num = 0;
 				string beatmapID = LSFunctions.LSText.randomString(16);
 
@@ -316,7 +311,7 @@ namespace RTFunctions.Functions.Data
 					if (!string.IsNullOrEmpty(jn["beatmap"]["version_number"]))
 						num = jn["beatmap"]["version_number"].AsInt;
 					if (!string.IsNullOrEmpty(jn["beatmap"]["workshop_id"]))
-						workshopID = jn["beatmap"]["workshop_id"].AsInt;
+						workshopID = jn["beatmap"]["workshop_id"];
 					if (!string.IsNullOrEmpty(jn["beatmap"]["beatmap_id"]))
 						beatmapID = jn["beatmap"]["beatmap_id"];
 				}
@@ -325,7 +320,7 @@ namespace RTFunctions.Functions.Data
 					Debug.LogError($"Beatmap Error: {ex}");
 				}
 
-				var beatmap = new LevelBeatmap(dateEdited, dateCreated, gameVersion, num, workshopID.ToString());
+				var beatmap = new LevelBeatmap(dateEdited, dateCreated, gameVersion, num, workshopID);
 
 				result = new MetaData(artist, creator, song, beatmap);
 			}
@@ -362,6 +357,7 @@ namespace RTFunctions.Functions.Data
 
 			jn["beatmap"]["date_edited"] = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 			jn["beatmap"]["game_version"] = "24.1.7";
+			jn["beatmap"]["workshop_id"] = LevelBeatmap.beatmap_id;
 
 			return jn;
 		}
@@ -393,8 +389,7 @@ namespace RTFunctions.Functions.Data
 			jn["beatmap"]["date_edited"] = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 			jn["beatmap"]["version_number"] = beatmap.version_number.ToString();
 			jn["beatmap"]["game_version"] = beatmap.game_version;
-			jn["beatmap"]["workshop_id"] = beatmap.workshop_id.ToString();
-			jn["beatmap"]["beatmap_id"] = LevelBeatmap.beatmap_id;
+			jn["beatmap"]["workshop_id"] = LevelBeatmap.beatmap_id;
 
 			return jn;
 		}
@@ -424,8 +419,10 @@ namespace RTFunctions.Functions.Data
     {
         public LevelArtist() : base()
 		{
-            
-        }
+			Name = "Kaixo";
+			LinkType = 2;
+			Link = "kaixo";
+		}
 
 		public LevelArtist(string name, int linkType, string link) : base(name, linkType, link)
         {
@@ -448,8 +445,8 @@ namespace RTFunctions.Functions.Data
     {
         public LevelCreator() : base()
 		{
-
-        }
+			steam_name = "Unknown User";
+		}
 
 		public LevelCreator(string steam_name, int steam_id, string link, int linkType) : base(steam_name, steam_id)
         {
@@ -510,22 +507,36 @@ namespace RTFunctions.Functions.Data
 		public LevelBeatmap() : base()
 		{
 			beatmap_id = workshop_id.ToString();
+			game_version = ProjectArrhythmia.GameVersion.ToString();
 			date_created = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 		}
 
-		public LevelBeatmap(string dateEdited, string gameVersion, int versionNumber, int workshopID) : base(dateEdited, gameVersion, versionNumber, workshopID)
-        {
-			beatmap_id = workshopID.ToString();
-		}
-
-		public LevelBeatmap(string dateEdited, string gameVersion, int versionNumber, string beatmapID) : base(dateEdited, gameVersion, versionNumber, Mathf.Clamp(int.Parse(beatmapID), 0, int.MaxValue))
+		public LevelBeatmap(int versionNumber, string workshopID)
 		{
-			beatmap_id = beatmapID;
+			date_edited = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 			date_created = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
+			version_number = versionNumber;
+
+			beatmap_id = workshopID;
+			game_version = ProjectArrhythmia.GameVersion.ToString();
 		}
 		
-		public LevelBeatmap(string dateEdited, string dateCreated, string gameVersion, int versionNumber, string beatmapID) : base(dateEdited, gameVersion, versionNumber, Mathf.Clamp(int.Parse(beatmapID), 0, int.MaxValue))
+		public LevelBeatmap(string dateEdited, string gameVersion, int versionNumber, string workshopID)
 		{
+			date_edited = dateEdited;
+			game_version = gameVersion;
+			version_number = versionNumber;
+
+			beatmap_id = workshopID;
+			game_version = ProjectArrhythmia.GameVersion.ToString();
+		}
+
+		public LevelBeatmap(string dateEdited, string dateCreated, string gameVersion, int versionNumber, string beatmapID)
+		{
+			date_edited = dateEdited;
+			game_version = gameVersion;
+			version_number = versionNumber;
+
 			beatmap_id = beatmapID;
 			date_created = dateCreated;
 		}
