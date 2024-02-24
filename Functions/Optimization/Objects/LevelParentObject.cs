@@ -5,6 +5,8 @@ namespace RTFunctions.Functions.Optimization.Objects
 {
     public class LevelParentObject : Exists
     {
+        public bool Active { get; set; }
+
         public Sequence<Vector2> PositionSequence { get; set; }
         public Sequence<Vector3> Position3DSequence { get; set; }
         public Sequence<Vector2> ScaleSequence { get; set; }

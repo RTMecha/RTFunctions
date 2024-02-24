@@ -221,6 +221,7 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             if (prevStartTime != beatmapObject.startTime)
             {
+                parentObjects.ForEach(x => x.Active = false);
                 parentChainSet.Clear();
                 prevStartTime = beatmapObject.startTime;
             }
@@ -233,7 +234,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 if (currentParent == null)
                     currentParent = parentObject;
 
-                if ((!currentParent.BeatmapObject.spawnOnce || num == 0 || !parentChainSet.Contains(parentObject.ID) || !spawned))
+                if ((!currentParent.BeatmapObject.spawnOnce || num == 0 || /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active || !spawned))
                 {
                     if (parentObject.ParentAdditivePosition)
                         positionAddedOffset += parentObject.ParentOffsetPosition;
@@ -290,9 +291,10 @@ namespace RTFunctions.Functions.Optimization.Objects
                     scaleParallax = parentObject.ParentParallaxScale;
                     rotationParallax = parentObject.ParentParallaxRotation;
 
-                    if (currentParent.BeatmapObject.spawnOnce && !parentChainSet.Contains(parentObject.ID))
+                    if (currentParent.BeatmapObject.spawnOnce && /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active)
                     {
-                        parentChainSet.Add(parentObject.ID);
+                        //parentChainSet.Add(parentObject.ID);
+                        parentObject.Active = true;
                         spawned = true;
                     }
                 }
