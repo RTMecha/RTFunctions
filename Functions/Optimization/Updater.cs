@@ -278,9 +278,9 @@ namespace RTFunctions.Functions.Optimization
                                         childLevelObject.scaleParent = beatmapParent.GetParentType(1);
                                         childLevelObject.rotationParent = beatmapParent.GetParentType(2);
 
-                                        childLevelObject.positionParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[0];
-                                        childLevelObject.scaleParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[1];
-                                        childLevelObject.rotationParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[2];
+                                        childLevelObject.positionParentOffset = ((BeatmapObject)beatmapParent).parallaxSettings[0];
+                                        childLevelObject.scaleParentOffset = ((BeatmapObject)beatmapParent).parallaxSettings[1];
+                                        childLevelObject.rotationParentOffset = ((BeatmapObject)beatmapParent).parallaxSettings[2];
                                     }
                                 }
                             }
@@ -316,9 +316,9 @@ namespace RTFunctions.Functions.Optimization
                                         childLevelObject.scaleParent = beatmapParent.GetParentType(1);
                                         childLevelObject.rotationParent = beatmapParent.GetParentType(2);
 
-                                        childLevelObject.positionParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[0];
-                                        childLevelObject.scaleParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[1];
-                                        childLevelObject.rotationParentOffset = ((Data.BeatmapObject)beatmapParent).parallaxSettings[2];
+                                        childLevelObject.positionParentOffset = ((BeatmapObject)beatmapParent).parallaxSettings[0];
+                                        childLevelObject.scaleParentOffset = ((BeatmapObject)beatmapParent).parallaxSettings[1];
+                                        childLevelObject.rotationParentOffset = ((BeatmapObject)beatmapParent).parallaxSettings[2];
                                     }
                                 }
                             }
@@ -418,7 +418,7 @@ namespace RTFunctions.Functions.Optimization
                 case "offset":
                 case "transformoffset":
                     {
-                        foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects.Where(x => x.fromPrefab && x.prefabInstanceID == prefabObject.ID && x is Data.BeatmapObject).Select(x => x as Data.BeatmapObject))
+                        foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects.Where(x => x.fromPrefab && x.prefabInstanceID == prefabObject.ID && x is BeatmapObject).Select(x => x as BeatmapObject))
                         {
                             if (beatmapObject.levelObject && beatmapObject.levelObject.visualObject != null && beatmapObject.levelObject.visualObject.Top)
                             {
@@ -489,7 +489,7 @@ namespace RTFunctions.Functions.Optimization
                             {
                                 if (prefab.objects.TryFind(x => x.id == ((BeatmapObject)beatmapObject).originalID, out BaseBeatmapObject original))
                                 {
-                                    beatmapObject.StartTime = prefabObject.StartTime + prefab.Offset + (original.StartTime + timeToAdd) / Mathf.Clamp(moddedPrefab.speed, 0.1f, MaxFastSpeed);
+                                    beatmapObject.StartTime = prefabObject.StartTime + prefab.Offset + ((original.StartTime + timeToAdd) / Mathf.Clamp(moddedPrefab.speed, 0.01f, MaxFastSpeed));
 
                                     if (lower == "speed")
                                     {
@@ -497,7 +497,7 @@ namespace RTFunctions.Functions.Optimization
                                         {
                                             for (int k = 0; k < beatmapObject.events[j].Count; k++)
                                             {
-                                                beatmapObject.events[i][k].eventTime = original.events[i][k].eventTime / Mathf.Clamp(moddedPrefab.speed, 0.1f, 100f);
+                                                beatmapObject.events[i][k].eventTime = original.events[i][k].eventTime / Mathf.Clamp(moddedPrefab.speed, 0.01f, MaxFastSpeed);
                                             }
                                         }
                                         UpdateProcessor(beatmapObject, "Keyframes");
@@ -594,14 +594,14 @@ namespace RTFunctions.Functions.Optimization
                         beatmapObject.fromPrefab = true;
                         beatmapObject.prefabInstanceID = iD;
 
-                        beatmapObject.StartTime = basePrefabObject.StartTime + prefab.Offset + (beatmapObject.StartTime + timeToAdd) / Mathf.Clamp(prefabObject.speed, 0.1f, MaxFastSpeed);
+                        beatmapObject.StartTime = basePrefabObject.StartTime + prefab.Offset + ((beatmapObject.StartTime + timeToAdd) / Mathf.Clamp(prefabObject.speed, 0.01f, MaxFastSpeed));
 
                         try
                         {
                             if (beatmapObject.events.Count > 0 && prefabObject.speed != 1f)
                                 for (int j = 0; j < beatmapObject.events.Count; j++)
                                 {
-                                    beatmapObject.events[j].ForEach(x => x.eventTime /= Mathf.Clamp(prefabObject.speed, 0.1f, MaxFastSpeed));
+                                    beatmapObject.events[j].ForEach(x => x.eventTime /= Mathf.Clamp(prefabObject.speed, 0.01f, MaxFastSpeed));
                                 }
                         }
                         catch (System.Exception ex)
