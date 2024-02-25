@@ -124,7 +124,6 @@ namespace RTFunctions.Functions.Data
                     jn[raxis[i]] = eventRandomValues[i].ToString();
             }
 
-            jn["id"] = id;
             jn["rel"] = relative.ToString();
 
             return jn;
