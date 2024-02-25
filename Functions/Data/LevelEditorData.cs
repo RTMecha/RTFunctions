@@ -24,7 +24,7 @@ namespace RTFunctions.Functions.Data
                 editorData.mainTimelineZoom = jn["timeline_zoom"].AsFloat;
 
             if (add)
-                editorData.openAmount += 1;
+                editorData.openAmount++;
 
             return editorData;
 		}
