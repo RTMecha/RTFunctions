@@ -112,7 +112,7 @@ namespace RTFunctions.Functions.Data
 
 		public bool ignoreLifespan = false;
 
-		public bool spawnOnce = false;
+		public bool desync = false;
 
 		public List<Modifier> modifiers = new List<Modifier>();
         public List<Component> components = new List<Component>();
@@ -338,7 +338,7 @@ namespace RTFunctions.Functions.Data
 				background = orig.background,
 				ignoreLifespan = orig.ignoreLifespan,
 				opacityCollision = orig.opacityCollision,
-				spawnOnce = orig.spawnOnce
+				desync = orig.desync
 			};
 
 			for (int i = 0; i < beatmapObject.events.Count; i++)
@@ -725,7 +725,7 @@ namespace RTFunctions.Functions.Data
 
 			beatmapObject.events = events;
 
-			beatmapObject.id = jn["id"] != null ? jn["id"] : LSText.randomString(16);
+			beatmapObject.id = jn["id"] ?? LSText.randomString(16);
 
 			if (jn["piid"] != null)
 				beatmapObject.prefabInstanceID = jn["piid"];
@@ -769,8 +769,8 @@ namespace RTFunctions.Functions.Data
 			if (jn["iglif"] != null)
 				beatmapObject.ignoreLifespan = jn["iglif"].AsBool;
 			
-			if (jn["spwnon"] != null)
-				beatmapObject.spawnOnce = jn["spwnon"].AsBool;
+			if (jn["desync"] != null)
+				beatmapObject.desync = jn["desync"].AsBool;
 
 			if (jn["empty"] != null)
 				beatmapObject.objectType = jn["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal;
@@ -848,16 +848,16 @@ namespace RTFunctions.Functions.Data
 			if (!string.IsNullOrEmpty(prefabInstanceID))
 				jn["pre_iid"] = prefabInstanceID;
 
-			if (GetParentType() != "101")
-				jn["p_t"] = GetParentType();
+			if (parentType != "101")
+				jn["p_t"] = parentType;
 
-			if (getParentOffsets().FindIndex(x => x != 0f) != -1)
+			if (parentOffsets.FindIndex(x => x != 0f) != -1)
 			{
-				int num4 = 0;
-				foreach (float num5 in getParentOffsets())
+				int index = 0;
+				foreach (float offset in parentOffsets)
 				{
-					jn["p_o"][num4] = num5;
-					num4++;
+					jn["p_o"][index] = offset;
+					index++;
 				}
 			}
 
@@ -893,9 +893,9 @@ namespace RTFunctions.Functions.Data
 			if (editorData.collapse)
 				jn["ed"]["co"] = editorData.collapse;
 
-				jn["ed"]["b"] = editorData.Bin;
+			jn["ed"]["b"] = editorData.Bin;
 			
-				jn["ed"]["l"].AsInt = Mathf.Clamp(editorData.layer, 0, 5);
+			jn["ed"]["l"].AsInt = Mathf.Clamp(editorData.layer, 0, 5);
 
 			// Events
             {
@@ -975,16 +975,16 @@ namespace RTFunctions.Functions.Data
 			if (!string.IsNullOrEmpty(prefabInstanceID))
 				jn["piid"] = prefabInstanceID;
 
-			if (GetParentType() != "101")
-				jn["pt"] = GetParentType();
+			if (parentType != "101")
+				jn["pt"] = parentType;
 
-			if (getParentOffsets().FindIndex(x => x != 0f) != -1)
+			if (parentOffsets.FindIndex(x => x != 0f) != -1)
 			{
-				int num4 = 0;
-				foreach (float num5 in getParentOffsets())
+				int index = 0;
+				foreach (var offset in parentOffsets)
 				{
-					jn["po"][num4] = num5.ToString();
-					num4++;
+					jn["po"][index] = offset.ToString();
+					index++;
 				}
 			}
 
@@ -997,13 +997,18 @@ namespace RTFunctions.Functions.Data
 			if (parentAdditive != "000")
 				jn["pa"] = parentAdditive;
 
-			jn["p"] = parent;
+			if (!string.IsNullOrEmpty(parent))
+				jn["p"] = parent;
 
 			jn["d"] = depth.ToString();
-			jn["rdt"] = (background ? 1 : 0).ToString();
-			jn["opcol"] = opacityCollision.ToString();
-			jn["iglif"] = ignoreLifespan.ToString();
-			jn["spwnon"] = spawnOnce.ToString();
+			if (background)
+				jn["rdt"] = "1";
+			if (opacityCollision)
+				jn["opcol"] = opacityCollision.ToString();
+			if (ignoreLifespan)
+				jn["iglif"] = ignoreLifespan.ToString();
+			if (desync)
+				jn["desync"] = desync.ToString();
 
 			if (LDM)
 				jn["ldm"] = LDM.ToString();
@@ -1057,10 +1062,10 @@ namespace RTFunctions.Functions.Data
 
 		public void SetParentAdditive(int _index, bool _new)
 		{
-			StringBuilder stringBuilder = new StringBuilder(parentAdditive);
-			stringBuilder[_index] = (_new ? '1' : '0');
+			var stringBuilder = new StringBuilder(parentAdditive);
+			stringBuilder[_index] = _new ? '1' : '0';
 			parentAdditive = stringBuilder.ToString();
-			Debug.Log("Set Parent Additive: " + parentAdditive);
+			Debug.Log($"{FunctionsPlugin.className}Set Parent Additive: {parentAdditive}");
 		}
 
 		#endregion
@@ -1077,5 +1082,4 @@ namespace RTFunctions.Functions.Data
 
         #endregion
     }
-
 }
