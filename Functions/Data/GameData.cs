@@ -459,18 +459,12 @@ namespace RTFunctions.Functions.Data
 
 			gameData.beatmapData = LevelBeatmapData.Parse(jn);
 
-            //Debug.Log($"{DataManager.inst.className}Parsing Markers...");
-
 			gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
-
-            //Debug.Log($"{DataManager.inst.className}Parsing Checkpoints...");
 
 			for (int i = 0; i < jn["checkpoints"].Count; i++)
 				gameData.beatmapData.checkpoints.Add(ProjectData.Reader.ParseCheckpoint(jn["checkpoints"][i]));
 
 			gameData.beatmapData.checkpoints = gameData.beatmapData.checkpoints.OrderBy(x => x.time).ToList();
-
-            //Debug.Log($"{DataManager.inst.className}Parsing Prefabs...");
 
 			for (int i = 0; i < jn["prefabs"].Count; i++)
 			{
@@ -479,16 +473,12 @@ namespace RTFunctions.Functions.Data
 					gameData.prefabs.Add(prefab);
 			}
 
-            //Debug.Log($"{DataManager.inst.className}Parsing PrefabObjects...");
-
 			for (int i = 0; i < jn["prefab_objects"].Count; i++)
 			{
 				var prefab = Data.PrefabObject.Parse(jn["prefab_objects"][i]);
 				if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
 					gameData.prefabObjects.Add(prefab);
 			}
-
-            //Debug.Log($"{DataManager.inst.className}Parsing BeatmapThemes...");
 
 			if (parseThemes)
 			{
@@ -529,8 +519,6 @@ namespace RTFunctions.Functions.Data
 
 			}
 
-            //Debug.Log($"{DataManager.inst.className}Parsing BeatmapObjects...");
-
 			for (int i = 0; i < jn["beatmap_objects"].Count; i++)
 				gameData.beatmapObjects.Add(Data.BeatmapObject.Parse(jn["beatmap_objects"][i]));
 
@@ -562,20 +550,12 @@ namespace RTFunctions.Functions.Data
 				}
 			}
 
-			//Debug.Log($"{DataManager.inst.className}Parsing BackgroundObjects...");
-
 			for (int i = 0; i < jn["bg_objects"].Count; i++)
 				gameData.backgroundObjects.Add(Data.BackgroundObject.Parse(jn["bg_objects"][i]));
 
-            //Debug.Log($"{DataManager.inst.className}Parsing Events...");
-
 			gameData.eventObjects.allEvents = ProjectData.Reader.ParseEventkeyframes(jn["events"], false);
 
-            //Debug.Log($"{DataManager.inst.className}Making sure the events meet the requirement...");
-
 			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
-
-            //Debug.Log($"{DataManager.inst.className}Completed parsing!");
 
 			return gameData;
 		}
@@ -814,15 +794,13 @@ namespace RTFunctions.Functions.Data
 		{
 			var jn = JSON.Parse("{}");
 
-			var _data = this;
-
 			jn["ed"]["timeline_pos"] = AudioManager.inst.CurrentAudioSource.time.ToString();
-			for (int i = 0; i < _data.beatmapData.markers.Count; i++)
+			for (int i = 0; i < beatmapData.markers.Count; i++)
 			{
-				jn["ed"]["markers"][i]["name"] = _data.beatmapData.markers[i].name.ToString();
-				jn["ed"]["markers"][i]["desc"] = _data.beatmapData.markers[i].desc.ToString();
-				jn["ed"]["markers"][i]["col"] = _data.beatmapData.markers[i].color.ToString();
-				jn["ed"]["markers"][i]["t"] = _data.beatmapData.markers[i].time.ToString();
+				jn["ed"]["markers"][i]["name"] = beatmapData.markers[i].name.ToString();
+				jn["ed"]["markers"][i]["desc"] = beatmapData.markers[i].desc.ToString();
+				jn["ed"]["markers"][i]["col"] = beatmapData.markers[i].color.ToString();
+				jn["ed"]["markers"][i]["t"] = beatmapData.markers[i].time.ToString();
 			}
 
 			for (int i = 0; i < AssetManager.SpriteAssets.Count; i++)
@@ -839,10 +817,7 @@ namespace RTFunctions.Functions.Data
 				if (!((Data.PrefabObject)prefabObjects[i]).fromModifier)
 					jn["prefab_objects"][i] = ((Data.PrefabObject)prefabObjects[i]).ToJSON();
 
-			jn["level_data"]["level_version"] = _data.beatmapData.levelData.levelVersion.ToString();
-			jn["level_data"]["background_color"] = _data.beatmapData.levelData.backgroundColor.ToString();
-			jn["level_data"]["follow_player"] = _data.beatmapData.levelData.followPlayer.ToString();
-			jn["level_data"]["show_intro"] = _data.beatmapData.levelData.showIntro.ToString();
+			jn["level_data"] = LevelBeatmapData.ModLevelData.ToJSON();
 
 			for (int i = 0; i < prefabs.Count; i++)
 				jn["prefabs"][i] = ((Data.Prefab)prefabs[i]).ToJSON();
@@ -875,13 +850,13 @@ namespace RTFunctions.Functions.Data
 				}
 			}
 
-			for (int i = 0; i < _data.beatmapData.checkpoints.Count; i++)
+			for (int i = 0; i < beatmapData.checkpoints.Count; i++)
 			{
 				jn["checkpoints"][i]["active"] = "False";
-				jn["checkpoints"][i]["name"] = _data.beatmapData.checkpoints[i].name;
-				jn["checkpoints"][i]["t"] = _data.beatmapData.checkpoints[i].time.ToString();
-				jn["checkpoints"][i]["pos"]["x"] = _data.beatmapData.checkpoints[i].pos.x.ToString();
-				jn["checkpoints"][i]["pos"]["y"] = _data.beatmapData.checkpoints[i].pos.y.ToString();
+				jn["checkpoints"][i]["name"] = beatmapData.checkpoints[i].name;
+				jn["checkpoints"][i]["t"] = beatmapData.checkpoints[i].time.ToString();
+				jn["checkpoints"][i]["pos"]["x"] = beatmapData.checkpoints[i].pos.x.ToString();
+				jn["checkpoints"][i]["pos"]["y"] = beatmapData.checkpoints[i].pos.y.ToString();
 			}
 
 			for (int i = 0; i < beatmapObjects.Count; i++)
@@ -1260,6 +1235,8 @@ namespace RTFunctions.Functions.Data
 		};
 
 		public static bool SaveOpacityToThemes { get; set; } = false;
+
+		public LevelBeatmapData LevelBeatmapData => (LevelBeatmapData)beatmapData;
 
 		public List<Data.BeatmapObject> BeatmapObjects
 		{
