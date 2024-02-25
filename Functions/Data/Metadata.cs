@@ -35,7 +35,7 @@ namespace RTFunctions.Functions.Data
 
         public string collectionID;
         public int index;
-        public string id;
+        public string serverID;
 
         #region Methods
 
@@ -72,7 +72,7 @@ namespace RTFunctions.Functions.Data
                 title = orig.song.title,
                 tags = orig.LevelSong.tags,
             },
-            id = orig.id,
+            serverID = orig.serverID,
             index = orig.index,
             collectionID = orig.collectionID,
         };
@@ -323,6 +323,8 @@ namespace RTFunctions.Functions.Data
 				var beatmap = new LevelBeatmap(dateEdited, dateCreated, gameVersion, num, workshopID);
 
 				result = new MetaData(artist, creator, song, beatmap);
+				if (!string.IsNullOrEmpty(jn["server_id"]))
+					result.serverID = jn["server_id"];
 			}
 			catch
 			{
@@ -390,6 +392,9 @@ namespace RTFunctions.Functions.Data
 			jn["beatmap"]["version_number"] = beatmap.version_number.ToString();
 			jn["beatmap"]["game_version"] = beatmap.game_version;
 			jn["beatmap"]["workshop_id"] = LevelBeatmap.beatmap_id;
+
+			if (!string.IsNullOrEmpty(serverID))
+				jn["server_id"] = serverID;
 
 			return jn;
 		}
