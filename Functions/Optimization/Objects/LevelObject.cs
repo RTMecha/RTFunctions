@@ -234,7 +234,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 if (currentParent == null)
                     currentParent = parentObject;
 
-                if ((!currentParent.BeatmapObject.spawnOnce || num == 0 || /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active || !spawned))
+                if ((!currentParent.BeatmapObject.desync || num == 0 || /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active || !spawned))
                 {
                     if (parentObject.ParentAdditivePosition)
                         positionAddedOffset += parentObject.ParentOffsetPosition;
@@ -291,7 +291,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                     scaleParallax = parentObject.ParentParallaxScale;
                     rotationParallax = parentObject.ParentParallaxRotation;
 
-                    if (currentParent.BeatmapObject.spawnOnce && /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active)
+                    if (currentParent.BeatmapObject.desync && /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active)
                     {
                         //parentChainSet.Add(parentObject.ID);
                         parentObject.Active = true;
