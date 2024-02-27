@@ -1086,9 +1086,10 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[1]
+				eventValues = new float[2]
 				{
-					18f
+					18f, // Color
+					0f // Active
 				},
 				id = LSText.randomNumString(8),
 			}, // BG
@@ -1227,8 +1228,8 @@ namespace RTFunctions.Functions.Data
 				eventTime = 0f,
 				eventValues = new float[2]
 				{
-					0f, // Z
-					0f, // Perspective
+					-10f, // Depth
+					0f, // Zoom
                 },
 				id = LSText.randomNumString(8),
 			}, // Camera Depth
