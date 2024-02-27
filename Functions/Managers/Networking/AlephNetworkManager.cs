@@ -103,6 +103,61 @@ namespace RTFunctions.Functions.Managers.Networking
                 Debug.Log($"{className}Form upload complete! {www.downloadHandler.text}");
         }
         
+        public static IEnumerator UploadBytes(string url, byte[] bytes, Action<string> onComplete)
+        {
+            var form = new WWWForm();
+            form.AddBinaryData("file", bytes);
+
+            var www = UnityWebRequest.Post(url, form);
+
+            www.certificateHandler = new ForceAcceptAll();
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
+            else
+                onComplete?.Invoke(www.downloadHandler.text);
+        }
+        
+        public static IEnumerator UploadBytes(string url, byte[] bytes, Action<string> onComplete, Action<string> onError)
+        {
+            var form = new WWWForm();
+            form.AddBinaryData("file", bytes);
+
+            var www = UnityWebRequest.Post(url, form);
+
+            www.certificateHandler = new ForceAcceptAll();
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+                onError?.Invoke(www.error);
+            else
+                onComplete?.Invoke(www.downloadHandler.text);
+        }
+        
+        public static IEnumerator UploadBytes(string url, byte[] bytes, Action<float> percentage, Action<string> onComplete, Action<string> onError)
+        {
+            var form = new WWWForm();
+            form.AddBinaryData("file", bytes);
+
+            var www = UnityWebRequest.Post(url, form);
+
+            www.certificateHandler = new ForceAcceptAll();
+
+            var webRequest = www.SendWebRequest();
+
+            while (!webRequest.isDone)
+            {
+                percentage?.Invoke(webRequest.progress);
+                yield return null;
+            }
+
+            if (www.isNetworkError || www.isHttpError)
+                onError?.Invoke(www.error);
+            else
+                onComplete?.Invoke(www.downloadHandler.text);
+        }
+        
         public static IEnumerator UploadString(string url, string str)
         {
             var www = UnityWebRequest.Post(url, str);
