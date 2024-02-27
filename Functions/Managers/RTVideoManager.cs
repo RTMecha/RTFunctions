@@ -42,9 +42,7 @@ namespace RTFunctions.Functions.Managers
 		{
 			inst = this;
 
-			var videoObject = new GameObject("VideoPlayer");
-			videoObject.transform.SetParent(SystemManager.inst.transform);
-			videoPlayer = videoObject.AddComponent<VideoPlayer>();
+			videoPlayer = gameObject.AddComponent<VideoPlayer>();
 			videoPlayer.renderMode = renderType == RenderType.Camera ? VideoRenderMode.CameraFarPlane : VideoRenderMode.MaterialOverride;
 			videoPlayer.source = VideoSource.VideoClip;
 			videoPlayer.timeSource = VideoTimeSource.GameTimeSource;
