@@ -14,6 +14,8 @@ namespace RTFunctions.Patchers
     {
 		public static AudioSource Audio => AudioManager.inst.CurrentAudioSource;
 
+		public static BackgroundManager Instance { get => BackgroundManager.inst; set => BackgroundManager.inst = value; }
+
 		[HarmonyPatch("CreateBackgroundObject")]
 		[HarmonyPrefix]
 		static bool CreateBackgroundObject(BackgroundManager __instance, ref GameObject __result, DataManager.GameData.BackgroundObject __0)
