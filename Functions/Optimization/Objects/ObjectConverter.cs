@@ -38,9 +38,9 @@ namespace RTFunctions.Functions.Optimization.Objects
         public Dictionary<string, CachedSequences> cachedSequences = new Dictionary<string, CachedSequences>();
         public Dictionary<string, BeatmapObject> beatmapObjects = new Dictionary<string, BeatmapObject>();
 
-        public bool ShowEmpties => ModCompatibility.sharedFunctions.ContainsKey("ShowEmpties") && (bool)ModCompatibility.sharedFunctions["ShowEmpties"];
+        public static bool ShowEmpties { get; set; } = false;
         
-        public bool ShowDamagable => ModCompatibility.sharedFunctions.ContainsKey("ShowDamagable") && (bool)ModCompatibility.sharedFunctions["ShowDamagable"];
+        public static bool ShowDamagable { get; set; } = false;
 
         readonly GameData gameData;
 
@@ -48,14 +48,18 @@ namespace RTFunctions.Functions.Optimization.Objects
         {
             this.gameData = gameData;
 
-            foreach (var beatmapObject in gameData.BeatmapObjects)
+            var beatmapObjects = gameData.BeatmapObjects;
+            for (int i = 0; i < beatmapObjects.Count; i++)
             {
-                if (!beatmapObjects.ContainsKey(beatmapObject.id))
-                    beatmapObjects.Add(beatmapObject.id, beatmapObject);
+                if (!this.beatmapObjects.ContainsKey(beatmapObjects[i].id))
+                    this.beatmapObjects.Add(beatmapObjects[i].id, beatmapObjects[i]);
             }
 
-            foreach (var beatmapObject in beatmapObjects.Values)
-                FunctionsPlugin.inst.StartCoroutine(CacheSequence(beatmapObject));
+            for (int i = 0; i < beatmapObjects.Count; i++)
+            {
+                if (this.beatmapObjects.ContainsKey(beatmapObjects[i].id))
+                    FunctionsPlugin.inst.StartCoroutine(CacheSequence(beatmapObjects[i]));
+            }
         }
 
         public IEnumerator CacheSequence(BeatmapObject beatmapObject)
@@ -189,205 +193,110 @@ namespace RTFunctions.Functions.Optimization.Objects
             if (shape == 9)
                 baseObject.SetActive(true);
 
-            try
+            int num = 0;
+            if (parentObjects != null)
+                num = parentObjects.Count;
+
+            var p = InitLevelParentObject(beatmapObject, baseObject);
+            if (parentObjects.Count > 0)
+                parentObjects.Insert(0, p);
+            else
+                parentObjects.Add(p);
+
+            baseObject.name = beatmapObject.name;
+
+            var top = new GameObject($"top - [{beatmapObject.name}]");
+            top.transform.SetParent(ObjectManager.inst.objectParent.transform);
+            top.transform.localScale = Vector3.one;
+
+            var prefabOffsetPosition = Vector3.zero;
+            var prefabOffsetScale = Vector3.one;
+            var prefabOffsetRotation = Vector3.zero;
+
+            if (beatmapObject.fromPrefab && !string.IsNullOrEmpty(beatmapObject.prefabInstanceID) && gameData.prefabObjects.Has(x => x.ID == beatmapObject.prefabInstanceID))
             {
-                int num = 0;
-                if (parentObjects != null)
-                    num = parentObjects.Count;
+                var prefabObject = gameData.prefabObjects.Find(x => x.ID == beatmapObject.prefabInstanceID);
 
-                try
-                {
-                    var p = InitLevelParentObject(beatmapObject, baseObject);
-                    if (parentObjects.Count > 0)
-                        parentObjects.Insert(0, p);
-                    else
-                        parentObjects.Add(p);
-                }
-                catch (Exception e)
-                {
-                    var stringBuilder = new StringBuilder();
-                    stringBuilder.AppendLine($"{Updater.className}Failed to init parent chain for '{beatmapObject.id}'. ParentObjects Null: {parentObjects == null} Count: {num}");
-                    stringBuilder.AppendLine($"Exception: {e.Message}");
-                    stringBuilder.AppendLine(e.StackTrace);
+                bool hasPosX = prefabObject.events.Count > 0 && prefabObject.events[0] != null && prefabObject.events[0].eventValues.Length > 0;
+                bool hasPosY = prefabObject.events.Count > 0 && prefabObject.events[0] != null && prefabObject.events[0].eventValues.Length > 1;
 
-                    Debug.LogError(stringBuilder.ToString());
-                } // Init BaseObject parent
+                bool hasScaX = prefabObject.events.Count > 1 && prefabObject.events[1] != null && prefabObject.events[1].eventValues.Length > 0;
+                bool hasScaY = prefabObject.events.Count > 1 && prefabObject.events[1] != null && prefabObject.events[1].eventValues.Length > 1;
 
-                baseObject.name = beatmapObject.name;
+                bool hasRot = prefabObject.events.Count > 2 && prefabObject.events[2] != null && prefabObject.events[2].eventValues.Length > 0;
 
-                var top = new GameObject($"top - [{beatmapObject.name}]");
-                top.transform.SetParent(ObjectManager.inst.objectParent.transform);
-                top.transform.localScale = Vector3.one;
+                var pos = new Vector3(
+                    hasPosX ? prefabObject.events[0].eventValues[0] : 0f,
+                    hasPosY ? prefabObject.events[0].eventValues[1] : 0f,
+                    0f);
+                var sca = new Vector3(
+                    hasScaX ? prefabObject.events[1].eventValues[0] : 1f,
+                    hasScaY ? prefabObject.events[1].eventValues[1] : 1f,
+                    1f);
+                var rot = Quaternion.Euler(0f, 0f, hasRot ? prefabObject.events[2].eventValues[0] : 0f);
 
-                var prefabOffsetPosition = Vector3.zero;
-                var prefabOffsetScale  = Vector3.one;
-                var prefabOffsetRotation = Vector3.zero;
+                if (prefabObject.events[0].random != 0)
+                    pos = ObjectManager.inst.RandomVector2Parser(prefabObject.events[0]);
+                if (prefabObject.events[1].random != 0)
+                    sca = ObjectManager.inst.RandomVector2Parser(prefabObject.events[1]);
+                if (prefabObject.events[2].random != 0)
+                    rot = Quaternion.Euler(0f, 0f, ObjectManager.inst.RandomFloatParser(prefabObject.events[2]));
 
-                try
-                {
-                    if (beatmapObject.fromPrefab && !string.IsNullOrEmpty(beatmapObject.prefabInstanceID) && gameData.prefabObjects.Has(x => x.ID == beatmapObject.prefabInstanceID))
-                    {
-                        var prefabObject = gameData.prefabObjects.Find(x => x.ID == beatmapObject.prefabInstanceID);
-
-                        bool hasPosX = prefabObject.events.Count > 0 && prefabObject.events[0] != null && prefabObject.events[0].eventValues.Length > 0;
-                        bool hasPosY = prefabObject.events.Count > 0 && prefabObject.events[0] != null && prefabObject.events[0].eventValues.Length > 1;
-
-                        bool hasScaX = prefabObject.events.Count > 1 && prefabObject.events[1] != null && prefabObject.events[1].eventValues.Length > 0;
-                        bool hasScaY = prefabObject.events.Count > 1 && prefabObject.events[1] != null && prefabObject.events[1].eventValues.Length > 1;
-
-                        bool hasRot = prefabObject.events.Count > 2 && prefabObject.events[2] != null && prefabObject.events[2].eventValues.Length > 0;
-
-                        var pos = new Vector3(
-                            hasPosX ? prefabObject.events[0].eventValues[0] : 0f,
-                            hasPosY ? prefabObject.events[0].eventValues[1] : 0f,
-                            0f);
-                        var sca = new Vector3(
-                            hasScaX ? prefabObject.events[1].eventValues[0] : 1f,
-                            hasScaY ? prefabObject.events[1].eventValues[1] : 1f,
-                            1f);
-                        var rot = Quaternion.Euler(0f, 0f, hasRot ? prefabObject.events[2].eventValues[0] : 0f);
-
-                        try
-                        {
-                            if (prefabObject.events[0].random != 0)
-                                pos = ObjectManager.inst.RandomVector2Parser(prefabObject.events[0]);
-                            if (prefabObject.events[1].random != 0)
-                                sca = ObjectManager.inst.RandomVector2Parser(prefabObject.events[1]);
-                            if (prefabObject.events[2].random != 0)
-                                rot = Quaternion.Euler(0f, 0f, ObjectManager.inst.RandomFloatParser(prefabObject.events[2]));
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.LogError($"{Updater.className}Prefab Randomization error.\n{ex}");
-                        }
-
-                        prefabOffsetPosition = pos;
-                        prefabOffsetScale = (sca.x > 0f || sca.x < 0f) && (sca.y > 0f || sca.y < 0f) ? sca : Vector3.one;
-                        prefabOffsetRotation = rot.eulerAngles;
-
-                        if (!hasPosX)
-                            Debug.LogError($"{Updater.className}PrefabObject does not have Postion X in its' eventValues.\nPossible causes:");
-                        if (!hasPosY)
-                            Debug.LogError($"{Updater.className}PrefabObject does not have Postion Y in its' eventValues.");
-                        if (!hasScaX)
-                            Debug.LogError($"{Updater.className}PrefabObject does not have Scale X in its' eventValues.");
-                        if (!hasScaY)
-                            Debug.LogError($"{Updater.className}PrefabObject does not have Scale Y in its' eventValues.");
-                        if (!hasRot)
-                            Debug.LogError($"{Updater.className}PrefabObject does not have Rotation in its' eventValues.");
-                    }
-                }
-                catch (Exception e)
-                {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    stringBuilder.AppendLine($"{Updater.className}Failed to set prefab values for '{beatmapObject.id}'.");
-                    stringBuilder.AppendLine($"Exception: {e.Message}");
-                    stringBuilder.AppendLine(e.StackTrace);
-
-                    Debug.LogError(stringBuilder.ToString());
-                } // Prefab
-
-                try
-                {
-                    var tf = parentObjects != null && parentObjects.Count > 0 && parentObjects[parentObjects.Count - 1] && parentObjects[parentObjects.Count - 1].Transform ?
-                        parentObjects[parentObjects.Count - 1].Transform : baseObject.transform;
-
-                    tf.SetParent(top.transform);
-                    tf.localScale = Vector3.one;
-                }
-                catch (Exception e)
-                {
-                    var stringBuilder = new StringBuilder();
-                    stringBuilder.AppendLine($"{Updater.className}Failed to set parent for '{beatmapObject.id}'.");
-                    stringBuilder.AppendLine($"ParentObjects is null: {parentObjects == null}.");
-                    if (parentObjects != null)
-                    {
-                        stringBuilder.AppendLine($"ParentObjects Count: {parentObjects.Count}.");
-                        if (parentObjects.Count > 0)
-                        {
-                            stringBuilder.AppendLine($"ParentObjects ParentObject {parentObjects.Count - 1} is null: {parentObjects[parentObjects.Count - 1] == null}.");
-                            if (parentObjects[parentObjects.Count - 1] != null)
-                                stringBuilder.AppendLine($"ParentObjects Transform {parentObjects.Count - 1} is null: {parentObjects[parentObjects.Count - 1].Transform == null}.");
-                        }
-                    }
-                    stringBuilder.AppendLine($"Exception: {e.Message}");
-                    stringBuilder.AppendLine(e.StackTrace);
-
-                    Debug.LogError(stringBuilder.ToString());
-
-                    Object.Destroy(baseObject);
-                    Object.Destroy(top);
-
-                    return null;
-                } // Parenting
-
-                baseObject.SetActive(true);
-                visualObject.SetActive(true);
-
-                // Init visual object wrapper
-                float opacity = beatmapObject.objectType == ObjectType.Helper ? 0.35f : 1.0f;
-                bool hasCollider = beatmapObject.objectType == ObjectType.Helper ||
-                                   beatmapObject.objectType == ObjectType.Decoration;
-
-                bool isSolid = beatmapObject.objectType == ObjectType.Solid;
-                bool isBackground = beatmapObject.background;
-
-                // 4 = text object
-                // 6 = image object
-                // 9 = player object
-                VisualObject visual =
-                    beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground) :
-                    beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground, AssetManager.SpriteAssets.ContainsKey(beatmapObject.text) ? AssetManager.SpriteAssets[beatmapObject.text] : null) :
-                    beatmapObject.shape == 9 ? new PlayerObject(visualObject, top.transform) :
-                    new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid, isBackground, beatmapObject.opacityCollision);
-
-                try
-                {
-                    if (EditorManager.inst && (!beatmapObject.fromPrefab || shape != 9))
-                    {
-                        var obj = visualObject.AddComponent<RTObject>();
-                        obj.SetObject(beatmapObject);
-                        beatmapObject.RTObject = obj;
-                    }
-                }
-                catch (Exception e)
-                {
-                    var stringBuilder = new StringBuilder();
-                    stringBuilder.AppendLine($"{Updater.className}Failed to generate FunctionObject for {beatmapObject.id} (Editor)");
-                    stringBuilder.AppendLine($"Exception: {e.Message}");
-                    stringBuilder.AppendLine(e.StackTrace);
-
-                    Debug.LogError(stringBuilder.ToString());
-                } // Editor
-
-                Object.Destroy(visualObject.GetComponent<SelectObjectInEditor>());
-
-                var levelObject = new LevelObject(
-                    beatmapObject,
-                    cachedSequences[beatmapObject.id].ColorSequence,
-                    parentObjects, visual,
-                    cachedSequences[beatmapObject.id].OpacitySequence,
-                    cachedSequences[beatmapObject.id].HueSequence,
-                    cachedSequences[beatmapObject.id].SaturationSequence,
-                    cachedSequences[beatmapObject.id].ValueSequence,
-                    prefabOffsetPosition, prefabOffsetScale, prefabOffsetRotation);
-
-                levelObject.SetActive(false);
-
-                beatmapObject.levelObject = levelObject;
-
-                return levelObject;
+                prefabOffsetPosition = pos;
+                prefabOffsetScale = (sca.x > 0f || sca.x < 0f) && (sca.y > 0f || sca.y < 0f) ? sca : Vector3.one;
+                prefabOffsetRotation = rot.eulerAngles;
             }
-            catch
+
+            var tf = parentObjects != null && parentObjects.Count > 0 && parentObjects[parentObjects.Count - 1] && parentObjects[parentObjects.Count - 1].Transform ?
+                parentObjects[parentObjects.Count - 1].Transform : baseObject.transform;
+
+            tf.SetParent(top.transform);
+            tf.localScale = Vector3.one;
+
+            baseObject.SetActive(true);
+            visualObject.SetActive(true);
+
+            // Init visual object wrapper
+            float opacity = beatmapObject.objectType == ObjectType.Helper ? 0.35f : 1.0f;
+            bool hasCollider = beatmapObject.objectType == ObjectType.Helper ||
+                               beatmapObject.objectType == ObjectType.Decoration;
+
+            bool isSolid = beatmapObject.objectType == ObjectType.Solid;
+            bool isBackground = beatmapObject.background;
+
+            // 4 = text object
+            // 6 = image object
+            // 9 = player object
+            VisualObject visual =
+                beatmapObject.shape == 4 ? new TextObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground) :
+                beatmapObject.shape == 6 ? new ImageObject(visualObject, top.transform, opacity, beatmapObject.text, isBackground, AssetManager.SpriteAssets.ContainsKey(beatmapObject.text) ? AssetManager.SpriteAssets[beatmapObject.text] : null) :
+                beatmapObject.shape == 9 ? new PlayerObject(visualObject, top.transform) :
+                new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid, isBackground, beatmapObject.opacityCollision);
+
+            if (EditorManager.inst && (!beatmapObject.fromPrefab || shape != 9))
             {
-                var par = baseObject.transform;
-                while (par.parent.name != "GameObjects")
-                    par = par.parent;
-
-                Object.Destroy(par.gameObject);
-
-                return null;
+                var obj = visualObject.AddComponent<RTObject>();
+                obj.SetObject(beatmapObject);
+                beatmapObject.RTObject = obj;
             }
+
+            Object.Destroy(visualObject.GetComponent<SelectObjectInEditor>());
+
+            var levelObject = new LevelObject(
+                beatmapObject,
+                cachedSequences[beatmapObject.id].ColorSequence,
+                parentObjects, visual,
+                cachedSequences[beatmapObject.id].OpacitySequence,
+                cachedSequences[beatmapObject.id].HueSequence,
+                cachedSequences[beatmapObject.id].SaturationSequence,
+                cachedSequences[beatmapObject.id].ValueSequence,
+                prefabOffsetPosition, prefabOffsetScale, prefabOffsetRotation);
+
+            levelObject.SetActive(false);
+
+            beatmapObject.levelObject = levelObject;
+
+            return levelObject;
         }
 
         GameObject InitParentChain(BeatmapObject beatmapObject, List<LevelParentObject> parentObjects)

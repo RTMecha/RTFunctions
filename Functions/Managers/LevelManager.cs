@@ -189,7 +189,9 @@ namespace RTFunctions.Functions.Managers
                 ((Action)ModCompatibility.sharedFunctions["EventsCoreResetOffsets"])?.Invoke();
             }
 
-            ObjectManager.inst.updateObjects();
+            yield return inst.StartCoroutine(Updater.IUpdateObjects(true));
+
+            //ObjectManager.inst.updateObjects();
 
             Debug.Log($"{className}Done!");
 

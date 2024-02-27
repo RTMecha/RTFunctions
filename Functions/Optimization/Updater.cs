@@ -57,7 +57,7 @@ namespace RTFunctions.Functions.Optimization
         {
             Debug.Log($"{className}Cleaning up level");
 
-            levelProcessor.Dispose();
+            levelProcessor?.Dispose();
             levelProcessor = null;
         }
 
@@ -776,26 +776,9 @@ namespace RTFunctions.Functions.Optimization
             // If it is not null then we continue.
             if (levelProcessor != null)
             {
-                if (DataManager.inst.gameData is GameData)
-                {
-                    foreach (var bm in GameData.Current.beatmapObjects)
-                    {
-                        if (bm is BeatmapObject modObject)
-                        {
-                            modObject.reactivePositionOffset = Vector3.zero;
-                            modObject.reactiveScaleOffset = Vector3.zero;
-                            modObject.reactiveRotationOffset = 0f;
-                            modObject.positionOffset = Vector3.zero;
-                            modObject.scaleOffset = Vector3.zero;
-                            modObject.rotationOffset = Vector3.zero;
-                        }
-                    }
-                }
+                ResetOffsets();
 
-                var level = levelProcessor.level;
-                var objects = level.objects;
-
-                level.objects.Clear();
+                levelProcessor.level.objects.Clear();
                 levelProcessor.converter.beatmapObjects.Clear();
 
                 // Delete all the "GameObjects" children.
@@ -811,6 +794,53 @@ namespace RTFunctions.Functions.Optimization
                 GameManagerPatch.EndInvoke();
                 if (restart)
                     GameManagerPatch.StartInvoke();
+            }
+        }
+
+        public static IEnumerator IUpdateObjects(bool restart, bool resetOffsets = false)
+        {
+            if (resetOffsets)
+                ResetOffsets();
+
+            if (levelProcessor != null)
+            {
+                levelProcessor.level.objects.Clear();
+                levelProcessor.converter.beatmapObjects.Clear();
+            }
+
+            // Delete all the "GameObjects" children.
+            LSFunctions.LSHelpers.DeleteChildren(GameObject.Find("GameObjects").transform);
+
+            // Removing and reinserting prefabs.
+            DataManager.inst.gameData.beatmapObjects.RemoveAll(x => x.fromPrefab);
+            if (restart)
+                for (int i = 0; i < DataManager.inst.gameData.prefabObjects.Count; i++)
+                    AddPrefabToLevel(DataManager.inst.gameData.prefabObjects[i], false);
+
+            // End and restart.
+            OnLevelEnd();
+            if (restart)
+                OnLevelStart();
+
+            yield break;
+        }
+
+        static void ResetOffsets()
+        {
+            if (DataManager.inst.gameData is not GameData)
+                return;
+
+            foreach (var bm in GameData.Current.beatmapObjects)
+            {
+                if (bm is BeatmapObject modObject)
+                {
+                    modObject.reactivePositionOffset = Vector3.zero;
+                    modObject.reactiveScaleOffset = Vector3.zero;
+                    modObject.reactiveRotationOffset = 0f;
+                    modObject.positionOffset = Vector3.zero;
+                    modObject.scaleOffset = Vector3.zero;
+                    modObject.rotationOffset = Vector3.zero;
+                }
             }
         }
     }
