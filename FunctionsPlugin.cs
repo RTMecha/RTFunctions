@@ -28,6 +28,7 @@ using Screen = UnityEngine.Screen;
 using Ease = RTFunctions.Functions.Animation.Ease;
 using Version = RTFunctions.Functions.Version;
 using System.Linq;
+using System.IO.Compression;
 
 namespace RTFunctions
 {
@@ -66,9 +67,9 @@ namespace RTFunctions
 		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
 		public static readonly Harmony harmony = new Harmony("rtfunctions");
 
-        #region Configs
+		#region Configs
 
-        public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
+		public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
 		public static ConfigEntry<KeyCode> OpenPAPersistentFolder { get; set; }
 
 		public static ConfigEntry<bool> DebugsOn { get; set; }
@@ -114,25 +115,25 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-        //static bool FullscreenProp
-        //{
-        //    get
-        //    {
-        //        return DataManager.inst.GetSettingBool("FullScreen", false);
-        //    }
-        //    set
-        //    {
-        //        DataManager.inst.UpdateSettingBool("FullScreen", value);
-        //        SaveManager.inst.ApplyVideoSettings();
-        //        SaveManager.inst.UpdateSettingsFile(false);
-        //    }
-        //}
+		//static bool FullscreenProp
+		//{
+		//    get
+		//    {
+		//        return DataManager.inst.GetSettingBool("FullScreen", false);
+		//    }
+		//    set
+		//    {
+		//        DataManager.inst.UpdateSettingBool("FullScreen", value);
+		//        SaveManager.inst.ApplyVideoSettings();
+		//        SaveManager.inst.UpdateSettingsFile(false);
+		//    }
+		//}
 
-        public static bool prevFullscreen;
+		public static bool prevFullscreen;
 
-        #endregion
+		#endregion
 
-        #region Resolution
+		#region Resolution
 
 		public static ConfigEntry<Resolutions> Resolution { get; set; }
 
@@ -151,31 +152,31 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-        //static Resolutions ResolutionProp
-        //{
-        //    get
-        //    {
-        //        return (Resolutions)DataManager.inst.GetSettingInt("Resolution_i", 0);
-        //    }
-        //    set
-        //    {
-        //        DataManager.inst.UpdateSettingInt("Resolution_i", (int)value);
+		//static Resolutions ResolutionProp
+		//{
+		//    get
+		//    {
+		//        return (Resolutions)DataManager.inst.GetSettingInt("Resolution_i", 0);
+		//    }
+		//    set
+		//    {
+		//        DataManager.inst.UpdateSettingInt("Resolution_i", (int)value);
 
-        //        var res = DataManager.inst.resolutions[(int)value];
+		//        var res = DataManager.inst.resolutions[(int)value];
 
-        //        DataManager.inst.UpdateSettingFloat("Resolution_x", res.x);
-        //        DataManager.inst.UpdateSettingFloat("Resolution_y", res.y);
+		//        DataManager.inst.UpdateSettingFloat("Resolution_x", res.x);
+		//        DataManager.inst.UpdateSettingFloat("Resolution_y", res.y);
 
-        //        SaveManager.inst.ApplyVideoSettings();
-        //        SaveManager.inst.UpdateSettingsFile(false);
-        //    }
-        //}
+		//        SaveManager.inst.ApplyVideoSettings();
+		//        SaveManager.inst.UpdateSettingsFile(false);
+		//    }
+		//}
 
-        public static Resolutions prevResolution;
+		public static Resolutions prevResolution;
 
-        #endregion
+		#endregion
 
-        #region MasterVol
+		#region MasterVol
 
 		public static ConfigEntry<int> MasterVol { get; set; }
 
@@ -188,21 +189,21 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-        //static int MasterVolProp
-        //{
-        //    get
-        //    {
-        //        return DataManager.inst.GetSettingInt("MasterVolume", 9);
-        //    }
-        //    set
-        //    {
-        //        DataManager.inst.UpdateSettingInt("MasterVolume", value);
+		//static int MasterVolProp
+		//{
+		//    get
+		//    {
+		//        return DataManager.inst.GetSettingInt("MasterVolume", 9);
+		//    }
+		//    set
+		//    {
+		//        DataManager.inst.UpdateSettingInt("MasterVolume", value);
 
-        //        SaveManager.inst.UpdateSettingsFile(false);
-        //    }
-        //}
+		//        SaveManager.inst.UpdateSettingsFile(false);
+		//    }
+		//}
 
-        public static int prevMasterVol;
+		public static int prevMasterVol;
 
 		#endregion
 
@@ -235,11 +236,11 @@ namespace RTFunctions
 
 		public static int prevMusicVol;
 
-        #endregion
+		#endregion
 
-        #region SFXVol
+		#region SFXVol
 
-        public static ConfigEntry<int> SFXVol { get; set; }
+		public static ConfigEntry<int> SFXVol { get; set; }
 
 		static void SetSFXVol(int value)
 		{
@@ -269,16 +270,16 @@ namespace RTFunctions
 		#endregion
 
 		#region Language
-		
+
 		public enum Lang
-        {
+		{
 			english,
 			spanish,
 			japanese,
 			thai,
 			russian,
 			pirate
-        }
+		}
 
 		public static ConfigEntry<Lang> Language { get; set; }
 
@@ -337,7 +338,7 @@ namespace RTFunctions
 		//}
 
 		public static bool prevControllerRumble;
-		
+
 		#endregion
 
 		void Awake()
@@ -396,6 +397,7 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(ObjectManagerPatch));
 				harmony.PatchAll(typeof(PlayerPatch));
 				harmony.PatchAll(typeof(SaveManagerPatch));
+				harmony.PatchAll(typeof(SoundLibraryPatch));
 			}
 
 			// Hooks
@@ -466,58 +468,58 @@ namespace RTFunctions
 			}
 
 			if (prevResolution != Resolution.Value)
-            {
+			{
 				SetResolution(Resolution.Value);
 				//ResolutionProp = Resolution.Value;
-            }
+			}
 
 			if (prevMasterVol != MasterVol.Value)
-            {
+			{
 				SetMasterVol(MasterVol.Value);
 				//MasterVolProp = MasterVol.Value;
-            }
+			}
 
 			if (prevMusicVol != MusicVol.Value)
-            {
+			{
 				SetMusicVol(MusicVol.Value);
 				//MusicVolProp = MusicVol.Value;
-            }
+			}
 
 			if (prevSFXVol != SFXVol.Value)
-            {
+			{
 				SetSFXVol(SFXVol.Value);
 				//SFXVolProp = SFXVol.Value;
-            }
+			}
 
 			if (prevLanguage != Language.Value)
-            {
+			{
 				SetLanguage(Language.Value);
 				//LanguageProp = Language.Value;
-            }
-			
+			}
+
 			if (prevControllerRumble != ControllerRumble.Value)
-            {
+			{
 				SetControllerRumble(ControllerRumble.Value);
 				//ControllerRumbleProp = ControllerRumble.Value;
-            }
+			}
 
 			UpdateDiscordStatus(discordLevel, discordDetails, discordIcon, discordArt);
 
 			if (RTVideoManager.inst)
-            {
+			{
 				//RTVideoManager.inst.SetType(VideoBackgroundRenderType.Value);
 				if (RTVideoManager.inst.didntPlay && EnableVideoBackground.Value)
-                {
+				{
 					RTVideoManager.inst.Play(RTVideoManager.inst.currentURL, RTVideoManager.inst.currentAlpha);
 
 				}
-            }
+			}
 
 			SaveProfile();
 		}
 
 		void Update()
-        {
+		{
 			RTHelpers.screenScale = (float)Screen.width / 1920f;
 			RTHelpers.screenScaleInverse = 1f / RTHelpers.screenScale;
 
@@ -536,16 +538,16 @@ namespace RTFunctions
 			}
 		}
 
-        #region Patchers
+		#region Patchers
 
-        [HarmonyPatch(typeof(SystemManager), "Awake")]
+		[HarmonyPatch(typeof(SystemManager), "Awake")]
 		[HarmonyPostfix]
 		static void DisableLoggers()
 		{
 			Debug.unityLogger.logEnabled = DebugsOn.Value;
 		}
 
-        [HarmonyPatch(typeof(SystemManager), "Update")]
+		[HarmonyPatch(typeof(SystemManager), "Update")]
 		[HarmonyPrefix]
 		static bool SystemManagerUpdatePrefix()
 		{
@@ -556,13 +558,13 @@ namespace RTFunctions
 				Fullscreen.Value = !Fullscreen.Value;
 
 			return false;
-        }
+		}
 
-        [HarmonyPatch(typeof(EditorManager), "Start")]
-        [HarmonyPostfix]
-        static void EditorStartPostfix(EditorManager __instance)
-        {
-            __instance.SetCreatorName(DisplayName.Value);
+		[HarmonyPatch(typeof(EditorManager), "Start")]
+		[HarmonyPostfix]
+		static void EditorStartPostfix(EditorManager __instance)
+		{
+			__instance.SetCreatorName(DisplayName.Value);
 			if (SteamWrapper.inst)
 				SteamWrapper.inst.user.displayName = DisplayName.Value;
 		}
@@ -625,15 +627,63 @@ namespace RTFunctions
 		[HarmonyPatch(typeof(FileManager), "LoadImageFileRaw", MethodType.Enumerator)]
 		[HarmonyTranspiler]
 		static IEnumerable<CodeInstruction> LoadImageFileRawTranspiler(IEnumerable<CodeInstruction> instructions)
-        {
+		{
 			var match = new CodeMatcher(instructions).Start();
 
 			match = match.RemoveInstructionsInRange(108, 120);
 
 			return match.InstructionEnumeration();
+		}
+
+		//[HarmonyPatch(typeof(ZipArchiveEntry), "GetDataCompressor")]
+		//[HarmonyPrefix]
+		//static bool GetDataCompressorPrefix(ref CheckSumAndSizeWriteStream __result, ZipArchiveEntry __instance, Stream __0, bool __1, EventHandler __2)
+		//{
+		//    __result = GetDataCompressor(__instance, __0, __1, __2);
+		//    return false;
+		//}
+
+		[HarmonyPatch(typeof(ZipArchiveEntry), "OpenInWriteMode")]
+		[HarmonyPrefix]
+		static bool OpenInWriteModePrefix(ref Stream __result, ZipArchiveEntry __instance)
+        {
+			__result = OpenInWriteMode(__instance);
+			return false;
         }
 
-		public static Action<GameManager> EventsCoreGameThemePrefix { get; set; }
+		static Stream OpenInWriteMode(ZipArchiveEntry __instance)
+		{
+			if (__instance._everOpenedForWrite)
+			{
+				throw new IOException("Ever opened for write");
+			}
+			__instance._everOpenedForWrite = true;
+			var dataCompressor = GetDataCompressor(__instance, __instance._archive.ArchiveStream, true, delegate (object o, EventArgs e)
+			{
+				__instance._archive.ReleaseArchiveStream(__instance);
+				__instance._outstandingWriteStream = null;
+			});
+			__instance._outstandingWriteStream = new ZipArchiveEntry.DirectToArchiveWriterStream(dataCompressor, __instance);
+			return new WrappedStream(__instance._outstandingWriteStream, delegate (object o, EventArgs e)
+			{
+				__instance._outstandingWriteStream.Close();
+			});
+		}
+
+		static CheckSumAndSizeWriteStream GetDataCompressor(ZipArchiveEntry __instance, Stream backingStream, bool leaveBackingStreamOpen, EventHandler onClose)
+        {
+            var stream = new DeflateStream(backingStream, CompressionMode.Compress, leaveBackingStreamOpen);
+
+            return new CheckSumAndSizeWriteStream(stream, backingStream, leaveBackingStreamOpen && !true, delegate (long initialPosition, long currentPosition, uint checkSum)
+            {
+                __instance._crc32 = checkSum;
+                __instance._uncompressedSize = currentPosition;
+                __instance._compressedSize = backingStream.Position - initialPosition;
+                onClose?.Invoke(__instance, EventArgs.Empty);
+            });
+        }
+
+        public static Action<GameManager> EventsCoreGameThemePrefix { get; set; }
 		public static Action<EventManager, float> EventsCoreUpdateThemePrefix { get; set; }
 
 		#endregion
