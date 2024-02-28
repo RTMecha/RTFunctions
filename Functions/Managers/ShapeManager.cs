@@ -1,4 +1,5 @@
-﻿using RTFunctions.Functions.Data.Player;
+﻿using RTFunctions.Functions.Components;
+using RTFunctions.Functions.Data.Player;
 using RTFunctions.Functions.IO;
 using SimpleJSON;
 using System.Collections;
@@ -149,7 +150,9 @@ namespace RTFunctions.Functions.Managers
                             var gameObject = ObjectManager.inst.objectPrefabs[1].options[0].Duplicate(null, sjn["name"]);
 
                             gameObject.transform.GetChild(0).GetComponent<MeshFilter>().mesh = mesh;
-                            gameObject.transform.GetChild(0).GetComponent<PolygonCollider2D>().points = mesh.vertices.Select(x => new Vector2(x.x, x.y)).ToArray();
+
+                            DestroyImmediate(gameObject.transform.GetChild(0).GetComponent<PolygonCollider2D>());
+                            gameObject.transform.GetChild(0).gameObject.AddComponent<RTColliderCreator>();
 
                             ObjectManager.inst.objectPrefabs[i].options.Add(gameObject);
                         }
