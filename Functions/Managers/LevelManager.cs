@@ -81,6 +81,11 @@ namespace RTFunctions.Functions.Managers
 
             CurrentLevel = level;
 
+            if (Saves.Has(x => x.ID == level.id))
+            {
+                CurrentLevel.playerData = Saves.Find(x => x.ID == level.id);
+            }
+
             Debug.Log($"{className}Switching to Game scene");
 
             bool inGame = RTHelpers.InGame;
@@ -331,7 +336,7 @@ namespace RTFunctions.Functions.Managers
                 jn["lvl"][i] = Saves[i].ToJSON();
             }
 
-            if (RTFile.DirectoryExists(RTFile.ApplicationDirectory + "profile"))
+            if (!RTFile.DirectoryExists(RTFile.ApplicationDirectory + "profile"))
                 Directory.CreateDirectory(RTFile.ApplicationDirectory + "profile");
 
             var json = jn.ToString();
@@ -357,6 +362,15 @@ namespace RTFunctions.Functions.Managers
         }
         
         public static PlayerData GetPlayerData(string id) => Saves.Find(x => x.ID == id);
+
+        public static DataManager.LevelRank GetLevelRank(Level level)
+            => level.playerData != null && DataManager.inst.levelRanks.Has(LevelRankPredicate(level)) ? DataManager.inst.levelRanks.Find(LevelRankPredicate(level)) : DataManager.inst.levelRanks[0];
+
+        public static float CalculateAccuracy(int hits, float length)
+            => 100f / ((hits / (length / PlayerManager.AcurracyDivisionAmount)) + 1f);
+
+        public static Predicate<DataManager.LevelRank> LevelRankPredicate(Level level)
+             => x => level.playerData != null && level.playerData.Hits >= x.minHits && level.playerData.Hits <= x.maxHits;
 
         public static List<PlayerData> Saves { get; set; } = new List<PlayerData>();
         public class PlayerData

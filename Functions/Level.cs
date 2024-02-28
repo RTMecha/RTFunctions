@@ -26,7 +26,14 @@ namespace RTFunctions.Functions
             icon = RTFile.FileExists($"{path}level.jpg") ? SpriteManager.LoadSprite($"{path}level.jpg") : RTFile.FileExists($"{path}cover.jpg") ? SpriteManager.LoadSprite($"{path}cover.jpg") : SteamWorkshop.inst.defaultSteamImageSprite;
 
             if (metadata)
-                id = metadata.LevelBeatmap.beatmap_id;
+            {
+                if (!string.IsNullOrEmpty(metadata.serverID) && metadata.serverID != "-1")
+                    id = metadata.serverID;
+                else if (!string.IsNullOrEmpty(metadata.LevelBeatmap.beatmap_id) && metadata.LevelBeatmap.beatmap_id != "-1")
+                    id = metadata.LevelBeatmap.beatmap_id;
+                else
+                    id = "-1";
+            }
 
             if (RTFile.FileExists($"{path}modes.lsms"))
             {
