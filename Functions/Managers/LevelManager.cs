@@ -30,6 +30,8 @@ namespace RTFunctions.Functions.Managers
 
         #endregion
 
+        public static bool LevelEnded { get; set; }
+
         public static bool LoadingFromHere { get; set; }
 
         public static int CurrentLevelMode { get; set; }
@@ -78,6 +80,7 @@ namespace RTFunctions.Functions.Managers
         public static IEnumerator Play(Level level)
         {
             LoadingFromHere = true;
+            LevelEnded = false;
 
             CurrentLevel = level;
 

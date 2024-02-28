@@ -96,6 +96,7 @@ namespace RTFunctions
 		public static ConfigEntry<bool> RunInBackground { get; set; }
 
 		public static ConfigEntry<bool> EvaluateCode { get; set; }
+		public static ConfigEntry<bool> ReplayLevel { get; set; }
 
 		public static ConfigEntry<string> DiscordRichPresenceID { get; set; }
 
@@ -355,6 +356,7 @@ namespace RTFunctions
 			IncreasedClipPlanes = Config.Bind("Game", "Camera Clip Planes", true, "Increases the clip panes to a very high amount, allowing for object render depth to go really high or really low.");
 			EnableVideoBackground = Config.Bind("Game", "Video Backgrounds", false, "If on, the old video BG feature returns, though somewhat buggy. Requires a bg.mp4 file to exist in the level folder.");
 			EvaluateCode = Config.Bind("Game", "Evaluate Custom Code", false, "If custom written code should evaluate. Turn this on if you're sure the level you're using isn't going to mess anything up with a code Modifier or custom player code.");
+			ReplayLevel = Config.Bind("Game", "Replay Level in Background After Completion", true, "When completing a level, having this on will replay the level with no players in the background of the end screen.");
 
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
 

@@ -6,6 +6,7 @@ using UnityEngine;
 
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
+using RTFunctions.Functions.Managers;
 
 namespace RTFunctions.Patchers
 {
@@ -77,7 +78,7 @@ namespace RTFunctions.Patchers
 		[HarmonyPrefix]
 		static bool UpdateBackgroundObjects(BackgroundManager __instance)
 		{
-			if (GameManager.inst.gameState == GameManager.State.Playing && BackgroundManager.inst?.backgroundParent?.gameObject)
+			if ((GameManager.inst.gameState == GameManager.State.Playing || LevelManager.LevelEnded && FunctionsPlugin.ReplayLevel.Value) && BackgroundManager.inst?.backgroundParent?.gameObject)
 			{
 				var lerp = FunctionsPlugin.BGReactiveLerp.Value;
 				Audio?.GetSpectrumData(__instance.samples, 0, FFTWindow.Rectangular);
