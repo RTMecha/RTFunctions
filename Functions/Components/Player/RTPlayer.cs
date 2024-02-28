@@ -647,7 +647,7 @@ namespace RTFunctions.Functions.Components.Player
 
             if (!RTHelpers.Paused)
             {
-                if (!PlayerAlive && !isDead && CustomPlayer)
+                if (!PlayerAlive && !isDead && CustomPlayer && !PlayerManager.IsPractice)
                     StartCoroutine(Kill());
 
                 if (CanMove && PlayerAlive && Actions != null)
@@ -1344,7 +1344,8 @@ namespace RTFunctions.Functions.Components.Player
                     anim.SetTrigger("hurt");
                 if (CustomPlayer)
                 {
-                    CustomPlayer.Health--;
+                    if (!PlayerManager.IsPractice)
+                        CustomPlayer.Health--;
                     playerHitEvent?.Invoke(CustomPlayer.Health, rb.position);
                 }
 
