@@ -444,6 +444,63 @@ namespace RTFunctions.Functions.Managers
 
                         #endregion
 
+                        #region LevelRank
+
+                        if (beatmapObject.text.Contains("<levelRank>"))
+                        {
+                            DataManager.LevelRank levelRank = null;
+
+                            if (EditorManager.inst == null && LevelManager.CurrentLevel != null)
+                            {
+                                levelRank = LevelManager.GetLevelRank(LevelManager.CurrentLevel);
+                            }
+                            else
+                            {
+                                levelRank = DataManager.inst.levelRanks[0];
+                            }
+
+                            str = str.Replace("<levelRank>", $"<color=#{LSColors.ColorToHex(levelRank.color)}><b>{levelRank.name}</b></color>");
+                        }
+                        
+                        if (beatmapObject.text.Contains("<levelRankName>"))
+                        {
+                            DataManager.LevelRank levelRank = null;
+
+                            if (EditorManager.inst == null && LevelManager.CurrentLevel != null)
+                            {
+                                levelRank = LevelManager.GetLevelRank(LevelManager.CurrentLevel);
+                            }
+                            else
+                            {
+                                levelRank = DataManager.inst.levelRanks[0];
+                            }
+
+                            str = str.Replace("<levelRankName>", levelRank.name);
+                        }
+                        
+                        if (beatmapObject.text.Contains("<levelRankColor>"))
+                        {
+                            DataManager.LevelRank levelRank = null;
+
+                            if (EditorManager.inst == null && LevelManager.CurrentLevel != null)
+                            {
+                                levelRank = LevelManager.GetLevelRank(LevelManager.CurrentLevel);
+                            }
+                            else
+                            {
+                                levelRank = DataManager.inst.levelRanks[0];
+                            }
+
+                            str = str.Replace("<levelRankColor>", $"<color=#{LSColors.ColorToHex(levelRank.color)}>");
+                        }
+
+                        if (beatmapObject.text.Contains("<accuracy>"))
+                        {
+                            str = str.Replace("<accuracy>", $"{LevelManager.CalculateAccuracy(GameManager.inst.hits.Count, AudioManager.inst.CurrentAudioSource.clip.length)}");
+                        }
+
+                        #endregion
+
                         #region Mod stuff
 
                         {
