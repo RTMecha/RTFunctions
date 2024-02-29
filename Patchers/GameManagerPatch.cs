@@ -141,7 +141,7 @@ namespace RTFunctions.Patchers
                     if (!LevelManager.LevelEnded)
                         __instance.GoToNextLevel();
             }
-            else if (__instance.gameState == GameManager.State.Paused)
+            else if (__instance.gameState == GameManager.State.Finish)
             {
                 if (AudioManager.inst.CurrentAudioSource.clip != null && EditorManager.inst == null
                     && AudioManager.inst.CurrentAudioSource.time /*+ 0.1f*/ >= __instance.songLength - 0.1f
