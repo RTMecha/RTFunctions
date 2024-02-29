@@ -24,11 +24,13 @@ namespace RTFunctions.Functions.Managers
 			PlaySound(Library.GetClipFromName(soundName), volume, pitch);
 		}
 
-		public void PlaySound(AudioClip clip, float volume = 1f, float pitch = 1f)
+		public void PlaySound(AudioClip clip, float volume = 1f, float pitch = 1f) => PlaySound(Camera.main.gameObject, clip, volume, pitch);
+
+		public void PlaySound(GameObject gameObject, AudioClip clip, float volume = 1f, float pitch = 1f)
 		{
 			if (clip != null)
 			{
-				var audioSource = Camera.main.gameObject.AddComponent<AudioSource>();
+				var audioSource = gameObject.AddComponent<AudioSource>();
 				audioSource.clip = clip;
 				audioSource.playOnAwake = true;
 				audioSource.loop = false;
