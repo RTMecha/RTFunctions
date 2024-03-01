@@ -1,6 +1,9 @@
-﻿using System.IO;
+﻿using RTFunctions.Functions.IO;
+using System.IO;
+using System.Collections.Generic;
 
 using UnityEngine;
+using System.Text.RegularExpressions;
 
 namespace RTFunctions.Functions.Managers
 {
@@ -8,7 +11,46 @@ namespace RTFunctions.Functions.Managers
     {
         public static SpriteManager inst;
 
-        void Awake() => inst = this;
+        public static List<List<Sprite>> RoundedSprites = new List<List<Sprite>>
+        {
+            new List<Sprite>(),
+            new List<Sprite>(),
+            new List<Sprite>(),
+            new List<Sprite>(),
+            new List<Sprite>(),
+        };
+
+        void Awake()
+        {
+            inst = this;
+
+            try
+            {
+                var assetBundle = AssetBundle.LoadFromFile($"{RTFile.ApplicationDirectory}{FunctionsPlugin.BepInExAssetsPath}sprites.asset");
+
+                var allAssetNames = assetBundle.GetAllAssetNames();
+
+                for (int i = 0; i < allAssetNames.Length; i++)
+                {
+                    var name = assetBundle.GetAllAssetNames()[i].Replace(Path.GetDirectoryName(assetBundle.GetAllAssetNames()[0]).Replace("\\", "/") + "/", "");
+
+                    var sprite = assetBundle.LoadAsset<Sprite>(name);
+                    
+                    var regex = new Regex("square_([1-5])_");
+
+                    var match = regex.Match(name);
+
+                    if (match.Success && int.TryParse(match.Groups[1].ToString(), out int num))
+                    {
+                        RoundedSprites[num - 1].Add(sprite);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError(ex);
+            }
+        }
 
         public static Sprite LoadSprite(string path, TextureFormat textureFormat = TextureFormat.ARGB32, bool mipChain = false, TextureWrapMode textureWrapMode = TextureWrapMode.Clamp, FilterMode filterMode = FilterMode.Point)
         {
@@ -26,5 +68,31 @@ namespace RTFunctions.Functions.Managers
         public static void SaveSprite(Sprite sprite, string path) => File.WriteAllBytes(path, sprite.texture.EncodeToPNG());
 
         public static Sprite CreateSprite(Texture2D texture2D) => Sprite.Create(texture2D, new Rect(0f, 0f, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f), 100f);
+
+        public static Sprite GetRoundedSprite(int roundness, RoundedSide side)
+            => RoundedSprites[Mathf.Clamp(roundness, 1, 5) - 1][(int)side];
+
+        public static void SetRoundedSprite(UnityEngine.UI.Image image, int roundness, RoundedSide side)
+        {
+            image.sprite = GetRoundedSprite(roundness, side);
+            image.type = UnityEngine.UI.Image.Type.Sliced;
+        }
+
+        public enum RoundedSide
+        {
+            Bottom,
+            Bottom_Left_E,
+            Bottom_Left_I,
+            Bottom_Right_E,
+            Bottom_Right_I,
+            Left,
+            Right,
+            Top,
+            Top_Left_E,
+            Top_Left_I,
+            Top_Right_E,
+            Top_Right_I,
+            W,
+        }
     }
 }
