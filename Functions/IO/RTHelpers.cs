@@ -1,6 +1,7 @@
 ﻿using InControl;
 using LSFunctions;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -47,6 +48,10 @@ namespace RTFunctions.Functions.IO
 			}
 		}
 
+		public static DataManager.Difficulty GetDifficulty(int difficulty)
+			=> difficulty >= 0 && difficulty < DataManager.inst.difficulties.Count ?
+			DataManager.inst.difficulties[difficulty] : new DataManager.Difficulty("Unknown Difficulty", LSColors.HexToColor("424242"));
+
 		public static bool Paused => GameManager.inst && GameManager.inst.gameState == GameManager.State.Paused;
 		public static bool Playing => GameManager.inst && GameManager.inst.gameState == GameManager.State.Playing;
 
@@ -70,9 +75,11 @@ namespace RTFunctions.Functions.IO
             }[Mathf.Clamp(DataManager.inst.GetSettingEnum("ArcadeGameSpeed", 2), 0, 7)];
 		}
 
-        #region EventTriggers
+		#region EventTriggers
 
-        public static void AddEventTrigger(GameObject _if, List<EventTrigger.Entry> entries, bool clear = true)
+		public static void AddEventTriggerParams(GameObject gameObject, params EventTrigger.Entry[] entries) => AddEventTrigger(gameObject, entries.ToList());
+
+		public static void AddEventTrigger(GameObject _if, List<EventTrigger.Entry> entries, bool clear = true)
 		{
 			if (!_if.GetComponent<EventTrigger>())
 			{
@@ -85,595 +92,183 @@ namespace RTFunctions.Functions.IO
 				et.triggers.Add(entry);
 		}
 
-		public static EventTrigger.Entry ScrollDelta(InputField _if, float _amount, float _divide, bool _multi = false, List<float> clamp = null)
+		public static EventTrigger.Entry ScrollDelta(InputField inputField, float amount = 0.1f, float mutliply = 10f, float min = 0f, float max = 0f, bool multi = false)
 		{
-			EventTrigger.Entry entry = new EventTrigger.Entry();
+			var entry = new EventTrigger.Entry();
 			entry.eventID = EventTriggerType.Scroll;
 			entry.callback.AddListener(delegate (BaseEventData eventData)
 			{
-				PointerEventData pointerEventData = (PointerEventData)eventData;
+				var pointerEventData = (PointerEventData)eventData;
 
-				if (float.TryParse(_if.text, out float result))
+				if (float.TryParse(inputField.text, out float result))
 				{
-					if (!_multi)
+					if (!multi || !Input.GetKey(KeyCode.LeftShift))
 					{
-						//Small
-						if (Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.LeftControl))
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								float x = result;
-								x -= _amount / _divide;
+						var largeKey = KeyCode.LeftControl;
+						var smallKey = KeyCode.LeftAlt;
+						var regularKey = KeyCode.None;
 
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
+						// Large Amount
+						bool large = largeKey == KeyCode.None && !Input.GetKey(smallKey) && !Input.GetKey(regularKey) || Input.GetKey(largeKey);
 
-								_if.text = x.ToString("f2");
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								float x = result;
-								x += _amount / _divide;
+						// Small Amount
+						bool small = smallKey == KeyCode.None && !Input.GetKey(largeKey) && !Input.GetKey(regularKey) || Input.GetKey(smallKey);
 
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
+						// Regular Amount
+						bool regular = regularKey == KeyCode.None && !Input.GetKey(smallKey) && !Input.GetKey(largeKey) || Input.GetKey(regularKey);
 
-								_if.text = x.ToString("f2");
-							}
-						}
+						if (pointerEventData.scrollDelta.y < 0f)
+							result -= small ? amount / mutliply : large ? amount * mutliply : regular ? amount : 0f;
+						if (pointerEventData.scrollDelta.y > 0f)
+							result += small ? amount / mutliply : large ? amount * mutliply : regular ? amount : 0f;
 
-						//Big
-						if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetKey(KeyCode.LeftControl))
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								float x = result;
-								x -= _amount * _divide;
+						if (min != 0f || max != 0f)
+							result = Mathf.Clamp(result, min, max);
 
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString("f2");
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								float x = result;
-								x += _amount * _divide;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString("f2");
-							}
-						}
-
-						//Normal
-						if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.LeftControl))
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								float x = result;
-								x -= _amount;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString("f2");
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								float x = result;
-								x += _amount;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString("f2");
-							}
-						}
-					}
-					else if (!Input.GetKey(KeyCode.LeftShift))
-					{
-						//Small
-						if (Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.LeftControl))
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								float x = result;
-								x -= _amount / _divide;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString("f2");
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								float x = result;
-								x += _amount / _divide;
-								_if.text = x.ToString("f2");
-							}
-						}
-
-						//Big
-						if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetKey(KeyCode.LeftControl))
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								float x = result;
-								x -= _amount * _divide;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString("f2");
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								float x = result;
-								x += _amount * _divide;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString("f2");
-							}
-						}
-
-						//Normal
-						if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.LeftControl))
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								float x = result;
-								x -= _amount;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString("f2");
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								float x = result;
-								x += _amount;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString("f2");
-							}
-						}
+						inputField.text = result.ToString("f2");
 					}
 				}
 			});
 			return entry;
 		}
 
-		public static EventTrigger.Entry ScrollDeltaInt(InputField _if, int _amount, bool _multi = false, List<int> clamp = null)
+		public static EventTrigger.Entry ScrollDeltaInt(InputField inputField, int amount = 1, int min = 0, int max = 0, bool multi = false)
 		{
-			EventTrigger.Entry entry = new EventTrigger.Entry();
+			var entry = new EventTrigger.Entry();
 			entry.eventID = EventTriggerType.Scroll;
 			entry.callback.AddListener(delegate (BaseEventData eventData)
 			{
-				PointerEventData pointerEventData = (PointerEventData)eventData;
+				var pointerEventData = (PointerEventData)eventData;
 
-				if (int.TryParse(_if.text, out int result))
+				if (int.TryParse(inputField.text, out int result))
 				{
-					if (!_multi)
+					if (!multi || !Input.GetKey(KeyCode.LeftShift))
 					{
-						if (Input.GetKey(KeyCode.LeftControl))
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								int x = result;
-								x -= _amount * 10;
+						var largeKey = KeyCode.LeftControl;
+						var regularKey = KeyCode.None;
 
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
+						// Large Amount
+						bool large = largeKey == KeyCode.None && !Input.GetKey(regularKey) || Input.GetKey(largeKey);
 
-								_if.text = x.ToString();
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								int x = result;
-								x += _amount * 10;
+						// Regular Amount
+						bool regular = regularKey == KeyCode.None && !Input.GetKey(largeKey) || Input.GetKey(regularKey);
 
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
+						if (pointerEventData.scrollDelta.y < 0f)
+							result -= amount * (large ? 10 : regular ? 1 : 0);
+						if (pointerEventData.scrollDelta.y > 0f)
+							result += amount * (large ? 10 : regular ? 1 : 0);
 
-								_if.text = x.ToString();
-							}
-						}
+						if (min != 0f || max != 0f)
+							result = Mathf.Clamp(result, min, max);
+
+						inputField.text = result.ToString();
+					}
+				}
+			});
+			return entry;
+		}
+
+		public static EventTrigger.Entry ScrollDeltaVector2(InputField ifx, InputField ify, float amount, float mutliply, List<float> clamp = null)
+		{
+			var entry = new EventTrigger.Entry();
+			entry.eventID = EventTriggerType.Scroll;
+			entry.callback.AddListener(delegate (BaseEventData eventData)
+			{
+				var pointerEventData = (PointerEventData)eventData;
+				if (Input.GetKey(KeyCode.LeftShift) && float.TryParse(ifx.text, out float x) && float.TryParse(ify.text, out float y))
+				{
+					var largeKey = KeyCode.LeftControl;
+					var smallKey = KeyCode.LeftAlt;
+					var regularKey = KeyCode.None;
+
+					// Large Amount
+					bool large = largeKey == KeyCode.None && !Input.GetKey(smallKey) && !Input.GetKey(regularKey) || Input.GetKey(largeKey);
+
+					// Small Amount
+					bool small = smallKey == KeyCode.None && !Input.GetKey(largeKey) && !Input.GetKey(regularKey) || Input.GetKey(smallKey);
+
+					// Regular Amount
+					bool regular = regularKey == KeyCode.None && !Input.GetKey(smallKey) && !Input.GetKey(largeKey) || Input.GetKey(regularKey);
+
+					if (pointerEventData.scrollDelta.y < 0f)
+					{
+						x -= small ? amount / mutliply : large ? amount * mutliply : regular ? amount : 0f;
+						y -= small ? amount / mutliply : large ? amount * mutliply : regular ? amount : 0f;
+					}
+
+					if (pointerEventData.scrollDelta.y > 0f)
+					{
+						x += small ? amount / mutliply : large ? amount * mutliply : regular ? amount : 0f;
+						y += small ? amount / mutliply : large ? amount * mutliply : regular ? amount : 0f;
+					}
+
+					if (clamp != null && clamp.Count > 1)
+					{
+						x = Mathf.Clamp(x, clamp[0], clamp[1]);
+						if (clamp.Count == 2)
+							y = Mathf.Clamp(y, clamp[0], clamp[1]);
 						else
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								int x = result;
-								x -= _amount;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString();
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								int x = result;
-								x += _amount;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString();
-							}
-						}
+							y = Mathf.Clamp(y, clamp[2], clamp[3]);
 					}
-					else if (!Input.GetKey(KeyCode.LeftShift))
+
+					ifx.text = x.ToString("f2");
+					ify.text = y.ToString("f2");
+				}
+			});
+			return entry;
+		}
+
+		public static EventTrigger.Entry ScrollDeltaVector2Int(InputField ifx, InputField ify, int amount, List<int> clamp = null)
+		{
+			var entry = new EventTrigger.Entry();
+			entry.eventID = EventTriggerType.Scroll;
+			entry.callback.AddListener(delegate (BaseEventData eventData)
+			{
+				var pointerEventData = (PointerEventData)eventData;
+				if (Input.GetKey(KeyCode.LeftShift) && int.TryParse(ifx.text, out int x) && int.TryParse(ify.text, out int y))
+				{
+					var largeKey = KeyCode.LeftControl;
+					var regularKey = KeyCode.None;
+
+					// Large Amount
+					bool large = largeKey == KeyCode.None && !Input.GetKey(regularKey) || Input.GetKey(largeKey);
+
+					// Regular Amount
+					bool regular = regularKey == KeyCode.None && !Input.GetKey(largeKey) || Input.GetKey(regularKey);
+
+					if (pointerEventData.scrollDelta.y < 0f)
 					{
-						if (Input.GetKey(KeyCode.LeftControl))
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								int x = result;
-								x -= _amount * 10;
+						x -= large ? amount * 10 : regular ? amount : 0;
+						y -= large ? amount * 10 : regular ? amount : 0;
+					}
 
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
+					if (pointerEventData.scrollDelta.y > 0f)
+					{
+						x += large ? amount * 10 : regular ? amount : 0;
+						y += large ? amount * 10 : regular ? amount : 0;
+					}
 
-								_if.text = x.ToString();
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								int x = result;
-								x += _amount * 10;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString();
-							}
-						}
+					if (clamp != null)
+					{
+						x = Mathf.Clamp(x, clamp[0], clamp[1]);
+						if (clamp.Count == 2)
+							y = Mathf.Clamp(y, clamp[0], clamp[1]);
 						else
-						{
-							if (pointerEventData.scrollDelta.y < 0f)
-							{
-								int x = result;
-								x -= _amount;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString();
-								return;
-							}
-							if (pointerEventData.scrollDelta.y > 0f)
-							{
-								int x = result;
-								x += _amount;
-
-								if (clamp != null)
-								{
-									x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								}
-
-								_if.text = x.ToString();
-							}
-						}
+							y = Mathf.Clamp(y, clamp[2], clamp[3]);
 					}
+
+					ifx.text = x.ToString();
+					ify.text = y.ToString();
 				}
 			});
 			return entry;
 		}
 
-		public static EventTrigger.Entry ScrollDeltaVector2(InputField _ifX, InputField _ifY, float _amount, float _divide, List<float> clamp = null)
-		{
-			EventTrigger.Entry entry = new EventTrigger.Entry();
-			entry.eventID = EventTriggerType.Scroll;
-			entry.callback.AddListener(delegate (BaseEventData eventData)
-			{
-				PointerEventData pointerEventData = (PointerEventData)eventData;
-				if (Input.GetKey(KeyCode.LeftShift))
-				{
-					//Small
-					if (Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.LeftControl))
-					{
-						if (pointerEventData.scrollDelta.y < 0f)
-						{
-							float x = float.Parse(_ifX.text);
-							float y = float.Parse(_ifY.text);
+		#endregion
 
-							x -= _amount / _divide;
-							y -= _amount / _divide;
+		#region Buttons
 
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString("f2");
-							_ifY.text = y.ToString("f2");
-							return;
-						}
-						if (pointerEventData.scrollDelta.y > 0f)
-						{
-							float x = float.Parse(_ifX.text);
-							float y = float.Parse(_ifY.text);
-
-							x += _amount / _divide;
-							y += _amount / _divide;
-
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString("f2");
-							_ifY.text = y.ToString("f2");
-						}
-					}
-
-					//Big
-					if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetKey(KeyCode.LeftControl))
-					{
-						if (pointerEventData.scrollDelta.y < 0f)
-						{
-							float x = float.Parse(_ifX.text);
-							float y = float.Parse(_ifY.text);
-
-							x -= _amount * _divide;
-							y -= _amount * _divide;
-
-
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString("f2");
-							_ifY.text = y.ToString("f2");
-							return;
-						}
-						if (pointerEventData.scrollDelta.y > 0f)
-						{
-							float x = float.Parse(_ifX.text);
-							float y = float.Parse(_ifY.text);
-
-							x += _amount * _divide;
-							y += _amount * _divide;
-
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString("f2");
-							_ifY.text = y.ToString("f2");
-						}
-					}
-
-					//Normal
-					if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.LeftControl))
-					{
-						if (pointerEventData.scrollDelta.y < 0f)
-						{
-							float x = float.Parse(_ifX.text);
-							float y = float.Parse(_ifY.text);
-
-							x -= _amount;
-							y -= _amount;
-
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString("f2");
-							_ifY.text = y.ToString("f2");
-							return;
-						}
-						if (pointerEventData.scrollDelta.y > 0f)
-						{
-							float x = float.Parse(_ifX.text);
-							float y = float.Parse(_ifY.text);
-
-							x += _amount;
-							y += _amount;
-
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString("f2");
-							_ifY.text = y.ToString("f2");
-						}
-					}
-				}
-			});
-			return entry;
-		}
-
-		public static EventTrigger.Entry ScrollDeltaVector2Int(InputField _ifX, InputField _ifY, int _amount, List<int> clamp = null)
-		{
-			EventTrigger.Entry entry = new EventTrigger.Entry();
-			entry.eventID = EventTriggerType.Scroll;
-			entry.callback.AddListener(delegate (BaseEventData eventData)
-			{
-				PointerEventData pointerEventData = (PointerEventData)eventData;
-				if (Input.GetKey(KeyCode.LeftShift))
-				{
-					//Big
-					if (Input.GetKey(KeyCode.LeftControl))
-					{
-						if (pointerEventData.scrollDelta.y < 0f)
-						{
-							int x = int.Parse(_ifX.text);
-							int y = int.Parse(_ifY.text);
-
-							x -= _amount * 10;
-							y -= _amount * 10;
-
-
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString();
-							_ifY.text = y.ToString();
-							return;
-						}
-						if (pointerEventData.scrollDelta.y > 0f)
-						{
-							int x = int.Parse(_ifX.text);
-							int y = int.Parse(_ifY.text);
-
-							x += _amount * 10;
-							y += _amount * 10;
-
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString();
-							_ifY.text = y.ToString();
-						}
-					}
-
-					//Normal
-					if (!Input.GetKey(KeyCode.LeftControl))
-					{
-						if (pointerEventData.scrollDelta.y < 0f)
-						{
-							int x = int.Parse(_ifX.text);
-							int y = int.Parse(_ifY.text);
-
-							x -= _amount;
-							y -= _amount;
-
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString();
-							_ifY.text = y.ToString();
-							return;
-						}
-						if (pointerEventData.scrollDelta.y > 0f)
-						{
-							int x = int.Parse(_ifX.text);
-							int y = int.Parse(_ifY.text);
-
-							x += _amount;
-							y += _amount;
-
-							if (clamp != null)
-							{
-								x = Mathf.Clamp(x, clamp[0], clamp[1]);
-								if (clamp.Count == 2)
-									y = Mathf.Clamp(y, clamp[0], clamp[1]);
-								else
-									y = Mathf.Clamp(y, clamp[2], clamp[3]);
-							}
-
-							_ifX.text = x.ToString();
-							_ifY.text = y.ToString();
-						}
-					}
-				}
-			});
-			return entry;
-		}
-
-        #endregion
-
-        #region Buttons
-
-        public static void IncreaseDecreaseButtons(InputField _if, float _amount, float _divide, Transform t = null, List<float> clamp = null)
+		public static void IncreaseDecreaseButtons(InputField _if, float _amount, float _divide, Transform t = null, List<float> clamp = null)
 		{
 			var tf = _if.transform;
 
