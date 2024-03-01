@@ -29,6 +29,8 @@ namespace RTFunctions.Functions
             {
                 if (!string.IsNullOrEmpty(metadata.serverID) && metadata.serverID != "-1")
                     id = metadata.serverID;
+                else if (!string.IsNullOrEmpty(metadata.arcadeID) && metadata.arcadeID != "-1")
+                    id = metadata.arcadeID;
                 else if (!string.IsNullOrEmpty(metadata.LevelBeatmap.beatmap_id) && metadata.LevelBeatmap.beatmap_id != "-1")
                     id = metadata.LevelBeatmap.beatmap_id;
                 else
