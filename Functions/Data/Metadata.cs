@@ -36,6 +36,7 @@ namespace RTFunctions.Functions.Data
         public string collectionID;
         public int index;
         public string serverID;
+        public string arcadeID;
 
         #region Methods
 
@@ -298,7 +299,6 @@ namespace RTFunctions.Functions.Data
 				string dateCreated = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 				string workshopID = "-1";
 				int num = 0;
-				string beatmapID = LSFunctions.LSText.randomString(16);
 
                 try
 				{
@@ -312,8 +312,6 @@ namespace RTFunctions.Functions.Data
 						num = jn["beatmap"]["version_number"].AsInt;
 					if (!string.IsNullOrEmpty(jn["beatmap"]["workshop_id"]))
 						workshopID = jn["beatmap"]["workshop_id"];
-					if (!string.IsNullOrEmpty(jn["beatmap"]["beatmap_id"]))
-						beatmapID = jn["beatmap"]["beatmap_id"];
 				}
                 catch (Exception ex)
 				{
@@ -325,6 +323,8 @@ namespace RTFunctions.Functions.Data
 				result = new MetaData(artist, creator, song, beatmap);
 				if (!string.IsNullOrEmpty(jn["server_id"]))
 					result.serverID = jn["server_id"];
+				if (!string.IsNullOrEmpty(jn["arcade_id"]))
+					result.arcadeID = jn["arcade_id"];
 			}
 			catch
 			{
@@ -395,6 +395,9 @@ namespace RTFunctions.Functions.Data
 
 			if (!string.IsNullOrEmpty(serverID))
 				jn["server_id"] = serverID;
+			
+			if (!string.IsNullOrEmpty(arcadeID))
+				jn["arcade_id"] = arcadeID;
 
 			return jn;
 		}
