@@ -6,6 +6,8 @@ using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Managers.Networking;
+using System.Collections;
+using System;
 
 namespace RTFunctions.Functions
 {
@@ -105,6 +107,48 @@ namespace RTFunctions.Functions
             {
                 music = LSFunctions.LSAudio.CreateAudioClipUsingMP3File(path + "audio.mp3");
             }
+        }
+        
+        public IEnumerator LoadAudioClipRoutine(Action onComplete = null)
+        {
+            if (RTFile.FileExists(path + "level.ogg") && !music)
+            {
+                yield return FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadAudioClip("file://" + path + "level.ogg", AudioType.OGGVORBIS, delegate (AudioClip audioClip)
+                {
+                    music = audioClip;
+                }));
+            }
+            else if (RTFile.FileExists(path + "level.wav") && !music)
+            {
+                yield return FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadAudioClip("file://" + path + "level.wav", AudioType.WAV, delegate (AudioClip audioClip)
+                {
+                    music = audioClip;
+                }));
+            }
+            else if (RTFile.FileExists(path + "level.mp3") && !music)
+            {
+                yield return music = LSFunctions.LSAudio.CreateAudioClipUsingMP3File(path + "level.mp3");
+            }
+            else if (RTFile.FileExists(path + "audio.ogg") && !music)
+            {
+                yield return FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadAudioClip("file://" + path + "audio.ogg", AudioType.OGGVORBIS, delegate (AudioClip audioClip)
+                {
+                    music = audioClip;
+                }));
+            }
+            else if (RTFile.FileExists(path + "audio.wav") && !music)
+            {
+                yield return FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadAudioClip("file://" + path + "audio.wav", AudioType.WAV, delegate (AudioClip audioClip)
+                {
+                    music = audioClip;
+                }));
+            }
+            else if (RTFile.FileExists(path + "audio.mp3") && !music)
+            {
+                yield return music = LSFunctions.LSAudio.CreateAudioClipUsingMP3File(path + "audio.mp3");
+            }
+
+            onComplete?.Invoke();
         }
 
         public LevelManager.PlayerData playerData;
