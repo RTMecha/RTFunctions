@@ -94,12 +94,17 @@ namespace RTFunctions.Functions.Managers
         public static float AcurracyDivisionAmount { get; set; } = 10f;
 
         #region Game Modes
+        public static void SetGameMode(int mode) => DataManager.inst.UpdateSettingInt("ArcadeDifficulty", mode);
 
         public static bool IsZenMode => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 0;
         public static bool IsNormal => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 1;
         public static bool Is1Life => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 2;
         public static bool IsNoHit => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 3;
         public static bool IsPractice => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 4;
+
+        public static int ArcadeGameSpeed => DataManager.inst.GetSettingEnum("ArcadeGameSpeed", 2);
+
+        public static void SetGameSpeed(int speed) => DataManager.inst.UpdateSettingEnum("ArcadeGameSpeed", speed);
 
         #endregion
 
