@@ -82,12 +82,12 @@ namespace RTFunctions.Functions.Managers
             LoadingFromHere = true;
             LevelEnded = false;
 
-            CurrentLevel = level;
-
-            if (Saves.Has(x => x.ID == level.id))
+            if (level.playerData == null && Saves.Has(x => x.ID == level.id))
             {
-                CurrentLevel.playerData = Saves.Find(x => x.ID == level.id);
+                level.playerData = Saves.Find(x => x.ID == level.id);
             }
+
+            CurrentLevel = level;
 
             Debug.Log($"{className}Switching to Game scene");
 
@@ -97,7 +97,8 @@ namespace RTFunctions.Functions.Managers
 
             Debug.Log($"{className}Loading music...");
 
-            level.LoadAudioClip();
+            if (!level.music)
+                level.LoadAudioClip();
 
             if (ShapeManager.inst.loadedShapes)
                 ShapeManager.inst.Load();
