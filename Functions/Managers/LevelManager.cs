@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 namespace RTFunctions.Functions.Managers
@@ -54,6 +55,8 @@ namespace RTFunctions.Functions.Managers
         public static int BoostCount { get; set; }
 
         public static Action OnLevelEnd { get; set; }
+
+        public static int PlayedLevelCount { get; set; }
 
         void Awake()
         {
@@ -243,6 +246,62 @@ namespace RTFunctions.Functions.Managers
             InputDataManager.inst.SetAllControllerRumble(0f);
         }
 
+        public static void Sort(int orderby, bool ascend)
+        {
+            switch (orderby)
+            {
+                case 0:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.icon != SteamWorkshop.inst.defaultSteamImageSprite) :
+                            Levels.OrderByDescending(x => x.icon != SteamWorkshop.inst.defaultSteamImageSprite)).ToList();
+                        break;
+                    }
+                case 1:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.artist.Name) :
+                            Levels.OrderByDescending(x => x.metadata.artist.Name)).ToList();
+                        break;
+                    }
+                case 2:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.creator.steam_name) :
+                            Levels.OrderByDescending(x => x.metadata.creator.steam_name)).ToList();
+                        break;
+                    }
+                case 3:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => System.IO.Path.GetFileName(x.path)) :
+                            Levels.OrderByDescending(x => System.IO.Path.GetFileName(x.path))).ToList();
+                        break;
+                    }
+                case 4:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.song.title) :
+                            Levels.OrderByDescending(x => x.metadata.song.title)).ToList();
+                        break;
+                    }
+                case 5:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.song.difficulty) :
+                            Levels.OrderByDescending(x => x.metadata.song.difficulty)).ToList();
+                        break;
+                    }
+                case 6:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.beatmap.date_edited) :
+                            Levels.OrderByDescending(x => x.metadata.beatmap.date_edited)).ToList();
+                        break;
+                    }
+            }
+        }
+
         public static string UpdateBeatmap(string _json, string _version)
         {
             Debug.Log("[ -- Updating Beatmap! -- ] - [" + _version + "]");
@@ -340,6 +399,8 @@ namespace RTFunctions.Functions.Managers
                 jn["lvl"][i] = Saves[i].ToJSON();
             }
 
+            jn["played_count"] = PlayedLevelCount.ToString();
+
             if (!RTFile.DirectoryExists(RTFile.ApplicationDirectory + "profile"))
                 Directory.CreateDirectory(RTFile.ApplicationDirectory + "profile");
 
@@ -362,6 +423,11 @@ namespace RTFunctions.Functions.Managers
             for (int i = 0; i < jn["lvl"].Count; i++)
             {
                 Saves.Add(PlayerData.Parse(jn["lvl"][i]));
+            }
+
+            if (!string.IsNullOrEmpty(jn["played_count"]))
+            {
+                PlayedLevelCount = jn["played_count"].AsInt;
             }
         }
         
