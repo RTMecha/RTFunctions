@@ -91,6 +91,7 @@ namespace RTFunctions
 		public static ConfigEntry<KeyCode> ScreenshotKey { get; set; }
 
 		public static ConfigEntry<string> ScreenshotsPath { get; set; }
+		public static ConfigEntry<bool> UseNewUpdateMethod { get; set; }
 
 		public static ConfigEntry<bool> DiscordShowLevel { get; set; }
 
@@ -353,6 +354,8 @@ namespace RTFunctions
 			DebugInfoToggleKey = Config.Bind("Debugging", "Show Debug Info Toggle Key", KeyCode.F6, "Shows a helpful info overlay with some information about the current gamestate.");
 			NotifyREPL = Config.Bind("Debugging", "Notify REPL", false, "If in editor, code ran will have their results be notified.");
 
+			UseNewUpdateMethod = Config.Bind("Game", "Use New Update Method", true, "Possibly releases the fixed framerate of the game.");
+            UseNewUpdateMethod.SettingChanged += UseNewUpdateMethodChanged;
 			ScreenshotsPath = Config.Bind("Game", "Screenshot Path", "screenshots", "The path to save screenshots to.");
 			ScreenshotKey = Config.Bind("Game", "Screenshot Key", KeyCode.F2, "The key to press to take a screenshot.");
 			AntiAliasing = Config.Bind("Game", "Anti-Aliasing", true, "If antialiasing is on or not.");
@@ -384,6 +387,8 @@ namespace RTFunctions
 			displayName = DisplayName.Value;
 
 			player.sprName = displayName;
+
+			Updater.UseNewUpdateMethod = UseNewUpdateMethod.Value;
 
 			Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(UpdateSettings);
 
@@ -419,7 +424,7 @@ namespace RTFunctions
 				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
 					string str = RTFile.BasePath;
-					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-backup.lsb";
+					string modBackup = str + "level-quit-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
@@ -432,7 +437,7 @@ namespace RTFunctions
 				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
 					string str = RTFile.BasePath;
-					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-unity-backup.lsb";
+					string modBackup = str + "level-quit-unity-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
@@ -441,6 +446,11 @@ namespace RTFunctions
 			};
 
 			Logger.LogInfo($"Plugin RT Functions is loaded!");
+		}
+
+        void UseNewUpdateMethodChanged(object sender, EventArgs e)
+		{
+			Updater.UseNewUpdateMethod = UseNewUpdateMethod.Value;
 		}
 
 		static void UpdateSettings(object sender, EventArgs e)

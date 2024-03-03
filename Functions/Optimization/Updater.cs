@@ -18,6 +18,9 @@ namespace RTFunctions.Functions.Optimization
 
         public static LevelProcessor levelProcessor;
 
+        static float previousAudioTime;
+        static float audioTimeVelocity;
+
         public static bool Active => levelProcessor && levelProcessor.level;
 
         public static bool HasObject(BaseBeatmapObject beatmapObject) => Active && (LevelObject)levelProcessor.level.objects.Find(x => x.ID == beatmapObject.id);
@@ -47,6 +50,9 @@ namespace RTFunctions.Functions.Optimization
         {
             Debug.Log($"{className}Loading level");
 
+            previousAudioTime = 0.0f;
+            audioTimeVelocity = 0.0f;
+
             levelProcessor = new LevelProcessor(GameData.Current);
         }
 
@@ -61,10 +67,24 @@ namespace RTFunctions.Functions.Optimization
             levelProcessor = null;
         }
 
+        public static bool UseNewUpdateMethod { get; set; }
+
         /// <summary>
         /// Updates animation system.
         /// </summary>
-        public static void OnLevelTick() => levelProcessor?.Update(AudioManager.inst.CurrentAudioSource.time);
+        public static void OnLevelTick()
+        {
+            if (!UseNewUpdateMethod)
+            {
+                levelProcessor?.Update(AudioManager.inst.CurrentAudioSource.time);
+                return;
+            }
+
+            var currentAudioTime = AudioManager.inst.CurrentAudioSource.time;
+            var smoothedTime = Mathf.SmoothDamp(previousAudioTime, currentAudioTime, ref audioTimeVelocity, 1.0f / 50.0f);
+            levelProcessor?.Update(smoothedTime);
+            previousAudioTime = smoothedTime;
+        }
 
         /// <summary>
         /// Gets a BeatmapObjects associated LevelObject. Useful for other mods that want to retrieve this data.
