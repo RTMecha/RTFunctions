@@ -225,7 +225,7 @@ namespace RTFunctions.Functions.Data
 
 				var artist = new LevelArtist(name, linkType, link);
 
-				string steam_name = "Mecha";
+				string steam_name = "RTMecha";
 				int steam_id = -1;
 				string creatorLink = "";
 				int creatorLinkType = 0;
@@ -248,7 +248,7 @@ namespace RTFunctions.Functions.Data
 
 				var creator = new LevelCreator(steam_name, steam_id, creatorLink, creatorLinkType);
 
-				string title = "Pyrolysis";
+				string title = "Intertia";
 				int difficulty = 2;
 				string description = "This is the default description!";
 				float bpm = 120f;
@@ -491,7 +491,7 @@ namespace RTFunctions.Functions.Data
     {
         public LevelSong() : base()
 		{
-
+			title = "Intertia";
         }
 
 		public LevelSong(string title, int difficulty, string description, float BPM, float time, float previewStart, float previewLength, string[] tags) : base(title, difficulty, description, BPM, time, previewStart, previewLength)
