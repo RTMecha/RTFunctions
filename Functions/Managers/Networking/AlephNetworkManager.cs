@@ -29,27 +29,23 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadClient(string path, Action<byte[]> callback)
         {
-            using (var client = new WebClient())
-            {
-                var bytes = client.DownloadData(path);
-                while (client.IsBusy)
-                    yield return null;
+            using var client = new WebClient();
+            var bytes = client.DownloadData(path);
+            while (client.IsBusy)
+                yield return null;
 
-                callback?.Invoke(bytes);
-            }
+            callback?.Invoke(bytes);
             yield break;
         }
 
         public static IEnumerator DownloadClient(string path, Action<string> callback)
         {
-            using (var client = new WebClient())
-            {
-                var bytes = client.DownloadString(path);
-                while (client.IsBusy)
-                    yield return null;
+            using var client = new WebClient();
+            var bytes = client.DownloadString(path);
+            while (client.IsBusy)
+                yield return null;
 
-                callback?.Invoke(bytes);
-            }
+            callback?.Invoke(bytes);
             yield break;
         }
 
@@ -59,32 +55,28 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadBytes(string path, Action<byte[]> callback, Action<string> onError)
         {
-            using (var www = UnityWebRequest.Get(path))
+            using var www = UnityWebRequest.Get(path);
+            yield return www.SendWebRequest();
+            if (www.isNetworkError || www.isHttpError)
             {
-                yield return www.SendWebRequest();
-                if (www.isNetworkError || www.isHttpError)
-                {
-                    Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
-                    onError?.Invoke(www.error);
-                }
-                else
-                    callback?.Invoke(www.downloadHandler.data);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
+                onError?.Invoke(www.error);
             }
+            else
+                callback?.Invoke(www.downloadHandler.data);
 
             yield break;
         }
 
         public static IEnumerator DownloadBytes(string path, Action<byte[]> callback)
         {
-            using (var www = UnityWebRequest.Get(path))
-            {
-                www.certificateHandler = new ForceAcceptAll();
-                yield return www.SendWebRequest();
-                if (www.isNetworkError || www.isHttpError)
-                    Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
-                else
-                    callback?.Invoke(www.downloadHandler.data);
-            }
+            using var www = UnityWebRequest.Get(path);
+            www.certificateHandler = new ForceAcceptAll();
+            yield return www.SendWebRequest();
+            if (www.isNetworkError || www.isHttpError)
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
+            else
+                callback?.Invoke(www.downloadHandler.data);
         }
 
         public static IEnumerator UploadBytes(string url, byte[] bytes)
@@ -92,7 +84,7 @@ namespace RTFunctions.Functions.Managers.Networking
             var form = new WWWForm();
             form.AddBinaryData("file", bytes);
 
-            var www = UnityWebRequest.Post(url, form);
+            using var www = UnityWebRequest.Post(url, form);
 
             www.certificateHandler = new ForceAcceptAll();
             yield return www.SendWebRequest();
@@ -108,7 +100,7 @@ namespace RTFunctions.Functions.Managers.Networking
             var form = new WWWForm();
             form.AddBinaryData("file", bytes);
 
-            var www = UnityWebRequest.Post(url, form);
+            using var www = UnityWebRequest.Post(url, form);
 
             www.certificateHandler = new ForceAcceptAll();
             yield return www.SendWebRequest();
@@ -124,7 +116,7 @@ namespace RTFunctions.Functions.Managers.Networking
             var form = new WWWForm();
             form.AddBinaryData("file", bytes);
 
-            var www = UnityWebRequest.Post(url, form);
+            using var www = UnityWebRequest.Post(url, form);
 
             www.certificateHandler = new ForceAcceptAll();
             yield return www.SendWebRequest();
@@ -140,7 +132,7 @@ namespace RTFunctions.Functions.Managers.Networking
             var form = new WWWForm();
             form.AddBinaryData("file", bytes);
 
-            var www = UnityWebRequest.Post(url, form);
+            using var www = UnityWebRequest.Post(url, form);
 
             www.certificateHandler = new ForceAcceptAll();
 
@@ -160,7 +152,7 @@ namespace RTFunctions.Functions.Managers.Networking
         
         public static IEnumerator UploadString(string url, string str)
         {
-            var www = UnityWebRequest.Post(url, str);
+            using var www = UnityWebRequest.Post(url, str);
 
             www.certificateHandler = new ForceAcceptAll();
             yield return www.SendWebRequest();
@@ -173,7 +165,7 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadBytes(string path, Action<float> percentage, Action<byte[]> callback, Action<string> onError)
         {
-            var www = UnityWebRequest.Get(path);
+            using var www = UnityWebRequest.Get(path);
             var webRequest = www.SendWebRequest();
 
             while (!webRequest.isDone)
@@ -184,7 +176,7 @@ namespace RTFunctions.Functions.Managers.Networking
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
                 onError?.Invoke(www.error);
             }
             else
@@ -199,37 +191,34 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadJSONFile(string path, Action<string> callback, Action<string> onError)
         {
-            using (var www = UnityWebRequest.Get(path))
+            using var www = UnityWebRequest.Get(path);
+            yield return www.SendWebRequest();
+            if (www.isNetworkError || www.isHttpError)
             {
-                yield return www.SendWebRequest();
-                if (www.isNetworkError || www.isHttpError)
-                {
-                    Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
-                    onError?.Invoke(www.error);
-                }
-                else
-                    callback?.Invoke(www.downloadHandler.text);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
+                onError?.Invoke(www.error);
             }
+            else
+                callback?.Invoke(www.downloadHandler.text);
+            
         }
 
         public static IEnumerator DownloadJSONFile(string path, Action<string> callback)
         {
-            using (var www = UnityWebRequest.Get(path))
-            {
-                www.certificateHandler = new ForceAcceptAll();
-                yield return www.SendWebRequest();
-                if (www.isNetworkError || www.isHttpError)
-                    Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
-                else
-                    callback?.Invoke(www.downloadHandler.text);
-            }
+            using var www = UnityWebRequest.Get(path);
+            www.certificateHandler = new ForceAcceptAll();
+            yield return www.SendWebRequest();
+            if (www.isNetworkError || www.isHttpError)
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
+            else
+                callback?.Invoke(www.downloadHandler.text);
 
             yield break;
         }
 
         public static IEnumerator DownloadJSONFile(string path, Action<float> percentage, Action<string> callback, Action<string> onError)
         {
-            var www = UnityWebRequest.Get(path);
+            using var www = UnityWebRequest.Get(path);
             var webRequest = www.SendWebRequest();
 
             while (!webRequest.isDone)
@@ -240,7 +229,7 @@ namespace RTFunctions.Functions.Managers.Networking
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
                 onError?.Invoke(www.error);
             }
             else
@@ -255,12 +244,12 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadImageTexture(string path, Action<Texture2D> callback, Action<string> onError)
         {
-            var www = UnityWebRequestTexture.GetTexture(path);
+            using var www = UnityWebRequestTexture.GetTexture(path);
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
                 onError?.Invoke(www.error);
             }
             else
@@ -269,18 +258,18 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadImageTexture(string path, Action<Texture2D> callback)
         {
-            var www = UnityWebRequestTexture.GetTexture(path);
+            using var www = UnityWebRequestTexture.GetTexture(path);
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
             else
                 callback?.Invoke(((DownloadHandlerTexture)www.downloadHandler).texture);
         }
 
         public static IEnumerator DownloadImageTexture(string path, Action<float> percentage, Action<Texture2D> callback, Action<string> onError)
         {
-            var www = UnityWebRequestTexture.GetTexture(path);
+            using var www = UnityWebRequestTexture.GetTexture(path);
             var webRequest = www.SendWebRequest();
 
             while (!webRequest.isDone)
@@ -291,7 +280,7 @@ namespace RTFunctions.Functions.Managers.Networking
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
                 onError?.Invoke(www.error);
             }
             else
@@ -304,12 +293,12 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadAudioClip(string path, AudioType audioType, Action<AudioClip> callback, Action<string> onError)
         {
-            var www = UnityWebRequestMultimedia.GetAudioClip(path, audioType);
+            using var www = UnityWebRequestMultimedia.GetAudioClip(path, audioType);
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
                 onError?.Invoke(www.error);
             }
             else
@@ -318,18 +307,18 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadAudioClip(string path, AudioType audioType, Action<AudioClip> callback)
         {
-            var www = UnityWebRequestMultimedia.GetAudioClip(path, audioType);
+            using var www = UnityWebRequestMultimedia.GetAudioClip(path, audioType);
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
             else
                 callback?.Invoke(((DownloadHandlerAudioClip)www.downloadHandler).audioClip);
         }
 
         public static IEnumerator DownloadAudioClip(string path, Action<float> percentage, AudioType audioType, Action<AudioClip> callback, Action<string> onError)
         {
-            var www = UnityWebRequestMultimedia.GetAudioClip(path, audioType);
+            using var www = UnityWebRequestMultimedia.GetAudioClip(path, audioType);
             var webRequest = www.SendWebRequest();
 
             while (!webRequest.isDone)
@@ -340,7 +329,7 @@ namespace RTFunctions.Functions.Managers.Networking
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
                 onError?.Invoke(www.error);
             }
             else
@@ -353,12 +342,12 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadAssetBundle(string path, Action<AssetBundle> callback, Action<string> onError)
         {
-            UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(path);
+            using var www = UnityWebRequestAssetBundle.GetAssetBundle(path);
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
                 onError?.Invoke(www.error);
             }
             else
@@ -367,18 +356,18 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public static IEnumerator DownloadAssetBundle(string path, Action<AssetBundle> callback)
         {
-            UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(path);
+            using var www = UnityWebRequestAssetBundle.GetAssetBundle(path);
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
             else
                 callback?.Invoke(((DownloadHandlerAssetBundle)www.downloadHandler).assetBundle);
         }
 
         public static IEnumerator DownloadAssetBundle(string path, Action<float> percentage, Action<AssetBundle> callback, Action<string> onError)
         {
-            var www = UnityWebRequestAssetBundle.GetAssetBundle(path);
+            using var www = UnityWebRequestAssetBundle.GetAssetBundle(path);
             var webRequest = www.SendWebRequest();
 
             while (!webRequest.isDone)
@@ -389,7 +378,7 @@ namespace RTFunctions.Functions.Managers.Networking
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogErrorFormat("{0}Error: {1}", className, www.error);
+                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
                 onError?.Invoke(www.error);
             }
             else
