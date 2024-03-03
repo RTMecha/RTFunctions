@@ -32,7 +32,7 @@ namespace RTFunctions.Functions.Managers
 
                 for (int i = 0; i < allAssetNames.Length; i++)
                 {
-                    var name = assetBundle.GetAllAssetNames()[i].Replace(Path.GetDirectoryName(assetBundle.GetAllAssetNames()[0]).Replace("\\", "/") + "/", "");
+                    var name = allAssetNames[i].Replace(Path.GetDirectoryName(allAssetNames[i]).Replace("\\", "/") + "/", "");
 
                     var sprite = assetBundle.LoadAsset<Sprite>(name);
                     
