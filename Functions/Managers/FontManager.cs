@@ -643,6 +643,8 @@ namespace RTFunctions.Functions.Managers
                 }
             }
 
+            RTDebugger.Init();
+
             yield break;
         }
 
