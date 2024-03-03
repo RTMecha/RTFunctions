@@ -78,6 +78,8 @@ namespace RTFunctions
 
 		public static string displayName;
 
+		public static ConfigEntry<bool> DebugInfo { get; set; }
+		public static ConfigEntry<KeyCode> DebugInfoToggleKey { get; set; }
 		public static ConfigEntry<bool> NotifyREPL { get; set; }
 
 		public static ConfigEntry<bool> BGReactiveLerp { get; set; }
@@ -347,10 +349,12 @@ namespace RTFunctions
 			inst = this;
 
 			DebugsOn = Config.Bind("Debugging", "Enabled", true, "If disabled, turns all Unity debug logs off. Might boost performance.");
+			DebugInfo = Config.Bind("Debugging", "Show Debug Info", false, "Shows a helpful info overlay with some information about the current gamestate.");
+			DebugInfoToggleKey = Config.Bind("Debugging", "Show Debug Info Toggle Key", KeyCode.F6, "Shows a helpful info overlay with some information about the current gamestate.");
 			NotifyREPL = Config.Bind("Debugging", "Notify REPL", false, "If in editor, code ran will have their results be notified.");
 
 			ScreenshotsPath = Config.Bind("Game", "Screenshot Path", "screenshots", "The path to save screenshots to.");
-			ScreenshotKey = Config.Bind("Game", "Screenshot Key", KeyCode.P, "The key to press to take a screenshot.");
+			ScreenshotKey = Config.Bind("Game", "Screenshot Key", KeyCode.F2, "The key to press to take a screenshot.");
 			AntiAliasing = Config.Bind("Game", "Anti-Aliasing", true, "If antialiasing is on or not.");
 			RunInBackground = Config.Bind("Game", "Run In Background", true, "If you want the game to continue playing when minimized.");
 			IncreasedClipPlanes = Config.Bind("Game", "Camera Clip Planes", true, "Increases the clip panes to a very high amount, allowing for object render depth to go really high or really low.");
@@ -360,8 +364,8 @@ namespace RTFunctions
 
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
 
-			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F3, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
-			OpenPAPersistentFolder = Config.Bind("File", "Open LocalLow Folder", KeyCode.F4, "Opens the data folder all instances of PA share containing the log files and copied prefab (if you have EditorManagement installed)");
+			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F4, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
+			OpenPAPersistentFolder = Config.Bind("File", "Open LocalLow Folder", KeyCode.F5, "Opens the data folder all instances of PA share containing the log files and copied prefab (if you have EditorManagement installed)");
 
 			Fullscreen = Config.Bind("Settings", "Fullscreen", false);
 			Resolution = Config.Bind("Settings", "Resolution", Resolutions.p720);
@@ -400,6 +404,7 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(PlayerPatch));
 				harmony.PatchAll(typeof(SaveManagerPatch));
 				harmony.PatchAll(typeof(SoundLibraryPatch));
+				harmony.PatchAll(typeof(SteamManagerPatch));
 			}
 
 			// Hooks
@@ -535,9 +540,11 @@ namespace RTFunctions
 				if (Input.GetKeyDown(OpenPAPersistentFolder.Value))
 					RTFile.OpenInFileBrowser.Open(RTFile.PersistentApplicationDirectory);
 
-				if (Input.GetKeyDown(KeyCode.I))
-					Debug.LogFormat("{0}Objects alive: {1}", className, DataManager.inst.gameData.beatmapObjects.FindAll(x => x.TimeWithinLifespan()).Count);
+				if (Input.GetKeyDown(DebugInfoToggleKey.Value))
+					DebugInfo.Value = !DebugInfo.Value;
 			}
+
+			RTDebugger.Update();
 		}
 
 		#region Patchers
