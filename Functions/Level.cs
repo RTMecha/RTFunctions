@@ -54,6 +54,8 @@ namespace RTFunctions.Functions
                 {
                     RTFile.FileExists($"{path}level.vgd") ? "level.vgd" : "level.lsb",
                 };
+
+            IsVG = RTFile.FileExists($"{path}level.vgd") && RTFile.FileExists($"{path}metadata.vgm");
         }
 
         public string path;
@@ -153,6 +155,38 @@ namespace RTFunctions.Functions
 
         public LevelManager.PlayerData playerData;
 
+        public bool IsVG { get; set; }
+
         public override string ToString() => System.IO.Path.GetFileName(path);
+
+        /// <summary>
+        /// Checks if all files required to load a level exist. Includes LS / VG formats.
+        /// </summary>
+        /// <param name="folder">The folder to check. Must end with a /.</param>
+        /// <returns>True if all files are validated, otherwise false.</returns>
+        public static bool Verify(string folder) => VerifySong(folder) && VerifyMetadata(folder) && VerifyLevel(folder);
+
+        /// <summary>
+        /// Checks if the level has a song. Includes all audio types and LS / VG names.
+        /// </summary>
+        /// <param name="folder">The folder to check. Must end with a /.</param>
+        /// <returns>True if a song exists, otherwise false.</returns>
+        public static bool VerifySong(string folder) =>
+            RTFile.FileExists(folder + "audio.ogg") || RTFile.FileExists(folder + "audio.wav") || RTFile.FileExists(folder + "audio.mp3") ||
+            RTFile.FileExists(folder + "level.ogg") || RTFile.FileExists(folder + "level.wav") || RTFile.FileExists(folder + "level.mp3");
+
+        /// <summary>
+        /// Checks if the level has metadata. Includes LS and VG formats.
+        /// </summary>
+        /// <param name="folder">The folder to check. Must end with a /.</param>
+        /// <returns>True if metadata exists, otherwise false.</returns>
+        public static bool VerifyMetadata(string folder) => RTFile.FileExists(folder + "metadata.vgm") || RTFile.FileExists(folder + "metadata.lsb");
+
+        /// <summary>
+        /// Checks if the level has level data. Includes LS and VG formats.
+        /// </summary>
+        /// <param name="folder">The folder to check. Must end with a /.</param>
+        /// <returns>True if level data exists, otherwise false.</returns>
+        public static bool VerifyLevel(string folder) => RTFile.FileExists(folder + "level.vgd") || RTFile.FileExists(folder + "level.lsb");
     }
 }
