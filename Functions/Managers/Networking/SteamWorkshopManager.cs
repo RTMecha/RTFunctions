@@ -49,13 +49,18 @@ namespace RTFunctions.Functions.Managers.Networking
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{className}Steam Workshop Init failed.\n{ex}");
+                Debug.LogError($"{className}Steam Workshop Init failed.\nPlease replace the steam_api64.dll in Project Arrhythmia_Data/Plugins with the newer version!\n{ex}");
             }
         }
 
         void Update() => SteamClient.RunCallbacks();
 
         void OnApplicationQuit() => SteamClient.Shutdown();
+
+        public void LoadLevelsTest()
+        {
+            LoadLevels();
+        }
 
         public async void LoadLevels()
         {
@@ -82,16 +87,28 @@ namespace RTFunctions.Functions.Managers.Networking
             Levels.Add(new Level(entry.Directory + "/"));
         }
 
+        public void SearchTest(string search, int page = 1)
+        {
+            Search(search, page);
+        }
+
         public async void Search(string search, int page = 1)
         {
             ResultPage? resultPage = await Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page);
             if (resultPage != null)
             {
-                Debug.Log($"{className}This page has {resultPage.Value.ResultCount}");
+                string str = $"{className}This page has {resultPage.Value.ResultCount} items\n";
+                int num = 0;
                 foreach (var item in resultPage.Value.Entries)
                 {
-                    Debug.Log($"{className}Entry: {item.Title}");
+                    str += $"Entry: {item.Title}";
+
+                    if (num < resultPage.Value.ResultCount - 1)
+                        str += "\n";
+
+                    num++;
                 }
+                Debug.Log(str);
             }
         }
 
