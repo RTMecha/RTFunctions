@@ -54,8 +54,12 @@ namespace RTFunctions.Functions.Managers
 
         public static Sprite LoadSprite(string path, TextureFormat textureFormat = TextureFormat.ARGB32, bool mipChain = false, TextureWrapMode textureWrapMode = TextureWrapMode.Clamp, FilterMode filterMode = FilterMode.Point)
         {
+            return LoadSprite(File.ReadAllBytes(path), textureFormat, mipChain, textureWrapMode, filterMode);
+        }
+
+        public static Sprite LoadSprite(byte[] bytes, TextureFormat textureFormat = TextureFormat.ARGB32, bool mipChain = false, TextureWrapMode textureWrapMode = TextureWrapMode.Clamp, FilterMode filterMode = FilterMode.Point)
+        {
             var texture2d = new Texture2D(2, 2, textureFormat, mipChain);
-            var bytes = File.ReadAllBytes(path);
             texture2d.LoadImage(bytes);
 
             texture2d.wrapMode = textureWrapMode;
