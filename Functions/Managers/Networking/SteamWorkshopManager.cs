@@ -56,45 +56,109 @@ namespace RTFunctions.Functions.Managers.Networking
         void Update() => SteamClient.RunCallbacks();
 
         void OnApplicationQuit() => SteamClient.Shutdown();
+        
+        public bool hasLoaded;
 
-        public void LoadLevelsTest()
+        public bool loading;
+
+        public PublishedFileId[] subscribedFiles;
+
+        public uint LevelCount { get; set; }
+
+        public IEnumerator GetSubscribedItems(Action<Level, int> onLoad = null)
         {
-            LoadLevels();
+            hasLoaded = false;
+            loading = true;
+            Levels.Clear();
+
+            uint numSubscribedItems = SteamUGC.Internal.GetNumSubscribedItems();
+            subscribedFiles = new PublishedFileId[numSubscribedItems];
+            LevelCount = numSubscribedItems;
+            uint subscribedItems = SteamUGC.Internal.GetSubscribedItems(subscribedFiles, numSubscribedItems);
+            for (int i = 0; i < subscribedFiles.Length; i++)
+            {
+                yield return GetItemContent(subscribedFiles[i], i, onLoad);
+            }
+
+            loading = false;
+            hasLoaded = true;
         }
 
-        public async void LoadLevels()
+        public IEnumerator GetItemContent(PublishedFileId publishedFileID, int i = 0, Action<Level, int> onLoad = null)
         {
-            Levels.Clear();
-            Query q = Query.ItemsReadyToUse.WhereUserSubscribed().SortByCreationDate();
-            int pageNum = 1;
-            for (ResultPage? pageAsync = await q.GetPageAsync(pageNum); pageAsync.HasValue && pageAsync.Value.ResultCount > 0; pageAsync = await q.GetPageAsync(pageNum))
+            if (SteamUGC.Internal.GetItemState(publishedFileID) == 8U)
             {
-                foreach (var entry in pageAsync.Value.Entries)
-                {
-                    if (entry.IsInstalled && !entry.NeedsUpdate && Level.Verify(entry.Directory + "/"))
-                        CreateEntry(entry);
-                    else if (Level.Verify(entry.Directory + "/") && await entry.DownloadAsync())
-                        CreateEntry(entry);
-                    else
-                        Debug.LogError($"{className}{entry.Id} cannot be downloaded!");
-                }
-                ++pageNum;
+                if (SteamUGC.Internal.DownloadItem(publishedFileID, false))
+                    Debug.Log("Downloaded File!");
+                else
+                    yield break;
+            }
+            else
+            {
+                ulong punSizeOnDisk = 0;
+                string pchFolder;
+                uint punTimeStamp = 0;
+                SteamUGC.Internal.GetItemInstallInfo(publishedFileID, ref punSizeOnDisk, out pchFolder, ref punTimeStamp);
+
+                if (!Level.Verify(pchFolder + "/"))
+                    yield break;
+
+                var level = new Level(pchFolder + "/");
+                
+                if (level.InvalidID)
+                    yield break;
+
+                onLoad?.Invoke(level, i);
+
+                Levels.Add(level);
+
+                yield break;
             }
         }
 
         public void CreateEntry(Item entry)
         {
-            Levels.Add(new Level(entry.Directory + "/"));
+            var level = new Level(entry.Directory.Replace("\\", "/") + "/");
+            if (level.id == null || level.id == "0" || level.id == "-1")
+                return;
+
+            Levels.Add(level);
         }
 
         public void SearchTest(string search, int page = 1)
         {
-            Search(search, page);
+            //Search(search, page);
+            StartCoroutine(ISearch(search, page));
+        }
+
+        public IEnumerator ISearch(string search, int page = 1)
+        {
+            page = Mathf.Clamp(page, 1, int.MaxValue);
+
+            var resultPage = Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page).Result;
+
+            if (resultPage != null)
+            {
+                string str = $"{className}This page has {resultPage.Value.ResultCount} items\n";
+                int num = 0;
+                foreach (var item in resultPage.Value.Entries)
+                {
+                    str += $"Entry: {item.Title}";
+
+                    if (num < resultPage.Value.ResultCount - 1)
+                        str += "\n";
+
+                    num++;
+                }
+                Debug.Log(str);
+            }
+            yield break;
         }
 
         public async void Search(string search, int page = 1)
         {
             ResultPage? resultPage = await Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page);
+
             if (resultPage != null)
             {
                 string str = $"{className}This page has {resultPage.Value.ResultCount} items\n";
