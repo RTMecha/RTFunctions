@@ -20,6 +20,53 @@ namespace RTFunctions.Functions.Managers
         public static void LogColor(Color color) => Debug.Log($"[<color=#{RTHelpers.ColorToHex(color)}>▓▓▓▓▓▓▓▓▓▓▓▓▓</color>]");
         public static void LogColor(string color) => Debug.Log($"[<color={color}>▓▓▓▓▓▓▓▓▓▓▓▓▓</color>]");
 
+        public static void LogClassNames()
+        {
+            // Mod Class Names
+            var str = $"\n{FunctionsPlugin.className}";
+
+            foreach (var mod in ModCompatibility.mods.Values)
+            {
+                try
+                {
+                    var inst = mod.inst;
+
+                    str += inst.GetType().GetField("className").GetValue(inst);
+                }
+                catch
+                {
+
+                }
+            }
+
+            str += RTVideoManager.className;
+
+            // Base Class Names
+            str += DataManager.inst.className;
+            str += SceneManager.inst.className;
+            str += FileManager.className;
+            str += DiscordController.inst.className;
+            str += SteamWrapper.className;
+            str += AudioManager.inst.className;
+            str += AudioManager.inst.library.className;
+            str += InputDataManager.className;
+            str += SaveManager.inst.className;
+
+            str += GameManager.inst.className;
+
+            // Editor Class Names
+            str += EditorManager.inst.className;
+            str += ObjEditor.inst.className;
+            str += PrefabEditor.inst.className;
+            str += EventEditor.inst.className;
+            str += BackgroundEditor.inst.className;
+            str += CheckpointEditor.inst.className;
+            str += SettingEditor.inst.className;
+            str += MetadataEditor.inst.className;
+
+            Debug.Log(str);
+        }
+
         public static FPSCounter FPS { get; set; }
 
         public static TextMeshProUGUI Info { get; set; }
