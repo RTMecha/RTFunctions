@@ -43,7 +43,7 @@ namespace RTFunctions.Functions
             {
                 var jn = JSON.Parse(RTFile.ReadFromFile($"{path}modes.lsms"));
                 LevelModes = new string[jn["paths"].Count + 1];
-                LevelModes[0] = RTFile.FileExists($"{path}level.vgd") ? "level.vgd" : "level.lsb";
+                LevelModes[0] = FunctionsPlugin.PrioritizeVG.Value && RTFile.FileExists($"{path}level.vgd") ? "level.vgd" : "level.lsb";
                 for (int i = 1; i < jn["paths"].Count + 1; i++)
                 {
                     LevelModes[i] = jn["paths"][i - 1];
@@ -52,10 +52,8 @@ namespace RTFunctions.Functions
             else
                 LevelModes = new string[1]
                 {
-                    RTFile.FileExists($"{path}level.vgd") ? "level.vgd" : "level.lsb",
+                    FunctionsPlugin.PrioritizeVG.Value && RTFile.FileExists($"{path}level.vgd") ? "level.vgd" : "level.lsb",
                 };
-
-            IsVG = RTFile.FileExists($"{path}level.vgd") && RTFile.FileExists($"{path}metadata.vgm");
         }
 
         public string path;
@@ -155,9 +153,11 @@ namespace RTFunctions.Functions
 
         public LevelManager.PlayerData playerData;
 
-        public bool IsVG { get; set; }
+        public bool IsVG => RTFile.FileExists($"{path}level.vgd") && RTFile.FileExists($"{path}metadata.vgm");
 
-        public override string ToString() => System.IO.Path.GetFileName(path);
+        public bool InvalidID => id == null || id == "0" || id == "-1";
+
+        public override string ToString() => $"{System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(path))} - {id} - {(metadata == null || metadata.song == null ? "" : metadata.song.title)}";
 
         /// <summary>
         /// Checks if all files required to load a level exist. Includes LS / VG formats.

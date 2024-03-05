@@ -64,7 +64,7 @@ namespace RTFunctions
 		/// <summary>
 		/// Since most PA classes have a "className" for logging I decided to give some of mine a unique one.
 		/// </summary>
-		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
+		public static string className = "[<color=#0E36FD>RT</color><color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
 		public static readonly Harmony harmony = new Harmony("rtfunctions");
 
 		#region Configs
@@ -100,6 +100,7 @@ namespace RTFunctions
 
 		public static ConfigEntry<bool> EvaluateCode { get; set; }
 		public static ConfigEntry<bool> ReplayLevel { get; set; }
+		public static ConfigEntry<bool> PrioritizeVG { get; set; }
 
 		public static ConfigEntry<string> DiscordRichPresenceID { get; set; }
 
@@ -364,6 +365,7 @@ namespace RTFunctions
 			EnableVideoBackground = Config.Bind("Game", "Video Backgrounds", false, "If on, the old video BG feature returns, though somewhat buggy. Requires a bg.mp4 file to exist in the level folder.");
 			EvaluateCode = Config.Bind("Game", "Evaluate Custom Code", false, "If custom written code should evaluate. Turn this on if you're sure the level you're using isn't going to mess anything up with a code Modifier or custom player code.");
 			ReplayLevel = Config.Bind("Game", "Replay Level in Background After Completion", true, "When completing a level, having this on will replay the level with no players in the background of the end screen.");
+			PrioritizeVG = Config.Bind("Game", "Priotize VG format", true, "Due to LS file formats also being in level folders with VG formats, VG format will need to be prioritized, though you can turn this off if a VG level isn't working and it has a level.lsb file.");
 
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
 
