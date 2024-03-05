@@ -560,7 +560,6 @@ namespace RTFunctions.Functions.Data
 			return gameData;
 		}
 
-		// Previously 26, now 33
 		public static int EventCount => ModCompatibility.mods.ContainsKey("EventsCore") ? DefaultKeyframes.Count : 10;
 
 		public JSONNode ToJSONVG()
@@ -874,41 +873,86 @@ namespace RTFunctions.Functions.Data
 
 		#endregion
 
+		public bool Modded
+        {
+            get
+            {
+				return
+					BeatmapObjects.Has(x => x.modifiers.Count > 0
+					|| x.objectType == Data.BeatmapObject.ObjectType.Solid
+					|| x.desync
+					|| x.background
+					|| x.LDM
+					|| x.parallaxSettings.Any(y => y != 1f)
+					|| x.parentAdditive != "000"
+					|| x.shape > 5
+					|| x.shapeOption >= UnmoddedShapeOptions[Mathf.Clamp(x.shape, 0, UnmoddedShapeOptions.Length)]
+					|| ArePositionKeyframesModded(x.events[0])
+					|| AreScaleKeyframesModded(x.events[1])
+					|| AreRotationKeyframesModded(x.events[2])
+					|| AreColorKeyframesModded(x.events[3])) ||
+					eventObjects.allEvents.Count > 24 && eventObjects.allEvents[24].Count > 0 &&
+					eventObjects.allEvents[24].Any(x => x.eventValues.Length > 3 && x.eventValues[0] == 1f && (x.eventValues[1] == 1f || x.eventValues[2] == 1f));
+            }
+        }
+
+		static bool ArePositionKeyframesModded(List<BaseEventKeyframe> eventKeyframes)
+			=> eventKeyframes.Any(x => x.random > 4 || x.eventValues.Length > 2 && x.eventValues[2] != 0f || ((Data.EventKeyframe)x).relative);
+		
+		static bool AreScaleKeyframesModded(List<BaseEventKeyframe> eventKeyframes)
+			=> eventKeyframes.Any(x => ((Data.EventKeyframe)x).relative);
+
+		static bool AreRotationKeyframesModded(List<BaseEventKeyframe> eventKeyframes)
+			=> eventKeyframes.Any(x => x.random > 4 || !((Data.EventKeyframe)x).relative);
+		
+		static bool AreColorKeyframesModded(List<BaseEventKeyframe> eventKeyframes)
+			=> eventKeyframes.Any(x => x.random > 4 || x.eventValues[0] > 8f || x.eventValues[2] != 0f || x.eventValues[3] != 0f || x.eventValues[4] != 0f);
+
+		public static int[] UnmoddedShapeOptions => new int[]
+		{
+			3,
+			9,
+			4,
+			2,
+			1,
+			6
+		};
+
 		public static string[] EventTypes => new string[]
 		{
-			"pos",
-			"zoom",
-			"rot",
-			"shake",
-			"theme",
-			"chroma",
-			"bloom",
-			"vignette",
-			"lens",
-			"grain",
-			"cg",
-			"rip",
-			"rb",
-			"cs",
-			"offset",
-			"grd",
-			"dbv",
-			"scan",
-			"blur",
-			"pixel",
-			"bg",
-			"invert",
-			"timeline",
-			"player",
-			"follow_player",
-			"audio",
-			"vidbg_p",
-			"vidbg",
-			"sharp",
-			"bars",
-			"danger",
-			"xyrot",
-			"camdepth",
+			"pos", // 0
+			"zoom", // 1
+			"rot", // 2
+			"shake", // 3
+			"theme", // 4
+			"chroma", // 5
+			"bloom", // 6
+			"vignette", // 7
+			"lens", // 8
+			"grain", // 9
+			"cg", // 10
+			"rip", // 11
+			"rb", // 12
+			"cs", // 13
+			"offset", // 14
+			"grd", // 15
+			"dbv", // 16
+			"scan", // 17
+			"blur", // 18
+			"pixel", // 19
+			"bg", // 20
+			"invert", // 21
+			"timeline", // 22
+			"player", // 23
+			"follow_player", // 24
+			"audio", // 25
+			"vidbg_p", // 26
+			"vidbg", // 27
+			"sharp", // 28
+			"bars", // 29
+			"danger", // 30
+			"xyrot", // 31
+			"camdepth", // 32
 		};
 
 		public static List<BaseEventKeyframe> DefaultKeyframes = new List<BaseEventKeyframe>
@@ -1125,9 +1169,9 @@ namespace RTFunctions.Functions.Data
 				eventTime = 0f,
 				eventValues = new float[10]
 				{
-					0f,
-					0f,
-					0f,
+					0f, // Active
+					0f, // Move
+					0f, // Rotate
 					0.5f,
 					0f,
 					9999f,
