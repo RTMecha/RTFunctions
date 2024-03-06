@@ -38,6 +38,12 @@ namespace RTFunctions.Functions.Data
         public string serverID;
         public string arcadeID;
 
+		public string ID =>
+                !string.IsNullOrEmpty(serverID) && serverID != "-1" ?
+                    serverID : !string.IsNullOrEmpty(arcadeID) && arcadeID != "-1" ?
+                    arcadeID : !string.IsNullOrEmpty(LevelBeatmap.beatmap_id) && LevelBeatmap.beatmap_id != "-1" ?
+                    LevelBeatmap.beatmap_id : "-1";
+
         #region Methods
 
         public static MetaData DeepCopy(MetaData orig) => new MetaData
