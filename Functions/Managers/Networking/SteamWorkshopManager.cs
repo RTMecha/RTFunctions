@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +32,8 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public SteamUser steamUser;
 
+        public Action DownloadedItem { get; set; }
+
         public bool Initialized { get; set; }
 
         void Awake()
@@ -46,6 +49,7 @@ namespace RTFunctions.Functions.Managers.Networking
             try
             {
                 SteamClient.Init(440310U);
+                SteamUGC.OnDownloadItemResult += OnDownloadItem;
                 steamUser = new SteamUser(SteamClient.SteamId, SteamClient.SteamId.Value, SteamClient.Name);
                 Debug.Log($"{className}Init Steam User: {SteamClient.Name}");
                 Initialized = true;
@@ -56,6 +60,8 @@ namespace RTFunctions.Functions.Managers.Networking
                 Initialized = false;
             }
         }
+
+        void OnDownloadItem(Result obj) => DownloadedItem?.Invoke();
 
         void Update()
         {
@@ -139,35 +145,47 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public void SearchTest(string search, int page = 1)
         {
-            //Search(search, page);
-            StartCoroutine(ISearch(search, page));
-        }
-
-        public IEnumerator ISearch(string search, int page = 1)
-        {
-            page = Mathf.Clamp(page, 1, int.MaxValue);
-
-            var resultPage = Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page).Result;
-
-            if (resultPage != null)
+            StartCoroutine(Search(search, page, delegate
             {
-                string str = $"{className}This page has {resultPage.Value.ResultCount} items\n";
+                string str = $"{className}This page has {SearchItems.Count} items\n";
                 int num = 0;
-                foreach (var item in resultPage.Value.Entries)
+                foreach (var item in SearchItems)
                 {
                     str += $"Entry: {item.Title}";
 
-                    if (num < resultPage.Value.ResultCount - 1)
+                    if (num < SearchItems.Count - 1)
                         str += "\n";
 
                     num++;
                 }
+
                 Debug.Log(str);
-            }
+            }));
+
+        }
+
+        public List<Item> SearchItems { get; set; } = new List<Item>();
+
+        public IEnumerator Search(string search, int page = 1, Action onComplete = null)
+        {
+            SearchItems.Clear();
+
+            page = Mathf.Clamp(page, 1, int.MaxValue);
+
+            var resultPage = Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page).Result;
+
+            if (resultPage == null)
+                yield break;
+
+            foreach (var item in resultPage.Value.Entries)
+                SearchItems.Add(item);
+
+            onComplete?.Invoke();
+
             yield break;
         }
 
-        public async void Search(string search, int page = 1)
+        public async void SearchAsync(string search, int page = 1)
         {
             ResultPage? resultPage = await Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page);
 
