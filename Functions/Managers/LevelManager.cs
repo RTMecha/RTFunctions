@@ -246,6 +246,36 @@ namespace RTFunctions.Functions.Managers
             InputDataManager.inst.SetAllControllerRumble(0f);
         }
 
+        public static List<Level> SortLevels(List<Level> levels, int orderby, bool ascend)
+        {
+            switch (orderby)
+            {
+                case 0: return
+                            (ascend ? levels.OrderBy(x => x.icon != SteamWorkshop.inst.defaultSteamImageSprite) :
+                            levels.OrderByDescending(x => x.icon != SteamWorkshop.inst.defaultSteamImageSprite)).ToList();
+                case 1: return
+                            (ascend ? levels.OrderBy(x => x.metadata.artist.Name) :
+                            levels.OrderByDescending(x => x.metadata.artist.Name)).ToList();
+                case 2: return
+                            (ascend ? levels.OrderBy(x => x.metadata.creator.steam_name) :
+                            levels.OrderByDescending(x => x.metadata.creator.steam_name)).ToList();
+                case 3: return
+                            (ascend ? levels.OrderBy(x => System.IO.Path.GetFileName(x.path)) :
+                            levels.OrderByDescending(x => System.IO.Path.GetFileName(x.path))).ToList();
+                case 4: return
+                            (ascend ? levels.OrderBy(x => x.metadata.song.title) :
+                            levels.OrderByDescending(x => x.metadata.song.title)).ToList();
+                case 5: return
+                            (ascend ? levels.OrderBy(x => x.metadata.song.difficulty) :
+                            levels.OrderByDescending(x => x.metadata.song.difficulty)).ToList();
+                case 6: return
+                            (ascend ? levels.OrderBy(x => x.metadata.beatmap.date_edited) :
+                            levels.OrderByDescending(x => x.metadata.beatmap.date_edited)).ToList();
+            }
+
+            return levels;
+        }
+
         public static void Sort(int orderby, bool ascend)
         {
             switch (orderby)
