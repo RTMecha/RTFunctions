@@ -31,6 +31,8 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public SteamUser steamUser;
 
+        public bool Initialized { get; set; }
+
         void Awake()
         {
             if (!inst)
@@ -46,16 +48,26 @@ namespace RTFunctions.Functions.Managers.Networking
                 SteamClient.Init(440310U);
                 steamUser = new SteamUser(SteamClient.SteamId, SteamClient.SteamId.Value, SteamClient.Name);
                 Debug.Log($"{className}Init Steam User: {SteamClient.Name}");
+                Initialized = true;
             }
             catch (Exception ex)
             {
                 Debug.LogError($"{className}Steam Workshop Init failed.\nPlease replace the steam_api64.dll in Project Arrhythmia_Data/Plugins with the newer version!\n{ex}");
+                Initialized = false;
             }
         }
 
-        void Update() => SteamClient.RunCallbacks();
+        void Update()
+        {
+            if (Initialized)
+                SteamClient.RunCallbacks();
+        }
 
-        void OnApplicationQuit() => SteamClient.Shutdown();
+        void OnApplicationQuit()
+        {
+            if (Initialized)
+                SteamClient.Shutdown();
+        }
         
         public bool hasLoaded;
 
@@ -196,6 +208,4 @@ namespace RTFunctions.Functions.Managers.Networking
             }
         }
     }
-
-
 }
