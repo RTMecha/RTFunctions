@@ -230,7 +230,7 @@ namespace RTFunctions.Functions.Managers
                         SceneManager.inst.LoadScene("Main Menu");
                     };
 
-                var level = new Level(path.Replace("level.lsb", ""));
+                var level = new Level(path.Replace("level.lsb", "").Replace("level.vgd", ""));
                 inst.StartCoroutine(Play(level));
                 return;
             }
