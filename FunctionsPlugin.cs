@@ -120,20 +120,6 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		//static bool FullscreenProp
-		//{
-		//    get
-		//    {
-		//        return DataManager.inst.GetSettingBool("FullScreen", false);
-		//    }
-		//    set
-		//    {
-		//        DataManager.inst.UpdateSettingBool("FullScreen", value);
-		//        SaveManager.inst.ApplyVideoSettings();
-		//        SaveManager.inst.UpdateSettingsFile(false);
-		//    }
-		//}
-
 		public static bool prevFullscreen;
 
 		#endregion
@@ -157,26 +143,6 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		//static Resolutions ResolutionProp
-		//{
-		//    get
-		//    {
-		//        return (Resolutions)DataManager.inst.GetSettingInt("Resolution_i", 0);
-		//    }
-		//    set
-		//    {
-		//        DataManager.inst.UpdateSettingInt("Resolution_i", (int)value);
-
-		//        var res = DataManager.inst.resolutions[(int)value];
-
-		//        DataManager.inst.UpdateSettingFloat("Resolution_x", res.x);
-		//        DataManager.inst.UpdateSettingFloat("Resolution_y", res.y);
-
-		//        SaveManager.inst.ApplyVideoSettings();
-		//        SaveManager.inst.UpdateSettingsFile(false);
-		//    }
-		//}
-
 		public static Resolutions prevResolution;
 
 		#endregion
@@ -193,20 +159,6 @@ namespace RTFunctions
 
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
-
-		//static int MasterVolProp
-		//{
-		//    get
-		//    {
-		//        return DataManager.inst.GetSettingInt("MasterVolume", 9);
-		//    }
-		//    set
-		//    {
-		//        DataManager.inst.UpdateSettingInt("MasterVolume", value);
-
-		//        SaveManager.inst.UpdateSettingsFile(false);
-		//    }
-		//}
 
 		public static int prevMasterVol;
 
@@ -225,20 +177,6 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		//static int MusicVolProp
-		//{
-		//	get
-		//	{
-		//		return DataManager.inst.GetSettingInt("MusicVolume", 9);
-		//	}
-		//	set
-		//	{
-		//		DataManager.inst.UpdateSettingInt("MusicVolume", value);
-
-		//		SaveManager.inst.UpdateSettingsFile(false);
-		//	}
-		//}
-
 		public static int prevMusicVol;
 
 		#endregion
@@ -255,20 +193,6 @@ namespace RTFunctions
 
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
-
-		//static int SFXVolProp
-		//{
-		//	get
-		//	{
-		//		return DataManager.inst.GetSettingInt("EffectsVolume", 9);
-		//	}
-		//	set
-		//	{
-		//		DataManager.inst.UpdateSettingInt("EffectsVolume", value);
-
-		//		SaveManager.inst.UpdateSettingsFile(false);
-		//	}
-		//}
 
 		public static int prevSFXVol;
 
@@ -297,20 +221,6 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		//static Lang LanguageProp
-		//{
-		//	get
-		//	{
-		//		return (Lang)DataManager.inst.GetCurrentLanguageEnum();
-		//	}
-		//	set
-		//	{
-		//		DataManager.inst.GetSettingInt("Language_i", (int)value);
-
-		//		SaveManager.inst.UpdateSettingsFile(false);
-		//	}
-		//}
-
 		public static Lang prevLanguage;
 
 		#endregion
@@ -327,20 +237,6 @@ namespace RTFunctions
 
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
-
-		//static bool ControllerRumbleProp
-		//{
-		//	get
-		//	{
-		//		return DataManager.inst.GetSettingBool("ControllerVibrate", true);
-		//	}
-		//	set
-		//	{
-		//		DataManager.inst.UpdateSettingBool("ControllerVibrate", value);
-
-		//		SaveManager.inst.UpdateSettingsFile(false);
-		//	}
-		//}
 
 		public static bool prevControllerRumble;
 
@@ -374,7 +270,7 @@ namespace RTFunctions
 
 			Fullscreen = Config.Bind("Settings", "Fullscreen", false);
 			Resolution = Config.Bind("Settings", "Resolution", Resolutions.p720);
-			MasterVol = Config.Bind("Settings", "Volume Master", 9, new ConfigDescription("Total volume.", new AcceptableValueRange<int>(0, 9)));
+			MasterVol = Config.Bind("Settings", "Volume Master", 8, new ConfigDescription("Total volume.", new AcceptableValueRange<int>(0, 9)));
 			MusicVol = Config.Bind("Settings", "Volume Music", 9, new ConfigDescription("Music volume.", new AcceptableValueRange<int>(0, 9)));
 			SFXVol = Config.Bind("Settings", "Volume SFX", 9, new ConfigDescription("SFX volume.", new AcceptableValueRange<int>(0, 9)));
 			Language = Config.Bind("Settings", "Language", Lang.english, "This is currently here for testing purposes. This version of the game has not been translated yet.");
