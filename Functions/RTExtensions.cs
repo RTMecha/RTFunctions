@@ -947,6 +947,14 @@ namespace RTFunctions.Functions
 		public static Vector2 X(this Vector2 vector3) => new Vector2(vector3.x, 0f);
 		public static Vector2 Y(this Vector2 vector3) => new Vector2(0f, vector3.y);
 
+		public static void AddSet<TKey, TValue>(this Dictionary<TKey, TValue> keyValuePairs, TKey key, TValue value)
+        {
+			if (!keyValuePairs.ContainsKey(key))
+				keyValuePairs.Add(key, value);
+			else
+				keyValuePairs[key] = value;
+        }
+
 		#endregion
 	}
 }
