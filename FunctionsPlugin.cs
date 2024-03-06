@@ -79,6 +79,7 @@ namespace RTFunctions
 		public static string displayName;
 
 		public static ConfigEntry<bool> DebugInfo { get; set; }
+		public static ConfigEntry<bool> DebugInfoStartup { get; set; }
 		public static ConfigEntry<KeyCode> DebugInfoToggleKey { get; set; }
 		public static ConfigEntry<bool> NotifyREPL { get; set; }
 
@@ -248,6 +249,7 @@ namespace RTFunctions
 
 			DebugsOn = Config.Bind("Debugging", "Enabled", true, "If disabled, turns all Unity debug logs off. Might boost performance.");
 			DebugInfo = Config.Bind("Debugging", "Show Debug Info", false, "Shows a helpful info overlay with some information about the current gamestate.");
+			DebugInfoStartup = Config.Bind("Debugging", "Create Debug Info", false, "If the Debug Info menu should be created on game start. Requires restart to have this option take affect.");
 			DebugInfoToggleKey = Config.Bind("Debugging", "Show Debug Info Toggle Key", KeyCode.F6, "Shows a helpful info overlay with some information about the current gamestate.");
 			NotifyREPL = Config.Bind("Debugging", "Notify REPL", false, "If in editor, code ran will have their results be notified.");
 

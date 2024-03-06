@@ -643,7 +643,8 @@ namespace RTFunctions.Functions.Managers
                 }
             }
 
-            RTDebugger.Init();
+            if (FunctionsPlugin.DebugInfoStartup.Value)
+                RTDebugger.Init();
 
             yield break;
         }
