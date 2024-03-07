@@ -224,6 +224,38 @@ namespace RTFunctions.Functions.Managers.Networking
                 this.id = id;
                 this.name = name;
             }
+
+            public void SetAchievement(string achievement)
+            {
+                if (!inst.Initialized)
+                    return;
+
+                SteamUserStats.Internal.SetAchievement(achievement);
+                bool flag = false;
+                SteamUserStats.Internal.GetAchievement(achievement, ref flag);
+                Debug.Log($"{className} Set Achievement : [{achievement}] -> [{flag}]");
+                SteamUserStats.StoreStats();
+            }
+
+            public bool GetAchievement(string achievement)
+            {
+                if (!inst.Initialized)
+                    return false;
+
+                bool flag = false;
+                SteamUserStats.Internal.GetAchievement(achievement, ref flag);
+                return flag;
+            }
+
+            public void ClearAchievement(string achievement)
+            {
+                if (!inst.Initialized)
+                    return;
+
+                SteamUserStats.Internal.ClearAchievement(achievement);
+                Debug.Log($"{className} Cleared Achievement : [{achievement}]");
+            }
+
         }
     }
 }

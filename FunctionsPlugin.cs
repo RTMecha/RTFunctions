@@ -310,6 +310,7 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(SaveManagerPatch));
 				harmony.PatchAll(typeof(SoundLibraryPatch));
 				harmony.PatchAll(typeof(SteamManagerPatch));
+				harmony.PatchAll(typeof(SteamWrapperAchievementsPatch));
 			}
 
 			// Hooks
