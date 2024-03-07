@@ -155,7 +155,7 @@ namespace RTFunctions.Functions
 
         public bool IsVG => RTFile.FileExists($"{path}level.vgd") && RTFile.FileExists($"{path}metadata.vgm");
 
-        public bool InvalidID => id == null || id == "0" || id == "-1";
+        public bool InvalidID => string.IsNullOrEmpty(id) || id == "0" || id == "-1";
 
         public override string ToString() => $"{System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(path))} - {id} - {(metadata == null || metadata.song == null ? "" : metadata.song.title)}";
 
