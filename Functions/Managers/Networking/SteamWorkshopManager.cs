@@ -124,7 +124,19 @@ namespace RTFunctions.Functions.Managers.Networking
                 var level = new Level(pchFolder + "/");
                 
                 if (level.InvalidID)
-                    yield break;
+                {
+                    try
+                    {
+                        level.metadata.arcadeID = LSText.randomNumString(16);
+                        var metadataJN = level.metadata.ToJSON();
+                        RTFile.WriteToFile($"{level.path}metadata.lsb", metadataJN.ToString(3));
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"{className}Could not load due to ID being invalid and couldn't set a new ID.\n{ex}");
+                        yield break;
+                    }
+                }
 
                 onLoad?.Invoke(level, i);
 
