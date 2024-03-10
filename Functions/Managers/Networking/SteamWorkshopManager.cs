@@ -107,7 +107,7 @@ namespace RTFunctions.Functions.Managers.Networking
             if (SteamUGC.Internal.GetItemState(publishedFileID) == 8U)
             {
                 if (SteamUGC.Internal.DownloadItem(publishedFileID, false))
-                    Debug.Log("Downloaded File!");
+                    Debug.Log($"{className}Downloaded File: {publishedFileID}");
                 else
                     yield break;
             }
@@ -137,6 +137,9 @@ namespace RTFunctions.Functions.Managers.Networking
                         yield break;
                     }
                 }
+
+                if (LevelManager.Saves.Has(x => x.ID == level.id))
+                    level.playerData = LevelManager.Saves.Find(x => x.ID == level.id);
 
                 onLoad?.Invoke(level, i);
 
@@ -180,41 +183,90 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public IEnumerator Search(string search, int page = 1, Action onComplete = null)
         {
+            if (search == null)
+                search = "";
+
             SearchItems.Clear();
 
             page = Mathf.Clamp(page, 1, int.MaxValue);
 
-            var resultPage = Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page).Result;
+            ResultPage? resultPage = Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page).Result;
 
-            if (resultPage == null)
-                yield break;
+            //if (resultPage == null || !resultPage.HasValue || resultPage.Value.ResultCount < 1)
+            //{
+            //    Debug.LogError($"{className}Page has no content.");
+            //    onComplete?.Invoke();
+            //    yield break;
+            //}
 
-            foreach (var item in resultPage.Value.Entries)
-                SearchItems.Add(item);
+            //foreach (var item in resultPage.Value.Entries)
+            //    SearchItems.Add(item);
 
-            onComplete?.Invoke();
+            //onComplete?.Invoke();
+
+            if (resultPage != null && resultPage.HasValue && resultPage.Value.ResultCount > 0)
+            {
+                for (int i = 0; i < resultPage.Value.ResultCount; i++)
+                    SearchItems.Add(resultPage.Value.Entries.ElementAt(i));
+
+                onComplete?.Invoke();
+            }
+            else
+            {
+                Debug.LogError($"{className}Page has no content.");
+                onComplete?.Invoke();
+            }
 
             yield break;
         }
 
-        public async void SearchAsync(string search, int page = 1)
+        public async Task SearchAsync(string search, int page = 1)
         {
+            if (search == null)
+                search = "";
+
+            SearchItems.Clear();
+
+            page = Mathf.Clamp(page, 1, int.MaxValue);
+
             ResultPage? resultPage = await Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page);
 
-            if (resultPage != null)
+            if (resultPage != null && resultPage.HasValue && resultPage.Value.ResultCount > 0)
             {
-                string str = $"{className}This page has {resultPage.Value.ResultCount} items\n";
-                int num = 0;
-                foreach (var item in resultPage.Value.Entries)
+                for (int i = 0; i < resultPage.Value.ResultCount; i++)
+                    SearchItems.Add(resultPage.Value.Entries.ElementAt(i));
+
+                Debug.Log($"{className}Done");
+            }
+            else
+            {
+                Debug.LogError($"{className}Page has no content.");
+            }
+        }
+
+        public async Task SearchAsync(string search, int page = 1, Action<Item, int> onAddItem = null)
+        {
+            if (search == null)
+                search = "";
+
+            SearchItems.Clear();
+
+            page = Mathf.Clamp(page, 1, int.MaxValue);
+
+            ResultPage? resultPage = await Query.Items.WhereSearchText(search).RankedByTextSearch().GetPageAsync(page);
+
+            if (resultPage != null && resultPage.HasValue && resultPage.Value.ResultCount > 0)
+            {
+                for (int i = 0; i < resultPage.Value.ResultCount; i++)
                 {
-                    str += $"Entry: {item.Title}";
-
-                    if (num < resultPage.Value.ResultCount - 1)
-                        str += "\n";
-
-                    num++;
+                    var item = resultPage.Value.Entries.ElementAt(i);
+                    SearchItems.Add(item);
+                    onAddItem?.Invoke(item, i);
                 }
-                Debug.Log(str);
+            }
+            else
+            {
+                Debug.LogError($"{className}Page has no content.");
             }
         }
 
