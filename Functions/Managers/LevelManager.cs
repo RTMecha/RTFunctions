@@ -532,6 +532,8 @@ namespace RTFunctions.Functions.Managers
                 jn["l"] = LevelLength.ToString();
                 return jn;
             }
+
+            public override string ToString() => ID;
         }
     }
 }
