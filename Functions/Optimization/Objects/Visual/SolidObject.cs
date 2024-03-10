@@ -14,7 +14,7 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
         public override Collider2D Collider { get; set; }
 
         bool opacityCollision;
-        Material material;
+        public Material material;
         readonly float opacity;
 
         public SolidObject(GameObject gameObject, Transform top, float opacity, bool hasCollider, bool solid, bool background, bool opacityCollision)
@@ -29,8 +29,9 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
             if (background)
             {
                 GameObject.layer = 9;
-                Renderer.material = GameStorageManager.inst.bgMaterial;
+                //Renderer.material = GameStorageManager.inst.bgMaterial;
             }
+            Renderer.material = ObjectManager.inst.norm;
             material = Renderer.material;
 
             Collider = gameObject.GetComponent<Collider2D>();
@@ -40,8 +41,8 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
                 Collider.enabled = true;
                 if (hasCollider)
                     Collider.tag = "Helper";
-                if (solid)
-                    Collider.isTrigger = false;
+
+                Collider.isTrigger = !solid;
             }
 
             this.opacityCollision = opacityCollision;
