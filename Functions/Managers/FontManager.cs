@@ -549,71 +549,36 @@ namespace RTFunctions.Functions.Managers
             var refer = MaterialReferenceManager.instance;
             var dictionary = (Dictionary<int, TMP_FontAsset>)refer.GetType().GetField("m_FontAssetReferenceLookup", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(refer);
 
-            if (RTFile.FileExists(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/customfonts.asset"))
+            if (!RTFile.FileExists(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/customfonts.asset"))
             {
-                var assetBundle = GetAssetBundle(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets", "customfonts.asset");
-                foreach (var asset in assetBundle.GetAllAssetNames())
-                {
-                    string str = asset.Replace("assets/font/", "");
-                    var font = assetBundle.LoadAsset<Font>(str);
-                    if (font != null)
-                    {
-                        var fontCopy = Instantiate(font);
-                        fontCopy.name = ChangeName(str);
-                        if (!allFonts.ContainsKey(str))
-                        {
-                            allFonts.Add(fontCopy.name, fontCopy);
-                        }
-                        else
-                        {
-                            Debug.LogErrorFormat("{0}There was an error in adding the {1} font to the Dictionary.", className, str);
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogErrorFormat("{0}There was an error in loading the {1} font.", className, str);
-                    }
-                }
-                assetBundle.Unload(false);
+                Debug.LogError($"{className}customfonts.asset does not exist in the BepInEx/plugins/Assets folder.");
+                yield break;
             }
-            else
-            {
-                Debug.LogErrorFormat("{0}There was an error in loading the custom fonts. Make sure you have the customfonts file in the Assets folder!", className);
 
-                try
+            var assetBundle = GetAssetBundle(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets", "customfonts.asset");
+            foreach (var asset in assetBundle.GetAllAssetNames())
+            {
+                string str = asset.Replace("assets/font/", "");
+                var font = assetBundle.LoadAsset<Font>(str);
+
+                if (font == null)
                 {
-                    inst.StartCoroutine(AlephNetworkManager.DownloadAssetBundle("https://cdn.discordapp.com/attachments/1151231196022452255/1151231743580442765/customfonts", delegate (AssetBundle assetBundle)
-                    {
-                        foreach (var asset in assetBundle.GetAllAssetNames())
-                        {
-                            string str = asset.Replace("assets/font/", "");
-                            var font = assetBundle.LoadAsset<Font>(str);
-                            if (font != null)
-                            {
-                                var fontCopy = Instantiate(font);
-                                fontCopy.name = ChangeName(str);
-                                if (!allFonts.ContainsKey(str))
-                                {
-                                    allFonts.Add(fontCopy.name, fontCopy);
-                                }
-                                else
-                                {
-                                    Debug.LogErrorFormat("{0}There was an error in adding the {1} font to the Dictionary.", className, str);
-                                }
-                            }
-                            else
-                            {
-                                Debug.LogErrorFormat("{0}There was an error in loading the {1} font.", className, str);
-                            }
-                        }
-                        assetBundle.Unload(false);
-                    }));
+                    Debug.LogError($"{className}The font ({str}) does not exist in the asset bundle for some reason.");
+                    continue;
                 }
-                catch (Exception ex)
+
+                var fontCopy = Instantiate(font);
+                fontCopy.name = ChangeName(str);
+
+                if (allFonts.ContainsKey(fontCopy.name))
                 {
-                    Debug.LogFormat("{0}There was an error in getting the AssetBundle.\nMESSAGE: {1}\nSTACKTRACE: {2}", className, ex.Message, ex.StackTrace);
+                    Debug.LogError($"{className}The font ({str}) was already in the font dictionary.");
+                    continue;
                 }
+
+                allFonts.Add(fontCopy.name, fontCopy);
             }
+            assetBundle.Unload(false);
 
             foreach (var font in allFonts)
             {
@@ -624,23 +589,21 @@ namespace RTFunctions.Functions.Managers
                 e.hashCode = random1;
                 e.materialHashCode = random1;
 
-                if (!dictionary.ContainsKey(e.hashCode))
+                if (dictionary.ContainsKey(e.hashCode))
                 {
-                    MaterialReferenceManager.AddFontAsset(e);
-                }
-                else
-                {
-                    Debug.LogErrorFormat("{0}There was an error in adding the {1} font asset to the MaterialReferenceManager Font Asset Dictionary.\nHashcode: {2}", className, font.Key, e.hashCode);
+                    Debug.LogError($"{className}Could not convert the font to TextMeshPro Font Asset. Hashcode: {e.hashCode}");
+                    continue;
                 }
 
-                if (!allFontAssets.ContainsKey(font.Key))
+                MaterialReferenceManager.AddFontAsset(e);
+
+                if (allFontAssets.ContainsKey(font.Key))
                 {
-                    allFontAssets.Add(font.Key, e);
+                    Debug.LogError($"{className}The font asset ({font.Key}) was already in the font asset dictionary.");
+                    continue;
                 }
-                else
-                {
-                    Debug.LogErrorFormat("{0}There was an error in adding the {1} font asset to the Dictionary.", className, font);
-                }
+
+                allFontAssets.Add(font.Key, e);
             }
 
             if (FunctionsPlugin.DebugInfoStartup.Value)
@@ -649,42 +612,7 @@ namespace RTFunctions.Functions.Managers
             yield break;
         }
 
-        public Font GetCustomFont(string _font)
-        {
-            var assetBundle = GetAssetBundle(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets", "customfonts");
-            var fontToLoad = assetBundle.LoadAsset<Font>(_font);
-            var font = Instantiate(fontToLoad);
-            assetBundle.Unload(false);
-            return font;
-        }
-
         public AssetBundle GetAssetBundle(string _filepath, string _bundle) => AssetBundle.LoadFromFile(Path.Combine(_filepath, _bundle));
-
-        public TMP_FontAsset GetCustomFontAsset(string _font)
-        {
-            var fontAsset = TMP_FontAsset.CreateFontAsset(GetCustomFont(_font));
-            fontAsset.name = _font;
-            MaterialReferenceManager.AddFontAsset(fontAsset);
-            return fontAsset;
-        }
-
-        public void GetAsset(string _filepath, string _bundle, string _filename, Action<GameObject> callback)
-        {
-            var assetBundle = GetAssetBundle(_filepath, _bundle);
-            var prefab = assetBundle.LoadAsset<GameObject>(_filename);
-            callback(Instantiate(prefab));
-
-            assetBundle.Unload(false);
-        }
-
-        public void GetAsset(string _filepath, string _bundle, string _filename, Action<Font> callback)
-        {
-            var assetBundle = GetAssetBundle(_filepath, _bundle);
-            var prefab = assetBundle.LoadAsset<Font>(_filename);
-            callback(Instantiate(prefab));
-
-            assetBundle.Unload(false);
-        }
 
         public string ChangeName(string _name1)
         {
@@ -1032,16 +960,6 @@ namespace RTFunctions.Functions.Managers
                     }
             }
             return _name1;
-        }
-
-        public Font GetDefaultFont(string _font, int _size)
-        {
-            if (Font.GetOSInstalledFontNames().Contains(_font))
-            {
-                return Font.CreateDynamicFontFromOSFont(_font, _size);
-            }
-            Debug.LogFormat("{0}Font {1} does not exist on OS!", className, _font);
-            return Font.GetDefault();
         }
 
         public static class TextTranslater
