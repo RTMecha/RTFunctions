@@ -742,7 +742,7 @@ namespace RTFunctions.Functions.Optimization
             foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
             {
                 if (beatmapObject.parent == id)
-                    FunctionsPlugin.inst.StartCoroutine(UpdateObjects(beatmapObject, level, objects, converter, spawner));
+                    FunctionsPlugin.inst.StartCoroutine(UpdateObjects(beatmapObject, level, objects, converter, spawner, reinsert));
             }
 
             // Get ILevelObject related to BeatmapObject.
