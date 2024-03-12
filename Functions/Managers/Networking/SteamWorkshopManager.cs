@@ -85,6 +85,12 @@ namespace RTFunctions.Functions.Managers.Networking
 
         public IEnumerator GetSubscribedItems(Action<Level, int> onLoad = null)
         {
+            if (!Initialized)
+            {
+                Debug.LogError($"{className}Steam is not initialized! Try restarting with Steam open or updating the steam_api64.dll file to the newer version provided in the RTFunctions latest release.");
+                yield break;
+            }
+
             hasLoaded = false;
             loading = true;
             Levels.Clear();
