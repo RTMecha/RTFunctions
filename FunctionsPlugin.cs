@@ -98,7 +98,12 @@ namespace RTFunctions
 
 		public static ConfigEntry<bool> EnableVideoBackground { get; set; }
 		public static ConfigEntry<bool> RunInBackground { get; set; }
-		//public static ConfigEntry<RTVideoManager.RenderType> VideoBackgroundRenderType { get; set; }
+
+		public static ConfigEntry<bool> EvaluateCode { get; set; }
+		public static ConfigEntry<bool> ReplayLevel { get; set; }
+		public static ConfigEntry<bool> PrioritizeVG { get; set; }
+
+		public static ConfigEntry<string> DiscordRichPresenceID { get; set; }
 
 		#endregion
 
@@ -277,8 +282,7 @@ namespace RTFunctions
 
 			LDM = Config.Bind("Level", "Low Detail Mode", false, "If enabled, any objects with \"LDM\" on will not be rendered.");
 			DiscordShowLevel = Config.Bind("Discord", "Show Level Status", true, "Level name is shown.");
-			EnableVideoBackground = Config.Bind("Game", "Video Backgrounds", false, "If on, the old video BG feature returns, though really buggy.");
-			//VideoBackgroundRenderType = Config.Bind("Game", "Video Background Render Type", RTVideoManager.RenderType.Camera, "Where the video ends up rendering. If camera, the video will ALWAYS be stuck to the screen. Background render allows it to not be stuck to the camera.");
+			DiscordRichPresenceID = Config.Bind("Discord", "Status ID (READ DESC)", "1176264603374735420", "Only change if you already have your own custom Discord app status setup.");
 
 			displayName = DisplayName.Value;
 

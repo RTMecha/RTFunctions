@@ -204,9 +204,6 @@ namespace RTFunctions.Functions.Managers
             yield return inst.StartCoroutine(Updater.IUpdateObjects(true));
 
             //ObjectManager.inst.updateObjects();
-            Patchers.ObjectManagerPatch.AddPrefabObjects(ObjectManager.inst);
-
-            Patchers.GameManagerPatch.StartInvoke();
 
             Debug.Log($"{className}Done!");
 

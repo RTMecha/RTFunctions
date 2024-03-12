@@ -54,32 +54,8 @@ namespace RTFunctions.Functions.Managers
 		}
 
 		void Update()
-        {
-            //if (videoPlayer != null && videoPlayer.enabled && videoPlayer.isPrepared
-            //    && (prevPlaying != AudioManager.inst.CurrentAudioSource.isPlaying
-            //    || prevTime != AudioManager.inst.CurrentAudioSource.time
-            //    || prevPitch != AudioManager.inst.CurrentAudioSource.pitch))
-            //{
-            //    prevPlaying = AudioManager.inst.CurrentAudioSource.isPlaying;
-            //    prevTime = AudioManager.inst.CurrentAudioSource.time;
-            //    prevPitch = AudioManager.inst.CurrentAudioSource.pitch;
-            //    UpdatedAudioPos?.Invoke(AudioManager.inst.CurrentAudioSource.isPlaying, AudioManager.inst.CurrentAudioSource.time, AudioManager.inst.CurrentAudioSource.pitch);
-            //}
-
-            //if (canUpdate)
-            //{
-            //    float t = AudioManager.inst.CurrentAudioSource.time;
-
-            //    //if (t < videoPlayer.time)
-            //    //    t = -((float)videoPlayer.time) + t;
-
-            //    if (videoPlayer != null && videoPlayer.enabled && videoPlayer.isPrepared)
-            //        UpdatedAudioPos?.Invoke(AudioManager.inst.CurrentAudioSource.isPlaying, t, AudioManager.inst.CurrentAudioSource.pitch);
-            //    prevPlaying = AudioManager.inst.CurrentAudioSource.isPlaying;
-            //    prevTime = t;
-            //    prevPitch = AudioManager.inst.CurrentAudioSource.pitch;
-            //}
-            if (canUpdate && (prevTime != AudioManager.inst.CurrentAudioSource.time || prevPlaying != AudioManager.inst.CurrentAudioSource.isPlaying))
+		{
+			if (canUpdate && (prevTime != AudioManager.inst.CurrentAudioSource.time || prevPlaying != AudioManager.inst.CurrentAudioSource.isPlaying))
 			{
 				if (videoPlayer != null && videoPlayer.enabled && videoPlayer.isPrepared)
 				{
@@ -126,6 +102,12 @@ namespace RTFunctions.Functions.Managers
 
 		public void Play(string url, float alpha)
 		{
+			if (videoPlayer == null)
+			{
+				Debug.LogError($"{className}VideoPlayer does not exist so the set video cannot play.");
+				return;
+			}
+
 			currentURL = url;
 			currentAlpha = alpha;
 

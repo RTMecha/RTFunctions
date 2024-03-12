@@ -418,21 +418,35 @@ namespace RTFunctions.Functions.Data
 					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
 						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
 
-				eventKeyframe.eventTime = kfjn["t"].AsFloat;
-				eventKeyframe.SetEventValues(
-					kfjn["ev"][0].AsFloat,
-					kfjn["ev"][1].AsFloat,
-					kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat,
-					kfjn["ev"][3].AsFloat == 9f ? 18f : kfjn["ev"][3].AsFloat,
-					kfjn["ev"][4].AsFloat);
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat,
+						kfjn["ev"][2].AsFloat == 9f ? 19f : kfjn["ev"][2].AsFloat,
+						kfjn["ev"][3].AsFloat == 9f ? 19f : kfjn["ev"][3].AsFloat,
+						kfjn["ev"].Count > 4 ? kfjn["ev"][4].AsFloat : 0f);
 
 					gameData.eventObjects.allEvents[15].Add(eventKeyframe);
 				}
 
-			for (int i = 16; i < DefaultKeyframes.Count; i++)
-            {
-				gameData.eventObjects.allEvents[i].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[i]));
-            }
+				for (int i = 16; i < DefaultKeyframes.Count; i++)
+				{
+					gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
+					gameData.eventObjects.allEvents[i].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[i]));
+				}
+			}
+			catch (System.Exception ex)
+			{
+				EditorManager.inst?.DisplayNotification($"There was an error in parsing VG Event Keyframes. Parsing got caught at {breakContext}", 4f, EditorManager.NotificationType.Error);
+				if (!EditorManager.inst)
+				{
+					Debug.LogError($"There was an error in parsing VG Event Keyframes. Parsing got caught at {breakContext}.\n {ex}");
+				}
+				else
+				{
+					Debug.LogError($"{ex}");
+				}
+			}
 
 			Debug.Log($"{FunctionsPlugin.className}Checking keyframe counts");
 			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
