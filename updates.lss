@@ -1,3 +1,5 @@
+1.10.1 > [Mar 12, 2024]
+- Added catch for situations where Steam hasn't loaded correctly.
 1.10.0 > [Mar 12, 2024]
 - Added a boost counter for ObjectModifiers and ArcadiaCustoms.
 - Fixed a bug with Custom Objects in Player Models visibility values being the opposite if the value is zen mode.
