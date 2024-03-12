@@ -1,9 +1,6 @@
-﻿using UnityEngine;
-
+﻿using RTFunctions.Functions.IO;
 using SimpleJSON;
-
-using RTFunctions.Functions.IO;
-
+using UnityEngine;
 using BasePrefabType = DataManager.PrefabType;
 
 namespace RTFunctions.Functions.Data

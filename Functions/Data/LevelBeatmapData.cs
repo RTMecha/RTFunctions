@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-
-using SimpleJSON;
-
+﻿using SimpleJSON;
+using System.Collections.Generic;
 using BaseBeatmapData = DataManager.GameData.BeatmapData;
 
 namespace RTFunctions.Functions.Data
@@ -42,6 +40,7 @@ namespace RTFunctions.Functions.Data
         {
             var beatmapData = new LevelBeatmapData();
 
+			beatmapData.levelData = Data.LevelData.Parse(jn["level_data"]);
             beatmapData.editorData = LevelEditorData.Parse(jn["ed"]);
 
 			beatmapData.markers = new List<Marker>();
@@ -69,20 +68,7 @@ namespace RTFunctions.Functions.Data
 			return beatmapData;
         }
 
-        public JSONNode ToJSON()
-        {
-			var jn = ((LevelEditorData)editorData).ToJSON();
-
-			for (int i = 0; i < markers.Count; i++)
-            {
-				jn["markers"][i]["active"] = markers[i].active;
-				jn["markers"][i]["name"] = markers[i].name;
-				jn["markers"][i]["desc"] = markers[i].desc;
-				jn["markers"][i]["col"] = markers[i].color;
-				jn["markers"][i]["t"] = markers[i].time;
-            }
-
-			return jn;
-        }
+		public Data.LevelData ModLevelData => (Data.LevelData)levelData;
+		public LevelEditorData ModEditorData => (LevelEditorData)editorData;
 	}
 }

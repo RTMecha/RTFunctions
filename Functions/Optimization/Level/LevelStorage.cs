@@ -1,8 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using RTFunctions.Functions.Optimization.Objects;
+using System;
 using System.Collections.Generic;
-
-using RTFunctions.Functions.Optimization.Objects;
+using System.Linq;
 
 namespace RTFunctions.Functions.Optimization.Level
 

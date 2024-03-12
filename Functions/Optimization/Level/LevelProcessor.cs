@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-using UnityEngine;
-
+﻿using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Optimization.Objects;
-
-using GameData = DataManager.GameData;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Optimization.Level
 {

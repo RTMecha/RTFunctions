@@ -10,6 +10,7 @@ using RTFunctions.Functions;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
+using TMPro;
 
 namespace RTFunctions.Patchers
 {
@@ -31,10 +32,14 @@ namespace RTFunctions.Patchers
 				for (int i = 0; i < __instance.objectPrefabs.Count; i++)
 				{
 					foreach (var option in __instance.objectPrefabs[i].options)
-						if (option.transform.childCount > 0 && option.transform.GetChild(0).gameObject.TryGetComponent(out MeshRenderer renderer))
+						if (option.transform.childCount > 0 && option.transform.GetChild(0).gameObject.TryGetComponent(out Renderer renderer))
 							renderer.material.color = new Color(1f, 1f, 1f, 1f);
 				}
 
+			// Fixes Text being red.
+			__instance.objectPrefabs[4].options[0].GetComponentInChildren<TextMeshPro>().color = new Color(0f, 0f, 0f, 0f);
+
+			// Fixes Hexagons being solid.
 			foreach (var option in __instance.objectPrefabs[5].options)
             {
                 option.GetComponentInChildren<Collider2D>().isTrigger = true;

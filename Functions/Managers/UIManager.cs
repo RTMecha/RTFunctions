@@ -1,16 +1,13 @@
-﻿using System;
+﻿using RTFunctions.Functions.IO;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
 using System.IO;
-
+using System.Linq;
+using System.Reflection;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
-using TMPro;
-
-using RTFunctions.Functions.IO;
 
 namespace RTFunctions.Functions.Managers
 {

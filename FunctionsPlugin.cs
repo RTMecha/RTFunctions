@@ -28,13 +28,14 @@ using Screen = UnityEngine.Screen;
 using Ease = RTFunctions.Functions.Animation.Ease;
 using Version = RTFunctions.Functions.Version;
 using System.Linq;
+using System.IO.Compression;
 
 namespace RTFunctions
 {
 	/// <summary>
 	/// Base plugin for initializing all the patches.
 	/// </summary>
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.9.13")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.10.0")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
@@ -63,12 +64,12 @@ namespace RTFunctions
 		/// <summary>
 		/// Since most PA classes have a "className" for logging I decided to give some of mine a unique one.
 		/// </summary>
-		public static string className = "[<color=#0E36FD>RT<color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
+		public static string className = "[<color=#0E36FD>RT</color><color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
 		public static readonly Harmony harmony = new Harmony("rtfunctions");
 
-        #region Configs
+		#region Configs
 
-        public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
+		public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
 		public static ConfigEntry<KeyCode> OpenPAPersistentFolder { get; set; }
 
 		public static ConfigEntry<bool> DebugsOn { get; set; }
@@ -77,6 +78,9 @@ namespace RTFunctions
 
 		public static string displayName;
 
+		public static ConfigEntry<bool> DebugInfo { get; set; }
+		public static ConfigEntry<bool> DebugInfoStartup { get; set; }
+		public static ConfigEntry<KeyCode> DebugInfoToggleKey { get; set; }
 		public static ConfigEntry<bool> NotifyREPL { get; set; }
 
 		public static ConfigEntry<bool> BGReactiveLerp { get; set; }
@@ -88,13 +92,13 @@ namespace RTFunctions
 		public static ConfigEntry<KeyCode> ScreenshotKey { get; set; }
 
 		public static ConfigEntry<string> ScreenshotsPath { get; set; }
+		public static ConfigEntry<bool> UseNewUpdateMethod { get; set; }
 
 		public static ConfigEntry<bool> DiscordShowLevel { get; set; }
 
 		public static ConfigEntry<bool> EnableVideoBackground { get; set; }
 		public static ConfigEntry<bool> RunInBackground { get; set; }
-
-		public static ConfigEntry<bool> EvaluateCode { get; set; }
+		//public static ConfigEntry<RTVideoManager.RenderType> VideoBackgroundRenderType { get; set; }
 
 		#endregion
 
@@ -112,25 +116,11 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-        //static bool FullscreenProp
-        //{
-        //    get
-        //    {
-        //        return DataManager.inst.GetSettingBool("FullScreen", false);
-        //    }
-        //    set
-        //    {
-        //        DataManager.inst.UpdateSettingBool("FullScreen", value);
-        //        SaveManager.inst.ApplyVideoSettings();
-        //        SaveManager.inst.UpdateSettingsFile(false);
-        //    }
-        //}
+		public static bool prevFullscreen;
 
-        public static bool prevFullscreen;
+		#endregion
 
-        #endregion
-
-        #region Resolution
+		#region Resolution
 
 		public static ConfigEntry<Resolutions> Resolution { get; set; }
 
@@ -149,31 +139,11 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-        //static Resolutions ResolutionProp
-        //{
-        //    get
-        //    {
-        //        return (Resolutions)DataManager.inst.GetSettingInt("Resolution_i", 0);
-        //    }
-        //    set
-        //    {
-        //        DataManager.inst.UpdateSettingInt("Resolution_i", (int)value);
+		public static Resolutions prevResolution;
 
-        //        var res = DataManager.inst.resolutions[(int)value];
+		#endregion
 
-        //        DataManager.inst.UpdateSettingFloat("Resolution_x", res.x);
-        //        DataManager.inst.UpdateSettingFloat("Resolution_y", res.y);
-
-        //        SaveManager.inst.ApplyVideoSettings();
-        //        SaveManager.inst.UpdateSettingsFile(false);
-        //    }
-        //}
-
-        public static Resolutions prevResolution;
-
-        #endregion
-
-        #region MasterVol
+		#region MasterVol
 
 		public static ConfigEntry<int> MasterVol { get; set; }
 
@@ -186,21 +156,7 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-        //static int MasterVolProp
-        //{
-        //    get
-        //    {
-        //        return DataManager.inst.GetSettingInt("MasterVolume", 9);
-        //    }
-        //    set
-        //    {
-        //        DataManager.inst.UpdateSettingInt("MasterVolume", value);
-
-        //        SaveManager.inst.UpdateSettingsFile(false);
-        //    }
-        //}
-
-        public static int prevMasterVol;
+		public static int prevMasterVol;
 
 		#endregion
 
@@ -217,27 +173,13 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		//static int MusicVolProp
-		//{
-		//	get
-		//	{
-		//		return DataManager.inst.GetSettingInt("MusicVolume", 9);
-		//	}
-		//	set
-		//	{
-		//		DataManager.inst.UpdateSettingInt("MusicVolume", value);
-
-		//		SaveManager.inst.UpdateSettingsFile(false);
-		//	}
-		//}
-
 		public static int prevMusicVol;
 
-        #endregion
+		#endregion
 
-        #region SFXVol
+		#region SFXVol
 
-        public static ConfigEntry<int> SFXVol { get; set; }
+		public static ConfigEntry<int> SFXVol { get; set; }
 
 		static void SetSFXVol(int value)
 		{
@@ -248,35 +190,21 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		//static int SFXVolProp
-		//{
-		//	get
-		//	{
-		//		return DataManager.inst.GetSettingInt("EffectsVolume", 9);
-		//	}
-		//	set
-		//	{
-		//		DataManager.inst.UpdateSettingInt("EffectsVolume", value);
-
-		//		SaveManager.inst.UpdateSettingsFile(false);
-		//	}
-		//}
-
 		public static int prevSFXVol;
 
 		#endregion
 
 		#region Language
-		
+
 		public enum Lang
-        {
+		{
 			english,
 			spanish,
 			japanese,
 			thai,
 			russian,
 			pirate
-        }
+		}
 
 		public static ConfigEntry<Lang> Language { get; set; }
 
@@ -288,20 +216,6 @@ namespace RTFunctions
 
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
-
-		//static Lang LanguageProp
-		//{
-		//	get
-		//	{
-		//		return (Lang)DataManager.inst.GetCurrentLanguageEnum();
-		//	}
-		//	set
-		//	{
-		//		DataManager.inst.GetSettingInt("Language_i", (int)value);
-
-		//		SaveManager.inst.UpdateSettingsFile(false);
-		//	}
-		//}
 
 		public static Lang prevLanguage;
 
@@ -320,22 +234,8 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		//static bool ControllerRumbleProp
-		//{
-		//	get
-		//	{
-		//		return DataManager.inst.GetSettingBool("ControllerVibrate", true);
-		//	}
-		//	set
-		//	{
-		//		DataManager.inst.UpdateSettingBool("ControllerVibrate", value);
-
-		//		SaveManager.inst.UpdateSettingsFile(false);
-		//	}
-		//}
-
 		public static bool prevControllerRumble;
-		
+
 		#endregion
 
 		void Awake()
@@ -343,32 +243,48 @@ namespace RTFunctions
 			inst = this;
 
 			DebugsOn = Config.Bind("Debugging", "Enabled", true, "If disabled, turns all Unity debug logs off. Might boost performance.");
+			DebugInfo = Config.Bind("Debugging", "Show Debug Info", false, "Shows a helpful info overlay with some information about the current gamestate.");
+			DebugInfoStartup = Config.Bind("Debugging", "Create Debug Info", false, "If the Debug Info menu should be created on game start. Requires restart to have this option take affect.");
+			DebugInfoToggleKey = Config.Bind("Debugging", "Show Debug Info Toggle Key", KeyCode.F6, "Shows a helpful info overlay with some information about the current gamestate.");
 			NotifyREPL = Config.Bind("Debugging", "Notify REPL", false, "If in editor, code ran will have their results be notified.");
 
+			UseNewUpdateMethod = Config.Bind("Game", "Use New Update Method", true, "Possibly releases the fixed framerate of the game.");
+            UseNewUpdateMethod.SettingChanged += UseNewUpdateMethodChanged;
 			ScreenshotsPath = Config.Bind("Game", "Screenshot Path", "screenshots", "The path to save screenshots to.");
-			ScreenshotKey = Config.Bind("Game", "Screenshot Key", KeyCode.P, "The key to press to take a screenshot.");
+			ScreenshotKey = Config.Bind("Game", "Screenshot Key", KeyCode.F2, "The key to press to take a screenshot.");
 			AntiAliasing = Config.Bind("Game", "Anti-Aliasing", true, "If antialiasing is on or not.");
 			RunInBackground = Config.Bind("Game", "Run In Background", true, "If you want the game to continue playing when minimized.");
 			IncreasedClipPlanes = Config.Bind("Game", "Camera Clip Planes", true, "Increases the clip panes to a very high amount, allowing for object render depth to go really high or really low.");
+			EnableVideoBackground = Config.Bind("Game", "Video Backgrounds", false, "If on, the old video BG feature returns, though somewhat buggy. Requires a bg.mp4 file to exist in the level folder.");
+			EvaluateCode = Config.Bind("Game", "Evaluate Custom Code", false, "If custom written code should evaluate. Turn this on if you're sure the level you're using isn't going to mess anything up with a code Modifier or custom player code.");
+			ReplayLevel = Config.Bind("Game", "Replay Level in Background After Completion", true, "When completing a level, having this on will replay the level with no players in the background of the end screen.");
+			PrioritizeVG = Config.Bind("Game", "Priotize VG format", true, "Due to LS file formats also being in level folders with VG formats, VG format will need to be prioritized, though you can turn this off if a VG level isn't working and it has a level.lsb file.");
+
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
-			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F3, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
-			OpenPAPersistentFolder = Config.Bind("File", "Open LocalLow Folder", KeyCode.F4, "Opens the data folder all instances of PA share containing the log files and copied prefab (if you have EditorManagement installed)");
+
+			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F4, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
+			OpenPAPersistentFolder = Config.Bind("File", "Open LocalLow Folder", KeyCode.F5, "Opens the data folder all instances of PA share containing the log files and copied prefab (if you have EditorManagement installed)");
+
 			Fullscreen = Config.Bind("Settings", "Fullscreen", false);
 			Resolution = Config.Bind("Settings", "Resolution", Resolutions.p720);
-			MasterVol = Config.Bind("Settings", "Volume Master", 9, new ConfigDescription("Total volume.", new AcceptableValueRange<int>(0, 9)));
+			MasterVol = Config.Bind("Settings", "Volume Master", 8, new ConfigDescription("Total volume.", new AcceptableValueRange<int>(0, 9)));
 			MusicVol = Config.Bind("Settings", "Volume Music", 9, new ConfigDescription("Music volume.", new AcceptableValueRange<int>(0, 9)));
 			SFXVol = Config.Bind("Settings", "Volume SFX", 9, new ConfigDescription("SFX volume.", new AcceptableValueRange<int>(0, 9)));
 			Language = Config.Bind("Settings", "Language", Lang.english, "This is currently here for testing purposes. This version of the game has not been translated yet.");
 			ControllerRumble = Config.Bind("Settings", "Controller Vibrate", true, "If the controllers should vibrate or not.");
+
 			BGReactiveLerp = Config.Bind("Level Backgrounds", "Reactive Color Lerp", true, "If on, reactive color will lerp from base color to reactive color. Otherwise, the reactive color will be added to the base color.");
+
 			LDM = Config.Bind("Level", "Low Detail Mode", false, "If enabled, any objects with \"LDM\" on will not be rendered.");
 			DiscordShowLevel = Config.Bind("Discord", "Show Level Status", true, "Level name is shown.");
 			EnableVideoBackground = Config.Bind("Game", "Video Backgrounds", false, "If on, the old video BG feature returns, though really buggy.");
-			EvaluateCode = Config.Bind("Game", "Evaluate C# Code", false, "Only have this on if you're sure everything will be fine with a level.");
+			//VideoBackgroundRenderType = Config.Bind("Game", "Video Background Render Type", RTVideoManager.RenderType.Camera, "Where the video ends up rendering. If camera, the video will ALWAYS be stuck to the screen. Background render allows it to not be stuck to the camera.");
 
 			displayName = DisplayName.Value;
 
 			player.sprName = displayName;
+
+			Updater.UseNewUpdateMethod = UseNewUpdateMethod.Value;
 
 			Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(UpdateSettings);
 
@@ -388,6 +304,9 @@ namespace RTFunctions
 				harmony.PatchAll(typeof(ObjectManagerPatch));
 				harmony.PatchAll(typeof(PlayerPatch));
 				harmony.PatchAll(typeof(SaveManagerPatch));
+				harmony.PatchAll(typeof(SoundLibraryPatch));
+				harmony.PatchAll(typeof(SteamManagerPatch));
+				harmony.PatchAll(typeof(SteamWrapperAchievementsPatch));
 			}
 
 			// Hooks
@@ -402,7 +321,7 @@ namespace RTFunctions
 				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
 					string str = RTFile.BasePath;
-					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-backup.lsb";
+					string modBackup = str + "level-quit-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
@@ -415,7 +334,7 @@ namespace RTFunctions
 				if (EditorManager.inst && EditorManager.inst.hasLoadedLevel && !EditorManager.inst.loading)
 				{
 					string str = RTFile.BasePath;
-					string modBackup = RTFile.ApplicationDirectory + str + "level-quit-unity-backup.lsb";
+					string modBackup = str + "level-quit-unity-backup.lsb";
 					if (RTFile.FileExists(modBackup))
 						File.Delete(modBackup);
 
@@ -424,6 +343,11 @@ namespace RTFunctions
 			};
 
 			Logger.LogInfo($"Plugin RT Functions is loaded!");
+		}
+
+        void UseNewUpdateMethodChanged(object sender, EventArgs e)
+		{
+			Updater.UseNewUpdateMethod = UseNewUpdateMethod.Value;
 		}
 
 		static void UpdateSettings(object sender, EventArgs e)
@@ -458,58 +382,58 @@ namespace RTFunctions
 			}
 
 			if (prevResolution != Resolution.Value)
-            {
+			{
 				SetResolution(Resolution.Value);
 				//ResolutionProp = Resolution.Value;
-            }
+			}
 
 			if (prevMasterVol != MasterVol.Value)
-            {
+			{
 				SetMasterVol(MasterVol.Value);
 				//MasterVolProp = MasterVol.Value;
-            }
+			}
 
 			if (prevMusicVol != MusicVol.Value)
-            {
+			{
 				SetMusicVol(MusicVol.Value);
 				//MusicVolProp = MusicVol.Value;
-            }
+			}
 
 			if (prevSFXVol != SFXVol.Value)
-            {
+			{
 				SetSFXVol(SFXVol.Value);
 				//SFXVolProp = SFXVol.Value;
-            }
+			}
 
 			if (prevLanguage != Language.Value)
-            {
+			{
 				SetLanguage(Language.Value);
 				//LanguageProp = Language.Value;
-            }
-			
+			}
+
 			if (prevControllerRumble != ControllerRumble.Value)
-            {
+			{
 				SetControllerRumble(ControllerRumble.Value);
 				//ControllerRumbleProp = ControllerRumble.Value;
-            }
+			}
 
 			UpdateDiscordStatus(discordLevel, discordDetails, discordIcon, discordArt);
 
 			if (RTVideoManager.inst)
-            {
+			{
 				//RTVideoManager.inst.SetType(VideoBackgroundRenderType.Value);
 				if (RTVideoManager.inst.didntPlay && EnableVideoBackground.Value)
-                {
+				{
 					RTVideoManager.inst.Play(RTVideoManager.inst.currentURL, RTVideoManager.inst.currentAlpha);
 
 				}
-            }
+			}
 
 			SaveProfile();
 		}
 
 		void Update()
-        {
+		{
 			RTHelpers.screenScale = (float)Screen.width / 1920f;
 			RTHelpers.screenScaleInverse = 1f / RTHelpers.screenScale;
 
@@ -523,21 +447,23 @@ namespace RTFunctions
 				if (Input.GetKeyDown(OpenPAPersistentFolder.Value))
 					RTFile.OpenInFileBrowser.Open(RTFile.PersistentApplicationDirectory);
 
-				if (Input.GetKeyDown(KeyCode.I))
-					Debug.LogFormat("{0}Objects alive: {1}", className, DataManager.inst.gameData.beatmapObjects.FindAll(x => x.TimeWithinLifespan()).Count);
+				if (Input.GetKeyDown(DebugInfoToggleKey.Value))
+					DebugInfo.Value = !DebugInfo.Value;
 			}
+
+			RTDebugger.Update();
 		}
 
-        #region Patchers
+		#region Patchers
 
-        [HarmonyPatch(typeof(SystemManager), "Awake")]
+		[HarmonyPatch(typeof(SystemManager), "Awake")]
 		[HarmonyPostfix]
 		static void DisableLoggers()
 		{
 			Debug.unityLogger.logEnabled = DebugsOn.Value;
 		}
 
-        [HarmonyPatch(typeof(SystemManager), "Update")]
+		[HarmonyPatch(typeof(SystemManager), "Update")]
 		[HarmonyPrefix]
 		static bool SystemManagerUpdatePrefix()
 		{
@@ -548,13 +474,13 @@ namespace RTFunctions
 				Fullscreen.Value = !Fullscreen.Value;
 
 			return false;
-        }
+		}
 
-        [HarmonyPatch(typeof(EditorManager), "Start")]
-        [HarmonyPostfix]
-        static void EditorStartPostfix(EditorManager __instance)
-        {
-            __instance.SetCreatorName(DisplayName.Value);
+		[HarmonyPatch(typeof(EditorManager), "Start")]
+		[HarmonyPostfix]
+		static void EditorStartPostfix(EditorManager __instance)
+		{
+			__instance.SetCreatorName(DisplayName.Value);
 			if (SteamWrapper.inst)
 				SteamWrapper.inst.user.displayName = DisplayName.Value;
 		}
@@ -617,15 +543,63 @@ namespace RTFunctions
 		[HarmonyPatch(typeof(FileManager), "LoadImageFileRaw", MethodType.Enumerator)]
 		[HarmonyTranspiler]
 		static IEnumerable<CodeInstruction> LoadImageFileRawTranspiler(IEnumerable<CodeInstruction> instructions)
-        {
+		{
 			var match = new CodeMatcher(instructions).Start();
 
 			match = match.RemoveInstructionsInRange(108, 120);
 
 			return match.InstructionEnumeration();
+		}
+
+		//[HarmonyPatch(typeof(ZipArchiveEntry), "GetDataCompressor")]
+		//[HarmonyPrefix]
+		//static bool GetDataCompressorPrefix(ref CheckSumAndSizeWriteStream __result, ZipArchiveEntry __instance, Stream __0, bool __1, EventHandler __2)
+		//{
+		//    __result = GetDataCompressor(__instance, __0, __1, __2);
+		//    return false;
+		//}
+
+		[HarmonyPatch(typeof(ZipArchiveEntry), "OpenInWriteMode")]
+		[HarmonyPrefix]
+		static bool OpenInWriteModePrefix(ref Stream __result, ZipArchiveEntry __instance)
+        {
+			__result = OpenInWriteMode(__instance);
+			return false;
         }
 
-		public static Action<GameManager> EventsCoreGameThemePrefix { get; set; }
+		static Stream OpenInWriteMode(ZipArchiveEntry __instance)
+		{
+			if (__instance._everOpenedForWrite)
+			{
+				throw new IOException("Ever opened for write");
+			}
+			__instance._everOpenedForWrite = true;
+			var dataCompressor = GetDataCompressor(__instance, __instance._archive.ArchiveStream, true, delegate (object o, EventArgs e)
+			{
+				__instance._archive.ReleaseArchiveStream(__instance);
+				__instance._outstandingWriteStream = null;
+			});
+			__instance._outstandingWriteStream = new ZipArchiveEntry.DirectToArchiveWriterStream(dataCompressor, __instance);
+			return new WrappedStream(__instance._outstandingWriteStream, delegate (object o, EventArgs e)
+			{
+				__instance._outstandingWriteStream.Close();
+			});
+		}
+
+		static CheckSumAndSizeWriteStream GetDataCompressor(ZipArchiveEntry __instance, Stream backingStream, bool leaveBackingStreamOpen, EventHandler onClose)
+        {
+            var stream = new DeflateStream(backingStream, CompressionMode.Compress, leaveBackingStreamOpen);
+
+            return new CheckSumAndSizeWriteStream(stream, backingStream, leaveBackingStreamOpen && !true, delegate (long initialPosition, long currentPosition, uint checkSum)
+            {
+                __instance._crc32 = checkSum;
+                __instance._uncompressedSize = currentPosition;
+                __instance._compressedSize = backingStream.Position - initialPosition;
+                onClose?.Invoke(__instance, EventArgs.Empty);
+            });
+        }
+
+        public static Action<GameManager> EventsCoreGameThemePrefix { get; set; }
 		public static Action<EventManager, float> EventsCoreUpdateThemePrefix { get; set; }
 
 		#endregion

@@ -1,10 +1,8 @@
-﻿using System;
-
-using UnityEngine;
-
+﻿
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Managers.Networking;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Optimization.Objects.Visual
 {
@@ -23,7 +21,7 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
 
         public string Path { get; set; }
 
-        public ImageObject(GameObject gameObject, Transform top, float opacity, string text, bool background)
+        public ImageObject(GameObject gameObject, Transform top, float opacity, string text, bool background, Sprite imageData)
         {
             GameObject = gameObject;
             Top = top;
@@ -41,31 +39,40 @@ namespace RTFunctions.Functions.Optimization.Objects.Visual
             if (Renderer)
                 material = Renderer.material;
 
-            var local = GameObject.transform.localPosition;
+            var local = gameObject.transform.localPosition;
 
-            var regex = new System.Text.RegularExpressions.Regex(@"img\((.*?)\)");
-            var match = regex.Match(text);
+            if (imageData != null)
+            {
+                //var texture2d = new Texture2D(2, 2, TextureFormat.ARGB32, false);
+                //texture2d.LoadImage(imageData);
 
-            Path = match.Success ? RTFile.BasePath + match.Groups[1].ToString() : RTFile.BasePath + text;
+                //texture2d.wrapMode = TextureWrapMode.Clamp;
+                //texture2d.filterMode = FilterMode.Point;
+                //texture2d.Apply();
 
-            if (RTFile.FileExists(Path))
-                FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadImageTexture("file://" + Path, delegate (Texture2D x)
-                {
-                    ((SpriteRenderer)Renderer).sprite = SpriteManager.CreateSprite(x);
-                    GameObject.transform.localPosition = local;
-                    GameObject.transform.localPosition = local;
-                    GameObject.transform.localPosition = local;
-                }, delegate (string onError)
-                {
-                    ((SpriteRenderer)Renderer).sprite = ArcadeManager.inst.defaultImage;
-                }));
-            //{
-            //    ((SpriteRenderer)Renderer).sprite = SpriteManager.LoadSprite(Path);
-            //    GameObject.transform.localPosition = local;
-            //    GameObject.transform.localPosition = local;
-            //    GameObject.transform.localPosition = local;
-            //}
-            else ((SpriteRenderer)Renderer).sprite = ArcadeManager.inst.defaultImage;
+                ((SpriteRenderer)Renderer).sprite = imageData;
+            }
+            else
+            {
+                var regex = new System.Text.RegularExpressions.Regex(@"img\((.*?)\)");
+                var match = regex.Match(text);
+
+                Path = match.Success ? RTFile.BasePath + match.Groups[1].ToString() : RTFile.BasePath + text;
+
+                if (RTFile.FileExists(Path))
+                    FunctionsPlugin.inst.StartCoroutine(AlephNetworkManager.DownloadImageTexture("file://" + Path, delegate (Texture2D x)
+                    {
+                        ((SpriteRenderer)Renderer).sprite = SpriteManager.CreateSprite(x);
+                        gameObject.transform.localPosition = local;
+                        gameObject.transform.localPosition = local;
+                        gameObject.transform.localPosition = local;
+                    }, delegate (string onError)
+                    {
+                        ((SpriteRenderer)Renderer).sprite = ArcadeManager.inst.defaultImage;
+                    }));
+                else ((SpriteRenderer)Renderer).sprite = ArcadeManager.inst.defaultImage;
+            }
+
         }
 
         public override void SetColor(Color color) => material?.SetColor(new Color(color.r, color.g, color.b, color.a * opacity));

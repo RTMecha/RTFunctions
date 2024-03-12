@@ -107,6 +107,11 @@ namespace RTFunctions.Patchers
         [HarmonyPrefix]
         static bool UpdatePrefix(GameManager __instance)
         {
+            if (__instance.gameState == GameManager.State.Paused && !LevelManager.LevelEnded && InputDataManager.inst.menuActions.Cancel.WasPressed)
+            {
+                __instance.menuUI?.GetComponent<InterfaceController>()?.SwitchBranch("unpause");
+            }
+
             if (__instance.gameState == GameManager.State.Playing)
             {
                 if (EditorManager.inst == null)
@@ -124,16 +129,24 @@ namespace RTFunctions.Patchers
                     __instance.StartCoroutine(__instance.PlayCheckpointAnimation(__instance.UpcomingCheckpointIndex));
                 }
             }
+
             if (__instance.gameState == GameManager.State.Reversing && !__instance.isReversing)
             {
                 __instance.StartCoroutine(ReverseToCheckpointLoop(__instance));
             }
             else if (__instance.gameState == GameManager.State.Playing)
             {
-                if (AudioManager.inst.CurrentAudioSource.clip != null &&
-                    EditorManager.inst == null &&
-                    AudioManager.inst.CurrentAudioSource.time + 0.1f >= __instance.songLength)
-                    __instance.GoToNextLevel();
+                if (AudioManager.inst.CurrentAudioSource.clip != null && EditorManager.inst == null
+                    && AudioManager.inst.CurrentAudioSource.time /*+ 0.1f*/ >= __instance.songLength - 0.1f)
+                    if (!LevelManager.LevelEnded)
+                        __instance.GoToNextLevel();
+            }
+            else if (__instance.gameState == GameManager.State.Finish)
+            {
+                if (AudioManager.inst.CurrentAudioSource.clip != null && EditorManager.inst == null
+                    && AudioManager.inst.CurrentAudioSource.time /*+ 0.1f*/ >= __instance.songLength - 0.1f
+                    && FunctionsPlugin.ReplayLevel.Value && LevelManager.LevelEnded)
+                    AudioManager.inst.SetMusicTime(0f);
             }
 
             if (__instance.gameState == GameManager.State.Playing || __instance.gameState == GameManager.State.Reversing)
@@ -297,12 +310,6 @@ namespace RTFunctions.Patchers
                     GameStorageManager.inst.timelineLine.color = beatmapTheme.guiColor;
                 }
 
-                //var componentsInChildren = __instance.timeline.GetComponentsInChildren<Image>();
-                //for (int i = 0; i < componentsInChildren.Length; i++)
-                //{
-                //    componentsInChildren[i].color = beatmapTheme.guiColor;
-                //}
-
                 if (EditorManager.inst == null && AudioManager.inst.CurrentAudioSource.time < 15f)
                 {
                     if (__instance.introTitle.color != beatmapTheme.guiColor)
@@ -344,7 +351,9 @@ namespace RTFunctions.Patchers
             Time.timeScale = 1f;
             DG.Tweening.DOTween.Clear();
             InputDataManager.inst.SetAllControllerRumble(0f);
+
             LevelManager.finished = true;
+            LevelManager.LevelEnded = true;
             LevelManager.OnLevelEnd?.Invoke();
             yield break;
         }

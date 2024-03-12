@@ -326,6 +326,16 @@ namespace RTFunctions.Functions
 					jn["ed"]["markers"][i]["t"] = _data.beatmapData.markers[i].time.ToString();
 				}
 
+				for (int i = 0; i < AssetManager.SpriteAssets.Count; i++)
+				{
+					jn["assets"]["spr"][i]["n"] = AssetManager.SpriteAssets.ElementAt(i).Key;
+					var imageData = AssetManager.SpriteAssets.ElementAt(i).Value.texture.EncodeToPNG();
+					for (int j = 0; j < imageData.Length; j++)
+					{
+						jn["assets"]["spr"][i]["d"][j] = imageData[j];
+					}
+				}
+
 				Debug.Log($"{FunctionsPlugin.className}Saving Object Prefabs");
 				for (int i = 0; i < _data.prefabObjects.Count; i++)
 				{

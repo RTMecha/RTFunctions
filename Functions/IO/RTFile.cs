@@ -11,7 +11,7 @@ using Debug = UnityEngine.Debug;
 
 namespace RTFunctions.Functions.IO
 {
-	public static class RTFile
+    public static class RTFile
 	{
 		public static string ApplicationDirectory => Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/")) + "/";
 
@@ -86,10 +86,8 @@ namespace RTFunctions.Functions.IO
 
 		public static void WriteToFile(string path, string json)
 		{
-			var streamWriter = new StreamWriter(path);
+			using var streamWriter = new StreamWriter(path);
 			streamWriter.Write(json);
-			streamWriter.Flush();
-			streamWriter.Close();
 		}
 
 		public static string ReadFromFile(string path)
@@ -99,9 +97,8 @@ namespace RTFunctions.Functions.IO
 				Debug.LogFormat("{0}Could not load JSON file [{1}]", FunctionsPlugin.className, path);
 				return null;
 			}
-			var streamReader = new StreamReader(path);
-			string result = streamReader.ReadToEnd().ToString();
-			streamReader.Close();
+			using var streamReader = new StreamReader(path);
+			var result = streamReader.ReadToEnd().ToString();
 			return result;
 		}
 
@@ -245,115 +242,6 @@ namespace RTFunctions.Functions.IO
 		/// </summary>
 		public static class ZipUtil
 		{
-			public static void Zip(string path, string[] files)
-			{
-				using (var memoryStream = new MemoryStream())
-				{
-					using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-					{
-						foreach (var file in files)
-						{
-							archive.CreateEntryFromFile(file, Path.GetFileName(file));
-						}
-					}
-
-					using (var fileStream = new FileStream(path, FileMode.Create))
-					{
-						memoryStream.Seek(0, SeekOrigin.Begin);
-						memoryStream.CopyTo(fileStream);
-					}
-				}
-			}
-
-			public static void UnZip(string path, string output)
-			{
-				var archive = ZipFile.OpenRead(path);
-				archive.ExtractToDirectory(output);
-			}
-
-			public static string GetZipString(string path, int file)
-			{
-				var archive = ZipFile.OpenRead(path);
-				var stream = archive.Entries[file].Open();
-
-				var streamReader = new StreamReader(stream);
-				string result = streamReader.ReadToEnd().ToString();
-				streamReader.Close();
-
-				return result;
-			}
-
-			public static Texture2D GetZipImage(string path, int file)
-			{
-				var bytes = GetZipBytes(path, file);
-
-				var mem = new MemoryStream(bytes);
-
-				System.Drawing.Image image = System.Drawing.Image.FromStream(mem);
-
-				var texture2d = new Texture2D(image.Width, image.Height, TextureFormat.RGBA32, false);
-				texture2d.LoadImage(bytes);
-
-				texture2d.wrapMode = TextureWrapMode.Clamp;
-				texture2d.filterMode = FilterMode.Point;
-				texture2d.Apply();
-
-				image.Dispose();
-				image = null;
-
-				mem.Dispose();
-				mem = null;
-
-				return texture2d;
-			}
-
-			//public static AudioClip GetZipAudioClip(string path, int file)
-			//{
-			//	var bytes = GetZipData(path, file);
-
-			//	float[] samples = new float[bytes.Length / 4]; //size of a float is 4 bytes
-
-			//	Buffer.BlockCopy(bytes, 0, samples, 0, bytes.Length);
-
-			//	int channels = 1; //Assuming audio is mono because microphone input usually is
-			//	int sampleRate = 44100; //Assuming your samplerate is 44100 or change to 48000 or whatever is appropriate
-
-			//	AudioClip clip = AudioClip.Create("ZipClip", samples.Length, channels, sampleRate, false);
-			//	clip.SetData(samples, 0);
-
-			//	return clip;
-			//}
-
-			// Only supports .wav for now
-			public static AudioClip GetZipAudioClip(string path, int file)
-			{
-				var bytes = GetZipBytes(path, file);
-
-				return GetAudioWAV(bytes, "ZipClip");
-
-				//using (Stream s = new MemoryStream(bytes))
-				//{
-				//	AudioClip audioClip = AudioClip.Create("ZipClip", bytes.Length, 1, 48000, false);
-				//	float[] f = ConvertByteToFloat(bytes);
-				//	audioClip.SetData(f, 0);
-
-				//	return audioClip;
-				//}
-			}
-
-			public static byte[] GetZipBytes(string path, int file)
-			{
-				var archive = ZipFile.OpenRead(path);
-				var stream = archive.Entries[file].Open();
-
-				var bytes = ReadBytes(stream);
-
-				stream.Close();
-				archive.Dispose();
-				archive = null;
-
-				return bytes;
-			}
 		}
 
 		public static class OpenInFileBrowser

@@ -28,7 +28,7 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
-        static void StartPostfix(DataManager __instance, ref Dictionary<string, int> ___languagesToIndex, ref Dictionary<int, string> ___indexToLangauge)
+        static void StartPostfix(DataManager __instance)
         {
             var systemManager = SystemManager.inst;
 
@@ -70,7 +70,7 @@ namespace RTFunctions.Patchers
             playerManager.transform.SetParent(systemManager.transform);
             playerManager.AddComponent<PlayerManager>();
 
-            //AlephNetworkManager.Init();
+            AudioManager.inst.gameObject.AddComponent<SoundManager>();
 
             try
             {
@@ -85,24 +85,15 @@ namespace RTFunctions.Patchers
 
             RTVideoManager.Init();
 
-            // Test to see if this is even necessary. If not, then feel free to remove this.
-            //EnumPatcher.AddEnumValue<BeatmapObject.ObjectType>("Solid");
-            //EnumPatcher.AddEnumValue<DataManager.GameData.BackgroundObject.ReactiveType>("CUSTOM");
+            __instance.languagesToIndex.Add("japanese", 2);
+            __instance.languagesToIndex.Add("thai", 3);
+            __instance.languagesToIndex.Add("russian", 4);
+            __instance.languagesToIndex.Add("pirate", 5);
 
-            //EnumPatcher.AddEnumValue<DataManager.Language>("japanese");
-            //EnumPatcher.AddEnumValue<DataManager.Language>("thai");
-            //EnumPatcher.AddEnumValue<DataManager.Language>("russian");
-            //EnumPatcher.AddEnumValue<DataManager.Language>("pirate");
-
-            ___languagesToIndex.Add("japanese", 2);
-            ___languagesToIndex.Add("thai", 3);
-            ___languagesToIndex.Add("russian", 4);
-            ___languagesToIndex.Add("pirate", 5);
-
-            ___indexToLangauge.Add(2, "japanese");
-            ___indexToLangauge.Add(3, "thai");
-            ___indexToLangauge.Add(4, "russian");
-            ___indexToLangauge.Add(5, "pirate");
+            __instance.indexToLangauge.Add(2, "japanese");
+            __instance.indexToLangauge.Add(3, "thai");
+            __instance.indexToLangauge.Add(4, "russian");
+            __instance.indexToLangauge.Add(5, "pirate");
 
             __instance.difficulties = new List<DataManager.Difficulty>
             {
@@ -123,12 +114,6 @@ namespace RTFunctions.Patchers
                 new DataManager.LinkType("YouTube", "https://www.youtube.com/c/{0}"),
                 new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/")
             };
-
-            //if (__instance.AnimationList[1].Animation.keys[1].m_Time != 0.9999f)
-            //{
-            //    __instance.AnimationList[1].Animation.keys[1].m_Time = 0.9999f;
-            //    __instance.AnimationList[1].Animation.keys[1].m_Value = 0f;
-            //}
 
             //Themes
             __instance.BeatmapThemes[0].name = "PA Machine";
@@ -235,9 +220,9 @@ namespace RTFunctions.Patchers
             JSONNode jn;
             try
             {
-                if (__1 is Functions.Data.Metadata)
+                if (__1 is Functions.Data.MetaData)
                 {
-                    jn = ((Functions.Data.Metadata)__1).ToJSON();
+                    jn = ((Functions.Data.MetaData)__1).ToJSON();
 
                     Debug.Log($"{__instance.className}Saving Metadata Full");
                     RTFile.WriteToFile(__0, jn.ToString());

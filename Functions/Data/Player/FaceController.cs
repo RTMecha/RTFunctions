@@ -2,7 +2,7 @@
 
 namespace RTFunctions.Functions.Data.Player
 {
-	public class FaceController : PlayerActionSet
+    public class FaceController : PlayerActionSet
 	{
 		public FaceController()
 		{

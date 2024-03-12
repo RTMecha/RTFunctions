@@ -382,25 +382,10 @@ namespace RTFunctions.Functions
 			if (DataManager.inst.gameData.beatmapObjects.Find(x => x.id == id) != null)
 			{
 				_beatmapObject.parent = id;
-				_beatmapObject.updateObject();
+				Updater.UpdateProcessor(_beatmapObject);
 				return true;
 			}
 			return false;
-		}
-
-		public static ObjEditor.ObjectSelection ToObjectSelection(this BeatmapObject beatmapObject)
-		{
-			var objectSelection = new ObjEditor.ObjectSelection(ObjEditor.ObjectSelection.SelectionType.Object, beatmapObject.id);
-			objectSelection.Index = DataManager.inst.gameData.beatmapObjects.IndexOf(beatmapObject);
-			return objectSelection;
-		}
-
-		public static void updateObject(this BeatmapObject beatmapObject, bool reinsert = true)
-		{
-			var objectSelection = new ObjEditor.ObjectSelection(ObjEditor.ObjectSelection.SelectionType.Object, beatmapObject.id);
-			objectSelection.Index = DataManager.inst.gameData.beatmapObjects.IndexOf(beatmapObject);
-
-			Updater.updateProcessor(objectSelection, reinsert);
 		}
 
 		public static DataManager.BeatmapTheme CreateTheme(this DataManager dataManager, string _name, string _id, Color _bg, Color _gui, List<Color> _players, List<Color> _objects, List<Color> _bgs)
@@ -961,6 +946,14 @@ namespace RTFunctions.Functions
 		
 		public static Vector2 X(this Vector2 vector3) => new Vector2(vector3.x, 0f);
 		public static Vector2 Y(this Vector2 vector3) => new Vector2(0f, vector3.y);
+
+		public static void AddSet<TKey, TValue>(this Dictionary<TKey, TValue> keyValuePairs, TKey key, TValue value)
+        {
+			if (!keyValuePairs.ContainsKey(key))
+				keyValuePairs.Add(key, value);
+			else
+				keyValuePairs[key] = value;
+        }
 
 		#endregion
 	}

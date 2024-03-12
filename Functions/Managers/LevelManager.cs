@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-
-using UnityEngine;
-
-using SimpleJSON;
-using LSFunctions;
-
+﻿using LSFunctions;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Optimization;
+using SimpleJSON;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Managers
 {
@@ -33,7 +31,11 @@ namespace RTFunctions.Functions.Managers
 
         #endregion
 
+        public static bool LevelEnded { get; set; }
+
         public static bool LoadingFromHere { get; set; }
+
+        public static int CurrentLevelMode { get; set; }
 
         public static bool InEditor => EditorManager.inst;
         public static bool InGame => GameManager.inst;
@@ -50,7 +52,11 @@ namespace RTFunctions.Functions.Managers
 
         public static bool finished = false;
 
+        public static int BoostCount { get; set; }
+
         public static Action OnLevelEnd { get; set; }
+
+        public static int PlayedLevelCount { get; set; }
 
         void Awake()
         {
@@ -58,34 +64,31 @@ namespace RTFunctions.Functions.Managers
             Levels = new List<Level>();
             EditorLevels = new List<Level>();
             ArcadeQueue = new List<Level>();
+
+            if (!RTFile.FileExists(RTFile.ApplicationDirectory + "profile/saves.les") && RTFile.FileExists(RTFile.ApplicationDirectory + "settings/save.lss"))
+                UpgradeProgress();
+            else
+                LoadProgress();
         }
 
         void Update()
         {
             if (!InEditor)
                 EditorLevels.Clear();
-        }
 
-        public static void UpdateSavesFile()
-        {
-            var jn = JSON.Parse("{}");
-            for (int i = 0; i < Levels.Count; i++)
-            {
-                jn["arcade"][i]["level_data"]["id"] = Levels[i].id;
-                jn["arcade"][i]["level_data"]["ver"] = Levels[i].playerData.version;
-                jn["arcade"][i]["play_data"]["finished"] = Levels[i].playerData.completed;
-                jn["arcade"][i]["play_data"]["hits"] = Levels[i].playerData.hits;
-                jn["arcade"][i]["play_data"]["deaths"] = Levels[i].playerData.deaths;
-            }
-
-            string text = jn.ToString();
-            text = LSEncryption.EncryptText(text, SaveManager.inst.encryptionKey);
-            FileManager.inst.SaveJSONFile(SaveManager.inst.settingsFilePath, SaveManager.inst.savesFileName, text);
+            if (InEditor && EditorManager.inst.isEditing)
+                BoostCount = 0;
         }
 
         public static IEnumerator Play(Level level)
         {
             LoadingFromHere = true;
+            LevelEnded = false;
+
+            if (level.playerData == null && Saves.Has(x => x.ID == level.id))
+            {
+                level.playerData = Saves.Find(x => x.ID == level.id);
+            }
 
             CurrentLevel = level;
 
@@ -97,7 +100,8 @@ namespace RTFunctions.Functions.Managers
 
             Debug.Log($"{className}Loading music...");
 
-            level.LoadAudioClip();
+            if (!level.music)
+                level.LoadAudioClip();
 
             if (ShapeManager.inst.loadedShapes)
                 ShapeManager.inst.Load();
@@ -111,9 +115,12 @@ namespace RTFunctions.Functions.Managers
             Debug.Log($"{className}Parsing level...");
 
             GameManager.inst.gameState = GameManager.State.Parsing;
-            var rawJSON = RTFile.ReadFromFile(level.path + "level.lsb");
+            var levelMode = level.LevelModes[Mathf.Clamp(CurrentLevelMode, 0, level.LevelModes.Length - 1)];
+            Debug.Log($"{className}Level Mode: {levelMode}...");
+
+            var rawJSON = RTFile.ReadFromFile(level.path + levelMode);
             rawJSON = UpdateBeatmap(rawJSON, level.metadata.beatmap.game_version);
-            DataManager.inst.gameData = GameData.Parse(JSONNode.Parse(rawJSON));
+            DataManager.inst.gameData = levelMode.Contains(".vgd") ? GameData.ParseVG(JSON.Parse(rawJSON)) : GameData.Parse(JSONNode.Parse(rawJSON));
 
             Debug.Log($"{className}Setting paths...");
 
@@ -162,8 +169,6 @@ namespace RTFunctions.Functions.Managers
 
             EventManager.inst.cam.rect = new Rect(0f, 0f, 1f, 1f);
             EventManager.inst.camPer.rect = new Rect(0f, 0f, 1f, 1f);
-            //GameManager.inst.Camera.GetComponent<Camera>().rect = new Rect(0f, 0f, 1f, 1f);
-            //GameManager.inst.CameraPerspective.GetComponent<Camera>().rect = new Rect(0f, 0f, 1f, 1f);
 
             Debug.Log($"{className}Updating checkpoints...");
 
@@ -171,7 +176,7 @@ namespace RTFunctions.Functions.Managers
             GameManager.inst.ResetCheckpoints();
 
             Debug.Log($"{className}Spawning...");
-
+            BoostCount = 0;
             if (InputDataManager.inst.players.Count == 0)
             {
                 var customPlayer = new Data.Player.CustomPlayer(true, 0, null);
@@ -196,14 +201,12 @@ namespace RTFunctions.Functions.Managers
                 ((Action)ModCompatibility.sharedFunctions["EventsCoreResetOffsets"])?.Invoke();
             }
 
-            ObjectManager.inst.updateObjects();
+            yield return inst.StartCoroutine(Updater.IUpdateObjects(true));
 
-            //if (inGame)
-            //    Updater.UpdateObjects(false);
+            //ObjectManager.inst.updateObjects();
+            Patchers.ObjectManagerPatch.AddPrefabObjects(ObjectManager.inst);
 
-            //Patchers.ObjectManagerPatch.AddPrefabObjects(ObjectManager.inst);
-
-            //Patchers.GameManagerPatch.StartInvoke();
+            Patchers.GameManagerPatch.StartInvoke();
 
             Debug.Log($"{className}Done!");
 
@@ -230,7 +233,7 @@ namespace RTFunctions.Functions.Managers
                         SceneManager.inst.LoadScene("Main Menu");
                     };
 
-                var level = new Level(path.Replace("level.lsb", ""));
+                var level = new Level(path.Replace("level.lsb", "").Replace("level.vgd", ""));
                 inst.StartCoroutine(Play(level));
                 return;
             }
@@ -244,6 +247,92 @@ namespace RTFunctions.Functions.Managers
             DataManager.inst.gameData = null;
             DataManager.inst.gameData = new GameData();
             InputDataManager.inst.SetAllControllerRumble(0f);
+        }
+
+        public static List<Level> SortLevels(List<Level> levels, int orderby, bool ascend)
+        {
+            switch (orderby)
+            {
+                case 0: return
+                            (ascend ? levels.OrderBy(x => x.icon != SteamWorkshop.inst.defaultSteamImageSprite) :
+                            levels.OrderByDescending(x => x.icon != SteamWorkshop.inst.defaultSteamImageSprite)).ToList();
+                case 1: return
+                            (ascend ? levels.OrderBy(x => x.metadata.artist.Name) :
+                            levels.OrderByDescending(x => x.metadata.artist.Name)).ToList();
+                case 2: return
+                            (ascend ? levels.OrderBy(x => x.metadata.creator.steam_name) :
+                            levels.OrderByDescending(x => x.metadata.creator.steam_name)).ToList();
+                case 3: return
+                            (ascend ? levels.OrderBy(x => System.IO.Path.GetFileName(x.path)) :
+                            levels.OrderByDescending(x => System.IO.Path.GetFileName(x.path))).ToList();
+                case 4: return
+                            (ascend ? levels.OrderBy(x => x.metadata.song.title) :
+                            levels.OrderByDescending(x => x.metadata.song.title)).ToList();
+                case 5: return
+                            (ascend ? levels.OrderBy(x => x.metadata.song.difficulty) :
+                            levels.OrderByDescending(x => x.metadata.song.difficulty)).ToList();
+                case 6: return
+                            (ascend ? levels.OrderBy(x => x.metadata.beatmap.date_edited) :
+                            levels.OrderByDescending(x => x.metadata.beatmap.date_edited)).ToList();
+            }
+
+            return levels;
+        }
+
+        public static void Sort(int orderby, bool ascend)
+        {
+            switch (orderby)
+            {
+                case 0:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.icon != SteamWorkshop.inst.defaultSteamImageSprite) :
+                            Levels.OrderByDescending(x => x.icon != SteamWorkshop.inst.defaultSteamImageSprite)).ToList();
+                        break;
+                    }
+                case 1:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.artist.Name) :
+                            Levels.OrderByDescending(x => x.metadata.artist.Name)).ToList();
+                        break;
+                    }
+                case 2:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.creator.steam_name) :
+                            Levels.OrderByDescending(x => x.metadata.creator.steam_name)).ToList();
+                        break;
+                    }
+                case 3:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => System.IO.Path.GetFileName(x.path)) :
+                            Levels.OrderByDescending(x => System.IO.Path.GetFileName(x.path))).ToList();
+                        break;
+                    }
+                case 4:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.song.title) :
+                            Levels.OrderByDescending(x => x.metadata.song.title)).ToList();
+                        break;
+                    }
+                case 5:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.song.difficulty) :
+                            Levels.OrderByDescending(x => x.metadata.song.difficulty)).ToList();
+                        break;
+                    }
+                case 6:
+                    {
+                        Levels =
+                            (ascend ? Levels.OrderBy(x => x.metadata.beatmap.date_edited) :
+                            Levels.OrderByDescending(x => x.metadata.beatmap.date_edited)).ToList();
+                        break;
+                    }
+            }
         }
 
         public static string UpdateBeatmap(string _json, string _version)
@@ -310,16 +399,32 @@ namespace RTFunctions.Functions.Managers
             return _json;
         }
 
-        public void UpgradeProgress()
+        public static void UpgradeProgress()
         {
             if (!RTFile.FileExists(RTFile.ApplicationDirectory + "profile/saves.les") && RTFile.FileExists(RTFile.ApplicationDirectory + "settings/save.lss"))
             {
                 var decryptedJSON = LSEncryption.DecryptText(RTFile.ReadFromFile(RTFile.ApplicationDirectory + "settings/saves.lss"), SaveManager.inst.encryptionKey);
 
+                var jn = JSON.Parse(decryptedJSON);
+
+                for (int i = 0; i < jn["arcade"].Count; i++)
+                {
+                    var js = jn["arcade"][i];
+
+                    Saves.Add(new PlayerData
+                    {
+                        ID = js["level_data"]["id"],
+                        Completed = js["play_data"]["finished"].AsBool,
+                        Hits = js["play_data"]["hits"].AsInt,
+                        Deaths = js["play_data"]["deaths"].AsInt,
+                    });
+                }
+
+                SaveProgress();
             }
         }
 
-        public void SaveProgress()
+        public static void SaveProgress()
         {
             var jn = JSON.Parse("{}");
             for (int i = 0; i < Saves.Count; i++)
@@ -327,7 +432,9 @@ namespace RTFunctions.Functions.Managers
                 jn["lvl"][i] = Saves[i].ToJSON();
             }
 
-            if (RTFile.DirectoryExists(RTFile.ApplicationDirectory + "profile"))
+            jn["played_count"] = PlayedLevelCount.ToString();
+
+            if (!RTFile.DirectoryExists(RTFile.ApplicationDirectory + "profile"))
                 Directory.CreateDirectory(RTFile.ApplicationDirectory + "profile");
 
             var json = jn.ToString();
@@ -335,10 +442,12 @@ namespace RTFunctions.Functions.Managers
             RTFile.WriteToFile(RTFile.ApplicationDirectory + "profile/saves.les", json);
         }
 
-        public void LoadProgress()
+        public static void LoadProgress()
         {
             if (!RTFile.FileExists(RTFile.ApplicationDirectory + "profile/saves.les"))
                 return;
+
+            Saves.Clear();
 
             string decryptedJSON = LSEncryption.DecryptText(RTFile.ReadFromFile(RTFile.ApplicationDirectory + "profile/saves.les"), SaveManager.inst.encryptionKey);
 
@@ -348,11 +457,25 @@ namespace RTFunctions.Functions.Managers
             {
                 Saves.Add(PlayerData.Parse(jn["lvl"][i]));
             }
+
+            if (!string.IsNullOrEmpty(jn["played_count"]))
+            {
+                PlayedLevelCount = jn["played_count"].AsInt;
+            }
         }
         
-        public PlayerData GetPlayerData(string id) => Saves.Find(x => x.ID == id);
+        public static PlayerData GetPlayerData(string id) => Saves.Find(x => x.ID == id);
 
-        public List<PlayerData> Saves { get; set; } = new List<PlayerData>();
+        public static DataManager.LevelRank GetLevelRank(Level level)
+            => level.playerData != null && DataManager.inst.levelRanks.Has(LevelRankPredicate(level)) ? DataManager.inst.levelRanks.Find(LevelRankPredicate(level)) : DataManager.inst.levelRanks[0];
+
+        public static float CalculateAccuracy(int hits, float length)
+            => 100f / ((hits / (length / PlayerManager.AcurracyDivisionAmount)) + 1f);
+
+        public static Predicate<DataManager.LevelRank> LevelRankPredicate(Level level)
+             => x => level.playerData != null && level.playerData.Hits >= x.minHits && level.playerData.Hits <= x.maxHits;
+
+        public static List<PlayerData> Saves { get; set; } = new List<PlayerData>();
         public class PlayerData
         {
             public string ID { get; set; }
@@ -412,6 +535,8 @@ namespace RTFunctions.Functions.Managers
                 jn["l"] = LevelLength.ToString();
                 return jn;
             }
+
+            public override string ToString() => ID;
         }
     }
 }

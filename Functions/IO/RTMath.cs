@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace RTFunctions.Functions.IO
 {
-	public static class RTMath
+    public static class RTMath
 	{
 		public static float Lerp(float x, float y, float t) => x + (y - x) * t;
 		public static Vector2 Lerp(Vector2 x, Vector2 y, float t) => x + (y - x) * t;

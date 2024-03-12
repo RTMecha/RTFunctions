@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections;
-using LSFunctions;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using System.Reflection;
+﻿using UnityEngine;
 
 namespace RTFunctions.Functions.Components.Player
 {

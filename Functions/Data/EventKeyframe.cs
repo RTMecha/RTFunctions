@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
-
+﻿using LSFunctions;
 using SimpleJSON;
-using LSFunctions;
-
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 
 namespace RTFunctions.Functions.Data
@@ -101,6 +98,9 @@ namespace RTFunctions.Functions.Data
                     eventRandomValues.Add(jn[raxis[i]].AsFloat);
 
             eventKeyframe.random = jn["r"].AsInt;
+
+            eventKeyframe.relative = !string.IsNullOrEmpty(jn["rel"]) && jn["rel"].AsBool;
+
             eventKeyframe.SetEventRandomValues(eventRandomValues.ToArray());
 
             return eventKeyframe;
@@ -124,7 +124,6 @@ namespace RTFunctions.Functions.Data
                     jn[raxis[i]] = eventRandomValues[i].ToString();
             }
 
-            jn["id"] = id;
             jn["rel"] = relative.ToString();
 
             return jn;

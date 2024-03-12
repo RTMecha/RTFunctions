@@ -19,7 +19,7 @@ namespace RTFunctions.Patchers
         [HarmonyPrefix]
         static void AwakePrefix(DiscordController __instance)
         {
-            __instance.applicationId = "1176264603374735420";
+            __instance.applicationId = FunctionsPlugin.DiscordRichPresenceID.Value;
         }
 		
         [HarmonyPatch("Awake")]

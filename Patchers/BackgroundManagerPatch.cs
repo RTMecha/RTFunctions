@@ -6,6 +6,7 @@ using UnityEngine;
 
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
+using RTFunctions.Functions.Managers;
 
 namespace RTFunctions.Patchers
 {
@@ -13,6 +14,8 @@ namespace RTFunctions.Patchers
     public class BackgroundManagerPatch : MonoBehaviour
     {
 		public static AudioSource Audio => AudioManager.inst.CurrentAudioSource;
+
+		public static BackgroundManager Instance { get => BackgroundManager.inst; set => BackgroundManager.inst = value; }
 
 		[HarmonyPatch("CreateBackgroundObject")]
 		[HarmonyPrefix]
@@ -75,8 +78,9 @@ namespace RTFunctions.Patchers
 		[HarmonyPrefix]
 		static bool UpdateBackgroundObjects(BackgroundManager __instance)
 		{
-			if (GameManager.inst.gameState == GameManager.State.Playing)
+			if ((GameManager.inst.gameState == GameManager.State.Playing || LevelManager.LevelEnded && FunctionsPlugin.ReplayLevel.Value) && BackgroundManager.inst?.backgroundParent?.gameObject)
 			{
+				var lerp = FunctionsPlugin.BGReactiveLerp.Value;
 				Audio?.GetSpectrumData(__instance.samples, 0, FFTWindow.Rectangular);
 				__instance.sampleLow = __instance.samples.Skip(0).Take(56).Average((float a) => a) * 1000f;
 				__instance.sampleMid = __instance.samples.Skip(56).Take(100).Average((float a) => a) * 3000f;
@@ -92,7 +96,7 @@ namespace RTFunctions.Patchers
 
 					if (backgroundObject.reactive)
 					{
-						if (FunctionsPlugin.BGReactiveLerp.Value)
+						if (lerp)
 						{
 							a = RTMath.Lerp(beatmapTheme.GetBGColor(backgroundObject.color), beatmapTheme.GetBGColor(backgroundObject.reactiveCol), __instance.samples[Mathf.Clamp(backgroundObject.reactiveColSample, 0, __instance.samples.Length - 1)] * backgroundObject.reactiveColIntensity);
 						}
@@ -109,9 +113,9 @@ namespace RTFunctions.Patchers
 
 					a.a = 1f;
 
-					int i = 0;
-					foreach (var renderer in backgroundObject.renderers)
+					for (int i = 0; i < backgroundObject.renderers.Count; i++)
 					{
+						var renderer = backgroundObject.renderers[i];
 						if (i == 0)
 						{
 							renderer.material.color = a;
@@ -134,8 +138,6 @@ namespace RTFunctions.Patchers
 								renderer.material.color = Color.Lerp(Color.Lerp(a, b, t), b, t);
 							}
 						}
-
-						i++;
 					}
 
 					if (backgroundObject.reactive)

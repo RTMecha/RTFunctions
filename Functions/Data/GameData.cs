@@ -1,25 +1,18 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
-
-using SimpleJSON;
-using LSFunctions;
-
-using RTFunctions.Functions.IO;
+﻿using LSFunctions;
 using RTFunctions.Functions.Managers;
-
-using BaseGameData = DataManager.GameData;
-
-using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
-
-using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using SimpleJSON;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using BaseBackgroundObject = DataManager.GameData.BackgroundObject;
+using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
 using BaseBeatmapTheme = DataManager.BeatmapTheme;
+using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
+using BaseGameData = DataManager.GameData;
 
 namespace RTFunctions.Functions.Data
 {
-	public class GameData : BaseGameData
+    public class GameData : BaseGameData
 	{
 		public GameData()
 		{
@@ -30,9 +23,9 @@ namespace RTFunctions.Functions.Data
 
 		public Dictionary<string, BaseBeatmapTheme> beatmapThemes = new Dictionary<string, BaseBeatmapTheme>();
 
-        #region Methods
+		#region Methods
 
-        public static GameData DeepCopy(GameData orig)
+		public static GameData DeepCopy(GameData orig)
 		{
 			if (orig.beatmapObjects == null)
 				orig.beatmapObjects = new List<BaseBeatmapObject>();
@@ -71,8 +64,8 @@ namespace RTFunctions.Functions.Data
 			return gameData;
 		}
 
-		public static GameData ParseVG(JSONNode jn)
-        {
+		public static GameData ParseVG(JSONNode jn, bool parseThemes = true)
+		{
 			var gameData = new GameData();
 
 			Debug.Log($"{FunctionsPlugin.className}Parsing BeatmapData");
@@ -82,12 +75,12 @@ namespace RTFunctions.Functions.Data
 
 			Debug.Log($"{FunctionsPlugin.className}Parsing Checkpoints");
 			for (int i = 0; i < jn["checkpoints"].Count; i++)
-            {
+			{
 				var name = jn["checkpoints"][i]["n"] == null ? "" : (string)jn["checkpoints"][i]["n"];
 				var time = jn["checkpoints"][i]["t"] == null ? 0f : jn["checkpoints"][i]["t"].AsFloat;
 				var pos = jn["checkpoints"][i]["p"] == null ? Vector2.zero : new Vector2(jn["checkpoints"][i]["p"]["x"] == null ? 0f : jn["checkpoints"][i]["p"]["x"].AsFloat, jn["checkpoints"][i]["p"]["y"] == null ? 0f : jn["checkpoints"][i]["p"]["y"].AsFloat);
 				gameData.beatmapData.checkpoints.Add(new BeatmapData.Checkpoint(true, name, time, pos));
-            }
+			}
 
 			Debug.Log($"{FunctionsPlugin.className}Parsing Objects");
 			for (int i = 0; i < jn["objects"].Count; i++)
@@ -104,8 +97,16 @@ namespace RTFunctions.Functions.Data
 			Dictionary<string, string> idConversion = new Dictionary<string, string>();
 
 			if (jn["themes"] != null)
-            {
+			{
 				Debug.Log($"{FunctionsPlugin.className}Parsing Beatmap Themes");
+
+				if (parseThemes)
+                {
+					DataManager.inst.CustomBeatmapThemes.Clear();
+					DataManager.inst.BeatmapThemeIndexToID.Clear();
+					DataManager.inst.BeatmapThemeIDToIndex.Clear();
+				}
+
 				for (int i = 0; i < jn["themes"].Count; i++)
 				{
 					var beatmapTheme = BeatmapTheme.ParseVG(jn["themes"][i]);
@@ -117,6 +118,31 @@ namespace RTFunctions.Functions.Data
 
 					if (!gameData.beatmapThemes.ContainsKey(beatmapTheme.id))
 						gameData.beatmapThemes.Add(beatmapTheme.id, beatmapTheme);
+
+					if (parseThemes)
+					{
+
+						DataManager.inst.CustomBeatmapThemes.Add(beatmapTheme);
+						if (DataManager.inst.BeatmapThemeIDToIndex.ContainsKey(int.Parse(beatmapTheme.id)))
+						{
+							var list = DataManager.inst.CustomBeatmapThemes.Where(x => x.id == beatmapTheme.id).ToList();
+							var str = "";
+							for (int j = 0; j < list.Count; j++)
+							{
+								str += list[j].name;
+								if (i != list.Count - 1)
+									str += ", ";
+							}
+
+							if (EditorManager.inst != null)
+								EditorManager.inst.DisplayNotification($"Unable to Load theme [{beatmapTheme.name}] due to conflicting themes: {str}", 2f, EditorManager.NotificationType.Error);
+						}
+						else
+						{
+							DataManager.inst.BeatmapThemeIndexToID.Add(DataManager.inst.AllThemes.Count - 1, int.Parse(beatmapTheme.id));
+							DataManager.inst.BeatmapThemeIDToIndex.Add(int.Parse(beatmapTheme.id), DataManager.inst.AllThemes.Count - 1);
+						}
+					}
 
 					beatmapTheme = null;
 				}
@@ -132,7 +158,7 @@ namespace RTFunctions.Functions.Data
 			gameData.eventObjects.allEvents = new List<List<BaseEventKeyframe>>();
 
 			string breakContext = "";
-            try
+			try
 			{
 				Debug.Log($"{FunctionsPlugin.className}Parsing VG Event Keyframes");
 				// Move
@@ -392,34 +418,20 @@ namespace RTFunctions.Functions.Data
 					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
 						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
 
-					eventKeyframe.eventTime = kfjn["t"].AsFloat;
-					eventKeyframe.SetEventValues(
-						kfjn["ev"][0].AsFloat,
-						kfjn["ev"][1].AsFloat,
-						kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat,
-						kfjn["ev"][3].AsFloat == 9f ? 18f : kfjn["ev"][3].AsFloat,
-						kfjn["ev"].Count > 4 ? kfjn["ev"][4].AsFloat : 0f);
+				eventKeyframe.eventTime = kfjn["t"].AsFloat;
+				eventKeyframe.SetEventValues(
+					kfjn["ev"][0].AsFloat,
+					kfjn["ev"][1].AsFloat,
+					kfjn["ev"][2].AsFloat == 9f ? 18f : kfjn["ev"][2].AsFloat,
+					kfjn["ev"][3].AsFloat == 9f ? 18f : kfjn["ev"][3].AsFloat,
+					kfjn["ev"][4].AsFloat);
 
 					gameData.eventObjects.allEvents[15].Add(eventKeyframe);
 				}
 
-				for (int i = 16; i < DefaultKeyframes.Count; i++)
-				{
-					gameData.eventObjects.allEvents.Add(new List<BaseEventKeyframe>());
-					gameData.eventObjects.allEvents[i].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[i]));
-				}
-			}
-            catch (System.Exception ex)
+			for (int i = 16; i < DefaultKeyframes.Count; i++)
             {
-				EditorManager.inst?.DisplayNotification($"There was an error in parsing VG Event Keyframes. Parsing got caught at {breakContext}", 4f, EditorManager.NotificationType.Error);
-				if (!EditorManager.inst)
-                {
-					Debug.LogError($"There was an error in parsing VG Event Keyframes. Parsing got caught at {breakContext}.\n {ex}");
-				}
-				else
-				{
-					Debug.LogError($"{ex}");
-				}
+				gameData.eventObjects.allEvents[i].Add(Data.EventKeyframe.DeepCopy((Data.EventKeyframe)DefaultKeyframes[i]));
             }
 
 			Debug.Log($"{FunctionsPlugin.className}Checking keyframe counts");
@@ -433,31 +445,12 @@ namespace RTFunctions.Functions.Data
 
 			gameData.beatmapData = LevelBeatmapData.Parse(jn);
 
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Markers...");
-			#region Markers
-
-			//if (gameData.beatmapData.markers == null)
-			//	gameData.beatmapData.markers = new List<BeatmapData.Marker>();
-
-			//for (int i = 0; i < jn["ed"]["markers"].Count; i++)
-			//	gameData.beatmapData.markers.Add(ProjectData.Reader.ParseMarker(jn["ed"]["markers"][i]));
-
 			gameData.beatmapData.markers = gameData.beatmapData.markers.OrderBy(x => x.time).ToList();
-
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Checkpoints...");
-			#region Checkpoints
 
 			for (int i = 0; i < jn["checkpoints"].Count; i++)
 				gameData.beatmapData.checkpoints.Add(ProjectData.Reader.ParseCheckpoint(jn["checkpoints"][i]));
 
 			gameData.beatmapData.checkpoints = gameData.beatmapData.checkpoints.OrderBy(x => x.time).ToList();
-
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Prefabs...");
-			#region Prefabs
 
 			for (int i = 0; i < jn["prefabs"].Count; i++)
 			{
@@ -466,22 +459,12 @@ namespace RTFunctions.Functions.Data
 					gameData.prefabs.Add(prefab);
 			}
 
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing PrefabObjects...");
-			#region PrefabObjects
-
 			for (int i = 0; i < jn["prefab_objects"].Count; i++)
 			{
 				var prefab = Data.PrefabObject.Parse(jn["prefab_objects"][i]);
 				if (gameData.prefabObjects.Find(x => x.ID == prefab.ID) == null)
 					gameData.prefabObjects.Add(prefab);
 			}
-
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BeatmapThemes...");
-			#region Themes
 
 			if (parseThemes)
 			{
@@ -522,42 +505,51 @@ namespace RTFunctions.Functions.Data
 
 			}
 
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BeatmapObjects...");
-			#region Objects
-
 			for (int i = 0; i < jn["beatmap_objects"].Count; i++)
 				gameData.beatmapObjects.Add(Data.BeatmapObject.Parse(jn["beatmap_objects"][i]));
 
-			#endregion
+			AssetManager.SpriteAssets.Clear();
+			if (jn["assets"] != null && jn["assets"]["spr"] != null)
+			{
+				for (int i = 0; i < jn["assets"]["spr"].Count; i++)
+				{
+					var name = jn["assets"]["spr"][i]["n"];
+					var data = jn["assets"]["spr"][i]["d"];
 
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing BackgroundObjects...");
-			#region Backgrounds
+					if (!AssetManager.SpriteAssets.ContainsKey(name) && gameData.beatmapObjects.Has(x => x.text == name))
+					{
+						byte[] imageData = new byte[data.Count];
+						for (int j = 0; j < data.Count; j++)
+						{
+							imageData[j] = (byte)data[j].AsInt;
+						}
+
+						var texture2d = new Texture2D(2, 2, TextureFormat.ARGB32, false);
+						texture2d.LoadImage(imageData);
+
+						texture2d.wrapMode = TextureWrapMode.Clamp;
+						texture2d.filterMode = FilterMode.Point;
+						texture2d.Apply();
+
+						AssetManager.SpriteAssets.Add(name, SpriteManager.CreateSprite(texture2d));
+					}
+				}
+			}
 
 			for (int i = 0; i < jn["bg_objects"].Count; i++)
 				gameData.backgroundObjects.Add(Data.BackgroundObject.Parse(jn["bg_objects"][i]));
 
-			#endregion
-
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Parsing Events...");
-			#region Events
-
 			gameData.eventObjects.allEvents = ProjectData.Reader.ParseEventkeyframes(jn["events"], false);
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Making sure the events meet the requirement...");
-			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
-			#endregion
 
-			UnityEngine.Debug.Log($"{DataManager.inst.className}Completed parsing!");
+			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
 
 			return gameData;
 		}
 
-		// Previously 26, now 33
 		public static int EventCount => ModCompatibility.mods.ContainsKey("EventsCore") ? DefaultKeyframes.Count : 10;
 
 		public JSONNode ToJSONVG()
-        {
+		{
 			var jn = JSON.Parse("{}");
 
 			jn["editor"]["bpm"]["snap"]["objects"] = true;
@@ -582,18 +574,18 @@ namespace RTFunctions.Functions.Data
 			}
 
 			for (int i = 0; i < beatmapData.checkpoints.Count; i++)
-            {
+			{
 				var checkpoint = beatmapData.checkpoints[i];
 				jn["checkpoints"][i]["n"] = checkpoint.name;
 				jn["checkpoints"][i]["t"] = checkpoint.time;
 				jn["checkpoints"][i]["p"]["X"] = checkpoint.pos.x;
 				jn["checkpoints"][i]["p"]["y"] = checkpoint.pos.y;
-            }
+			}
 
 			for (int i = 0; i < beatmapObjects.Count; i++)
-            {
+			{
 				jn["objects"][i] = ((Data.BeatmapObject)beatmapObjects[i]).ToJSONVG();
-            }
+			}
 
 			if (prefabObjects.Count > 0)
 				for (int i = 0; i < prefabObjects.Count; i++)
@@ -641,7 +633,7 @@ namespace RTFunctions.Functions.Data
 
 			// Event Handlers
 			{
-                // Move
+				// Move
 				for (int i = 0; i < eventObjects.allEvents[0].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[0][i];
@@ -651,7 +643,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][0][i]["ev"][1] = eventKeyframe.eventValues[1];
 				}
 
-                // Zoom
+				// Zoom
 				for (int i = 0; i < eventObjects.allEvents[1].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[1][i];
@@ -660,7 +652,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][1][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-                // Rotate
+				// Rotate
 				for (int i = 0; i < eventObjects.allEvents[2].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[2][i];
@@ -669,7 +661,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][2][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-                // Shake
+				// Shake
 				for (int i = 0; i < eventObjects.allEvents[3].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[3][i];
@@ -678,7 +670,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][3][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-                // Themes
+				// Themes
 				for (int i = 0; i < eventObjects.allEvents[4].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[4][i];
@@ -687,7 +679,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][4][i]["evs"][0] = idsConverter.ContainsKey(eventKeyframe.eventValues[0].ToString()) ? idsConverter[eventKeyframe.eventValues[0].ToString()] : eventKeyframe.eventValues[0].ToString();
 				}
 
-                // Chroma
+				// Chroma
 				for (int i = 0; i < eventObjects.allEvents[5].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[5][i];
@@ -696,7 +688,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][5][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-                // Bloom
+				// Bloom
 				for (int i = 0; i < eventObjects.allEvents[6].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[6][i];
@@ -704,10 +696,10 @@ namespace RTFunctions.Functions.Data
 					jn["events"][6][i]["t"] = eventKeyframe.eventTime;
 					jn["events"][6][i]["ev"][0] = eventKeyframe.eventValues[0];
 					jn["events"][6][i]["ev"][1] = eventKeyframe.eventValues[1];
-					jn["events"][6][i]["ev"][2] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[4], 0f, 9f);
+					jn["events"][6][i]["ev"][2] = Mathf.Clamp(eventKeyframe.eventValues[4], 0f, 9f);
 				}
 
-                // Vignette
+				// Vignette
 				for (int i = 0; i < eventObjects.allEvents[7].Count; i++)
 				{
 					var eventKeyframe = eventObjects.allEvents[7][i];
@@ -719,7 +711,7 @@ namespace RTFunctions.Functions.Data
 					jn["events"][7][i]["ev"][3] = eventKeyframe.eventValues[3];
 					jn["events"][7][i]["ev"][4] = eventKeyframe.eventValues[4];
 					jn["events"][7][i]["ev"][5] = eventKeyframe.eventValues[5];
-					jn["events"][7][i]["ev"][6] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[6], 0f, 9f);
+					jn["events"][7][i]["ev"][6] = Mathf.Clamp(eventKeyframe.eventValues[6], 0f, 9f);
 				}
 
 				// Lens
@@ -753,8 +745,8 @@ namespace RTFunctions.Functions.Data
 					jn["events"][10][i]["t"] = eventKeyframe.eventTime;
 					jn["events"][10][i]["ev"][0] = eventKeyframe.eventValues[0];
 					jn["events"][10][i]["ev"][1] = eventKeyframe.eventValues[1];
-					jn["events"][10][i]["ev"][2] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[2], 0f, 9f);
-					jn["events"][10][i]["ev"][3] = UnityEngine.Mathf.Clamp(eventKeyframe.eventValues[3], 0f, 9f);
+					jn["events"][10][i]["ev"][2] = Mathf.Clamp(eventKeyframe.eventValues[2], 0f, 9f);
+					jn["events"][10][i]["ev"][3] = Mathf.Clamp(eventKeyframe.eventValues[3], 0f, 9f);
 					jn["events"][10][i]["ev"][4] = eventKeyframe.eventValues[4];
 				}
 
@@ -781,32 +773,36 @@ namespace RTFunctions.Functions.Data
 			}
 
 			return jn;
-        }
+		}
 
 		public JSONNode ToJSON()
 		{
 			var jn = JSON.Parse("{}");
 
-			var _data = this;
-
 			jn["ed"]["timeline_pos"] = AudioManager.inst.CurrentAudioSource.time.ToString();
-			for (int i = 0; i < _data.beatmapData.markers.Count; i++)
+			for (int i = 0; i < beatmapData.markers.Count; i++)
 			{
-				//jn["ed"]["markers"][i]["active"] = "True";
-				jn["ed"]["markers"][i]["name"] = _data.beatmapData.markers[i].name.ToString();
-				jn["ed"]["markers"][i]["desc"] = _data.beatmapData.markers[i].desc.ToString();
-				jn["ed"]["markers"][i]["col"] = _data.beatmapData.markers[i].color.ToString();
-				jn["ed"]["markers"][i]["t"] = _data.beatmapData.markers[i].time.ToString();
+				jn["ed"]["markers"][i]["name"] = beatmapData.markers[i].name.ToString();
+				jn["ed"]["markers"][i]["desc"] = beatmapData.markers[i].desc.ToString();
+				jn["ed"]["markers"][i]["col"] = beatmapData.markers[i].color.ToString();
+				jn["ed"]["markers"][i]["t"] = beatmapData.markers[i].time.ToString();
 			}
 
+			for (int i = 0; i < AssetManager.SpriteAssets.Count; i++)
+            {
+				jn["assets"]["spr"][i]["n"] = AssetManager.SpriteAssets.ElementAt(i).Key;
+				var imageData = AssetManager.SpriteAssets.ElementAt(i).Value.texture.EncodeToPNG();
+				for (int j = 0; j < imageData.Length; j++)
+				{
+					jn["assets"]["spr"][i]["d"][j] = imageData[j];
+				}
+            }
+			
 			for (int i = 0; i < prefabObjects.Count; i++)
 				if (!((Data.PrefabObject)prefabObjects[i]).fromModifier)
 					jn["prefab_objects"][i] = ((Data.PrefabObject)prefabObjects[i]).ToJSON();
 
-			jn["level_data"]["level_version"] = _data.beatmapData.levelData.levelVersion.ToString();
-			jn["level_data"]["background_color"] = _data.beatmapData.levelData.backgroundColor.ToString();
-			jn["level_data"]["follow_player"] = _data.beatmapData.levelData.followPlayer.ToString();
-			jn["level_data"]["show_intro"] = _data.beatmapData.levelData.showIntro.ToString();
+			jn["level_data"] = LevelBeatmapData.ModLevelData.ToJSON();
 
 			for (int i = 0; i < prefabs.Count; i++)
 				jn["prefabs"][i] = ((Data.Prefab)prefabs[i]).ToJSON();
@@ -839,13 +835,13 @@ namespace RTFunctions.Functions.Data
 				}
 			}
 
-			for (int i = 0; i < _data.beatmapData.checkpoints.Count; i++)
+			for (int i = 0; i < beatmapData.checkpoints.Count; i++)
 			{
 				jn["checkpoints"][i]["active"] = "False";
-				jn["checkpoints"][i]["name"] = _data.beatmapData.checkpoints[i].name;
-				jn["checkpoints"][i]["t"] = _data.beatmapData.checkpoints[i].time.ToString();
-				jn["checkpoints"][i]["pos"]["x"] = _data.beatmapData.checkpoints[i].pos.x.ToString();
-				jn["checkpoints"][i]["pos"]["y"] = _data.beatmapData.checkpoints[i].pos.y.ToString();
+				jn["checkpoints"][i]["name"] = beatmapData.checkpoints[i].name;
+				jn["checkpoints"][i]["t"] = beatmapData.checkpoints[i].time.ToString();
+				jn["checkpoints"][i]["pos"]["x"] = beatmapData.checkpoints[i].pos.x.ToString();
+				jn["checkpoints"][i]["pos"]["y"] = beatmapData.checkpoints[i].pos.y.ToString();
 			}
 
 			for (int i = 0; i < beatmapObjects.Count; i++)
@@ -861,45 +857,90 @@ namespace RTFunctions.Functions.Data
 			return jn;
 		}
 
-        #endregion
+		#endregion
 
-        public static string[] EventTypes => new string[]
-		{
-			"pos",
-			"zoom",
-			"rot",
-			"shake",
-			"theme",
-			"chroma",
-			"bloom",
-			"vignette",
-			"lens",
-			"grain",
-			"cg",
-			"rip",
-			"rb",
-			"cs",
-			"offset",
-			"grd",
-			"dbv",
-			"scan",
-			"blur",
-			"pixel",
-			"bg",
-			"invert",
-			"timeline",
-			"player",
-			"follow_player",
-			"audio",
-            "vidbg_p",
-            "vidbg",
-			"sharp",
-			"bars",
-			"danger",
-			"xyrot",
-			"camdepth",
-        };
+		public bool Modded
+        {
+            get
+            {
+				return
+					BeatmapObjects.Has(x => x.modifiers.Count > 0
+					|| x.objectType == Data.BeatmapObject.ObjectType.Solid
+					|| x.desync
+					|| x.background
+					|| x.LDM
+					|| x.parallaxSettings.Any(y => y != 1f)
+					|| x.parentAdditive != "000"
+					|| x.shape > 5
+					|| x.shapeOption >= UnmoddedShapeOptions[Mathf.Clamp(x.shape, 0, UnmoddedShapeOptions.Length)]
+					|| ArePositionKeyframesModded(x.events[0])
+					|| AreScaleKeyframesModded(x.events[1])
+					|| AreRotationKeyframesModded(x.events[2])
+					|| AreColorKeyframesModded(x.events[3])) ||
+					eventObjects.allEvents.Count > 24 && eventObjects.allEvents[24].Count > 0 &&
+					eventObjects.allEvents[24].Any(x => x.eventValues.Length > 3 && x.eventValues[0] == 1f && (x.eventValues[1] == 1f || x.eventValues[2] == 1f));
+            }
+        }
+
+		static bool ArePositionKeyframesModded(List<BaseEventKeyframe> eventKeyframes)
+			=> eventKeyframes.Any(x => x.random > 4 || x.eventValues.Length > 2 && x.eventValues[2] != 0f || ((Data.EventKeyframe)x).relative);
 		
+		static bool AreScaleKeyframesModded(List<BaseEventKeyframe> eventKeyframes)
+			=> eventKeyframes.Any(x => ((Data.EventKeyframe)x).relative);
+
+		static bool AreRotationKeyframesModded(List<BaseEventKeyframe> eventKeyframes)
+			=> eventKeyframes.Any(x => x.random > 4 || !((Data.EventKeyframe)x).relative);
+		
+		static bool AreColorKeyframesModded(List<BaseEventKeyframe> eventKeyframes)
+			=> eventKeyframes.Any(x => x.random > 4 || x.eventValues[0] > 8f || x.eventValues[2] != 0f || x.eventValues[3] != 0f || x.eventValues[4] != 0f);
+
+		public static int[] UnmoddedShapeOptions => new int[]
+		{
+			3,
+			9,
+			4,
+			2,
+			1,
+			6
+		};
+
+		public static string[] EventTypes => new string[]
+		{
+			"pos", // 0
+			"zoom", // 1
+			"rot", // 2
+			"shake", // 3
+			"theme", // 4
+			"chroma", // 5
+			"bloom", // 6
+			"vignette", // 7
+			"lens", // 8
+			"grain", // 9
+			"cg", // 10
+			"rip", // 11
+			"rb", // 12
+			"cs", // 13
+			"offset", // 14
+			"grd", // 15
+			"dbv", // 16
+			"scan", // 17
+			"blur", // 18
+			"pixel", // 19
+			"bg", // 20
+			"invert", // 21
+			"timeline", // 22
+			"player", // 23
+			"follow_player", // 24
+			"audio", // 25
+			"vidbg_p", // 26
+			"vidbg", // 27
+			"sharp", // 28
+			"bars", // 29
+			"danger", // 30
+			"xyrot", // 31
+			"camdepth", // 32
+		};
+
 		public static List<BaseEventKeyframe> DefaultKeyframes = new List<BaseEventKeyframe>
 		{
 			new Data.EventKeyframe
@@ -925,7 +966,7 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[5]
-                {
+				{
 					0f, // Shake Intensity
 					1f, // Shake X
 					1f, // Shake Y
@@ -963,7 +1004,7 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[7]
-                {
+				{
 					0f, // Vignette Intensity
 					0f, // Vignette Smoothness
 					0f, // Vignette Rounded
@@ -978,14 +1019,14 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[6]
-                {
+				{
 					0f,
 					0f,
 					0f,
 					1f,
 					1f,
 					1f
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Lens
 			new Data.EventKeyframe
@@ -1004,23 +1045,23 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[5]
-                {
+				{
 					0f,
 					0f,
 					1f,
 					0f,
 					0f
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Ripples
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
 				eventValues = new float[2]
-                {
+				{
 					0f,
 					6f
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // RadialBlur
 			new Data.EventKeyframe
@@ -1039,13 +1080,13 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[5]
-                {
+				{
 					0f,
 					0f,
 					18f,
 					18f,
 					0f,
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Gradient
 			new Data.EventKeyframe
@@ -1075,9 +1116,10 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[1]
+				eventValues = new float[2]
 				{
-					18f
+					18f, // Color
+					0f // Active
 				},
 				id = LSText.randomNumString(8),
 			}, // BG
@@ -1091,7 +1133,7 @@ namespace RTFunctions.Functions.Data
 			{
 				eventTime = 0f,
 				eventValues = new float[7]
-                {
+				{
 					0f,
 					0f,
 					-342f,
@@ -1105,17 +1147,17 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[5],
+				eventValues = new float[6],
 				id = LSText.randomNumString(8),
 			}, // Player
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
 				eventValues = new float[10]
-                {
-					0f,
-					0f,
-					0f,
+				{
+					0f, // Active
+					0f, // Move
+					0f, // Rotate
 					0.5f,
 					0f,
 					9999f,
@@ -1123,25 +1165,25 @@ namespace RTFunctions.Functions.Data
 					9999f,
 					-9999f,
 					1f,
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Follow Player
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
 				eventValues = new float[2]
-                {
+				{
 					1f,
 					1f
-                },
+				},
 				id = LSText.randomNumString(8),
 			}, // Audio
 			new Data.EventKeyframe
-            {
-                eventTime = 0f,
-                eventValues = new float[9]
-                {
-                    0f, // Position X
+			{
+				eventTime = 0f,
+				eventValues = new float[9]
+				{
+					0f, // Position X
                     0f, // Position Y
                     0f, // Position Z
                     1f, // Scale X
@@ -1151,14 +1193,14 @@ namespace RTFunctions.Functions.Data
                     0f, // Rotation Y
                     0f, // Rotation Z
                 },
-                id = LSText.randomNumString(8),
-            }, // Video BG Parent
+				id = LSText.randomNumString(8),
+			}, // Video BG Parent
 			new Data.EventKeyframe
-            {
-                eventTime = 0f,
-                eventValues = new float[10]
-                {
-                    0f, // Position X
+			{
+				eventTime = 0f,
+				eventValues = new float[10]
+				{
+					0f, // Position X
                     0f, // Position Y
                     120f, // Position Z
                     240f, // Scale X
@@ -1169,17 +1211,17 @@ namespace RTFunctions.Functions.Data
                     0f, // Rotation Z
                     0f, // Render Layer (Foreground / Background)
                 },
-                id = LSText.randomNumString(8),
-            }, // Video BG
+				id = LSText.randomNumString(8),
+			}, // Video BG
 			new Data.EventKeyframe
-            {
-                eventTime = 0f,
-                eventValues = new float[1]
-                {
-                    0f, // Sharpen Amount
+			{
+				eventTime = 0f,
+				eventValues = new float[1]
+				{
+					0f, // Sharpen Amount
                 },
-                id = LSText.randomNumString(8),
-            }, // Sharpen
+				id = LSText.randomNumString(8),
+			}, // Sharpen
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
@@ -1216,33 +1258,35 @@ namespace RTFunctions.Functions.Data
 				eventTime = 0f,
 				eventValues = new float[2]
 				{
-					0f, // Z
-					0f, // Perspective
+					-10f, // Depth
+					0f, // Zoom
                 },
 				id = LSText.randomNumString(8),
 			}, // Camera Depth
 		};
 
-        public static bool SaveOpacityToThemes { get; set; } = false;
+		public static bool SaveOpacityToThemes { get; set; } = false;
+
+		public LevelBeatmapData LevelBeatmapData => (LevelBeatmapData)beatmapData;
 
 		public List<Data.BeatmapObject> BeatmapObjects
-        {
+		{
 			get => beatmapObjects.Select(x => (Data.BeatmapObject)x).ToList();
 			set
-            {
+			{
 				beatmapObjects.Clear();
 				beatmapObjects.AddRange(value);
-            }
-        }
+			}
+		}
 
 		public List<Data.BackgroundObject> BackgroundObjects
-        {
+		{
 			get => backgroundObjects.Select(x => (Data.BackgroundObject)x).ToList();
 			set
-            {
+			{
 				backgroundObjects.Clear();
 				backgroundObjects.AddRange(value);
-            }
-        }
-    }
+			}
+		}
+	}
 }

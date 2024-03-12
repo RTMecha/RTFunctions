@@ -1,24 +1,20 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
-using System.IO;
-using System.Text.RegularExpressions;
-
-using UnityEngine;
-using UnityEngine.UI;
-
-using LSFunctions;
-
-using TMPro;
-
+﻿using LSFunctions;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers.Networking;
 using RTFunctions.Functions.Optimization;
 using RTFunctions.Functions.Optimization.Objects;
 using RTFunctions.Functions.Optimization.Objects.Visual;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace RTFunctions.Functions.Managers
 {
@@ -56,11 +52,12 @@ namespace RTFunctions.Functions.Managers
 
             if (DataManager.inst.gameData != null && DataManager.inst.gameData.beatmapObjects.Count > 0)
             {
-                foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
+                foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects.Where(x =>
+                                x.shape == 4 && x.TimeWithinLifespan() && x.objectType != DataManager.GameData.BeatmapObject.ObjectType.Empty))
                 {
-                    if (beatmapObject.shape == 4 && beatmapObject.TimeWithinLifespan() && Updater.TryGetObject(beatmapObject, out LevelObject levelObject) && ((TextObject)levelObject.visualObject).TextMeshPro)
+                    if (Updater.TryGetObject(beatmapObject, out LevelObject levelObject) && ((TextObject)levelObject.visualObject).TextMeshPro)
                     {
-                        var visualObject = ((TextObject)levelObject.visualObject);
+                        var visualObject = (TextObject)levelObject.visualObject;
                         var tmp = visualObject.TextMeshPro;
 
                         var currentAudioTime = AudioManager.inst.CurrentAudioSource.time;
@@ -265,7 +262,7 @@ namespace RTFunctions.Functions.Managers
                         var phRegex = new Regex(@"<playerHealth=(.*?)>");
                         var phMatch = phRegex.Match(beatmapObject.text);
 
-                        if (phMatch.Success && int.TryParse(phMatch.Groups[1].ToString(), out int num))
+                        if (phMatch.Success && phMatch.Groups.Count > 1 && int.TryParse(phMatch.Groups[1].ToString(), out int num))
                         {
                             if (InputDataManager.inst.players.Count > num)
                             {
@@ -292,7 +289,7 @@ namespace RTFunctions.Functions.Managers
                         var pdRegex = new Regex(@"<playerDeaths=(.*?)>");
                         var pdMatch = pdRegex.Match(beatmapObject.text);
 
-                        if (pdMatch.Success && int.TryParse(pdMatch.Groups[1].ToString(), out int numDeath))
+                        if (pdMatch.Success && pdMatch.Groups.Count > 1 && int.TryParse(pdMatch.Groups[1].ToString(), out int numDeath))
                         {
                             if (InputDataManager.inst.players.Count > numDeath)
                             {
@@ -319,7 +316,7 @@ namespace RTFunctions.Functions.Managers
                         var phiRegex = new Regex(@"<playerHits=(.*?)>");
                         var phiMatch = phiRegex.Match(beatmapObject.text);
 
-                        if (phiMatch.Success && int.TryParse(phiMatch.Groups[1].ToString(), out int numHit))
+                        if (phiMatch.Success && phiMatch.Groups.Count > 1 && int.TryParse(phiMatch.Groups[1].ToString(), out int numHit))
                         {
                             if (InputDataManager.inst.players.Count > numHit)
                             {
@@ -343,6 +340,11 @@ namespace RTFunctions.Functions.Managers
                             str = str.Replace("<playerHitsAll>", pd.ToString());
                         }
 
+                        if (beatmapObject.text.Contains("<playerBoostCount>"))
+                        {
+                            str = str.Replace("<playerBoostCount>", LevelManager.BoostCount.ToString());
+                        }
+
                         #endregion
 
                         #region QuickElement
@@ -350,7 +352,7 @@ namespace RTFunctions.Functions.Managers
                         var qeRegex = new Regex(@"<quickElement=(.*?)>");
                         var qeMatch = qeRegex.Match(beatmapObject.text);
 
-                        if (qeMatch.Success)
+                        if (qeMatch.Success && qeMatch.Groups.Count > 1)
                         {
                             str = str.Replace("<quickElement=" + qeMatch.Groups[1].ToString() + ">", QuickElementManager.ConvertQuickElement(beatmapObject, qeMatch.Groups[1].ToString()));
                         }
@@ -363,7 +365,7 @@ namespace RTFunctions.Functions.Managers
                             var ratRegex = new Regex(@"<randomText=(.*?)>");
                             var ratMatch = ratRegex.Match(beatmapObject.text);
 
-                            if (ratMatch.Success && int.TryParse(ratMatch.Groups[1].ToString(), out int ratInt))
+                            if (ratMatch.Success && ratMatch.Groups.Count > 1 && int.TryParse(ratMatch.Groups[1].ToString(), out int ratInt))
                             {
                                 str = str.Replace("<randomText=" + ratMatch.Groups[1].ToString() + ">", LSFunctions.LSText.randomString(ratInt));
                             }
@@ -371,7 +373,7 @@ namespace RTFunctions.Functions.Managers
                             var ranRegex = new Regex(@"<randomNumber=(.*?)>");
                             var ranMatch = ranRegex.Match(beatmapObject.text);
 
-                            if (ranMatch.Success && int.TryParse(ranMatch.Groups[1].ToString(), out int ranInt))
+                            if (ranMatch.Success && ratMatch.Groups.Count > 1 && int.TryParse(ranMatch.Groups[1].ToString(), out int ranInt))
                             {
                                 str = str.Replace("<randomNumber=" + ranMatch.Groups[1].ToString() + ">", LSFunctions.LSText.randomNumString(ranInt));
                             }
@@ -381,68 +383,120 @@ namespace RTFunctions.Functions.Managers
 
                         #region Theme
 
-                        // We do a try catch due to an error.
-                        try
                         {
-                            {
-                                var matchCollection = Regex.Matches(str, "<themeObject=(.*?)>");
+                            var matchCollection = Regex.Matches(str, "<themeObject=(.*?)>");
 
-                                foreach (var obj in matchCollection)
-                                {
-                                    var match = (Match)obj;
+                            foreach (var obj in matchCollection)
+                            {
+                                var match = (Match)obj;
+                                if (match.Groups.Count > 1)
                                     str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetObjColor(int.Parse(match.Groups[1].ToString())))}>");
-                                }
                             }
-
-                            {
-                                var matchCollection = Regex.Matches(str, "<themeBGs=(.*?)>");
-
-                                foreach (var obj in matchCollection)
-                                {
-                                    var match = (Match)obj;
-                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetBGColor(int.Parse(match.Groups[1].ToString())))}>");
-                                }
-                            }
-
-                            {
-                                var matchCollection = Regex.Matches(str, "<themeFX=(.*?)>");
-
-                                foreach (var obj in matchCollection)
-                                {
-                                    var match = (Match)obj;
-                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetFXColor(int.Parse(match.Groups[1].ToString())))}>");
-                                }
-                            }
-
-                            {
-                                var matchCollection = Regex.Matches(str, "<themePlayers=(.*?)>");
-
-                                foreach (var obj in matchCollection)
-                                {
-                                    var match = (Match)obj;
-                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetPlayerColor(int.Parse(match.Groups[1].ToString())))}>");
-                                }
-                            }
-
-                            if (beatmapObject.text.Contains("<themeBG>"))
-                            {
-                                str = str.Replace("<themeBG>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.backgroundColor));
-                            }
-
-                            if (beatmapObject.text.Contains("<themeGUI>"))
-                            {
-                                str = str.Replace("<themeGUI>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiColor));
-                            }
-
-                            if (beatmapObject.text.Contains("<themeTail>"))
-                            {
-                                str = str.Replace("<themeTail>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiAccentColor));
-                            }
-
                         }
-                        catch
-                        {
 
+                        {
+                            var matchCollection = Regex.Matches(str, "<themeBGs=(.*?)>");
+
+                            foreach (var obj in matchCollection)
+                            {
+                                var match = (Match)obj;
+                                if (match.Groups.Count > 1)
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetBGColor(int.Parse(match.Groups[1].ToString())))}>");
+                            }
+                        }
+
+                        {
+                            var matchCollection = Regex.Matches(str, "<themeFX=(.*?)>");
+
+                            foreach (var obj in matchCollection)
+                            {
+                                var match = (Match)obj;
+                                if (match.Groups.Count > 1)
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetFXColor(int.Parse(match.Groups[1].ToString())))}>");
+                            }
+                        }
+
+                        {
+                            var matchCollection = Regex.Matches(str, "<themePlayers=(.*?)>");
+
+                            foreach (var obj in matchCollection)
+                            {
+                                var match = (Match)obj;
+                                if (match.Groups.Count > 1)
+                                    str = str.Replace(match.Groups[0].Value, $"<#{LSColors.ColorToHex(RTHelpers.BeatmapTheme.GetPlayerColor(int.Parse(match.Groups[1].ToString())))}>");
+                            }
+                        }
+
+                        if (beatmapObject.text.Contains("<themeBG>"))
+                        {
+                            str = str.Replace("<themeBG>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.backgroundColor));
+                        }
+
+                        if (beatmapObject.text.Contains("<themeGUI>"))
+                        {
+                            str = str.Replace("<themeGUI>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiColor));
+                        }
+
+                        if (beatmapObject.text.Contains("<themeTail>"))
+                        {
+                            str = str.Replace("<themeTail>", LSColors.ColorToHex(RTHelpers.BeatmapTheme.guiAccentColor));
+                        }
+
+                        #endregion
+
+                        #region LevelRank
+
+                        if (beatmapObject.text.Contains("<levelRank>"))
+                        {
+                            DataManager.LevelRank levelRank = null;
+
+                            if (EditorManager.inst == null && LevelManager.CurrentLevel != null)
+                            {
+                                levelRank = LevelManager.GetLevelRank(LevelManager.CurrentLevel);
+                            }
+                            else
+                            {
+                                levelRank = DataManager.inst.levelRanks[0];
+                            }
+
+                            str = str.Replace("<levelRank>", $"<color=#{LSColors.ColorToHex(levelRank.color)}><b>{levelRank.name}</b></color>");
+                        }
+                        
+                        if (beatmapObject.text.Contains("<levelRankName>"))
+                        {
+                            DataManager.LevelRank levelRank = null;
+
+                            if (EditorManager.inst == null && LevelManager.CurrentLevel != null)
+                            {
+                                levelRank = LevelManager.GetLevelRank(LevelManager.CurrentLevel);
+                            }
+                            else
+                            {
+                                levelRank = DataManager.inst.levelRanks[0];
+                            }
+
+                            str = str.Replace("<levelRankName>", levelRank.name);
+                        }
+                        
+                        if (beatmapObject.text.Contains("<levelRankColor>"))
+                        {
+                            DataManager.LevelRank levelRank = null;
+
+                            if (EditorManager.inst == null && LevelManager.CurrentLevel != null)
+                            {
+                                levelRank = LevelManager.GetLevelRank(LevelManager.CurrentLevel);
+                            }
+                            else
+                            {
+                                levelRank = DataManager.inst.levelRanks[0];
+                            }
+
+                            str = str.Replace("<levelRankColor>", $"<color=#{LSColors.ColorToHex(levelRank.color)}>");
+                        }
+
+                        if (beatmapObject.text.Contains("<accuracy>"))
+                        {
+                            str = str.Replace("<accuracy>", $"{LevelManager.CalculateAccuracy(GameManager.inst.hits.Count, AudioManager.inst.CurrentAudioSource.clip.length)}");
                         }
 
                         #endregion
@@ -453,7 +507,7 @@ namespace RTFunctions.Functions.Managers
                             var regex = new Regex(@"<modifierVariable=(.*?)>");
                             var match = regex.Match(beatmapObject.text);
 
-                            if (match.Success && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.name == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
+                            if (match.Success && match.Groups.Count > 1 && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.name == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
                             {
                                 str = str.Replace("<modifierVariable=" + match.Groups[1].ToString() + ">", ((BeatmapObject)other).integerVariable.ToString());
                             }
@@ -463,7 +517,7 @@ namespace RTFunctions.Functions.Managers
                             var regex = new Regex(@"<modifierVariableID=(.*?)>");
                             var match = regex.Match(beatmapObject.text);
 
-                            if (match.Success && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
+                            if (match.Success && match.Groups.Count > 1 && DataManager.inst.gameData.beatmapObjects.TryFind(x => x.id == match.Groups[1].ToString(), out DataManager.GameData.BeatmapObject other))
                             {
                                 str = str.Replace("<modifierVariableID=" + match.Groups[1].ToString() + ">", ((BeatmapObject)other).integerVariable.ToString());
                             }
@@ -495,71 +549,36 @@ namespace RTFunctions.Functions.Managers
             var refer = MaterialReferenceManager.instance;
             var dictionary = (Dictionary<int, TMP_FontAsset>)refer.GetType().GetField("m_FontAssetReferenceLookup", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(refer);
 
-            if (RTFile.FileExists(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/customfonts.asset"))
+            if (!RTFile.FileExists(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/customfonts.asset"))
             {
-                var assetBundle = GetAssetBundle(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets", "customfonts.asset");
-                foreach (var asset in assetBundle.GetAllAssetNames())
-                {
-                    string str = asset.Replace("assets/font/", "");
-                    var font = assetBundle.LoadAsset<Font>(str);
-                    if (font != null)
-                    {
-                        var fontCopy = Instantiate(font);
-                        fontCopy.name = ChangeName(str);
-                        if (!allFonts.ContainsKey(str))
-                        {
-                            allFonts.Add(fontCopy.name, fontCopy);
-                        }
-                        else
-                        {
-                            Debug.LogErrorFormat("{0}There was an error in adding the {1} font to the Dictionary.", className, str);
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogErrorFormat("{0}There was an error in loading the {1} font.", className, str);
-                    }
-                }
-                assetBundle.Unload(false);
+                Debug.LogError($"{className}customfonts.asset does not exist in the BepInEx/plugins/Assets folder.");
+                yield break;
             }
-            else
-            {
-                Debug.LogErrorFormat("{0}There was an error in loading the custom fonts. Make sure you have the customfonts file in the Assets folder!", className);
 
-                try
+            var assetBundle = GetAssetBundle(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets", "customfonts.asset");
+            foreach (var asset in assetBundle.GetAllAssetNames())
+            {
+                string str = asset.Replace("assets/font/", "");
+                var font = assetBundle.LoadAsset<Font>(str);
+
+                if (font == null)
                 {
-                    inst.StartCoroutine(AlephNetworkManager.DownloadAssetBundle("https://cdn.discordapp.com/attachments/1151231196022452255/1151231743580442765/customfonts", delegate (AssetBundle assetBundle)
-                    {
-                        foreach (var asset in assetBundle.GetAllAssetNames())
-                        {
-                            string str = asset.Replace("assets/font/", "");
-                            var font = assetBundle.LoadAsset<Font>(str);
-                            if (font != null)
-                            {
-                                var fontCopy = Instantiate(font);
-                                fontCopy.name = ChangeName(str);
-                                if (!allFonts.ContainsKey(str))
-                                {
-                                    allFonts.Add(fontCopy.name, fontCopy);
-                                }
-                                else
-                                {
-                                    Debug.LogErrorFormat("{0}There was an error in adding the {1} font to the Dictionary.", className, str);
-                                }
-                            }
-                            else
-                            {
-                                Debug.LogErrorFormat("{0}There was an error in loading the {1} font.", className, str);
-                            }
-                        }
-                        assetBundle.Unload(false);
-                    }));
+                    Debug.LogError($"{className}The font ({str}) does not exist in the asset bundle for some reason.");
+                    continue;
                 }
-                catch (Exception ex)
+
+                var fontCopy = Instantiate(font);
+                fontCopy.name = ChangeName(str);
+
+                if (allFonts.ContainsKey(fontCopy.name))
                 {
-                    Debug.LogFormat("{0}There was an error in getting the AssetBundle.\nMESSAGE: {1}\nSTACKTRACE: {2}", className, ex.Message, ex.StackTrace);
+                    Debug.LogError($"{className}The font ({str}) was already in the font dictionary.");
+                    continue;
                 }
+
+                allFonts.Add(fontCopy.name, fontCopy);
             }
+            assetBundle.Unload(false);
 
             foreach (var font in allFonts)
             {
@@ -570,64 +589,30 @@ namespace RTFunctions.Functions.Managers
                 e.hashCode = random1;
                 e.materialHashCode = random1;
 
-                if (!dictionary.ContainsKey(e.hashCode))
+                if (dictionary.ContainsKey(e.hashCode))
                 {
-                    MaterialReferenceManager.AddFontAsset(e);
-                }
-                else
-                {
-                    Debug.LogErrorFormat("{0}There was an error in adding the {1} font asset to the MaterialReferenceManager Font Asset Dictionary.\nHashcode: {2}", className, font.Key, e.hashCode);
+                    Debug.LogError($"{className}Could not convert the font to TextMeshPro Font Asset. Hashcode: {e.hashCode}");
+                    continue;
                 }
 
-                if (!allFontAssets.ContainsKey(font.Key))
+                MaterialReferenceManager.AddFontAsset(e);
+
+                if (allFontAssets.ContainsKey(font.Key))
                 {
-                    allFontAssets.Add(font.Key, e);
+                    Debug.LogError($"{className}The font asset ({font.Key}) was already in the font asset dictionary.");
+                    continue;
                 }
-                else
-                {
-                    Debug.LogErrorFormat("{0}There was an error in adding the {1} font asset to the Dictionary.", className, font);
-                }
+
+                allFontAssets.Add(font.Key, e);
             }
+
+            if (FunctionsPlugin.DebugInfoStartup.Value)
+                RTDebugger.Init();
 
             yield break;
         }
 
-        public Font GetCustomFont(string _font)
-        {
-            var assetBundle = GetAssetBundle(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets", "customfonts");
-            var fontToLoad = assetBundle.LoadAsset<Font>(_font);
-            var font = Instantiate(fontToLoad);
-            assetBundle.Unload(false);
-            return font;
-        }
-
         public AssetBundle GetAssetBundle(string _filepath, string _bundle) => AssetBundle.LoadFromFile(Path.Combine(_filepath, _bundle));
-
-        public TMP_FontAsset GetCustomFontAsset(string _font)
-        {
-            var fontAsset = TMP_FontAsset.CreateFontAsset(GetCustomFont(_font));
-            fontAsset.name = _font;
-            MaterialReferenceManager.AddFontAsset(fontAsset);
-            return fontAsset;
-        }
-
-        public void GetAsset(string _filepath, string _bundle, string _filename, Action<GameObject> callback)
-        {
-            var assetBundle = GetAssetBundle(_filepath, _bundle);
-            var prefab = assetBundle.LoadAsset<GameObject>(_filename);
-            callback(Instantiate(prefab));
-
-            assetBundle.Unload(false);
-        }
-
-        public void GetAsset(string _filepath, string _bundle, string _filename, Action<Font> callback)
-        {
-            var assetBundle = GetAssetBundle(_filepath, _bundle);
-            var prefab = assetBundle.LoadAsset<Font>(_filename);
-            callback(Instantiate(prefab));
-
-            assetBundle.Unload(false);
-        }
 
         public string ChangeName(string _name1)
         {
@@ -975,16 +960,6 @@ namespace RTFunctions.Functions.Managers
                     }
             }
             return _name1;
-        }
-
-        public Font GetDefaultFont(string _font, int _size)
-        {
-            if (Font.GetOSInstalledFontNames().Contains(_font))
-            {
-                return Font.CreateDynamicFontFromOSFont(_font, _size);
-            }
-            Debug.LogFormat("{0}Font {1} does not exist on OS!", className, _font);
-            return Font.GetDefault();
         }
 
         public static class TextTranslater

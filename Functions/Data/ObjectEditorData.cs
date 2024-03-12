@@ -1,7 +1,5 @@
-﻿using UnityEngine;
-
-using SimpleJSON;
-
+﻿using SimpleJSON;
+using UnityEngine;
 using BaseEditorData = DataManager.GameData.BeatmapObject.EditorData;
 
 namespace RTFunctions.Functions.Data

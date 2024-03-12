@@ -1,44 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-
-using UnityEngine;
-
+﻿using RTFunctions.Functions.IO;
 using SimpleJSON;
-
-using RTFunctions.Functions.IO;
-
-using BaseMetadata = DataManager.MetaData;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 using BaseArtist = DataManager.MetaData.Artist;
-using BaseCreator = DataManager.MetaData.Creator;
-using BaseSong = DataManager.MetaData.Song;
 using BaseBeatmap = DataManager.MetaData.Beatmap;
+using BaseCreator = DataManager.MetaData.Creator;
+using BaseMetadata = DataManager.MetaData;
+using BaseSong = DataManager.MetaData.Song;
 
 namespace RTFunctions.Functions.Data
 {
-    public class Metadata : BaseMetadata
+    public class MetaData : BaseMetadata
     {
-		public Metadata() : base()
+		public MetaData()
+		{
+			artist = new LevelArtist();
+			creator = new LevelCreator();
+			song = new LevelSong();
+			beatmap = new LevelBeatmap();
+        }
+
+		public MetaData(LevelArtist artist, LevelCreator creator, LevelSong song, LevelBeatmap beatmap) : base(artist, creator, song, beatmap)
         {
 
         }
 
-		public Metadata(LevelArtist artist, LevelCreator creator, LevelSong song, LevelBeatmap beatmap) : base(artist, creator, song, beatmap)
+        public MetaData(BaseMetadata metadata)
         {
 
         }
 
-        public Metadata(BaseMetadata metadata)
-        {
-
-        }
+		public static MetaData Current => (MetaData)DataManager.inst.metaData;
 
         public string collectionID;
         public int index;
-        public string id;
+        public string serverID;
+        public string arcadeID;
+
+		public string ID =>
+                !string.IsNullOrEmpty(serverID) && serverID != "-1" ?
+                    serverID : !string.IsNullOrEmpty(arcadeID) && arcadeID != "-1" ?
+                    arcadeID : !string.IsNullOrEmpty(LevelBeatmap.beatmap_id) && LevelBeatmap.beatmap_id != "-1" ?
+                    LevelBeatmap.beatmap_id : "-1";
 
         #region Methods
 
-        public static Metadata DeepCopy(Metadata orig) => new Metadata
+        public static MetaData DeepCopy(MetaData orig) => new MetaData
         {
             artist = new LevelArtist
             {
@@ -71,14 +79,14 @@ namespace RTFunctions.Functions.Data
                 title = orig.song.title,
                 tags = orig.LevelSong.tags,
             },
-            id = orig.id,
+            serverID = orig.serverID,
             index = orig.index,
             collectionID = orig.collectionID,
         };
 
-		public static Metadata ParseVG(JSONNode jn)
+		public static MetaData ParseVG(JSONNode jn)
         {
-			Metadata result;
+			MetaData result;
             try
 			{
 				string name = "Artist Name";
@@ -159,9 +167,8 @@ namespace RTFunctions.Functions.Data
 				string gameVersion = ProjectArrhythmia.GameVersion.ToString();
 				string dateEdited = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 				string dateCreated = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
-				int workshopID = -1;
+				string workshopID = "-1";
 				int num = 0;
-				string beatmapID = LSFunctions.LSText.randomString(16);
 
 				try
 				{
@@ -174,34 +181,32 @@ namespace RTFunctions.Functions.Data
 					if (!string.IsNullOrEmpty(jn["beatmap"]["version_number"]))
 						num = jn["beatmap"]["version_number"].AsInt;
 					if (!string.IsNullOrEmpty(jn["beatmap"]["workshop_id"]))
-						workshopID = jn["beatmap"]["workshop_id"].AsInt;
-					if (!string.IsNullOrEmpty(jn["beatmap"]["beatmap_id"]))
-						beatmapID = jn["beatmap"]["beatmap_id"];
+						workshopID = jn["beatmap"]["workshop_id"];
 				}
 				catch (Exception ex)
 				{
 					Debug.LogError($"Beatmap Error: {ex}");
 				}
 
-				var beatmap = new LevelBeatmap(dateEdited, dateCreated, gameVersion, num, workshopID.ToString());
+				var beatmap = new LevelBeatmap(dateEdited, dateCreated, "", gameVersion, num, workshopID.ToString());
 
-				result = new Metadata(artist, creator, song, beatmap);
+				result = new MetaData(artist, creator, song, beatmap);
 			}
             catch (Exception ex)
 			{
 				var artist2 = new LevelArtist("Corrupted", 0, "");
 				var creator2 = new LevelCreator(SteamWrapper.inst.user.displayName, SteamWrapper.inst.user.id, "", 0);
 				var song2 = new LevelSong("Corrupt Metadata", 0, "", 140f, 100f, -1f, -1f, new string[] { "Corrupted" });
-				var beatmap2 = new LevelBeatmap("", "", ProjectArrhythmia.GameVersion.ToString(), 0, "-1");
-				result = new Metadata(artist2, creator2, song2, beatmap2);
+				var beatmap2 = new LevelBeatmap("", "", "", ProjectArrhythmia.GameVersion.ToString(), 0, "-1");
+				result = new MetaData(artist2, creator2, song2, beatmap2);
 				Debug.LogError($"{DataManager.inst.className}Something went wrong with parsing metadata!\n{ex}");
 			}
 			return result;
         }
 
-        public static Metadata Parse(JSONNode jn)
+        public static MetaData Parse(JSONNode jn)
         {
-			Metadata result;
+			MetaData result;
 			try
 			{
 				string name = "Artist Name";
@@ -223,7 +228,7 @@ namespace RTFunctions.Functions.Data
 
 				var artist = new LevelArtist(name, linkType, link);
 
-				string steam_name = "Mecha";
+				string steam_name = "RTMecha";
 				int steam_id = -1;
 				string creatorLink = "";
 				int creatorLinkType = 0;
@@ -246,7 +251,7 @@ namespace RTFunctions.Functions.Data
 
 				var creator = new LevelCreator(steam_name, steam_id, creatorLink, creatorLinkType);
 
-				string title = "Pyrolysis";
+				string title = "Intertia";
 				int difficulty = 2;
 				string description = "This is the default description!";
 				float bpm = 120f;
@@ -295,9 +300,9 @@ namespace RTFunctions.Functions.Data
 				string gameVersion = ProjectArrhythmia.GameVersion.ToString();
 				string dateEdited = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 				string dateCreated = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
-				int workshopID = -1;
+				string datePublished = "";
+				string workshopID = "-1";
 				int num = 0;
-				string beatmapID = LSFunctions.LSText.randomString(16);
 
                 try
 				{
@@ -307,29 +312,33 @@ namespace RTFunctions.Functions.Data
 						dateEdited = jn["beatmap"]["date_edited"];
 					if (!string.IsNullOrEmpty(jn["beatmap"]["date_created"]))
 						dateCreated = jn["beatmap"]["date_created"];
+					if (!string.IsNullOrEmpty(jn["beatmap"]["date_published"]))
+						datePublished = jn["beatmap"]["date_published"];
 					if (!string.IsNullOrEmpty(jn["beatmap"]["version_number"]))
 						num = jn["beatmap"]["version_number"].AsInt;
 					if (!string.IsNullOrEmpty(jn["beatmap"]["workshop_id"]))
-						workshopID = jn["beatmap"]["workshop_id"].AsInt;
-					if (!string.IsNullOrEmpty(jn["beatmap"]["beatmap_id"]))
-						beatmapID = jn["beatmap"]["beatmap_id"];
+						workshopID = jn["beatmap"]["workshop_id"];
 				}
                 catch (Exception ex)
 				{
 					Debug.LogError($"Beatmap Error: {ex}");
 				}
 
-				var beatmap = new LevelBeatmap(dateEdited, dateCreated, gameVersion, num, workshopID.ToString());
+				var beatmap = new LevelBeatmap(dateEdited, dateCreated, datePublished, gameVersion, num, workshopID);
 
-				result = new Metadata(artist, creator, song, beatmap);
+				result = new MetaData(artist, creator, song, beatmap);
+				if (!string.IsNullOrEmpty(jn["server_id"]))
+					result.serverID = jn["server_id"];
+				if (!string.IsNullOrEmpty(jn["arcade_id"]))
+					result.arcadeID = jn["arcade_id"];
 			}
 			catch
 			{
 				var artist2 = new LevelArtist("Corrupted", 0, "");
 				var creator2 = new LevelCreator(SteamWrapper.inst.user.displayName, SteamWrapper.inst.user.id, "", 0);
 				var song2 = new LevelSong("Corrupt Metadata", 0, "", 140f, 100f, -1f, -1f, new string[] { "Corrupted" });
-				var beatmap2 = new LevelBeatmap("", "", ProjectArrhythmia.GameVersion.ToString(), 0, "-1");
-				result = new Metadata(artist2, creator2, song2, beatmap2);
+				var beatmap2 = new LevelBeatmap("", "", "", ProjectArrhythmia.GameVersion.ToString(), 0, "-1");
+				result = new MetaData(artist2, creator2, song2, beatmap2);
 				Debug.LogError($"{DataManager.inst.className}Something went wrong with parsing metadata!");
 			}
 			return result;
@@ -356,6 +365,7 @@ namespace RTFunctions.Functions.Data
 
 			jn["beatmap"]["date_edited"] = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 			jn["beatmap"]["game_version"] = "24.1.7";
+			jn["beatmap"]["workshop_id"] = LevelBeatmap.beatmap_id;
 
 			return jn;
 		}
@@ -387,13 +397,21 @@ namespace RTFunctions.Functions.Data
 			jn["beatmap"]["date_edited"] = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 			jn["beatmap"]["version_number"] = beatmap.version_number.ToString();
 			jn["beatmap"]["game_version"] = beatmap.game_version;
-			jn["beatmap"]["workshop_id"] = beatmap.workshop_id.ToString();
-			jn["beatmap"]["beatmap_id"] = LevelBeatmap.beatmap_id;
+			jn["beatmap"]["workshop_id"] = LevelBeatmap.beatmap_id;
+
+			if (!string.IsNullOrEmpty(serverID))
+				jn["server_id"] = serverID;
+			
+			if (!string.IsNullOrEmpty(arcadeID))
+				jn["arcade_id"] = arcadeID;
 
 			return jn;
 		}
 
-        #endregion
+		#endregion
+
+		public List<LevelArtist> Artists { get; set; } = new List<LevelArtist>();
+		public List<LevelCreator> Creators { get; set; } = new List<LevelCreator>();
 
         public LevelArtist LevelArtist => (LevelArtist)artist;
         public LevelCreator LevelCreator => (LevelCreator)creator;
@@ -402,9 +420,9 @@ namespace RTFunctions.Functions.Data
 
         #region Operators
 
-        public static implicit operator bool(Metadata exists) => exists != null;
+        public static implicit operator bool(MetaData exists) => exists != null;
 
-		public override bool Equals(object obj) => obj is Metadata && LevelBeatmap.beatmap_id == (obj as Metadata).LevelBeatmap.beatmap_id;
+		public override bool Equals(object obj) => obj is MetaData && LevelBeatmap.beatmap_id == (obj as MetaData).LevelBeatmap.beatmap_id;
 
 		public override string ToString() => $"{LevelBeatmap.beatmap_id}: {artist.Name} - {song.title}";
 
@@ -415,8 +433,10 @@ namespace RTFunctions.Functions.Data
     {
         public LevelArtist() : base()
 		{
-            
-        }
+			Name = "Kaixo";
+			LinkType = 2;
+			Link = "kaixo";
+		}
 
 		public LevelArtist(string name, int linkType, string link) : base(name, linkType, link)
         {
@@ -439,8 +459,8 @@ namespace RTFunctions.Functions.Data
     {
         public LevelCreator() : base()
 		{
-
-        }
+			steam_name = "Unknown User";
+		}
 
 		public LevelCreator(string steam_name, int steam_id, string link, int linkType) : base(steam_name, steam_id)
         {
@@ -457,7 +477,7 @@ namespace RTFunctions.Functions.Data
 
 		public static List<DataManager.LinkType> creatorLinkTypes = new List<DataManager.LinkType>
 		{
-			new DataManager.LinkType("Youtube", "https://www.youtube.com/c/{0}"),
+			new DataManager.LinkType("YouTube", "https://www.youtube.com/c/{0}"),
 			new DataManager.LinkType("Newgrounds", "https://{0}.newgrounds.com/"),
 			new DataManager.LinkType("Discord", "https://discord.gg/{0}"),
 			new DataManager.LinkType("Patreon", "https://patreon.com/{0}"),
@@ -477,7 +497,7 @@ namespace RTFunctions.Functions.Data
     {
         public LevelSong() : base()
 		{
-
+			title = "Intertia";
         }
 
 		public LevelSong(string title, int difficulty, string description, float BPM, float time, float previewStart, float previewLength, string[] tags) : base(title, difficulty, description, BPM, time, previewStart, previewLength)
@@ -501,28 +521,44 @@ namespace RTFunctions.Functions.Data
 		public LevelBeatmap() : base()
 		{
 			beatmap_id = workshop_id.ToString();
+			game_version = ProjectArrhythmia.GameVersion.ToString();
 			date_created = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 		}
 
-		public LevelBeatmap(string dateEdited, string gameVersion, int versionNumber, int workshopID) : base(dateEdited, gameVersion, versionNumber, workshopID)
-        {
-			beatmap_id = workshopID.ToString();
-		}
-
-		public LevelBeatmap(string dateEdited, string gameVersion, int versionNumber, string beatmapID) : base(dateEdited, gameVersion, versionNumber, Mathf.Clamp(int.Parse(beatmapID), 0, int.MaxValue))
+		public LevelBeatmap(int versionNumber, string workshopID)
 		{
-			beatmap_id = beatmapID;
+			date_edited = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
 			date_created = DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss");
+			version_number = versionNumber;
+
+			beatmap_id = workshopID;
+			game_version = ProjectArrhythmia.GameVersion.ToString();
 		}
 		
-		public LevelBeatmap(string dateEdited, string dateCreated, string gameVersion, int versionNumber, string beatmapID) : base(dateEdited, gameVersion, versionNumber, Mathf.Clamp(int.Parse(beatmapID), 0, int.MaxValue))
+		public LevelBeatmap(string dateEdited, string gameVersion, int versionNumber, string workshopID)
 		{
+			date_edited = dateEdited;
+			game_version = gameVersion;
+			version_number = versionNumber;
+
+			beatmap_id = workshopID;
+			game_version = ProjectArrhythmia.GameVersion.ToString();
+		}
+
+		public LevelBeatmap(string dateEdited, string dateCreated, string datePublished, string gameVersion, int versionNumber, string beatmapID)
+		{
+			date_edited = dateEdited;
+			game_version = gameVersion;
+			version_number = versionNumber;
+
 			beatmap_id = beatmapID;
 			date_created = dateCreated;
+			date_published = datePublished;
 		}
 
 		public string beatmap_id;
 		public string date_created;
+		public string date_published;
 
 		public void RegisterMods()
         {

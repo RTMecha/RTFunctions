@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Mono.CSharp;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Reflection;
-
-using Mono.CSharp;
 
 namespace RTFunctions.Functions.IO
 {
@@ -542,8 +541,7 @@ namespace RTFunctions.Functions.IO
         }
 
         public static bool Validate(string str) =>
-                FunctionsPlugin.EvaluateCode.Value && !str.Contains("File.") && !str.Contains("FileManager") && !str.Contains("System.IO")
-                && !str.Contains("WebClient") && !str.Contains("HttpClient");
+                FunctionsPlugin.EvaluateCode.Value && !str.Contains("File.") && !str.Contains("FileManager") && !str.Contains("System.IO") && !str.Contains("WebClient") && !str.Contains("HttpClient");
     }
 
     public class ScriptEvaluator : Evaluator, IDisposable

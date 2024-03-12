@@ -1,22 +1,17 @@
-﻿using System;
+﻿using LSFunctions;
+using RTFunctions.Functions.Components;
+using SimpleJSON;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
 using UnityEngine;
-
-using SimpleJSON;
-using LSFunctions;
-
-using RTFunctions.Functions.Components;
-
-using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
-
 using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
+using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 
 namespace RTFunctions.Functions.Data
 {
-	public class BeatmapObject : BaseBeatmapObject
+    public class BeatmapObject : BaseBeatmapObject
 	{
 		public BeatmapObject() : base()
 		{
@@ -48,7 +43,7 @@ namespace RTFunctions.Functions.Data
 			editorData.collapse = beatmapObject.editorData.collapse;
 			editorData.locked = beatmapObject.editorData.locked;
 			fromPrefab = beatmapObject.fromPrefab;
-			objectType = beatmapObject.objectType;
+			objectType = (ObjectType)beatmapObject.objectType;
 			origin = beatmapObject.origin;
 			prefabID = beatmapObject.prefabID;
 			prefabInstanceID = beatmapObject.prefabInstanceID;
@@ -75,7 +70,7 @@ namespace RTFunctions.Functions.Data
 			editorData.collapse = beatmapObject.editorData.collapse;
 			editorData.locked = beatmapObject.editorData.locked;
 			fromPrefab = beatmapObject.fromPrefab;
-			objectType = beatmapObject.objectType;
+			objectType = (ObjectType)beatmapObject.objectType;
 			origin = beatmapObject.origin;
 			prefabID = beatmapObject.prefabID;
 			prefabInstanceID = beatmapObject.prefabInstanceID;
@@ -111,7 +106,13 @@ namespace RTFunctions.Functions.Data
 			set => depth = value;
 		}
 
+		public bool opacityCollision = false;
+
 		public bool background;
+
+		public bool ignoreLifespan = false;
+
+		public bool desync = false;
 
 		public List<Modifier> modifiers = new List<Modifier>();
         public List<Component> components = new List<Component>();
@@ -285,6 +286,17 @@ namespace RTFunctions.Functions.Data
 			#endregion
 		}
 
+		public new ObjectType objectType;
+
+		public new enum ObjectType
+		{
+			Normal,
+			Helper,
+			Decoration,
+			Empty,
+			Solid
+		}
+
 		#region Methods
 
 		public static BeatmapObject DeepCopy(BeatmapObject orig, bool newID = true, bool copyVariables = true)
@@ -323,7 +335,10 @@ namespace RTFunctions.Functions.Data
 				floatVariable = copyVariables ? orig.floatVariable : 0f,
 				stringVariable = copyVariables ? orig.stringVariable : "",
 				tags = orig.tags.Count > 0 ? orig.tags.Clone() : new List<string>(),
-				background = orig.background
+				background = orig.background,
+				ignoreLifespan = orig.ignoreLifespan,
+				opacityCollision = orig.opacityCollision,
+				desync = orig.desync
 			};
 
 			for (int i = 0; i < beatmapObject.events.Count; i++)
@@ -480,6 +495,8 @@ namespace RTFunctions.Functions.Data
 
 			beatmapObject.id = jn["id"] != null ? jn["id"] : LSText.randomString(16);
 
+			beatmapObject.opacityCollision = true;
+
 			if (jn["pre_iid"] != null)
 				beatmapObject.prefabInstanceID = jn["pre_iid"];
 
@@ -490,13 +507,19 @@ namespace RTFunctions.Functions.Data
 				beatmapObject.parent = jn["p_id"] == "camera" ? "CAMERA_PARENT" : jn["p_id"];
 
 			if (jn["p_t"] != null)
-				beatmapObject.parentType = jn["p_id"] == "camera" ? "111" : jn["p_t"];
+				beatmapObject.parentType = jn["p_t"];
+			if (jn["p_id"] == "camera")
+				beatmapObject.parentType = "111";
 
-			if (jn["p_o"] != null)
+			if (jn["p_o"] != null && jn["p_id"] != "camera")
 			{
 				beatmapObject.parentOffsets = new List<float>(from n in jn["p_o"].AsArray.Children
 															  select n.AsFloat).ToList();
 			}
+            else if (jn["p_id"] == "camera")
+            {
+				beatmapObject.parentOffsets = new List<float> { 0f, 0f, 0f };
+            }
 
 			if (jn["ot"] != null)
 			{
@@ -702,7 +725,7 @@ namespace RTFunctions.Functions.Data
 
 			beatmapObject.events = events;
 
-			beatmapObject.id = jn["id"] != null ? jn["id"] : LSText.randomString(16);
+			beatmapObject.id = jn["id"] ?? LSText.randomString(16);
 
 			if (jn["piid"] != null)
 				beatmapObject.prefabInstanceID = jn["piid"];
@@ -739,6 +762,15 @@ namespace RTFunctions.Functions.Data
 
 			if (jn["rdt"] != null)
 				beatmapObject.background = jn["rdt"].AsInt == 1;
+			
+			if (jn["opcol"] != null)
+				beatmapObject.opacityCollision = jn["opcol"].AsBool;
+			
+			if (jn["iglif"] != null)
+				beatmapObject.ignoreLifespan = jn["iglif"].AsBool;
+			
+			if (jn["desync"] != null)
+				beatmapObject.desync = jn["desync"].AsBool;
 
 			if (jn["empty"] != null)
 				beatmapObject.objectType = jn["empty"].AsBool ? ObjectType.Empty : ObjectType.Normal;
@@ -816,16 +848,16 @@ namespace RTFunctions.Functions.Data
 			if (!string.IsNullOrEmpty(prefabInstanceID))
 				jn["pre_iid"] = prefabInstanceID;
 
-			if (GetParentType() != "101")
-				jn["p_t"] = GetParentType();
+			if (parentType != "101")
+				jn["p_t"] = parentType;
 
-			if (getParentOffsets().FindIndex(x => x != 0f) != -1)
+			if (parentOffsets.FindIndex(x => x != 0f) != -1)
 			{
-				int num4 = 0;
-				foreach (float num5 in getParentOffsets())
+				int index = 0;
+				foreach (float offset in parentOffsets)
 				{
-					jn["p_o"][num4] = num5;
-					num4++;
+					jn["p_o"][index] = offset;
+					index++;
 				}
 			}
 
@@ -839,7 +871,7 @@ namespace RTFunctions.Functions.Data
 			if (!string.IsNullOrEmpty(name))
 				jn["n"] = name;
 
-			jn["ot"] = (int)objectType;
+			jn["ot"] = (int)objectType == 4 ? 0 : (int)objectType;
 			jn["ak_t"] = (int)autoKillType;
 			jn["ak_o"] = autoKillOffset;
 
@@ -861,9 +893,9 @@ namespace RTFunctions.Functions.Data
 			if (editorData.collapse)
 				jn["ed"]["co"] = editorData.collapse;
 
-				jn["ed"]["b"] = editorData.Bin;
+			jn["ed"]["b"] = editorData.Bin;
 			
-				jn["ed"]["l"].AsInt = Mathf.Clamp(editorData.layer, 0, 5);
+			jn["ed"]["l"].AsInt = Mathf.Clamp(editorData.layer, 0, 5);
 
 			// Events
             {
@@ -943,16 +975,16 @@ namespace RTFunctions.Functions.Data
 			if (!string.IsNullOrEmpty(prefabInstanceID))
 				jn["piid"] = prefabInstanceID;
 
-			if (GetParentType() != "101")
-				jn["pt"] = GetParentType();
+			if (parentType != "101")
+				jn["pt"] = parentType;
 
-			if (getParentOffsets().FindIndex(x => x != 0f) != -1)
+			if (parentOffsets.FindIndex(x => x != 0f) != -1)
 			{
-				int num4 = 0;
-				foreach (float num5 in getParentOffsets())
+				int index = 0;
+				foreach (var offset in parentOffsets)
 				{
-					jn["po"][num4] = num5.ToString();
-					num4++;
+					jn["po"][index] = offset.ToString();
+					index++;
 				}
 			}
 
@@ -965,10 +997,18 @@ namespace RTFunctions.Functions.Data
 			if (parentAdditive != "000")
 				jn["pa"] = parentAdditive;
 
-			jn["p"] = parent;
+			if (!string.IsNullOrEmpty(parent))
+				jn["p"] = parent;
 
 			jn["d"] = depth.ToString();
-			jn["rdt"] = (background ? 1 : 0).ToString();
+			if (background)
+				jn["rdt"] = "1";
+			if (opacityCollision)
+				jn["opcol"] = opacityCollision.ToString();
+			if (ignoreLifespan)
+				jn["iglif"] = ignoreLifespan.ToString();
+			if (desync)
+				jn["desync"] = desync.ToString();
 
 			if (LDM)
 				jn["ldm"] = LDM.ToString();
@@ -1022,10 +1062,10 @@ namespace RTFunctions.Functions.Data
 
 		public void SetParentAdditive(int _index, bool _new)
 		{
-			StringBuilder stringBuilder = new StringBuilder(parentAdditive);
-			stringBuilder[_index] = (_new ? '1' : '0');
+			var stringBuilder = new StringBuilder(parentAdditive);
+			stringBuilder[_index] = _new ? '1' : '0';
 			parentAdditive = stringBuilder.ToString();
-			Debug.Log("Set Parent Additive: " + parentAdditive);
+			Debug.Log($"{FunctionsPlugin.className}Set Parent Additive: {parentAdditive}");
 		}
 
 		#endregion
@@ -1042,5 +1082,4 @@ namespace RTFunctions.Functions.Data
 
         #endregion
     }
-
 }

@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
-
-using RTFunctions.Functions.Animation;
-
+﻿using RTFunctions.Functions.Animation;
 using RTFunctions.Functions.Optimization.Objects.Visual;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace RTFunctions.Functions.Optimization.Objects
 {
@@ -130,6 +127,10 @@ namespace RTFunctions.Functions.Optimization.Objects
             return LSFunctions.LSColors.ColorFromHSV(num + hue, saturation + sat, value + val);
         }
 
+        float prevStartTime = 0f;
+        List<string> parentChainSet = new List<string>();
+        bool spawned = false;
+
         public void Interpolate(float time)
         {
             // Set visual object color
@@ -154,7 +155,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             {
                 Color color = colorSequence.Interpolate(time - StartTime);
                 float opacity = opacitySequence.Interpolate(time - StartTime);
-                
+
                 float a = opacity - 1f;
 
                 a = -a;
@@ -218,67 +219,88 @@ namespace RTFunctions.Functions.Optimization.Objects
             float scaleParallax = 1f;
             float rotationParallax = 1f;
 
+            if (prevStartTime != beatmapObject.startTime)
+            {
+                parentObjects.ForEach(x => x.Active = false);
+                parentChainSet.Clear();
+                prevStartTime = beatmapObject.startTime;
+            }
+
+            LevelParentObject currentParent = null;
+
             int num = 0;
             foreach (var parentObject in parentObjects)
             {
-                if (parentObject.ParentAdditivePosition)
-                    positionAddedOffset += parentObject.ParentOffsetPosition;
-                if (parentObject.ParentAdditiveScale)
-                    scaleAddedOffset += parentObject.ParentOffsetScale;
-                if (parentObject.ParentAdditiveRotation)
-                    rotationAddedOffset += parentObject.ParentOffsetRotation;
+                if (currentParent == null)
+                    currentParent = parentObject;
 
-                // If last parent is position parented, animate position
-                if (animatePosition)
+                if ((!currentParent.BeatmapObject.desync || num == 0 || /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active || !spawned))
                 {
-                    if (parentObject.Position3DSequence != null)
+                    if (parentObject.ParentAdditivePosition)
+                        positionAddedOffset += parentObject.ParentOffsetPosition;
+                    if (parentObject.ParentAdditiveScale)
+                        scaleAddedOffset += parentObject.ParentOffsetScale;
+                    if (parentObject.ParentAdditiveRotation)
+                        rotationAddedOffset += parentObject.ParentOffsetRotation;
+
+                    // If last parent is position parented, animate position
+                    if (animatePosition)
                     {
-                        var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset)) + parentObject.BeatmapObject.reactivePositionOffset + parentObject.BeatmapObject.positionOffset;
+                        if (parentObject.Position3DSequence != null)
+                        {
+                            var value = parentObject.Position3DSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset)) + parentObject.BeatmapObject.reactivePositionOffset + parentObject.BeatmapObject.positionOffset;
 
-                        float z = depth * 0.0005f + (value.z / 10f);
+                            float z = depth * 0.0005f + (value.z / 10f);
 
-                        parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, z);
+                            parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, z);
+                        }
+                        else
+                        {
+                            var value = parentObject.PositionSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset));
+                            parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, depth * 0.0005f);
+                        }
                     }
-                    else
+
+                    // If last parent is scale parented, animate scale
+                    if (animateScale)
                     {
-                        var value = parentObject.PositionSequence.Interpolate(time - parentObject.TimeOffset - (positionOffset + positionAddedOffset));
-                        parentObject.Transform.localPosition = new Vector3(value.x * positionParallax, value.y * positionParallax, depth * 0.0005f);
+                        var r = parentObject.BeatmapObject.reactiveScaleOffset + parentObject.BeatmapObject.reactiveScaleOffset + parentObject.BeatmapObject.scaleOffset;
+                        var value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - (scaleOffset + scaleAddedOffset)) + new Vector2(r.x, r.y);
+                        parentObject.Transform.localScale = new Vector3(value.x * scaleParallax, value.y * scaleParallax, 1.0f + parentObject.BeatmapObject.scaleOffset.z);
+                    }
+
+                    // If last parent is rotation parented, animate rotation
+                    if (animateRotation)
+                    {
+                        var value = Quaternion.AngleAxis(
+                            (parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - (rotationOffset + rotationAddedOffset)) + parentObject.BeatmapObject.reactiveRotationOffset) * rotationParallax,
+                            Vector3.forward);
+                        parentObject.Transform.localRotation = Quaternion.Euler(value.eulerAngles + parentObject.BeatmapObject.rotationOffset);
+                    }
+
+                    // Cache parent values to use for next parent
+                    positionOffset = parentObject.ParentOffsetPosition;
+                    scaleOffset = parentObject.ParentOffsetScale;
+                    rotationOffset = parentObject.ParentOffsetRotation;
+
+                    animatePosition = parentObject.ParentAnimatePosition;
+                    animateScale = parentObject.ParentAnimateScale;
+                    animateRotation = parentObject.ParentAnimateRotation;
+
+                    positionParallax = parentObject.ParentParallaxPosition;
+                    scaleParallax = parentObject.ParentParallaxScale;
+                    rotationParallax = parentObject.ParentParallaxRotation;
+
+                    if (currentParent.BeatmapObject.desync && /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active)
+                    {
+                        //parentChainSet.Add(parentObject.ID);
+                        parentObject.Active = true;
+                        spawned = true;
                     }
                 }
 
-                // If last parent is scale parented, animate scale
-                if (animateScale)
-                {
-                    var r = parentObject.BeatmapObject.reactiveScaleOffset + parentObject.BeatmapObject.reactiveScaleOffset + parentObject.BeatmapObject.scaleOffset;
-                    var value = parentObject.ScaleSequence.Interpolate(time - parentObject.TimeOffset - (scaleOffset + scaleAddedOffset)) + new Vector2(r.x, r.y);
-                    parentObject.Transform.localScale = new Vector3(value.x * scaleParallax, value.y * scaleParallax, 1.0f + parentObject.BeatmapObject.scaleOffset.z);
-                }
+                currentParent = parentObject;
 
-                // If last parent is rotation parented, animate rotation
-                if (animateRotation)
-                {
-                    var value = Quaternion.AngleAxis(
-                        (parentObject.RotationSequence.Interpolate(time - parentObject.TimeOffset - (rotationOffset + rotationAddedOffset)) + parentObject.BeatmapObject.reactiveRotationOffset) * rotationParallax,
-                        Vector3.forward);
-                    parentObject.Transform.localRotation = Quaternion.Euler(value.eulerAngles + parentObject.BeatmapObject.rotationOffset);
-                }
-
-                // Cache parent values to use for next parent
-                positionOffset = parentObject.ParentOffsetPosition;
-                scaleOffset = parentObject.ParentOffsetScale;
-                rotationOffset = parentObject.ParentOffsetRotation;
-
-                animatePosition = parentObject.ParentAnimatePosition;
-                animateScale = parentObject.ParentAnimateScale;
-                animateRotation = parentObject.ParentAnimateRotation;
-
-                //positionParallax = parentObject.ParentAdditivePosition ? positionParallax + parentObject.ParentParallaxPosition : parentObject.ParentParallaxPosition;
-                //scaleParallax = parentObject.ParentAdditiveScale ? scaleParallax + parentObject.ParentParallaxScale : parentObject.ParentParallaxScale;
-                //rotationParallax = parentObject.ParentAdditiveRotation ? rotationParallax + parentObject.ParentParallaxRotation : parentObject.ParentParallaxRotation;
-
-                positionParallax = parentObject.ParentParallaxPosition;
-                scaleParallax = parentObject.ParentParallaxScale;
-                rotationParallax = parentObject.ParentParallaxRotation;
                 num++;
             }
         }

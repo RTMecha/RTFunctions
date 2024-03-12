@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using LSFunctions;
-
+﻿using LSFunctions;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace RTFunctions.Functions.Components
 {
-	/// <summary>
-	/// Component for selecting and dragging objects. Still needs a ton of work though.
-	/// </summary>
+    /// <summary>
+    /// Component for selecting and dragging objects. Still needs a ton of work though.
+    /// </summary>
     public class RTObject : MonoBehaviour
     {
 		public bool CanDrag => ModCompatibility.sharedFunctions.ContainsKey("SelectedObjectCount") && ((int)ModCompatibility.sharedFunctions["SelectedObjectCount"]) < 2;
@@ -193,7 +192,7 @@ namespace RTFunctions.Functions.Components
 		}
 
 		void OnMouseDown()
-        {
+		{
 			onMouseDown?.Invoke();
 			if (EditorManager.inst && EditorManager.inst.isEditing && DataManager.inst.gameData.beatmapObjects.Count > 0 && !string.IsNullOrEmpty(id) && !LSHelpers.IsUsingInputField() && !EventSystem.current.IsPointerOverGameObject())
 			{
@@ -230,7 +229,7 @@ namespace RTFunctions.Functions.Components
 						&& ModCompatibility.sharedFunctions.ContainsKey("CurrentSelection") && ModCompatibility.sharedFunctions["CurrentSelection"] is TimelineObject
 						 && ModCompatibility.sharedFunctions.ContainsKey("ParentPickerDisable")
 						 && ModCompatibility.sharedFunctions.ContainsKey("RefreshObjectGUI"))
-                    {
+					{
 						var currentSelection = (TimelineObject)ModCompatibility.sharedFunctions["CurrentSelection"];
 
 						var dictionary = new Dictionary<string, bool>();
@@ -282,9 +281,9 @@ namespace RTFunctions.Functions.Components
 					}
 				}
 			}
-        }
+		}
 
-        void OnMouseEnter()
+		void OnMouseEnter()
         {
             hovered = true;
 			onMouseEnter?.Invoke();
@@ -403,7 +402,10 @@ namespace RTFunctions.Functions.Components
         void Update()
 		{
 			if (!EditorManager.inst || !EditorManager.inst.isEditing)
+			{
+				hovered = false;
 				return;
+			}
 
 			var m = 0f;
 

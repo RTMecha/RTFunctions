@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.UI;
 
 namespace RTFunctions.Functions.Managers
 {

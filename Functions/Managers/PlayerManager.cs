@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-
-using BepInEx.Configuration;
-
-using UnityEngine;
-using UnityEngine.UI;
-
+﻿using BepInEx.Configuration;
 using RTFunctions.Functions.Components.Player;
 using RTFunctions.Functions.Data.Player;
 using RTFunctions.Functions.IO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace RTFunctions.Functions.Managers
 {
@@ -93,26 +89,26 @@ namespace RTFunctions.Functions.Managers
 
         public static bool allowController;
 
-        public static string GetPlayerModelIndex(int index) => PlayerModelsIndex[index];
+        public static bool IncludeOtherPlayersInRank { get; set; }
 
-        public static void SetPlayerModelIndex(int index, int _id)
-        {
-            string e = PlayerModels.ElementAt(_id).Key;
+        public static float AcurracyDivisionAmount { get; set; } = 10f;
 
-            PlayerModelsIndex[index] = e;
-        }
+        #region Game Modes
+        public static void SetGameMode(int mode) => DataManager.inst.UpdateSettingInt("ArcadeDifficulty", mode);
 
-        public static int GetPlayerModelInt(PlayerModel _model) => PlayerModels.Values.ToList().IndexOf(_model);
+        public static bool IsZenMode => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 0;
+        public static bool IsNormal => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 1;
+        public static bool Is1Life => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 2;
+        public static bool IsNoHit => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 3;
+        public static bool IsPractice => DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 4;
 
-        public static void UpdatePlayers()
-        {
-            if (InputDataManager.inst)
-                foreach (var player in Players.Where(x => x.Player).Select(x => x.Player))
-                {
-                    if (EditorManager.inst != null || DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0)
-                        player.UpdatePlayer();
-                }
-        }
+        public static int ArcadeGameSpeed => DataManager.inst.GetSettingEnum("ArcadeGameSpeed", 2);
+
+        public static void SetGameSpeed(int speed) => DataManager.inst.UpdateSettingEnum("ArcadeGameSpeed", speed);
+
+        #endregion
+
+        #region Spawning
 
         public static void SpawnPlayer(CustomPlayer customPlayer, Vector3 pos)
         {
@@ -168,7 +164,7 @@ namespace RTFunctions.Functions.Managers
                 }
             }
 
-            if (DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 3 || DataManager.inst.GetSettingInt("ArcadeDifficulty", 0) == 2)
+            if (Is1Life || IsNoHit)
             {
                 player.playerDeathEvent += delegate (Vector3 _val)
                 {
@@ -195,7 +191,8 @@ namespace RTFunctions.Functions.Managers
                     }
                 };
             }
-            if (player.playerIndex == 0 && !EditorManager.inst)
+
+            if ((IncludeOtherPlayersInRank || player.playerIndex == 0) && !EditorManager.inst)
             {
                 player.playerDeathEvent += delegate (Vector3 _val)
                 {
@@ -282,6 +279,31 @@ namespace RTFunctions.Functions.Managers
                 DataManager.inst.gameData.beatmapData.checkpoints[prevIndex].pos : EventManager.inst.cam.transform.position);
         }
 
+        #endregion
+
+        #region Models
+
+        public static void UpdatePlayers()
+        {
+            if (InputDataManager.inst)
+                foreach (var player in Players.Where(x => x.Player).Select(x => x.Player))
+                {
+                    if (EditorManager.inst != null || DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0)
+                        player.UpdatePlayer();
+                }
+        }
+
+        public static string GetPlayerModelIndex(int index) => PlayerModelsIndex[index];
+
+        public static void SetPlayerModelIndex(int index, int _id)
+        {
+            string e = PlayerModels.ElementAt(_id).Key;
+
+            PlayerModelsIndex[index] = e;
+        }
+
+        public static int GetPlayerModelInt(PlayerModel _model) => PlayerModels.Values.ToList().IndexOf(_model);
+
         public static void AssignPlayerModels()
         {
             if (Players.Count > 0)
@@ -295,5 +317,7 @@ namespace RTFunctions.Functions.Managers
                     }
                 }
         }
+
+        #endregion
     }
 }

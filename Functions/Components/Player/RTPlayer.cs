@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using UnityEngine;
-using UnityEngine.UI;
-
-using InControl;
-using XInputDotNetPure;
-using TMPro;
-using DG.Tweening;
-
+﻿using DG.Tweening;
 using LSFunctions;
-
-using RTFunctions.Functions;
 using RTFunctions.Functions.Data.Player;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using XInputDotNetPure;
 
 namespace RTFunctions.Functions.Components.Player
 {
@@ -53,6 +45,8 @@ namespace RTFunctions.Functions.Components.Player
         public static bool EvaluateCode { get; set; }
 
         public static bool AllowPlayersToTakeBulletDamage { get; set; }
+
+        public static bool OutOfBounds { get; set; } = false;
 
         #region Base
 
@@ -653,7 +647,7 @@ namespace RTFunctions.Functions.Components.Player
 
             if (!RTHelpers.Paused)
             {
-                if (!PlayerAlive && !isDead && CustomPlayer)
+                if (!PlayerAlive && !isDead && CustomPlayer && !PlayerManager.IsPractice)
                     StartCoroutine(Kill());
 
                 if (CanMove && PlayerAlive && Actions != null)
@@ -674,15 +668,6 @@ namespace RTFunctions.Functions.Components.Player
                     if (!PlayerModel.bulletPart.constant && faceController.Shoot.WasPressed && canShoot ||
                         PlayerModel.bulletPart.constant && faceController.Shoot.IsPressed && canShoot)
                         CreateBullet();
-
-                    //if (!(bool)currentModel.values["Bullet Constant"] && faceController.Shoot.WasPressed && canShoot)
-                    //{
-                    //    CreateBullet();
-                    //}
-                    //if ((bool)currentModel.values["Bullet Constant"] && faceController.Shoot.IsPressed && canShoot)
-                    //{
-                    //    CreateBullet();
-                    //}
                 }
             }
         }
@@ -707,7 +692,7 @@ namespace RTFunctions.Functions.Components.Player
             var player = playerObjects["RB Parent"].gameObject;
 
             // Here we handle the player's bounds to the camera. It is possible to include negative zoom in those bounds but it might not be a good idea since people have already utilized it.
-            if ((!ModCompatibility.sharedFunctions.ContainsKey("EventsCoreEditorOffset") || !(bool)ModCompatibility.sharedFunctions["EventsCoreEditorOffset"]) && GameManager.inst.gameState == GameManager.State.Playing)
+            if (!OutOfBounds && (!ModCompatibility.sharedFunctions.ContainsKey("EventsCoreEditorOffset") || !(bool)ModCompatibility.sharedFunctions["EventsCoreEditorOffset"]) && GameManager.inst.gameState == GameManager.State.Playing)
             {
                 var cameraToViewportPoint = Camera.main.WorldToViewportPoint(player.transform.position);
                 cameraToViewportPoint.x = Mathf.Clamp(cameraToViewportPoint.x, 0f, 1f);
@@ -1359,7 +1344,8 @@ namespace RTFunctions.Functions.Components.Player
                     anim.SetTrigger("hurt");
                 if (CustomPlayer)
                 {
-                    CustomPlayer.Health--;
+                    if (!PlayerManager.IsPractice)
+                        CustomPlayer.Health--;
                     playerHitEvent?.Invoke(CustomPlayer.Health, rb.position);
                 }
 
@@ -1470,6 +1456,8 @@ namespace RTFunctions.Functions.Components.Player
                     animatingBoost = true;
                     playerObjects["Boost Tail Base"].gameObject.transform.DOScale(Vector3.zero, 0.05f / RTHelpers.Pitch).SetEase(DataManager.inst.AnimationList[2].Animation);
                 }
+
+                LevelManager.BoostCount++;
 
                 EvaluateBoostCode();
             }
@@ -2379,7 +2367,7 @@ namespace RTFunctions.Functions.Components.Player
                     return
                     x.command == "isBoosting" && (!x.not && isBoosting || x.not && !isBoosting) ||
                     x.command == "isTakingHit" && (!x.not && isTakingHit || x.not && !isTakingHit) ||
-                    x.command == "isZenMode" && (!x.not && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0 && (EditorManager.inst == null || !ZenModeInEditor) || x.not && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) != 0 && (EditorManager.inst == null || ZenModeInEditor)) ||
+                    x.command == "isZenMode" && (!x.not && (EditorManager.inst == null && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) == 0 || ZenModeInEditor) || x.not && (EditorManager.inst == null && DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) != 0 || !ZenModeInEditor)) ||
                     x.command == "isHealthPercentageGreater" && (!x.not && (float)CustomPlayer.health / (float)initialHealthCount * 100f >= x.value || x.not && (float)CustomPlayer.health / (float)initialHealthCount * 100f < x.value) ||
                     x.command == "isHealthGreaterEquals" && (!x.not && CustomPlayer.health >= x.value || x.not && CustomPlayer.health < x.value) ||
                     x.command == "isHealthEquals" && (!x.not && CustomPlayer.health == x.value || x.not && CustomPlayer.health != x.value) ||
@@ -2780,7 +2768,7 @@ namespace RTFunctions.Functions.Components.Player
 
                 string cs = FileManager.inst.LoadJSONFileRaw(path);
 
-                if (!cs.Contains("System.IO.File.") && !cs.Contains("File."))
+                if (RTCode.Validate(cs))
                     RTCode.Evaluate($"{def}{cs}");
             }
         }
@@ -2798,7 +2786,7 @@ namespace RTFunctions.Functions.Components.Player
 
                 string cs = FileManager.inst.LoadJSONFileRaw(path);
 
-                if (!cs.Contains("System.IO.File.") && !cs.Contains("File."))
+                if (RTCode.Validate(cs))
                     RTCode.Evaluate($"{def}{cs}");
             }
         }
@@ -2816,7 +2804,7 @@ namespace RTFunctions.Functions.Components.Player
 
                 string cs = FileManager.inst.LoadJSONFileRaw(path);
 
-                if (!cs.Contains("System.IO.File.") && !cs.Contains("File."))
+                if (RTCode.Validate(cs))
                     RTCode.Evaluate($"{def}{cs}");
             }
         }
@@ -2834,7 +2822,7 @@ namespace RTFunctions.Functions.Components.Player
 
                 string cs = FileManager.inst.LoadJSONFileRaw(path);
 
-                if (!cs.Contains("System.IO.File.") && !cs.Contains("File."))
+                if (RTCode.Validate(cs))
                     RTCode.Evaluate($"{def}{cs}");
             }
         }
