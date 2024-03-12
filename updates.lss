@@ -1,4 +1,4 @@
-1.10.0 > [???]
+1.10.0 > [Mar 12, 2024]
 - Added a boost counter for ObjectModifiers and ArcadiaCustoms.
 - Fixed a bug with Custom Objects in Player Models visibility values being the opposite if the value is zen mode.
 - Added Opacity Collision toggle to Beatmap Objects. If on, the object will work like alpha+ objects, if the opacity is lower than 100% it will turn the collision off.
@@ -8,6 +8,7 @@
 - Changed the menu moving sounds to a click and a block sound so it's not always the blip noise.
 - Level loading *should* be faster now, since previously the level updated twice for some reason.
 - Fixed most custom shape collisions, aside from the heart outlines. the half heart outlines do work so you can use those instead.
+- Fixed deleting objects still regenerating its children, throwing an error.
 1.9.10 > [Feb 11, 2024]
 - Final update until Online Arcade server due to some level systems being reworked in preparation for it.
 - Fixed a bug with tail color in themes not parsing correctly.
