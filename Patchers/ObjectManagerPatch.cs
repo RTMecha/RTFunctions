@@ -72,14 +72,5 @@ namespace RTFunctions.Patchers
 			Updater.UpdateObjects();
 			return false;
 		}
-
-		public static void AddPrefabObjects(ObjectManager __instance)
-		{
-			DataManager.inst.gameData.beatmapObjects.RemoveAll(x => x.fromPrefab);
-			for (int i = 0; i < DataManager.inst.gameData.prefabObjects.Count; i++)
-			{
-				__instance.AddPrefabToLevel(DataManager.inst.gameData.prefabObjects[i]);
-			}
-		}
 	}
 }
