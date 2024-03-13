@@ -1,3 +1,6 @@
+1.10.2 > [Mar 14, 2024]
+- LDM Config now updates all objects with LDM on if the user is in the editor.
+- Cleaned up some config code.
 1.10.1 > [Mar 12, 2024]
 - Added catch for situations where Steam hasn't loaded correctly.
 1.10.0 > [Mar 12, 2024]
