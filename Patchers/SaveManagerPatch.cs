@@ -13,7 +13,7 @@ namespace RTFunctions.Patchers
     {
         [HarmonyPatch("ApplySettingsFile")]
         [HarmonyPostfix]
-        static void ApplySettingsFilePostfix(SaveManager __instance)
+        static void ApplySettingsFilePostfix()
         {
             FunctionsPlugin.prevFullscreen = FunctionsPlugin.Fullscreen.Value;
             FunctionsPlugin.Fullscreen.Value = DataManager.inst.GetSettingBool("FullScreen", false);
@@ -31,33 +31,33 @@ namespace RTFunctions.Patchers
             FunctionsPlugin.SFXVol.Value = DataManager.inst.GetSettingInt("EffectsVolume", 9);
 
             FunctionsPlugin.prevLanguage = FunctionsPlugin.Language.Value;
-            FunctionsPlugin.Language.Value = (FunctionsPlugin.Lang)DataManager.inst.GetSettingInt("Language_i", 0);
+            FunctionsPlugin.Language.Value = (ModLanguage)DataManager.inst.GetSettingInt("Language_i", 0);
 
             FunctionsPlugin.prevControllerRumble = FunctionsPlugin.ControllerRumble.Value;
             FunctionsPlugin.ControllerRumble.Value = DataManager.inst.GetSettingBool("ControllerVibrate", true);
 
             if (RTFile.FileExists(RTFile.ApplicationDirectory + "settings/functions.lss"))
             {
-                string rawProfileJSON = FileManager.inst.LoadJSONFile("settings/functions.lss");
+                string rawProfileJSON = RTFile.ReadFromFile(RTFile.ApplicationDirectory + "settings/functions.lss");
 
-                JSONNode jn = JSON.Parse(rawProfileJSON);
+                var jn = JSON.Parse(rawProfileJSON);
 
                 if (string.IsNullOrEmpty(jn["general"]["updated_speed"]))
                 {
                     jn["general"]["updated_speed"] = "True";
                     DataManager.inst.UpdateSettingEnum("ArcadeGameSpeed", DataManager.inst.GetSettingEnum("ArcadeGameSpeed", 2) + 1);
 
-                    RTFile.WriteToFile("settings/functions.lss", jn.ToString(3));
+                    RTFile.WriteToFile(RTFile.ApplicationDirectory + "settings/functions.lss", jn.ToString(3));
                 }
             }
             else
             {
-                JSONNode jn = JSON.Parse("{}");
+                var jn = JSON.Parse("{}");
 
                 jn["general"]["updated_speed"] = "True";
                 DataManager.inst.UpdateSettingEnum("ArcadeGameSpeed", DataManager.inst.GetSettingEnum("ArcadeGameSpeed", 2) + 1);
 
-                RTFile.WriteToFile("settings/functions.lss", jn.ToString(3));
+                RTFile.WriteToFile(RTFile.ApplicationDirectory + "settings/functions.lss", jn.ToString(3));
             }
         }
 

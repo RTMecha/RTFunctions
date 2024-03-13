@@ -107,10 +107,21 @@ namespace RTFunctions
 
 		#endregion
 
-		// PA Settings
-		#region Fullscreen
+		#region Default Settings
 
 		public static ConfigEntry<bool> Fullscreen { get; set; }
+
+		public static ConfigEntry<Resolutions> Resolution { get; set; }
+
+		public static ConfigEntry<int> MasterVol { get; set; }
+
+		public static ConfigEntry<int> MusicVol { get; set; }
+
+		public static ConfigEntry<int> SFXVol { get; set; }
+
+		public static ConfigEntry<ModLanguage> Language { get; set; }
+
+		public static ConfigEntry<bool> ControllerRumble { get; set; }
 
 		static void SetFullscreen(bool value)
 		{
@@ -120,14 +131,6 @@ namespace RTFunctions
 			SaveManager.inst.ApplyVideoSettings();
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
-
-		public static bool prevFullscreen;
-
-		#endregion
-
-		#region Resolution
-
-		public static ConfigEntry<Resolutions> Resolution { get; set; }
 
 		static void SetResolution(Resolutions value)
 		{
@@ -144,14 +147,6 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		public static Resolutions prevResolution;
-
-		#endregion
-
-		#region MasterVol
-
-		public static ConfigEntry<int> MasterVol { get; set; }
-
 		static void SetMasterVol(int value)
 		{
 			prevMasterVol = MasterVol.Value;
@@ -160,14 +155,6 @@ namespace RTFunctions
 
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
-
-		public static int prevMasterVol;
-
-		#endregion
-
-		#region MusicVol
-
-		public static ConfigEntry<int> MusicVol { get; set; }
 
 		static void SetMusicVol(int value)
 		{
@@ -178,14 +165,6 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		public static int prevMusicVol;
-
-		#endregion
-
-		#region SFXVol
-
-		public static ConfigEntry<int> SFXVol { get; set; }
-
 		static void SetSFXVol(int value)
 		{
 			prevSFXVol = SFXVol.Value;
@@ -195,25 +174,7 @@ namespace RTFunctions
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
 
-		public static int prevSFXVol;
-
-		#endregion
-
-		#region Language
-
-		public enum Lang
-		{
-			english,
-			spanish,
-			japanese,
-			thai,
-			russian,
-			pirate
-		}
-
-		public static ConfigEntry<Lang> Language { get; set; }
-
-		static void SetLanguage(Lang value)
+		static void SetLanguage(ModLanguage value)
 		{
 			prevLanguage = Language.Value;
 
@@ -221,14 +182,6 @@ namespace RTFunctions
 
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
-
-		public static Lang prevLanguage;
-
-		#endregion
-
-		#region Controller Rumble
-
-		public static ConfigEntry<bool> ControllerRumble { get; set; }
 
 		static void SetControllerRumble(bool value)
 		{
@@ -238,6 +191,18 @@ namespace RTFunctions
 
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
+
+		public static bool prevFullscreen;
+
+		public static Resolutions prevResolution;
+
+		public static int prevMasterVol;
+
+		public static int prevMusicVol;
+
+		public static int prevSFXVol;
+
+		public static ModLanguage prevLanguage;
 
 		public static bool prevControllerRumble;
 
@@ -275,7 +240,7 @@ namespace RTFunctions
 			MasterVol = Config.Bind("Settings", "Volume Master", 8, new ConfigDescription("Total volume.", new AcceptableValueRange<int>(0, 9)));
 			MusicVol = Config.Bind("Settings", "Volume Music", 9, new ConfigDescription("Music volume.", new AcceptableValueRange<int>(0, 9)));
 			SFXVol = Config.Bind("Settings", "Volume SFX", 9, new ConfigDescription("SFX volume.", new AcceptableValueRange<int>(0, 9)));
-			Language = Config.Bind("Settings", "Language", Lang.english, "This is currently here for testing purposes. This version of the game has not been translated yet.");
+			Language = Config.Bind("Settings", "Language", ModLanguage.English, "This is currently here for testing purposes. This version of the game has not been translated yet.");
 			ControllerRumble = Config.Bind("Settings", "Controller Vibrate", true, "If the controllers should vibrate or not.");
 
 			BGReactiveLerp = Config.Bind("Level Backgrounds", "Reactive Color Lerp", true, "If on, reactive color will lerp from base color to reactive color. Otherwise, the reactive color will be added to the base color.");
@@ -290,6 +255,16 @@ namespace RTFunctions
 
 			Updater.UseNewUpdateMethod = UseNewUpdateMethod.Value;
 
+			DisplayName.SettingChanged += DisplayNameChanged;
+            Fullscreen.SettingChanged += DefaultSettingsChanged;
+			Resolution.SettingChanged += DefaultSettingsChanged;
+			MasterVol.SettingChanged += DefaultSettingsChanged;
+			MusicVol.SettingChanged += DefaultSettingsChanged;
+			SFXVol.SettingChanged += DefaultSettingsChanged;
+			Language.SettingChanged += DefaultSettingsChanged;
+			ControllerRumble.SettingChanged += DefaultSettingsChanged;
+            LDM.SettingChanged += LDMChanged;
+            DiscordShowLevel.SettingChanged += DiscordChanged;
 			Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(UpdateSettings);
 
 			// Patchers
@@ -349,93 +324,6 @@ namespace RTFunctions
 			Logger.LogInfo($"Plugin RT Functions is loaded!");
 		}
 
-        void UseNewUpdateMethodChanged(object sender, EventArgs e)
-		{
-			Updater.UseNewUpdateMethod = UseNewUpdateMethod.Value;
-		}
-
-		static void UpdateSettings(object sender, EventArgs e)
-		{
-			Debug.unityLogger.logEnabled = DebugsOn.Value;
-
-			SetCameraRenderDistance();
-			SetAntiAliasing();
-
-			//Display Name
-			{
-				displayName = DisplayName.Value;
-				DataManager.inst.UpdateSettingString("s_display_name", DisplayName.Value);
-
-				player.sprName = displayName;
-
-				if (SteamWrapper.inst != null)
-				{
-					SteamWrapper.inst.user.displayName = displayName;
-				}
-
-				if (EditorManager.inst != null)
-				{
-					EditorManager.inst.SetCreatorName(displayName);
-				}
-			}
-
-			if (prevFullscreen != Fullscreen.Value)
-			{
-				SetFullscreen(Fullscreen.Value);
-				//FullscreenProp = Fullscreen.Value;
-			}
-
-			if (prevResolution != Resolution.Value)
-			{
-				SetResolution(Resolution.Value);
-				//ResolutionProp = Resolution.Value;
-			}
-
-			if (prevMasterVol != MasterVol.Value)
-			{
-				SetMasterVol(MasterVol.Value);
-				//MasterVolProp = MasterVol.Value;
-			}
-
-			if (prevMusicVol != MusicVol.Value)
-			{
-				SetMusicVol(MusicVol.Value);
-				//MusicVolProp = MusicVol.Value;
-			}
-
-			if (prevSFXVol != SFXVol.Value)
-			{
-				SetSFXVol(SFXVol.Value);
-				//SFXVolProp = SFXVol.Value;
-			}
-
-			if (prevLanguage != Language.Value)
-			{
-				SetLanguage(Language.Value);
-				//LanguageProp = Language.Value;
-			}
-
-			if (prevControllerRumble != ControllerRumble.Value)
-			{
-				SetControllerRumble(ControllerRumble.Value);
-				//ControllerRumbleProp = ControllerRumble.Value;
-			}
-
-			UpdateDiscordStatus(discordLevel, discordDetails, discordIcon, discordArt);
-
-			if (RTVideoManager.inst)
-			{
-				//RTVideoManager.inst.SetType(VideoBackgroundRenderType.Value);
-				if (RTVideoManager.inst.didntPlay && EnableVideoBackground.Value)
-				{
-					RTVideoManager.inst.Play(RTVideoManager.inst.currentURL, RTVideoManager.inst.currentAlpha);
-
-				}
-			}
-
-			SaveProfile();
-		}
-
 		void Update()
 		{
 			RTHelpers.screenScale = (float)Screen.width / 1920f;
@@ -458,9 +346,92 @@ namespace RTFunctions
 			RTDebugger.Update();
 		}
 
-		#region Patchers
+        #region Settings Changed
 
-		[HarmonyPatch(typeof(SystemManager), "Awake")]
+        void DiscordChanged(object sender, EventArgs e)
+		{
+			UpdateDiscordStatus(discordLevel, discordDetails, discordIcon, discordArt);
+		}
+
+		void LDMChanged(object sender, EventArgs e)
+		{
+			if (EditorManager.inst)
+			{
+				var list = Functions.Data.GameData.Current.BeatmapObjects.Where(x => x.LDM).ToList();
+				for (int i = 0; i < list.Count; i++)
+				{
+					Updater.UpdateProcessor(list[i]);
+				}
+			}
+		}
+
+		void DefaultSettingsChanged(object sender, EventArgs e)
+		{
+			if (prevFullscreen != Fullscreen.Value)
+				SetFullscreen(Fullscreen.Value);
+
+			if (prevResolution != Resolution.Value)
+				SetResolution(Resolution.Value);
+
+			if (prevMasterVol != MasterVol.Value)
+				SetMasterVol(MasterVol.Value);
+
+			if (prevMusicVol != MusicVol.Value)
+				SetMusicVol(MusicVol.Value);
+
+			if (prevSFXVol != SFXVol.Value)
+				SetSFXVol(SFXVol.Value);
+
+			if (prevLanguage != Language.Value)
+				SetLanguage(Language.Value);
+
+			if (prevControllerRumble != ControllerRumble.Value)
+				SetControllerRumble(ControllerRumble.Value);
+		}
+
+		void DisplayNameChanged(object sender, EventArgs e)
+		{
+			displayName = DisplayName.Value;
+			DataManager.inst.UpdateSettingString("s_display_name", DisplayName.Value);
+
+			player.sprName = displayName;
+
+			if (SteamWrapper.inst != null)
+				SteamWrapper.inst.user.displayName = displayName;
+
+			EditorManager.inst?.SetCreatorName(displayName);
+
+			SaveProfile();
+		}
+
+		void UseNewUpdateMethodChanged(object sender, EventArgs e)
+		{
+			Updater.UseNewUpdateMethod = UseNewUpdateMethod.Value;
+		}
+
+		static void UpdateSettings(object sender, EventArgs e)
+		{
+			Debug.unityLogger.logEnabled = DebugsOn.Value;
+
+			SetCameraRenderDistance();
+			SetAntiAliasing();
+
+			if (RTVideoManager.inst)
+			{
+				if (RTVideoManager.inst.didntPlay && EnableVideoBackground.Value)
+				{
+					RTVideoManager.inst.Play(RTVideoManager.inst.currentURL, RTVideoManager.inst.currentAlpha);
+				}
+			}
+
+			SaveProfile();
+		}
+
+        #endregion
+
+        #region Patchers
+
+        [HarmonyPatch(typeof(SystemManager), "Awake")]
 		[HarmonyPostfix]
 		static void DisableLoggers()
 		{
@@ -606,9 +577,11 @@ namespace RTFunctions
         public static Action<GameManager> EventsCoreGameThemePrefix { get; set; }
 		public static Action<EventManager, float> EventsCoreUpdateThemePrefix { get; set; }
 
-		#endregion
+        #endregion
 
-		public static IEnumerator Empty()
+        #region Misc Functions
+
+        public static IEnumerator Empty()
         {
 			yield break;
         }
@@ -882,7 +855,11 @@ namespace RTFunctions
 			DiscordRpc.UpdatePresence(DiscordController.inst.presence);
 		}
 
-		public static void SaveProfile()
+        #endregion
+
+        #region Profile
+
+        public static void SaveProfile()
 		{
 			var jn = JSON.Parse("{}");
 
@@ -1005,5 +982,7 @@ namespace RTFunctions
 				public float fq;
             }
 		}
-	}
+
+        #endregion
+    }
 }

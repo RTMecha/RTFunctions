@@ -1539,7 +1539,7 @@ namespace RTFunctions.Functions.Components.Player
             isTakingHit = true;
             CanTakeDamage = false;
 
-            AudioManager.inst.PlaySound(FunctionsPlugin.Language.Value == FunctionsPlugin.Lang.pirate ? "pirate_KillPlayer" : "HurtPlayer");
+            AudioManager.inst.PlaySound(FunctionsPlugin.Language.Value == ModLanguage.Pirate ? "pirate_KillPlayer" : "HurtPlayer");
         }
 
         public void InitAfterHit()

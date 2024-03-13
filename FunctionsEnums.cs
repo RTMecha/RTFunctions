@@ -1,11 +1,22 @@
 ﻿namespace RTFunctions
 {
+    public enum ModLanguage
+    {
+        English,
+        Spanish,
+        Japanese,
+        Thai,
+        Russian,
+        Pirate
+    }
+
     public enum DifficultyMode
     {
         ZenMode,
         Normal,
-        Life,
-        Hit
+        OneLife,
+        OneHit,
+        Practice
     }
 
     public enum Resolutions
