@@ -34,49 +34,39 @@ namespace RTFunctions.Functions
 		/// <summary>
 		/// Tries to get the game object associated with the beatmap object.
 		/// </summary>
-		/// <param name="_beatmapObject"></param>
+		/// <param name="beatmapObject"></param>
 		/// <param name="result"></param>
 		/// <returns>True if GameObject is not null, otherwise returns false.</returns>
-		public static bool TryGetGameObject(this BeatmapObject _beatmapObject, out GameObject result)
+		public static bool TryGetGameObject(this BeatmapObject beatmapObject, out GameObject result)
 		{
-			var b = _beatmapObject.GetGameObject();
-			if (b != null)
-			{
-				result = b;
-				return true;
-			}
-			result = null;
-			return false;
+			var b = beatmapObject.GetGameObject();
+			result = b;
+			return b != null;
 		}
 
 		/// <summary>
 		/// Gets the game object associated with the beatmap object.
 		/// </summary>
-		/// <param name="_beatmapObject"></param>
+		/// <param name="beatmapObject"></param>
 		/// <returns>GameObject from beatmapGameObjects if Catalyst is not installed, otherwise returns VisualObject from ILevelObject within Catalyst.</returns>
-		public static GameObject GetGameObject(this BeatmapObject _beatmapObject) => Updater.GetGameObject(_beatmapObject);
+		public static GameObject GetGameObject(this BeatmapObject beatmapObject) => Updater.GetGameObject(beatmapObject);
 
-		public static bool TryGetTransformChain(this BeatmapObject _beatmapObject, out List<Transform> result)
+		public static bool TryGetTransformChain(this BeatmapObject beatmapObject, out List<Transform> result)
 		{
-			var tf = _beatmapObject.GetTransformChain();
-			if (tf != null && tf.Count > 0 && !tf.Any(x => x == null))
-			{
-				result = tf;
-				return true;
-			}
-			result = null;
-			return false;
+			var tf = beatmapObject.GetTransformChain();
+			result = tf;
+			return tf != null && tf.Count > 0 && !tf.Any(x => x == null);
 		}
 
 		/// <summary>
 		/// Gets the transform parent chain associated with the beatmap object.
 		/// </summary>
-		/// <param name="_beatmapObject"></param>
+		/// <param name="beatmapObject"></param>
 		/// <returns>List of transforms ordered by the base parent to the actual game object.</returns>
-		public static List<Transform> GetTransformChain(this BeatmapObject _beatmapObject)
+		public static List<Transform> GetTransformChain(this BeatmapObject beatmapObject)
 		{
 			var list = new List<Transform>();
-			var tf1 = _beatmapObject.GetGameObject().transform;
+			var tf1 = beatmapObject.GetGameObject().transform;
 
 			while (tf1.parent != null && tf1.parent.gameObject.name != "GameObjects")
 			{
@@ -129,25 +119,15 @@ namespace RTFunctions.Functions
 		public static bool TryFind(string find, out GameObject result)
 		{
 			var e = GameObject.Find(find);
-			if (e != null)
-			{
-				result = e;
-				return true;
-			}
-			result = null;
-			return false;
+			result = e;
+			return e != null;
 		}
 
 		public static bool TryFind(this Transform tf, string find, out Transform result)
 		{
 			var e = tf.Find(find);
-			if (e != null)
-			{
-				result = e;
-				return true;
-			}
-			result = null;
-			return false;
+			result = e;
+			return e != null;
 		}
 
 		public static List<Transform> ChildList(this Transform transform)
@@ -197,6 +177,16 @@ namespace RTFunctions.Functions
 				action(result);
         }
 
+		public static void GetComponentsAndPerformActions<T>(this GameObject gameObject, params ComponentAction[] componentActions)
+		{
+			for (int i = 0; i < componentActions.Length; i++)
+			{
+				var comp = gameObject.GetComponent(componentActions[i].Type);
+				if (comp)
+					componentActions[i].Action?.Invoke(comp);
+			}
+		}
+
 		public static void GetComponentsAndPerformActions(this GameObject gameObject, Type[] types, Action<Component>[] actions)
         {
 			for (int i = 0; i < types.Length; i++)
@@ -210,17 +200,13 @@ namespace RTFunctions.Functions
 		public static RectTransform GetChildRT(this Transform transform, int index)
         {
 			var child = transform.GetChild(index);
-			if (child is RectTransform)
-				return (RectTransform)child;
-			return null;
+			return child is RectTransform rectTransform ? rectTransform : null;
         }
 
 		public static RectTransform FindRT(this Transform transform, string n)
         {
 			var find = transform.Find(n);
-			if (find is RectTransform)
-				return (RectTransform)find;
-			return null;
+			return find is RectTransform rectTransform ? rectTransform : null;
         }
 
 		public static RectTransform AsRT(this Transform transform) => (RectTransform)transform;
@@ -232,15 +218,15 @@ namespace RTFunctions.Functions
 		/// <summary>
 		/// Gets the entire parent chain, including the beatmap object itself.
 		/// </summary>
-		/// <param name="_beatmapObject"></param>
+		/// <param name="beatmapObject"></param>
 		/// <returns>List of parents ordered by the current beatmap object to the base parent with no other parents.</returns>
-		public static List<BeatmapObject> GetParentChain(this BeatmapObject _beatmapObject)
+		public static List<BeatmapObject> GetParentChain(this BeatmapObject beatmapObject)
 		{
-			List<BeatmapObject> beatmapObjects = new List<BeatmapObject>();
+			var beatmapObjects = new List<BeatmapObject>();
 
-			if (_beatmapObject != null)
+			if (beatmapObject != null)
 			{
-				var orig = _beatmapObject;
+				var orig = beatmapObject;
 				beatmapObjects.Add(orig);
 
 				while (!string.IsNullOrEmpty(orig.parent))
@@ -258,7 +244,7 @@ namespace RTFunctions.Functions
 
 		public static List<BeatmapObject> GetParentChainSimple(this BeatmapObject beatmapObject)
 		{
-			List<BeatmapObject> beatmapObjects = new List<BeatmapObject>();
+			var beatmapObjects = new List<BeatmapObject>();
 
 			var orig = beatmapObject;
 			beatmapObjects.Add(orig);
@@ -275,25 +261,26 @@ namespace RTFunctions.Functions
 		/// <summary>
 		/// Gets the every child connected to the beatmap object.
 		/// </summary>
-		/// <param name="_beatmapObject"></param>
+		/// <param name="beatmapObject"></param>
 		/// <returns>A full list tree with every child object.</returns>
-		public static List<List<BeatmapObject>> GetChildChain(this BeatmapObject _beatmapObject)
+		public static List<List<BeatmapObject>> GetChildChain(this BeatmapObject beatmapObject)
 		{
 			var lists = new List<List<BeatmapObject>>();
-			foreach (var beatmapObject in DataManager.inst.gameData.beatmapObjects)
+			for (int i = 0; i < DataManager.inst.gameData.beatmapObjects.Count; i++)
 			{
-				if (beatmapObject.GetParentChain() != null && beatmapObject.GetParentChain().Count > 0)
+				var parentChain = DataManager.inst.gameData.beatmapObjects[i].GetParentChain();
+				if (parentChain != null && parentChain.Count > 0)
 				{
-					var parentChain = beatmapObject.GetParentChain();
 					foreach (var parent in parentChain)
 					{
-						if (parent.id == _beatmapObject.id)
+						if (parent.id == beatmapObject.id)
 						{
 							lists.Add(parentChain);
 						}
 					}
 				}
 			}
+
 			return lists;
 		}
 
@@ -301,28 +288,24 @@ namespace RTFunctions.Functions
 		/// Checks whether the current time is within the objects' lifespan / if the object is alive.
 		/// </summary>
 		/// <returns>If alive returns true, otherwise returns false.</returns>
-		public static bool TimeWithinLifespan(this BeatmapObject _beatmapObject)
+		public static bool TimeWithinLifespan(this BeatmapObject beatmapObject)
 		{
 			var time = AudioManager.inst.CurrentAudioSource.time;
-			var st = _beatmapObject.StartTime;
-			var akt = _beatmapObject.autoKillType;
-			var ako = _beatmapObject.autoKillOffset;
-			var l = _beatmapObject.GetObjectLifeLength(_oldStyle: true);
-			if (time >= st && (time <= l + st && akt != AutoKillType.OldStyleNoAutokill && akt != AutoKillType.SongTime || akt == AutoKillType.OldStyleNoAutokill || time < ako && _beatmapObject.autoKillType == AutoKillType.SongTime))
-			{
-				return true;
-			}
-			return false;
+			var st = beatmapObject.StartTime;
+			var akt = beatmapObject.autoKillType;
+			var ako = beatmapObject.autoKillOffset;
+			var l = beatmapObject.GetObjectLifeLength(_oldStyle: true);
+			return time >= st && (time <= l + st && akt != AutoKillType.OldStyleNoAutokill && akt != AutoKillType.SongTime || akt == AutoKillType.OldStyleNoAutokill || time < ako && beatmapObject.autoKillType == AutoKillType.SongTime);
 		}
 
 		/// <summary>
 		/// Gets every child connected to the beatmap objects' base parent.
 		/// </summary>
-		/// <param name="_beatmapObject"></param>
+		/// <param name="beatmapObject"></param>
 		/// <returns>A full list tree with every child object rooted from the base parent.</returns>
-		public static List<List<BeatmapObject>> GetStartTree(this BeatmapObject _beatmapObject)
+		public static List<List<BeatmapObject>> GetStartTree(this BeatmapObject beatmapObject)
 		{
-			var parentChain = _beatmapObject.GetParentChain();
+			var parentChain = beatmapObject.GetParentChain();
 			var parentTop = parentChain[parentChain.Count - 1];
 
 			return parentTop.GetChildChain();
@@ -331,26 +314,26 @@ namespace RTFunctions.Functions
 		/// <summary>
 		/// Gets beatmap object by id from any beatmap object list.
 		/// </summary>
-		/// <param name="_bms"></param>
+		/// <param name="beatmapObjects"></param>
 		/// <param name="_id"></param>
 		/// <returns>Beatmap object from list.</returns>
-		public static BeatmapObject ID(this List<BeatmapObject> _bms, string _id) => _bms.Find(x => x.id == _id);
+		public static BeatmapObject ID(this List<BeatmapObject> beatmapObjects, string _id) => beatmapObjects.Find(x => x.id == _id);
 
 		/// <summary>
 		/// Gets all beatmap objects that match the provided name.
 		/// </summary>
-		/// <param name="_bms"></param>
+		/// <param name="beatmapObjects"></param>
 		/// <param name="_name"></param>
 		/// <returns>A list of beatmap objects with a specific name.</returns>
-		public static List<BeatmapObject> AllName(this List<BeatmapObject> _bms, string _name) => _bms.FindAll(x => x.name == _name);
+		public static List<BeatmapObject> AllName(this List<BeatmapObject> beatmapObjects, string _name) => beatmapObjects.FindAll(x => x.name == _name);
 
 		/// <summary>
 		/// Gets all beatmap objects that contain the provided name.
 		/// </summary>
-		/// <param name="_bms"></param>
+		/// <param name="beatmapObjects"></param>
 		/// <param name="_name"></param>
 		/// <returns>A list of beatmap objects with a specified name contained in its own.</returns>
-		public static List<BeatmapObject> AllNameContains(this List<BeatmapObject> _bms, string _name) => _bms.FindAll(x => x.name.Contains(_name));
+		public static List<BeatmapObject> AllNameContains(this List<BeatmapObject> beatmapObjects, string _name) => beatmapObjects.FindAll(x => x.name.Contains(_name));
 
 		/// <summary>
 		/// Tries to get the parent of the beatmap object.
@@ -361,28 +344,23 @@ namespace RTFunctions.Functions
 		public static bool TryGetParent(this BeatmapObject beatmapObject, out BeatmapObject result)
 		{
 			var p = beatmapObject.GetParent();
-			if (p != null)
-			{
-				result = p;
-				return true;
-			}
-			result = null;
-			return false;
+			result = p;
+			return p != null;
 		}
 
 		/// <summary>
 		/// Gets the parent of the beatmap object.
 		/// </summary>
-		/// <param name="_beatmapObject"></param>
+		/// <param name="beatmapObject"></param>
 		/// <returns>Parent of the beatmap object.</returns>
-		public static BeatmapObject GetParent(this BeatmapObject _beatmapObject) => DataManager.inst.gameData.beatmapObjects.Find(x => x.id == _beatmapObject.parent);
+		public static BeatmapObject GetParent(this BeatmapObject beatmapObject) => DataManager.inst.gameData.beatmapObjects.Find(x => x.id == beatmapObject.parent);
 
-		public static bool TrySetParent(this BeatmapObject _beatmapObject, string id)
+		public static bool TrySetParent(this BeatmapObject beatmapObject, string id)
 		{
-			if (DataManager.inst.gameData.beatmapObjects.Find(x => x.id == id) != null)
+			if (DataManager.inst.gameData.beatmapObjects.Has(x => x.id == id))
 			{
-				_beatmapObject.parent = id;
-				Updater.UpdateProcessor(_beatmapObject);
+				beatmapObject.parent = id;
+				Updater.UpdateProcessor(beatmapObject);
 				return true;
 			}
 			return false;
@@ -390,7 +368,7 @@ namespace RTFunctions.Functions
 
 		public static DataManager.BeatmapTheme CreateTheme(this DataManager dataManager, string _name, string _id, Color _bg, Color _gui, List<Color> _players, List<Color> _objects, List<Color> _bgs)
 		{
-			DataManager.BeatmapTheme beatmapTheme = new DataManager.BeatmapTheme();
+			var beatmapTheme = new DataManager.BeatmapTheme();
 
 			beatmapTheme.name = _name;
 			beatmapTheme.id = _id;
@@ -409,9 +387,7 @@ namespace RTFunctions.Functions
 		{
 			var index = beatmapObject.events[type].FindIndex(x => x.eventTime > AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime) - 1;
 			if (index < 0)
-			{
 				index = 0;
-			}
 
 			return beatmapObject.events[type][index];
 		}
@@ -487,10 +463,7 @@ namespace RTFunctions.Functions
 
                 var x = RTMath.Lerp(prev, next, Ease.GetEaseFunction(nextKF.curveType.Name)(RTMath.InverseLerp(prevKF.eventTime, nextKF.eventTime, time)));
 
-                if (prevKFIndex == nextKFIndex)
-                    x = next;
-
-                if (float.IsNaN(x) || float.IsInfinity(x))
+                if (prevKFIndex == nextKFIndex || float.IsNaN(x) || float.IsInfinity(x))
                     x = next;
 
                 return x;
@@ -502,23 +475,16 @@ namespace RTFunctions.Functions
                 if (float.IsNaN(x))
                     x = 0f;
 
-                if (float.IsNaN(x) || float.IsInfinity(x))
-                    x = beatmapObject.events[type][beatmapObject.events[type].Count - 1].eventValues[value];
-
                 return x;
             }
         }
 
         #endregion
 
-        #region Catalyst
-
-        [Obsolete("Editor Catalyst is fully implemented with RTFunctions, no need to use this.")]
-		public static object GetILevelObject(this BeatmapObject _beatmapObject) => null;
-
-		#endregion
-
 		#region Event Keyframes
+
+		public static EventKeyframe GetEventKeyframe(this List<List<EventKeyframe>> eventKeyframes, int type, int index) => eventKeyframes[RTMath.Clamp(type, 0, eventKeyframes.Count - 1)].GetEventKeyframe(index);
+		public static EventKeyframe GetEventKeyframe(this List<EventKeyframe> eventKeyframes, int index) => eventKeyframes[RTMath.Clamp(index, 0, eventKeyframes.Count - 1)];
 
 		public static EventKeyframe ClosestEventKeyframe(int _type, object n = null) => DataManager.inst.gameData.eventObjects.allEvents[_type][ClosestEventKeyframe(_type)];
 
@@ -531,7 +497,7 @@ namespace RTFunctions.Functions
 		{
 			var allEvents = DataManager.inst.gameData.eventObjects.allEvents;
 			float time = AudioManager.inst.CurrentAudioSource.time;
-			if (allEvents[_type].Find(x => x.eventTime > time) != null)
+			if (allEvents[_type].Has(x => x.eventTime > time))
 			{
 				var nextKFE = allEvents[_type].Find(x => x.eventTime > time);
 				var nextKF = allEvents[_type].IndexOf(nextKFE);
@@ -624,13 +590,8 @@ namespace RTFunctions.Functions
 
 		public static bool TryGetValue(this EventKeyframe eventKeyframe, int index, out float result)
         {
-			if (eventKeyframe.eventValues.Length > index)
-            {
-				result = eventKeyframe.eventValues[index];
-				return true;
-            }
-			result = 0f;
-			return false;
+			result = eventKeyframe.eventValues.Length > index ? eventKeyframe.eventValues[index] : 0f;
+			return eventKeyframe.eventValues.Length > index;
         }
 
         #endregion
@@ -697,6 +658,7 @@ namespace RTFunctions.Functions
 
 			return jn;
 		}
+
 		public static JSONNode ToJSON(this Vector2 vector2)
         {
 			var jn = JSON.Parse("{}");
@@ -738,7 +700,7 @@ namespace RTFunctions.Functions
 
 		#endregion
 
-		#region Misc
+		#region UI
 
 		public static ColorBlock SetColorBlock(this ColorBlock cb, Color normal, Color highlighted, Color pressed, Color selected, Color disabled, float fade = 0.2f)
 		{
@@ -750,11 +712,6 @@ namespace RTFunctions.Functions
 			cb.fadeDuration = fade;
 			return cb;
 		}
-
-		public static void Save(this Sprite sprite, string path) => SpriteManager.SaveSprite(sprite, path);
-
-        public static EventKeyframe GetEventKeyframe(this List<List<EventKeyframe>> eventKeyframes, int type, int index) => eventKeyframes[RTMath.Clamp(type, 0, eventKeyframes.Count - 1)].GetEventKeyframe(index);
-		public static EventKeyframe GetEventKeyframe(this List<EventKeyframe> eventKeyframes, int index) => eventKeyframes[RTMath.Clamp(index, 0, eventKeyframes.Count - 1)];
 
 		public static void SetColor(this Material material, Color color) => material.color = color;
 
@@ -770,22 +727,8 @@ namespace RTFunctions.Functions
 
 		public static void SetSlider(this Slider slider, float value) => slider.value = value;
 
-		public static string ColorToHex(Color32 color) => color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
-
-		public static bool TryGetComponent<T>(this GameObject gameObject, out T result)
-        {
-			var t = gameObject.GetComponent<T>();
-			if (t != null)
-            {
-				result = t;
-				return true;
-            }
-			result = default(T);
-			return false;
-        }
-
 		public static void ClearAll(this Button.ButtonClickedEvent b)
-        {
+		{
 			b.m_Calls.m_ExecutingCalls.Clear();
 			b.m_Calls.m_PersistentCalls.Clear();
 			b.m_PersistentCalls.m_Calls.Clear();
@@ -793,7 +736,7 @@ namespace RTFunctions.Functions
 		}
 
 		public static void ClearAll(this InputField.OnChangeEvent i)
-        {
+		{
 			i.m_Calls.m_ExecutingCalls.Clear();
 			i.m_Calls.m_PersistentCalls.Clear();
 			i.m_PersistentCalls.m_Calls.Clear();
@@ -801,15 +744,15 @@ namespace RTFunctions.Functions
 		}
 
 		public static void ClearAll(this InputField.SubmitEvent s)
-        {
+		{
 			s.m_Calls.m_ExecutingCalls.Clear();
 			s.m_Calls.m_PersistentCalls.Clear();
 			s.m_PersistentCalls.m_Calls.Clear();
 			s.RemoveAllListeners();
-        }
-		
+		}
+
 		public static void ClearAll(this Toggle.ToggleEvent i)
-        {
+		{
 			i.m_Calls.m_ExecutingCalls.Clear();
 			i.m_Calls.m_PersistentCalls.Clear();
 			i.m_PersistentCalls.m_Calls.Clear();
@@ -817,61 +760,76 @@ namespace RTFunctions.Functions
 		}
 
 		public static void ClearAll(this Dropdown.DropdownEvent d)
-        {
+		{
 			d.m_Calls.m_ExecutingCalls.Clear();
 			d.m_Calls.m_PersistentCalls.Clear();
 			d.m_PersistentCalls.m_Calls.Clear();
 			d.RemoveAllListeners();
-        }
-		
+		}
+
 		public static void ClearAll(this Slider.SliderEvent s)
-        {
+		{
 			s.m_Calls.m_ExecutingCalls.Clear();
 			s.m_Calls.m_PersistentCalls.Clear();
 			s.m_PersistentCalls.m_Calls.Clear();
 			s.RemoveAllListeners();
-        }
-		
+		}
+
 		public static void ClearAll(this Scrollbar.ScrollEvent s)
-        {
+		{
 			s.m_Calls.m_ExecutingCalls.Clear();
 			s.m_Calls.m_PersistentCalls.Clear();
 			s.m_PersistentCalls.m_Calls.Clear();
 			s.RemoveAllListeners();
-        }
+		}
 
 		public static void NewOnClickListener(this Button b, UnityAction unityAction)
-        {
+		{
 			b.onClick.ClearAll();
 			b.onClick.AddListener(unityAction);
-        }
+		}
 
 		public static void NewValueChangedListener(this InputField i, string value, UnityAction<string> unityAction)
-        {
+		{
 			i.onValueChanged.ClearAll();
 			i.text = value;
 			i.onValueChanged.AddListener(unityAction);
-        }
-		
+		}
+
 		public static void NewValueChangedListener(this Toggle i, bool value, UnityAction<bool> unityAction)
-        {
+		{
 			i.onValueChanged.ClearAll();
 			i.isOn = value;
 			i.onValueChanged.AddListener(unityAction);
-        }
-		
+		}
+
 		public static void NewValueChangedListener(this Dropdown d, int value, UnityAction<int> unityAction)
-        {
+		{
 			d.onValueChanged.ClearAll();
 			d.value = value;
 			d.onValueChanged.AddListener(unityAction);
-        }
+		}
 
 		public static void NewValueChangedListener(this Slider slider, float value, UnityAction<float> unityAction)
-        {
+		{
 			slider.onValueChanged.ClearAll();
 			slider.value = value;
 			slider.onValueChanged.AddListener(unityAction);
+		}
+
+		#endregion
+
+		#region Misc
+
+		public static void Save(this Sprite sprite, string path) => SpriteManager.SaveSprite(sprite, path);
+
+		public static string ColorToHex(Color32 color) => color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
+
+		public static bool TryGetComponent<T>(this GameObject gameObject, out T result)
+        {
+			var t = gameObject.GetComponent<T>();
+			result = t;
+			return t != null;
         }
 
 		public static Component ReplaceComponent(this Component component, Component newComponent)
@@ -880,34 +838,22 @@ namespace RTFunctions.Functions
 
 			Object.DestroyImmediate(component);
 
-			if (gameObject != null)
+            try
+			{
 				return gameObject.AddComponent(newComponent.GetType());
-			return null;
+			}
+            catch
+            {
+				return null;
+            }
         }
 
-		public static float[] ConvertByteToFloat(byte[] array)
+		public static void AddSet<TKey, TValue>(this Dictionary<TKey, TValue> keyValuePairs, TKey key, TValue value)
 		{
-			float[] floatArr = new float[array.Length / 4];
-			for (int i = 0; i < floatArr.Length; i++)
-			{
-				if (BitConverter.IsLittleEndian)
-					Array.Reverse(array, i * 4, 4);
-				floatArr[i] = BitConverter.ToSingle(array, i * 4) / 0x80000000;
-			}
-			return floatArr;
-		}
-
-		public static byte[] ConvertFloatToByte(float[] array)
-		{
-			byte[] byteArr = new byte[array.Length * 4];
-			for (int i = 0; i < array.Length; i++)
-			{
-				var bytes = BitConverter.GetBytes(array[i] * 0x80000000);
-				Array.Copy(bytes, 0, byteArr, i * 4, bytes.Length);
-				if (BitConverter.IsLittleEndian)
-					Array.Reverse(byteArr, i * 4, 4);
-			}
-			return byteArr;
+			if (!keyValuePairs.ContainsKey(key))
+				keyValuePairs.Add(key, value);
+			else
+				keyValuePairs[key] = value;
 		}
 
 		public static void Add<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, KeyValuePair<TKey, TValue> keyValuePair)
@@ -915,21 +861,11 @@ namespace RTFunctions.Functions
 			dictionary.Add(keyValuePair.Key, keyValuePair.Value);
 		}
 
-		public static KeyValuePair<TKey, TValue> NewKeyValuePair<TKey, TValue>(TKey key, TValue value)
-		{
-			return new KeyValuePair<TKey, TValue>(key, value);
-		}
-
 		public static bool TryFind<T>(this List<T> ts, Predicate<T> match, out T item)
         {
 			var t = ts.Find(match);
-			if (t != null)
-            {
-				item = t;
-				return true;
-            }
-			item = default(T);
-			return true;
+			item = t;
+			return t != null;
         }
 
 		public static Type[] ToTypes<T>(this T[] ts)
@@ -946,14 +882,6 @@ namespace RTFunctions.Functions
 		
 		public static Vector2 X(this Vector2 vector3) => new Vector2(vector3.x, 0f);
 		public static Vector2 Y(this Vector2 vector3) => new Vector2(0f, vector3.y);
-
-		public static void AddSet<TKey, TValue>(this Dictionary<TKey, TValue> keyValuePairs, TKey key, TValue value)
-        {
-			if (!keyValuePairs.ContainsKey(key))
-				keyValuePairs.Add(key, value);
-			else
-				keyValuePairs[key] = value;
-        }
 
 		#endregion
 	}
