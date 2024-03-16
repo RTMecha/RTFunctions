@@ -178,23 +178,23 @@ namespace RTFunctions.Functions.Data
             {
             }
 
-            public Modifier(Type _type, string _value)
+            public Modifier(Type type, string value)
             {
-                type = _type;
-                value = _value;
+                this.type = type;
+				this.value = value;
             }
 
-            public Modifier(Type _type, string _command, string _value, BeatmapObject _beatmapObject)
+            public Modifier(Type type, string command, string value, BeatmapObject beatmapObject)
             {
-                commands[0] = _command;
-                type = _type;
-                value = _value;
-                modifierObject = _beatmapObject;
+                commands[0] = command;
+                this.type = type;
+				this.value = value;
+                modifierObject = beatmapObject;
             }
 
-            public Modifier(BeatmapObject _beatmapObject)
+            public Modifier(BeatmapObject beatmapObject)
             {
-                modifierObject = _beatmapObject;
+                modifierObject = beatmapObject;
             }
 
             public BeatmapObject modifierObject;
