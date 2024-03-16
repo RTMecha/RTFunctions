@@ -9,6 +9,7 @@ using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
 using BaseBeatmapTheme = DataManager.BeatmapTheme;
 using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 using BaseGameData = DataManager.GameData;
+using Modifier = RTFunctions.Functions.Data.BeatmapObject.Modifier;
 
 namespace RTFunctions.Functions.Data
 {
@@ -22,6 +23,230 @@ namespace RTFunctions.Functions.Data
 		public static GameData Current => (GameData)DataManager.inst.gameData;
 
 		public Dictionary<string, BaseBeatmapTheme> beatmapThemes = new Dictionary<string, BaseBeatmapTheme>();
+
+		public List<LevelModifier> levelModifiers = new List<LevelModifier>();
+
+		/// <summary>
+		/// Class for alpha EventTrigger support.
+		/// Known Triggers:
+		/// - Time
+		/// Known Event Types:
+		/// - Player_Heartrate
+		/// - Player Bubble
+		/// </summary>
+		public class LevelModifier
+        {
+			public Modifier TriggerModifier { get; set; }
+			public Modifier ActionModifier { get; set; }
+
+			public int retriggerAmount = -1;
+			public int current;
+
+			public void AssignModifier(Modifier.Type type, int i)
+			{
+				if (type == Modifier.Type.Trigger)
+					AssignTrigger(i);
+				if (type == Modifier.Type.Action)
+					AssignAction(i);
+            }
+
+			public void AssignModifier(int action, int trigger)
+			{
+				AssignTrigger(trigger);
+				AssignAction(action);
+            }
+
+			public void AssignTrigger(int i)
+            {
+				TriggerModifier = DefaultTriggers[Mathf.Clamp(i, 0, DefaultTriggers.Length - 1)];
+            }
+			
+			public void AssignAction(int i)
+            {
+				ActionModifier = DefaultActions[Mathf.Clamp(i, 0, DefaultActions.Length - 1)];
+            }
+
+			public void Activate()
+            {
+				if (Trigger())
+					Action();
+            }
+
+			public bool Trigger()
+            {
+				var modiifer = TriggerModifier;
+
+				if (modiifer == null || retriggerAmount != -1 && current > retriggerAmount)
+					return false;
+
+				current++;
+
+				var time = AudioManager.inst.CurrentAudioSource.time;
+
+				switch (modiifer.commands[0].ToLower())
+                {
+					case "none":
+                        {
+							return true;
+                        }
+					case "time":
+                        {
+							return modiifer.commands.Count > 3 && float.TryParse(modiifer.commands[1], out float min) && float.TryParse(modiifer.commands[2], out float max)
+								&& time >= min && time <= max;
+						}
+                }
+
+				return false;
+            }
+
+			public void Action()
+            {
+				var modifier = ActionModifier;
+
+				if (modifier == null)
+					return;
+
+				switch (modifier.commands[0].ToLower().Replace(" ", "").Replace("_", ""))
+                {
+					case "playerlocation":
+						{
+							float x = 0f;
+							float y = 0f;
+							float t = 0f;
+
+							if (modifier.commands.Count > 1 && float.TryParse(modifier.commands[1], out float xResult))
+								x = xResult;
+							
+							if (modifier.commands.Count > 2 && float.TryParse(modifier.commands[2], out float yResult))
+								y = yResult;
+							
+							if (modifier.commands.Count > 2 && float.TryParse(modifier.commands[2], out float tResult))
+								t = tResult;
+
+							foreach (var player in PlayerManager.Players)
+							{
+								if (!player.Player || !player.Player.playerObjects.ContainsKey("RB Parent") || !player.Player.playerObjects["RB Parent"].gameObject)
+									continue;
+
+								var tf = player.Player.playerObjects["RB Parent"].gameObject.transform;
+
+								if (t == 0f)
+								{
+									tf.localPosition = new Vector3(x, y, 0f);
+									continue;
+								}
+
+								var animation = new Animation.AnimationManager.Animation("Player Move");
+
+								animation.vector2Animations = new List<Animation.AnimationManager.Animation.AnimationObject<Vector2>>
+								{
+									new Animation.AnimationManager.Animation.AnimationObject<Vector2>(new List<Animation.Keyframe.IKeyframe<Vector2>>
+									{
+										new Animation.Keyframe.Vector2Keyframe(0f, tf.localPosition, Animation.Ease.Linear),
+										new Animation.Keyframe.Vector2Keyframe(t, new Vector2(x, y), Animation.Ease.Linear),
+										new Animation.Keyframe.Vector2Keyframe(t + 0.02f, new Vector2(x, y), Animation.Ease.Linear),
+									}, delegate (Vector2 x)
+									{
+										if (!tf)
+											return;
+
+										tf.localPosition = x;
+									}),
+								};
+							}
+
+							break;
+						}
+                }
+            }
+
+			public Modifier[] DefaultTriggers => new Modifier[]
+			{
+				new Modifier
+                {
+					type = Modifier.Type.Trigger,
+					constant = true,
+					commands = new List<string>
+					{
+						"Time",
+						"0", // Activation Time Range Min
+						"0", // Activation Time Range Max
+						"-1", // Retrigger Amount (what is this...)
+					},
+                }
+			};
+			public Modifier[] DefaultActions => new Modifier[]
+			{
+				new Modifier
+                {
+					type = Modifier.Type.Action,
+					constant = false,
+					commands = new List<string>
+                    {
+						"Player_Hit"
+                    },
+                }, // Player Hit
+				new Modifier
+                {
+					type = Modifier.Type.Action,
+					constant = false,
+					commands = new List<string>
+                    {
+						"Player_Death"
+                    },
+                }, // Player Death
+				new Modifier
+                {
+					type = Modifier.Type.Action,
+					constant = false,
+					commands = new List<string>
+                    {
+						"Level_Restart"
+                    },
+                }, // Level Restart
+				new Modifier
+                {
+					type = Modifier.Type.Action,
+					constant = false,
+					commands = new List<string>
+                    {
+						"Level_Rewind"
+                    },
+                }, // Level Rewind
+				new Modifier
+                {
+					type = Modifier.Type.Action,
+					constant = false,
+					commands = new List<string>
+                    {
+						"Player_Heartrate"
+                    },
+                }, // Player Heartrate
+				new Modifier
+                {
+					type = Modifier.Type.Action,
+					constant = false,
+					commands = new List<string>
+                    {
+						"Player Bubble",
+						"Text", // Text
+						"0", // Time?
+                    },
+                }, // Player Bubble (Probably won't have support for this yet)
+				new Modifier
+                {
+					type = Modifier.Type.Action,
+					constant = false,
+					commands = new List<string>
+                    {
+						"Player_Location",
+						"0", // X
+						"0", // Y
+						"0", // Time?
+                    }, // Set Player location
+                }, // Player Location
+			};
+        }
 
 		#region Methods
 
