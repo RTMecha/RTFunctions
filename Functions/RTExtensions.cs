@@ -603,16 +603,28 @@ namespace RTFunctions.Functions
 
 		public static bool Has<T>(this List<T> ts, Predicate<T> predicate) => ts.Find(predicate) != null;
 
+		public static void For<T>(this T[] ts, Action<T, int> action)
+        {
+			for (int i = 0; i < ts.Length; i++)
+				action?.Invoke(ts[i], i);
+        }
+		
+		public static void For<T>(this List<T> ts, Action<T, int> action)
+        {
+			for (int i = 0; i < ts.Count; i++)
+				action?.Invoke(ts[i], i);
+        }
+
 		public static Dictionary<TKey, TValue> ToDictionary<T, TKey, TValue>(this List<T> ts, Func<T, TKey> key, Func<T, TValue> value)
         {
 			var dictionary = new Dictionary<TKey, TValue>();
 
-			var keys = ts.Select(key).ToList();
-			var values = ts.Select(value).ToList();
+			var keys = ts.Select(key);
+			var values = ts.Select(value);
 
-			for (int i = 0; i < keys.Count; i++)
-				if (!dictionary.ContainsKey(keys[i]))
-					dictionary.Add(keys[i], values[i]);
+			for (int i = 0; i < keys.Count(); i++)
+				if (!dictionary.ContainsKey(keys.ElementAt(i)))
+					dictionary.Add(keys.ElementAt(i), values.ElementAt(i));
 
 			return dictionary;
         }
@@ -621,16 +633,20 @@ namespace RTFunctions.Functions
         {
 			DataManager.inst.gameData.beatmapObjects.ToDictionary(x => x.id, x => x);
 
+			DataManager.inst.gameData.beatmapObjects.ToDictionary(x => x.id);
+
 			var dictionary = new Dictionary<string, object>();
 
-			dictionary.Get<Component, string>("test");
+			dictionary.Get<string, Component>("test");
         }
 
+		public static string[] GetLinesArray(this string str) => str.Split(new string[] { "\n", "\n\r", "\r" }, StringSplitOptions.RemoveEmptyEntries);
+		
 		public static List<string> GetLines(this string str) => str.Split(new string[] { "\n", "\n\r", "\r" }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
 		public static T Get<T>(this List<object> list, int index) => (T)list[index];
 
-		public static T Get<T, TKey>(this Dictionary<TKey, object> keyValuePairs, TKey key) => (T)keyValuePairs[key];
+		public static T Get<TKey, T>(this Dictionary<TKey, object> keyValuePairs, TKey key) => (T)keyValuePairs[key];
 
 		public static Vector2 ToVector2(this Vector3 _v) => new Vector2(_v.x, _v.y);
 
