@@ -295,7 +295,7 @@ namespace RTFunctions.Functions.Managers.Networking
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
+                Debug.LogError($"{className}Error: {www.error}");
                 onError?.Invoke(www.error);
             }
             else
@@ -308,7 +308,7 @@ namespace RTFunctions.Functions.Managers.Networking
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
-                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
+                Debug.LogError($"{className}Error: {www.error}");
             else
                 callback?.Invoke(((DownloadHandlerAudioClip)www.downloadHandler).audioClip);
         }
@@ -326,7 +326,7 @@ namespace RTFunctions.Functions.Managers.Networking
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.LogError($"{className}Error: {www.error}\nMessage: {www.downloadHandler.text}");
+                Debug.LogError($"{className}Error: {www.error}");
                 onError?.Invoke(www.error);
             }
             else
