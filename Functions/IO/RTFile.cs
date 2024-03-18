@@ -4,10 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 using Debug = UnityEngine.Debug;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace RTFunctions.Functions.IO
 {
@@ -84,22 +85,60 @@ namespace RTFunctions.Functions.IO
 
 		public static bool DirectoryExists(string _directoryPath) => !string.IsNullOrEmpty(_directoryPath) && Directory.Exists(_directoryPath);
 
+
+		public static string ValidateFileName(string name)
+		{
+			string text = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
+			text += "+?";
+			string text2 = string.Format("([{0}]*\\.+$)|([{0}]+)", text);
+			return Regex.Replace(name, text2, string.Empty);
+		}
+		
+		public static string ValidateDirectory(string name)
+		{
+			string text = Regex.Escape(new string(Path.GetInvalidPathChars()));
+			text += "+?";
+			string text2 = string.Format("([{0}]*\\.+$)|([{0}]+)", text);
+			return Regex.Replace(name, text2, string.Empty);
+		}
+
 		public static void WriteToFile(string path, string json)
 		{
 			using var streamWriter = new StreamWriter(path);
 			streamWriter.Write(json);
 		}
 
+		public static void WriteToFile<T>(string path, T obj)
+        {
+			var binaryFormatter = new BinaryFormatter();
+			using var fileStream = File.Create(path);
+			binaryFormatter.Serialize(fileStream, obj);
+		}
+
 		public static string ReadFromFile(string path)
 		{
 			if (!FileExists(path))
 			{
-				Debug.LogFormat("{0}Could not load JSON file [{1}]", FunctionsPlugin.className, path);
+				Debug.Log($"{FunctionsPlugin.className}Could not load JSON file [{path}]");
 				return null;
 			}
+
 			using var streamReader = new StreamReader(path);
 			var result = streamReader.ReadToEnd().ToString();
 			return result;
+		}
+
+		public static T ReadFromFile<T>(string path)
+		{
+			if (!FileExists(path))
+			{
+				Debug.Log($"{FunctionsPlugin.className}Could not load file [{path}]");
+				return default;
+			}
+
+			var binaryFormatter = new BinaryFormatter();
+			using var fileStream = File.Open(path, FileMode.Open);
+			return (T)binaryFormatter.Deserialize(fileStream);
 		}
 
 		public static AudioType GetAudioType(string str)
