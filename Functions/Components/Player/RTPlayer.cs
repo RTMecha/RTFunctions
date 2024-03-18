@@ -1233,13 +1233,13 @@ namespace RTFunctions.Functions.Components.Player
                 var str = string.Format("Tail {0} Particles", i + 1);
                 if (playerObjects.ContainsKey(str))
                 {
-                    var ps = playerObjects[string.Format("Tail {0} Particles", i + 1)].values.Get<ParticleSystem, string>("ParticleSystem");
+                    var ps = playerObjects[string.Format("Tail {0} Particles", i + 1)].values.Get<string, ParticleSystem>("ParticleSystem");
                     var main = ps.main;
 
                     main.startColor = GetColor(psCol, 1f, psColHex);
 
                     ((MeshRenderer)playerObjects[string.Format("Tail {0}", i + 1)].values["MeshRenderer"]).material.color = GetColor(col, alpha, colHex);
-                    var trailRenderer = playerObjects[string.Format("Tail {0}", i + 1)].values.Get<TrailRenderer, string>("TrailRenderer");
+                    var trailRenderer = playerObjects[string.Format("Tail {0}", i + 1)].values.Get<string, TrailRenderer>("TrailRenderer");
 
                     trailRenderer.startColor = GetColor(colStart, alphaStart, colStartHex);
                     trailRenderer.endColor = GetColor(colEnd, alphaEnd, colEndHex);
