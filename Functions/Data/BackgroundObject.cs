@@ -61,7 +61,7 @@ namespace RTFunctions.Functions.Data
             }
         }
 
-        public GameObject BaseObject => gameObjects[0];
+        public GameObject BaseObject => gameObjects.Count > 0 ? gameObjects[0] : null;
 
         public List<GameObject> gameObjects = new List<GameObject>();
         public List<Transform> transforms = new List<Transform>();
@@ -94,6 +94,10 @@ namespace RTFunctions.Functions.Data
         public bool reactiveIncludesZ;
         public float reactiveZIntensity;
         public int reactiveZSample;
+
+		public List<List<BeatmapObject.Modifier>> modifiers = new List<List<BeatmapObject.Modifier>>();
+
+		public bool Enabled { get; set; } = true;
 
 		#region Methods
 
@@ -257,7 +261,7 @@ namespace RTFunctions.Functions.Data
 
 			#endregion
 
-			return new BackgroundObject
+			var bg = new BackgroundObject
 			{
 				active = active,
 				name = name,
@@ -290,6 +294,19 @@ namespace RTFunctions.Functions.Data
 				reactiveColSample = reactiveColSample,
 				reactiveCol = reactiveCol,
 			};
+
+			for (int i = 0; i < jn["modifiers"].Count; i++)
+			{
+				bg.modifiers.Add(new List<BeatmapObject.Modifier>());
+				for (int j = 0; j < jn["modifiers"][i].Count; j++)
+				{
+					var modifier = BeatmapObject.Modifier.Parse(jn["modifiers"][i][j]);
+					modifier.bgModifierObject = bg;
+					bg.modifiers[i].Add(modifier);
+				}
+			}
+
+			return bg;
 		}
 
 		public JSONNode ToJSON()
@@ -341,6 +358,10 @@ namespace RTFunctions.Functions.Data
 				jn["r_set"]["type"] = reactiveType.ToString();
 				jn["r_set"]["scale"] = reactiveScale.ToString();
 			}
+
+			for (int i = 0; i < modifiers.Count; i++)
+				for (int j = 0; j < modifiers[i].Count; j++)
+					jn["modifiers"][i][j] = modifiers[i][j].ToJSON();
 
 			return jn;
 		}
