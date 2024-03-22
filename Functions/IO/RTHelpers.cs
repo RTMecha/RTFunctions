@@ -478,9 +478,20 @@ namespace RTFunctions.Functions.IO
 			return LSColors.ColorFromHSV(num, sat, val);
 		}
 
-        #endregion
+		#endregion
 
-        public static void CreateCollider(this PolygonCollider2D collider2D, MeshFilter meshFilter)
+		public static string RandomAlphaNumericString(int length)
+		{
+			var result = "";
+			var str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+			while (result.Length < length)
+				result += str[Random.Range(0, str.Length)];
+
+			return result;
+		}
+
+		public static void CreateCollider(this PolygonCollider2D collider2D, MeshFilter meshFilter)
         {
 			if (meshFilter.mesh != null)
 			{
