@@ -69,6 +69,8 @@ namespace RTFunctions.Functions.Optimization
 
         public static bool UseNewUpdateMethod { get; set; }
 
+        public static float CurrentTime { get; set; }
+
         /// <summary>
         /// Updates animation system.
         /// </summary>
@@ -76,12 +78,14 @@ namespace RTFunctions.Functions.Optimization
         {
             if (!UseNewUpdateMethod)
             {
+                CurrentTime = AudioManager.inst.CurrentAudioSource.time;
                 levelProcessor?.Update(AudioManager.inst.CurrentAudioSource.time);
                 return;
             }
 
             var currentAudioTime = AudioManager.inst.CurrentAudioSource.time;
             var smoothedTime = Mathf.SmoothDamp(previousAudioTime, currentAudioTime, ref audioTimeVelocity, 1.0f / 50.0f);
+            CurrentTime = smoothedTime;
             levelProcessor?.Update(smoothedTime);
             previousAudioTime = smoothedTime;
         }
