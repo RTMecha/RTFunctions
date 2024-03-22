@@ -178,7 +178,7 @@ namespace RTFunctions
 		{
 			prevLanguage = Language.Value;
 
-			DataManager.inst.GetSettingInt("Language_i", (int)value);
+			DataManager.inst.UpdateSettingInt("Language_i", (int)value);
 
 			SaveManager.inst.UpdateSettingsFile(false);
 		}
