@@ -7,7 +7,11 @@
         Japanese,
         Thai,
         Russian,
-        Pirate
+        Pirate,
+        French,
+        Dutch,
+        AncientAutobot,
+        Matoran
     }
 
     public enum DifficultyMode
