@@ -67,6 +67,17 @@ namespace RTFunctions
 		public static string className = "[<color=#0E36FD>RT</color><color=#4FBDD1>Functions</color>] " + PluginInfo.PLUGIN_VERSION + "\n";
 		public static readonly Harmony harmony = new Harmony("rtfunctions");
 
+		public static Material blur;
+		public static Material GetBlur()
+		{
+			var assetBundle = AssetBundle.LoadFromFile(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/objectmaterials.asset");
+			var assetToLoad = assetBundle.LoadAsset<Material>("blur.mat");
+			var blurMat = Instantiate(assetToLoad);
+			assetBundle.Unload(false);
+
+			return blurMat;
+		}
+
 		#region Configs
 
 		public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
@@ -266,6 +277,8 @@ namespace RTFunctions
             LDM.SettingChanged += LDMChanged;
             DiscordShowLevel.SettingChanged += DiscordChanged;
 			Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(UpdateSettings);
+
+			blur = GetBlur();
 
 			// Patchers
 			{
