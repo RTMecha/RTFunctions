@@ -7,6 +7,7 @@ using UnityEngine;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Managers;
+using RTFunctions.Functions;
 
 namespace RTFunctions.Patchers
 {
@@ -23,38 +24,35 @@ namespace RTFunctions.Patchers
 		{
 			var backgroundObject = (BackgroundObject)__0;
 
+			if (!backgroundObject.active)
+				return false;
+
 			float scaleZ = backgroundObject.zscale;
 			int depth = backgroundObject.depth;
 
-			var gameObject = Instantiate(__instance.backgroundPrefab);
-			gameObject.name = __0.name;
+			var gameObject = __instance.backgroundPrefab.Duplicate(__instance.backgroundParent, backgroundObject.name);
 			gameObject.layer = 9;
-			gameObject.transform.SetParent(__instance.backgroundParent);
-			gameObject.transform.localPosition = new Vector3(__0.pos.x, __0.pos.y, 32f + backgroundObject.layer * 10f);
-			gameObject.transform.localScale = new Vector3(__0.scale.x, __0.scale.y, scaleZ);
-			gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, __0.rot));
+			gameObject.transform.localPosition = new Vector3(backgroundObject.pos.x, backgroundObject.pos.y, 32f + backgroundObject.layer * 10f);
+			gameObject.transform.localScale = new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, scaleZ);
+			gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, backgroundObject.rot));
 
-			// For now, removing selecting backgrounds.
 			Destroy(gameObject.GetComponent<SelectBackgroundInEditor>());
-			//gameObject.GetComponent<SelectBackgroundInEditor>().obj = __instance.backgroundObjects.Count;
 			__instance.backgroundObjects.Add(gameObject);
 
-				backgroundObject.gameObjects.Clear();
-				backgroundObject.transforms.Clear();
-				backgroundObject.renderers.Clear();
+			backgroundObject.gameObjects.Clear();
+			backgroundObject.transforms.Clear();
+			backgroundObject.renderers.Clear();
 
-				backgroundObject.gameObjects.Add(gameObject);
-				backgroundObject.transforms.Add(gameObject.transform);
-				backgroundObject.renderers.Add(gameObject.GetComponent<Renderer>());
+			backgroundObject.gameObjects.Add(gameObject);
+			backgroundObject.transforms.Add(gameObject.transform);
+			backgroundObject.renderers.Add(gameObject.GetComponent<Renderer>());
 
-			if (__0.drawFade)
+			if (backgroundObject.drawFade)
 			{
 				for (int i = 1; i < depth - backgroundObject.layer; i++)
 				{
-					var gameObject2 = Instantiate(__instance.backgroundFadePrefab, Vector3.zero, Quaternion.identity);
-					gameObject2.name = $"{__0.name} Fade [{i}]";
+					var gameObject2 = __instance.backgroundFadePrefab.Duplicate(gameObject.transform, $"{backgroundObject.name} Fade [{i}]");
 
-					gameObject2.transform.SetParent(gameObject.transform);
 					gameObject2.transform.localPosition = new Vector3(0f, 0f, i);
 					gameObject2.transform.localScale = Vector3.one;
 					gameObject2.transform.localRotation = Quaternion.Euler(Vector3.zero);
@@ -85,10 +83,19 @@ namespace RTFunctions.Patchers
 				__instance.sampleLow = __instance.samples.Skip(0).Take(56).Average((float a) => a) * 1000f;
 				__instance.sampleMid = __instance.samples.Skip(56).Take(100).Average((float a) => a) * 3000f;
 				__instance.sampleHigh = __instance.samples.Skip(156).Take(100).Average((float a) => a) * 6000f;
-				int num = 0;
-				foreach (var bg in DataManager.inst.gameData.backgroundObjects)
+
+				//foreach (var bg in DataManager.inst.gameData.backgroundObjects)
+				for (int bg = 0; bg < DataManager.inst.gameData.backgroundObjects.Count; bg++)
                 {
-					var backgroundObject = (BackgroundObject)bg;
+					var backgroundObject = (BackgroundObject)DataManager.inst.gameData.backgroundObjects[bg];
+
+					if (backgroundObject.active)
+					{
+						backgroundObject.BaseObject?.SetActive(backgroundObject.Enabled);
+					}
+
+					if (!backgroundObject.active || !backgroundObject.Enabled || !backgroundObject.BaseObject)
+						continue;
 
 					var beatmapTheme = RTHelpers.BeatmapTheme;
 
@@ -141,7 +148,7 @@ namespace RTFunctions.Patchers
 					}
 
 					if (backgroundObject.reactive)
-                    {
+					{
 						switch (backgroundObject.reactiveType)
 						{
 							case DataManager.GameData.BackgroundObject.ReactiveType.LOW:
@@ -155,49 +162,45 @@ namespace RTFunctions.Patchers
 								break;
 							case (DataManager.GameData.BackgroundObject.ReactiveType)3:
 								{
-									float x = __instance.samples[Mathf.Clamp(backgroundObject.reactiveScaSamples[0], 0, __instance.samples.Length - 1)];
-									float y = __instance.samples[Mathf.Clamp(backgroundObject.reactiveScaSamples[1], 0, __instance.samples.Length - 1)];
+									float xr = __instance.samples[Mathf.Clamp(backgroundObject.reactiveScaSamples[0], 0, __instance.samples.Length - 1)];
+									float yr = __instance.samples[Mathf.Clamp(backgroundObject.reactiveScaSamples[1], 0, __instance.samples.Length - 1)];
 
 									backgroundObject.reactiveSize =
-										new Vector2(x * backgroundObject.reactiveScaIntensity[0], y * backgroundObject.reactiveScaIntensity[1]) * backgroundObject.reactiveScale;
+										new Vector2(xr * backgroundObject.reactiveScaIntensity[0], yr * backgroundObject.reactiveScaIntensity[1]) * backgroundObject.reactiveScale;
 									break;
 								}
 						}
-						if (__instance.backgroundObjects.Count > num)
-                        {
-							float x = __instance.samples[Mathf.Clamp(backgroundObject.reactivePosSamples[0], 0, __instance.samples.Length - 1)];
-							float y = __instance.samples[Mathf.Clamp(backgroundObject.reactivePosSamples[1], 0, __instance.samples.Length - 1)];
 
-							float rot = __instance.samples[Mathf.Clamp(backgroundObject.reactiveRotSample, 0, __instance.samples.Length - 1)];
+						float x = __instance.samples[Mathf.Clamp(backgroundObject.reactivePosSamples[0], 0, __instance.samples.Length - 1)];
+						float y = __instance.samples[Mathf.Clamp(backgroundObject.reactivePosSamples[1], 0, __instance.samples.Length - 1)];
 
-							var gameObject = __instance.backgroundObjects[num];
+						float rot = __instance.samples[Mathf.Clamp(backgroundObject.reactiveRotSample, 0, __instance.samples.Length - 1)];
 
-							float z = __instance.samples[Mathf.Clamp(backgroundObject.reactiveZSample, 0, __instance.samples.Length - 1)];
+						var gameObject = backgroundObject.BaseObject;
 
-							gameObject.transform.localPosition =
-								new Vector3(backgroundObject.pos.x + x * backgroundObject.reactivePosIntensity[0],
-								backgroundObject.pos.y + y * backgroundObject.reactivePosIntensity[1],
-								32f + backgroundObject.layer * 10f + z * backgroundObject.reactiveZIntensity);
-							gameObject.transform.localScale =
-								new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, backgroundObject.zscale) +
-								new Vector3(backgroundObject.reactiveSize.x, backgroundObject.reactiveSize.y, 0f);
-							gameObject.transform.localRotation = Quaternion.Euler(
-								new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y,
-								backgroundObject.rot + rot * backgroundObject.reactiveRotIntensity));
-						}
+						float z = __instance.samples[Mathf.Clamp(backgroundObject.reactiveZSample, 0, __instance.samples.Length - 1)];
+
+						gameObject.transform.localPosition =
+							new Vector3(backgroundObject.pos.x + x * backgroundObject.reactivePosIntensity[0],
+							backgroundObject.pos.y + y * backgroundObject.reactivePosIntensity[1],
+							32f + backgroundObject.layer * 10f + z * backgroundObject.reactiveZIntensity);
+						gameObject.transform.localScale =
+							new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, backgroundObject.zscale) +
+							new Vector3(backgroundObject.reactiveSize.x, backgroundObject.reactiveSize.y, 0f);
+						gameObject.transform.localRotation = Quaternion.Euler(
+							new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y,
+							backgroundObject.rot + rot * backgroundObject.reactiveRotIntensity));
 					}
 					else
 					{
 						backgroundObject.reactiveSize = Vector2.zero;
-						if (__instance.backgroundObjects.Count > num)
-						{
-							var gameObject = __instance.backgroundObjects[num];
-							gameObject.transform.localPosition = new Vector3(backgroundObject.pos.x, backgroundObject.pos.y, 32f + backgroundObject.layer * 10f);
-							gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, backgroundObject.rot));
-							gameObject.transform.localScale = new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, backgroundObject.zscale);
-						}
+
+						var gameObject = backgroundObject.BaseObject;
+
+						gameObject.transform.localPosition = new Vector3(backgroundObject.pos.x, backgroundObject.pos.y, 32f + backgroundObject.layer * 10f);
+						gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, backgroundObject.rot));
+						gameObject.transform.localScale = new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, backgroundObject.zscale);
 					}
-					num++;
 				}
 			}
 
