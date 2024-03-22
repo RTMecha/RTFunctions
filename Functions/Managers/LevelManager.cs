@@ -1,4 +1,5 @@
 ﻿using LSFunctions;
+using RTFunctions.Functions.Components.Player;
 using RTFunctions.Functions.Data;
 using RTFunctions.Functions.IO;
 using RTFunctions.Functions.Optimization;
@@ -181,16 +182,16 @@ namespace RTFunctions.Functions.Managers
             {
                 var customPlayer = new Data.Player.CustomPlayer(true, 0, null);
                 InputDataManager.inst.players.Add(customPlayer);
-                PlayerManager.allowController = true;
             }
-            else
-            {
-                PlayerManager.allowController = false;
-            }
+
+            PlayerManager.allowController = InputDataManager.inst.players.Count == 0;
 
             PlayerManager.LoadLocalModels?.Invoke();
 
             PlayerManager.AssignPlayerModels();
+
+            RTPlayer.LockBoost = false;
+            RTPlayer.SpeedMultiplier = 1f;
 
             GameManager.inst.introAnimator.SetTrigger("play");
             GameManager.inst.SpawnPlayers(DataManager.inst.gameData.beatmapData.checkpoints[0].pos);
