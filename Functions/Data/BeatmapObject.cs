@@ -198,6 +198,7 @@ namespace RTFunctions.Functions.Data
             }
 
             public BeatmapObject modifierObject;
+			public BackgroundObject bgModifierObject;
 
             public bool constant = true;
 
