@@ -128,7 +128,6 @@ namespace RTFunctions.Functions.Optimization.Objects
         }
 
         float prevStartTime = 0f;
-        List<string> parentChainSet = new List<string>();
         bool spawned = false;
 
         public void Interpolate(float time)
@@ -222,19 +221,21 @@ namespace RTFunctions.Functions.Optimization.Objects
             if (prevStartTime != beatmapObject.startTime)
             {
                 parentObjects.ForEach(x => x.Active = false);
-                parentChainSet.Clear();
                 prevStartTime = beatmapObject.startTime;
             }
 
             LevelParentObject currentParent = null;
 
             int num = 0;
-            foreach (var parentObject in parentObjects)
+            //foreach (var parentObject in parentObjects)
+            for (int i = 0; i < parentObjects.Count; i++)
             {
+                var parentObject = parentObjects[i];
+
                 if (currentParent == null)
                     currentParent = parentObject;
 
-                if ((!currentParent.BeatmapObject.desync || num == 0 || /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active || !spawned))
+                if ((!currentParent.BeatmapObject.desync || num == 0 || !parentObject.Active || !spawned))
                 {
                     if (parentObject.ParentAdditivePosition)
                         positionAddedOffset += parentObject.ParentOffsetPosition;
@@ -291,9 +292,8 @@ namespace RTFunctions.Functions.Optimization.Objects
                     scaleParallax = parentObject.ParentParallaxScale;
                     rotationParallax = parentObject.ParentParallaxRotation;
 
-                    if (currentParent.BeatmapObject.desync && /*!parentChainSet.Contains(parentObject.ID)*/ !parentObject.Active)
+                    if (currentParent.BeatmapObject.desync && !parentObject.Active)
                     {
-                        //parentChainSet.Add(parentObject.ID);
                         parentObject.Active = true;
                         spawned = true;
                     }
