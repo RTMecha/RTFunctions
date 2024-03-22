@@ -1,5 +1,7 @@
 ﻿using LSFunctions;
+using RTFunctions.Functions.Components.Player;
 using RTFunctions.Functions.Managers;
+using RTFunctions.Functions.Optimization;
 using SimpleJSON;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,8 +70,16 @@ namespace RTFunctions.Functions.Data
 
 			public void Activate()
             {
-				if (Trigger())
+				var trigger = Trigger();
+				if ((trigger && !TriggerModifier.not || !trigger && TriggerModifier.not) && !TriggerModifier.active)
+				{
 					Action();
+
+					if (!TriggerModifier.constant)
+						TriggerModifier.active = true;
+				}
+				else if (!(trigger && !TriggerModifier.not || !trigger && TriggerModifier.not))
+					TriggerModifier.active = false;
             }
 
 			public bool Trigger()
@@ -81,7 +91,7 @@ namespace RTFunctions.Functions.Data
 
 				current++;
 
-				var time = AudioManager.inst.CurrentAudioSource.time;
+				var time = Updater.CurrentTime;
 
 				switch (modiifer.commands[0].ToLower())
                 {
@@ -91,8 +101,20 @@ namespace RTFunctions.Functions.Data
                         }
 					case "time":
                         {
-							return modiifer.commands.Count > 3 && float.TryParse(modiifer.commands[1], out float min) && float.TryParse(modiifer.commands[2], out float max)
-								&& time >= min && time <= max;
+							return modiifer.commands.Count > 2 && float.TryParse(modiifer.commands[1], out float min) && float.TryParse(modiifer.commands[2], out float max)
+								&& time >= min - 0.01f && time <= max + 0.1f;
+						}
+					case "playerhit":
+                        {
+							return PlayerManager.Players.Any(x => x.Player != null && x.Player.isTakingHit);
+						}
+					case "playerdeath":
+                        {
+							return PlayerManager.Players.Any(x => x.Player != null && x.Player.isDead);
+						}
+					case "levelstart":
+                        {
+							return AudioManager.inst.CurrentAudioSource.time < 0.1f;
 						}
                 }
 
@@ -157,10 +179,20 @@ namespace RTFunctions.Functions.Data
 
 							break;
 						}
-                }
+					case "playerboostlock":
+                        {
+							if (modifier.commands.Count > 3 && !string.IsNullOrEmpty(modifier.commands[1]) && bool.TryParse(modifier.commands[1], out bool lockBoost))
+                            {
+								RTPlayer.LockBoost = lockBoost;
+							}
+
+							break;
+                        }
+
+				}
             }
 
-			public Modifier[] DefaultTriggers => new Modifier[]
+			public static Modifier[] DefaultTriggers => new Modifier[]
 			{
 				new Modifier
                 {
@@ -168,14 +200,50 @@ namespace RTFunctions.Functions.Data
 					constant = true,
 					commands = new List<string>
 					{
-						"Time",
+						"time",
 						"0", // Activation Time Range Min
 						"0", // Activation Time Range Max
-						"-1", // Retrigger Amount (what is this...)
 					},
-                }
+					value = "",
+				}, // time
+				new Modifier
+                {
+					type = Modifier.Type.Trigger,
+					constant = false,
+					commands = new List<string>
+					{
+						"playerHit",
+						"0", // Activation Time Range Min
+						"0", // Activation Time Range Max
+					},
+					value = "",
+				}, // playerHit
+				new Modifier
+                {
+					type = Modifier.Type.Trigger,
+					constant = false,
+					commands = new List<string>
+					{
+						"playerDeath",
+						"0", // Activation Time Range Min
+						"0", // Activation Time Range Max
+					},
+					value = "",
+				}, // playerDeath
+				new Modifier
+                {
+					type = Modifier.Type.Trigger,
+					constant = false,
+					commands = new List<string>
+					{
+						"levelStart",
+						"0", // Activation Time Range Min
+						"0", // Activation Time Range Max
+					},
+					value = "",
+				}, // levelStart
 			};
-			public Modifier[] DefaultActions => new Modifier[]
+			public static Modifier[] DefaultActions => new Modifier[]
 			{
 				new Modifier
                 {
@@ -183,68 +251,58 @@ namespace RTFunctions.Functions.Data
 					constant = false,
 					commands = new List<string>
                     {
-						"Player_Hit"
+						"vnInk"
                     },
-                }, // Player Hit
+					value = "",
+                }, // vnInk
 				new Modifier
                 {
 					type = Modifier.Type.Action,
 					constant = false,
 					commands = new List<string>
                     {
-						"Player_Death"
+						"vnTimeline"
                     },
-                }, // Player Death
+					value = "",
+				}, // vnTimeline
 				new Modifier
                 {
 					type = Modifier.Type.Action,
 					constant = false,
 					commands = new List<string>
                     {
-						"Level_Restart"
-                    },
-                }, // Level Restart
-				new Modifier
-                {
-					type = Modifier.Type.Action,
-					constant = false,
-					commands = new List<string>
-                    {
-						"Level_Rewind"
-                    },
-                }, // Level Rewind
-				new Modifier
-                {
-					type = Modifier.Type.Action,
-					constant = false,
-					commands = new List<string>
-                    {
-						"Player_Heartrate"
-                    },
-                }, // Player Heartrate
-				new Modifier
-                {
-					type = Modifier.Type.Action,
-					constant = false,
-					commands = new List<string>
-                    {
-						"Player Bubble",
+						"playerBubble",
 						"Text", // Text
-						"0", // Time?
+						"0", // Time
                     },
-                }, // Player Bubble (Probably won't have support for this yet)
+					value = "",
+				}, // playerBubble (Probably won't have support for this yet)
 				new Modifier
                 {
 					type = Modifier.Type.Action,
 					constant = false,
 					commands = new List<string>
                     {
-						"Player_Location",
+						"playerLocation",
 						"0", // X
 						"0", // Y
-						"0", // Time?
-                    }, // Set Player location
-                }, // Player Location
+						"0", // Time
+                    },
+					value = "",
+				}, // playerLocation
+				new Modifier
+                {
+					type = Modifier.Type.Action,
+					constant = false,
+					commands = new List<string>
+                    {
+						"playerBoostLock",
+						"False", // Lock Enabled
+						"", // Show Bubble
+						"", // Bubble Time
+                    },
+					value = "",
+				}, // playerBoostLock
 			};
         }
 
@@ -289,9 +347,39 @@ namespace RTFunctions.Functions.Data
 			return gameData;
 		}
 
+		public static GameData ConvertedGameData { get; set; }
+
 		public static GameData ParseVG(JSONNode jn, bool parseThemes = true)
 		{
 			var gameData = new GameData();
+
+			for (int i = 0; i < jn["triggers"].Count; i++)
+            {
+				var levelModifier = new LevelModifier();
+
+				levelModifier.retriggerAmount = jn["triggers"][i]["event_retrigger"];
+
+				levelModifier.AssignModifier(jn["triggers"][i]["event_type"].AsInt, jn["triggers"][i]["event_trigger"].AsInt);
+
+				for (int j = 0; j < jn["triggers"][i]["event_data"].Count; j++)
+                {
+					var data = jn["triggers"][i]["event_data"][j];
+
+					if (levelModifier.ActionModifier.commands.Count - 2 < data.Count)
+                    {
+						levelModifier.ActionModifier.commands.Add(data);
+					}
+					else
+                    {
+						levelModifier.ActionModifier.commands[j + 1] = data;
+					}
+				}
+
+				levelModifier.TriggerModifier.commands[1] = jn["triggers"][i]["event_trigger_time"]["x"].AsFloat.ToString();
+				levelModifier.TriggerModifier.commands[2] = jn["triggers"][i]["event_trigger_time"]["y"].AsFloat.ToString();
+
+				gameData.levelModifiers.Add(levelModifier);
+			}
 
 			Debug.Log($"{FunctionsPlugin.className}Parsing BeatmapData");
 			gameData.beatmapData = LevelBeatmapData.ParseVG(jn);
@@ -457,7 +545,7 @@ namespace RTFunctions.Functions.Data
 						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
 
 					eventKeyframe.eventTime = kfjn["t"].AsFloat;
-					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat);
+					eventKeyframe.SetEventValues(kfjn["ev"][0].AsFloat, 1f, 1f);
 
 					gameData.eventObjects.allEvents[3].Add(eventKeyframe);
 				}
@@ -675,12 +763,28 @@ namespace RTFunctions.Functions.Data
 
 			Debug.Log($"{FunctionsPlugin.className}Checking keyframe counts");
 			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
+
+			ConvertedGameData = gameData;
+
 			return gameData;
 		}
 
 		public static GameData Parse(JSONNode jn, bool parseThemes = true)
 		{
 			var gameData = new GameData();
+
+			for (int i = 0; i < jn["modifiers"].Count; i++)
+            {
+				var modifier = jn["modifiers"][i];
+
+				var levelModifier = new LevelModifier();
+
+				levelModifier.ActionModifier = Modifier.Parse(modifier["action"]);
+				levelModifier.TriggerModifier = Modifier.Parse(modifier["trigger"]);
+				levelModifier.retriggerAmount = modifier["retrigger"].AsInt;
+
+				gameData.levelModifiers.Add(levelModifier);
+            }
 
 			gameData.beatmapData = LevelBeatmapData.Parse(jn);
 
@@ -810,6 +914,27 @@ namespace RTFunctions.Functions.Data
 			{
 				jn["parallax_settings"]["l"][i - 1]["d"] = 100 * i;
 				jn["parallax_settings"]["l"][i - 1]["c"] = 1 * i;
+			}
+
+			for (int i = 0; i < levelModifiers.Count; i++)
+			{
+				var levelModifier = levelModifiers[i];
+
+				var triggerIndex = LevelModifier.DefaultTriggers.ToList().FindIndex(x => x.commands[0] == levelModifier.TriggerModifier.commands[0]);
+				var actionIndex = LevelModifier.DefaultActions.ToList().FindIndex(x => x.commands[0] == levelModifier.ActionModifier.commands[0]);
+
+				if (triggerIndex < 0 || actionIndex < 0)
+					continue;
+
+				jn["triggers"][i]["event_trigger"] = triggerIndex;
+				jn["triggers"][i]["event_trigger_time"]["x"] = Parser.TryParse(levelModifier.TriggerModifier.commands[1], 0f);
+				jn["triggers"][i]["event_trigger_time"]["y"] = Parser.TryParse(levelModifier.TriggerModifier.commands[2], 0f);
+				jn["triggers"][i]["event_retrigger"] = levelModifier.retriggerAmount;
+
+				jn["triggers"][i]["event_type"] = actionIndex;
+
+				for (int j = 1; j < levelModifier.ActionModifier.commands.Count; j++)
+					jn["triggers"][i]["event_data"][j - 1] = levelModifier.ActionModifier.commands[j];
 			}
 
 			for (int i = 0; i < beatmapData.checkpoints.Count; i++)
@@ -1036,7 +1161,16 @@ namespace RTFunctions.Functions.Data
 					jn["assets"]["spr"][i]["d"][j] = imageData[j];
 				}
             }
-			
+
+			for (int i = 0; i < levelModifiers.Count; i++)
+			{
+				var levelModifier = levelModifiers[i];
+
+				jn["modifiers"][i]["action"] = levelModifier.ActionModifier.ToJSON();
+				jn["modifiers"][i]["trigger"] = levelModifier.TriggerModifier.ToJSON();
+				jn["modifiers"][i]["retrigger"] = levelModifier.retriggerAmount.ToString();
+			}
+
 			for (int i = 0; i < prefabObjects.Count; i++)
 				if (!((Data.PrefabObject)prefabObjects[i]).fromModifier)
 					jn["prefab_objects"][i] = ((Data.PrefabObject)prefabObjects[i]).ToJSON();
