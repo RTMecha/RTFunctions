@@ -114,6 +114,11 @@ namespace RTFunctions.Patchers
 
             if (__instance.gameState == GameManager.State.Playing)
             {
+                for (int i = 0; i < GameData.Current.levelModifiers.Count; i++)
+                {
+                    GameData.Current.levelModifiers[i].Activate();
+                }
+
                 if (EditorManager.inst == null)
                 {
                     foreach (var player in PlayerManager.Players)
