@@ -9,7 +9,9 @@ using BaseBeatmapTheme = DataManager.BeatmapTheme;
 namespace RTFunctions.Functions.Data
 {
     public class BeatmapTheme : BaseBeatmapTheme
-    {
+	{
+		public string filePath;
+
 		public Color guiAccentColor = Color.white;
 
 		public List<Color> effectColors = new List<Color>();

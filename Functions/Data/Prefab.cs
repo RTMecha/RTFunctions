@@ -71,6 +71,8 @@ namespace RTFunctions.Functions.Data
 
         }
 
+        public string filePath;
+
         public string description;
 
         public Dictionary<string, Sprite> SpriteAssets { get; set; } = new Dictionary<string, Sprite>();
