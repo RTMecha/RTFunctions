@@ -21,10 +21,11 @@ namespace RTFunctions.Functions.Managers
             try
             {
                 bgMaterial = BackgroundManager.inst.backgroundPrefab.GetComponent<MeshRenderer>().material;
+                interfaceBlur = GameManager.inst.menuUI.GetComponentInChildren<Image>();
             }
             catch (Exception ex)
             {
-                Debug.LogError(ex.ToString());
+                Debug.LogException(ex);
             }
 
             timelinePlayer = GameManager.inst.timeline.transform.Find("Base/position").GetComponent<Image>();
@@ -43,6 +44,7 @@ namespace RTFunctions.Functions.Managers
         public Transform extraBG;
         public Transform video;
         public Material bgMaterial;
+        public Image interfaceBlur;
 
         public Dictionary<string, object> assets = new Dictionary<string, object>();
     }
