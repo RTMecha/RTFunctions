@@ -326,6 +326,15 @@ namespace RTFunctions.Functions
 					jn["ed"]["markers"][i]["t"] = _data.beatmapData.markers[i].time.ToString();
 				}
 
+				for (int i = 0; i < _data.levelModifiers.Count; i++)
+				{
+					var levelModifier = _data.levelModifiers[i];
+
+					jn["modifiers"][i]["action"] = levelModifier.ActionModifier.ToJSON();
+					jn["modifiers"][i]["trigger"] = levelModifier.TriggerModifier.ToJSON();
+					jn["modifiers"][i]["retrigger"] = levelModifier.retriggerAmount.ToString();
+				}
+
 				for (int i = 0; i < AssetManager.SpriteAssets.Count; i++)
 				{
 					jn["assets"]["spr"][i]["n"] = AssetManager.SpriteAssets.ElementAt(i).Key;
