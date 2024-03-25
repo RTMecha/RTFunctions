@@ -95,6 +95,10 @@ namespace RTFunctions.Functions.Data
         public float reactiveZIntensity;
         public int reactiveZSample;
 
+		public Vector3 positionOffset;
+		public Vector3 scaleOffset;
+		public Vector3 rotationOffset;
+
 		public List<List<BeatmapObject.Modifier>> modifiers = new List<List<BeatmapObject.Modifier>>();
 
 		public bool Enabled { get; set; } = true;
@@ -365,6 +369,13 @@ namespace RTFunctions.Functions.Data
 
 			return jn;
 		}
+
+		public void ResetOffsets()
+        {
+			positionOffset = Vector3.zero;
+			scaleOffset = Vector3.zero;
+			rotationOffset = Vector3.zero;
+        }
 
 		#endregion
 
