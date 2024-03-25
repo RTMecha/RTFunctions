@@ -113,6 +113,8 @@ namespace RTFunctions.Functions.Managers
                     yield return null;
             }
 
+            WindowController.ResetResolution();
+
             Debug.Log($"{className}Parsing level...");
 
             GameManager.inst.gameState = GameManager.State.Parsing;
