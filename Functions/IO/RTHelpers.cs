@@ -48,6 +48,10 @@ namespace RTFunctions.Functions.IO
 			}
 		}
 
+		public static Vector2Int CurrentResolution => GetResolution((int)FunctionsPlugin.Resolution.Value);
+
+		public static Vector2Int GetResolution(int resolution) => new Vector2Int((int)DataManager.inst.resolutions[resolution].x, (int)DataManager.inst.resolutions[resolution].y);
+
 		public static DataManager.Difficulty GetDifficulty(int difficulty)
 			=> difficulty >= 0 && difficulty < DataManager.inst.difficulties.Count ?
 			DataManager.inst.difficulties[difficulty] : new DataManager.Difficulty("Unknown Difficulty", LSColors.HexToColor("424242"));
