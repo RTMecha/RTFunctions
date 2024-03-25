@@ -22,6 +22,7 @@ namespace RTFunctions.Functions.Managers
             {
                 bgMaterial = BackgroundManager.inst.backgroundPrefab.GetComponent<MeshRenderer>().material;
                 interfaceBlur = GameManager.inst.menuUI.GetComponentInChildren<Image>();
+                playerGUICanvasScaler = GameManager.inst.playerGUI.GetComponent<CanvasScaler>();
             }
             catch (Exception ex)
             {
@@ -33,6 +34,8 @@ namespace RTFunctions.Functions.Managers
             timelineRightCap = GameManager.inst.timeline.transform.Find("Base/Image 1").GetComponent<Image>();
             timelineLine = GameManager.inst.timeline.transform.Find("Base").GetComponent<Image>();
         }
+
+        public CanvasScaler playerGUICanvasScaler;
 
         public Image timelinePlayer;
         public Image timelineLine;
