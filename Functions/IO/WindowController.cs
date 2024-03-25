@@ -1,0 +1,66 @@
+﻿using RTFunctions.Functions.Managers;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace RTFunctions.Functions.IO
+{
+    public static class WindowController
+    {
+        [DllImport("user32.dll", EntryPoint = "SetWindowPos", SetLastError = true)]
+        public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowText", CharSet = CharSet.Unicode)]
+        public static extern bool SetWindowText(IntPtr hwnd, string lpString);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr FindWindow(string className, string windowName);
+
+        public static UnityEngine.Vector2Int WindowCenter => new UnityEngine.Vector2Int((UnityEngine.Display.main.systemWidth - UnityEngine.Screen.width) / 2, (UnityEngine.Display.main.systemHeight - UnityEngine.Screen.height) / 2);
+
+        public static Process CurrentProcess => Process.GetCurrentProcess();
+
+        public static IntPtr MainWindowHandler => CurrentProcess.MainWindowHandle;
+
+        static IntPtr windowHandle;
+        public static IntPtr WindowHandle
+           => windowHandle == IntPtr.Zero
+               ? windowHandle = FindWindow(null, UnityEngine.Application.productName)
+               : windowHandle;
+
+        public static void SetPosition(int x, int y)
+        {
+            SetWindowPos(WindowHandle, 0, x, y, 0, 0, 1);
+        }
+
+        public static void SetResolution(Resolutions value, bool fullScreen = false)
+        {
+            var res = DataManager.inst.resolutions[(int)value];
+
+            SetResolution((int)res.x, (int)res.y, fullScreen);
+        }
+
+        public static void SetResolution(int x, int y, bool fullScreen = false)
+        {
+            if (GameStorageManager.inst)
+                GameStorageManager.inst.playerGUICanvasScaler.referenceResolution = new UnityEngine.Vector2(x, y);
+
+            UnityEngine.Screen.SetResolution(x < 0 ? 1280 : x, y < 0 ? 720 : y, fullScreen);
+        }
+
+        public static void ResetResolution(bool setPosition = true)
+        {
+            if (setPosition)
+                SetPosition(WindowCenter.x, WindowCenter.y);
+
+            SetResolution(FunctionsPlugin.Resolution.Value, FunctionsPlugin.Fullscreen.Value);
+        }
+
+        public static void SetTitle(string title) => SetWindowText(WindowHandle, title);
+    }
+}

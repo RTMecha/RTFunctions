@@ -1312,6 +1312,9 @@ namespace RTFunctions.Functions.Data
 			"danger", // 30
 			"xyrot", // 31
 			"camdepth", // 32
+			"winbase", // 33
+			"winposx", // 34
+			"winposy", // 35
 		};
 
 		public static List<BaseEventKeyframe> DefaultKeyframes = new List<BaseEventKeyframe>
@@ -1636,6 +1639,36 @@ namespace RTFunctions.Functions.Data
                 },
 				id = LSText.randomNumString(8),
 			}, // Camera Depth
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[4]
+				{
+					0f, // Force Resolution (1 = true, includes position)
+					1280f, // X
+					720f, // Y
+					0f, // Allow Position
+                },
+				id = LSText.randomNumString(8),
+			}, // Window Base
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1]
+				{
+					0f, // Position X
+                },
+				id = LSText.randomNumString(8),
+			}, // Window Position X
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1]
+				{
+					0f, // Position Y
+                },
+				id = LSText.randomNumString(8),
+			}, // Window Position Y
 		};
 
 		public static bool SaveOpacityToThemes { get; set; } = false;
