@@ -23,9 +23,8 @@ namespace RTFunctions.Functions.IO
 
         public static UnityEngine.Vector2Int WindowCenter => new UnityEngine.Vector2Int((UnityEngine.Display.main.systemWidth - UnityEngine.Screen.width) / 2, (UnityEngine.Display.main.systemHeight - UnityEngine.Screen.height) / 2);
 
-        public static Process CurrentProcess => Process.GetCurrentProcess();
-
-        public static IntPtr MainWindowHandler => CurrentProcess.MainWindowHandle;
+        public static UnityEngine.Vector2Int CurrentPosition { get; set; }
+        public static UnityEngine.Vector2Int CurrentResolution { get; set; }
 
         static IntPtr windowHandle;
         public static IntPtr WindowHandle
@@ -35,6 +34,7 @@ namespace RTFunctions.Functions.IO
 
         public static void SetPosition(int x, int y)
         {
+            CurrentPosition = new UnityEngine.Vector2Int(x, y);
             SetWindowPos(WindowHandle, 0, x, y, 0, 0, 1);
         }
 
@@ -50,6 +50,7 @@ namespace RTFunctions.Functions.IO
             if (GameStorageManager.inst)
                 GameStorageManager.inst.playerGUICanvasScaler.referenceResolution = new UnityEngine.Vector2(x, y);
 
+            CurrentResolution = new UnityEngine.Vector2Int(x, y);
             UnityEngine.Screen.SetResolution(x < 0 ? 1280 : x, y < 0 ? 720 : y, fullScreen);
         }
 
@@ -62,5 +63,7 @@ namespace RTFunctions.Functions.IO
         }
 
         public static void SetTitle(string title) => SetWindowText(WindowHandle, title);
+
+        public static void ResetTitle() => SetWindowText(WindowHandle, "Project Arrhythmia");
     }
 }
