@@ -114,6 +114,7 @@ namespace RTFunctions.Functions.Managers
             }
 
             WindowController.ResetResolution();
+            WindowController.ResetTitle();
 
             Debug.Log($"{className}Parsing level...");
 
