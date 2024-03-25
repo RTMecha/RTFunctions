@@ -183,13 +183,13 @@ namespace RTFunctions.Patchers
 						gameObject.transform.localPosition =
 							new Vector3(backgroundObject.pos.x + x * backgroundObject.reactivePosIntensity[0],
 							backgroundObject.pos.y + y * backgroundObject.reactivePosIntensity[1],
-							32f + backgroundObject.layer * 10f + z * backgroundObject.reactiveZIntensity);
+							32f + backgroundObject.layer * 10f + z * backgroundObject.reactiveZIntensity) + backgroundObject.positionOffset;
 						gameObject.transform.localScale =
 							new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, backgroundObject.zscale) +
-							new Vector3(backgroundObject.reactiveSize.x, backgroundObject.reactiveSize.y, 0f);
+							new Vector3(backgroundObject.reactiveSize.x, backgroundObject.reactiveSize.y, 0f) + backgroundObject.scaleOffset;
 						gameObject.transform.localRotation = Quaternion.Euler(
 							new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y,
-							backgroundObject.rot + rot * backgroundObject.reactiveRotIntensity));
+							backgroundObject.rot + rot * backgroundObject.reactiveRotIntensity) + backgroundObject.rotationOffset);
 					}
 					else
 					{
@@ -197,9 +197,9 @@ namespace RTFunctions.Patchers
 
 						var gameObject = backgroundObject.BaseObject;
 
-						gameObject.transform.localPosition = new Vector3(backgroundObject.pos.x, backgroundObject.pos.y, 32f + backgroundObject.layer * 10f);
-						gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, backgroundObject.rot));
-						gameObject.transform.localScale = new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, backgroundObject.zscale);
+						gameObject.transform.localPosition = new Vector3(backgroundObject.pos.x, backgroundObject.pos.y, 32f + backgroundObject.layer * 10f) + backgroundObject.positionOffset;
+						gameObject.transform.localScale = new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, backgroundObject.zscale) + backgroundObject.scaleOffset;
+						gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, backgroundObject.rot) + backgroundObject.rotationOffset);
 					}
 				}
 			}
