@@ -1,3 +1,9 @@
+1.11.0 > [Mar 26, 2024]
+- Added BG modifier storage.
+- Added Window Controlling functionality for EventsCore.
+- Added Level Modiifers, based on alpha+ Event Triggers.
+- Fixed language config not actually updating the language setting and added new languages.
+- Added a config for allowing player controls while using an Input Field.
 1.10.2 > [Mar 14, 2024]
 - LDM Config now updates all objects with LDM on if the user is in the editor.
 - Cleaned up some config code.
