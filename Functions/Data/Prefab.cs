@@ -7,6 +7,7 @@ using RTFunctions.Functions.Managers;
 using BaseBeatmapObject = DataManager.GameData.BeatmapObject;
 using BasePrefab = DataManager.GameData.Prefab;
 using BasePrefabObject = DataManager.GameData.PrefabObject;
+using System;
 
 namespace RTFunctions.Functions.Data
 {

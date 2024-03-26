@@ -11,7 +11,7 @@ using BaseEventKeyframe = DataManager.GameData.EventKeyframe;
 
 namespace RTFunctions.Functions.Data
 {
-    public class BeatmapObject : BaseBeatmapObject
+	public class BeatmapObject : BaseBeatmapObject
 	{
 		public BeatmapObject() : base()
 		{

@@ -105,39 +105,55 @@ namespace RTFunctions.Functions.Data
 
 		#region Methods
 
-		public static BackgroundObject DeepCopy(BackgroundObject bg) => new BackgroundObject()
+		public static BackgroundObject DeepCopy(BackgroundObject bg)
 		{
-			active = bg.active,
-			color = bg.color,
-			drawFade = bg.drawFade,
-			kind = bg.kind,
-			layer = bg.layer,
-			name = bg.name,
-			pos = bg.pos,
-			reactive = bg.reactive,
-			reactiveScale = bg.reactiveScale,
-			reactiveSize = bg.reactiveSize,
-			reactiveType = bg.reactiveType,
-			rot = bg.rot,
-			scale = bg.scale,
-			text = bg.text,
-			depth = bg.depth,
-			shape = bg.shape,
-			zscale = bg.zscale,
-			rotation = bg.rotation,
+			var b = new BackgroundObject()
+			{
+				active = bg.active,
+				color = bg.color,
+				drawFade = bg.drawFade,
+				kind = bg.kind,
+				layer = bg.layer,
+				name = bg.name,
+				pos = bg.pos,
+				reactive = bg.reactive,
+				reactiveScale = bg.reactiveScale,
+				reactiveSize = bg.reactiveSize,
+				reactiveType = bg.reactiveType,
+				rot = bg.rot,
+				scale = bg.scale,
+				text = bg.text,
+				depth = bg.depth,
+				shape = bg.shape,
+				zscale = bg.zscale,
+				rotation = bg.rotation,
 
-			reactiveCol = bg.reactiveCol,
-			reactiveColSample = bg.reactiveColSample,
-			reactiveColIntensity = bg.reactiveColIntensity,
-			reactivePosSamples = bg.reactivePosSamples,
-			reactivePosIntensity = bg.reactivePosIntensity,
-			reactiveRotSample = bg.reactiveRotSample,
-			reactiveRotIntensity = bg.reactiveRotIntensity,
-			reactiveScaSamples = bg.reactiveScaSamples,
-			reactiveScaIntensity = bg.reactiveScaIntensity,
-			reactiveZIntensity = bg.reactiveZIntensity,
-			reactiveZSample = bg.reactiveZSample,
-		};
+				reactiveCol = bg.reactiveCol,
+				reactiveColSample = bg.reactiveColSample,
+				reactiveColIntensity = bg.reactiveColIntensity,
+				reactivePosSamples = bg.reactivePosSamples,
+				reactivePosIntensity = bg.reactivePosIntensity,
+				reactiveRotSample = bg.reactiveRotSample,
+				reactiveRotIntensity = bg.reactiveRotIntensity,
+				reactiveScaSamples = bg.reactiveScaSamples,
+				reactiveScaIntensity = bg.reactiveScaIntensity,
+				reactiveZIntensity = bg.reactiveZIntensity,
+				reactiveZSample = bg.reactiveZSample,
+			};
+
+			for (int i = 0; i < bg.modifiers.Count; i++)
+            {
+				b.modifiers.Add(new List<BeatmapObject.Modifier>());
+				for (int j = 0; j < bg.modifiers[i].Count; j++)
+                {
+					var modifier = BeatmapObject.Modifier.DeepCopy(bg.modifiers[i][j]);
+					modifier.bgModifierObject = b;
+					b.modifiers[i].Add(modifier);
+                }
+            }
+
+			return b;
+		}
 
 		public static BackgroundObject Parse(JSONNode jn)
 		{

@@ -3,6 +3,7 @@ using RTFunctions.Functions.Components.Player;
 using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
 using SimpleJSON;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -15,7 +16,7 @@ using Modifier = RTFunctions.Functions.Data.BeatmapObject.Modifier;
 
 namespace RTFunctions.Functions.Data
 {
-    public class GameData : BaseGameData
+	public class GameData : BaseGameData
 	{
 		public GameData()
 		{
@@ -30,11 +31,6 @@ namespace RTFunctions.Functions.Data
 
 		/// <summary>
 		/// Class for alpha EventTrigger support.
-		/// Known Triggers:
-		/// - Time
-		/// Known Event Types:
-		/// - Player_Heartrate
-		/// - Player Bubble
 		/// </summary>
 		public class LevelModifier
         {
@@ -42,6 +38,7 @@ namespace RTFunctions.Functions.Data
 			public Modifier ActionModifier { get; set; }
 
 			public int retriggerAmount = -1;
+			[NonSerialized]
 			public int current;
 
 			public void AssignModifier(Modifier.Type type, int i)
@@ -1694,5 +1691,8 @@ namespace RTFunctions.Functions.Data
 				backgroundObjects.AddRange(value);
 			}
 		}
+
+		[NonSerialized]
+		public new List<GameObject> backgroundGameObjects = new List<GameObject>();
 	}
 }

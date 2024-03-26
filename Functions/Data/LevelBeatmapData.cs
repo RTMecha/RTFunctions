@@ -1,10 +1,11 @@
 ﻿using SimpleJSON;
+using System;
 using System.Collections.Generic;
 using BaseBeatmapData = DataManager.GameData.BeatmapData;
 
 namespace RTFunctions.Functions.Data
 {
-    public class LevelBeatmapData : BaseBeatmapData
+	public class LevelBeatmapData : BaseBeatmapData
     {
         public LevelBeatmapData()
         {

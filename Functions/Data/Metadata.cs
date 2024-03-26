@@ -11,7 +11,7 @@ using BaseSong = DataManager.MetaData.Song;
 
 namespace RTFunctions.Functions.Data
 {
-    public class MetaData : BaseMetadata
+	public class MetaData : BaseMetadata
     {
 		public MetaData()
 		{
@@ -429,7 +429,8 @@ namespace RTFunctions.Functions.Data
         #endregion
     }
 
-    public class LevelArtist : BaseArtist
+	[Serializable]
+	public class LevelArtist : BaseArtist
     {
         public LevelArtist() : base()
 		{
@@ -455,7 +456,8 @@ namespace RTFunctions.Functions.Data
         #endregion
     }
 
-    public class LevelCreator : BaseCreator
+	[Serializable]
+	public class LevelCreator : BaseCreator
     {
         public LevelCreator() : base()
 		{
@@ -493,6 +495,7 @@ namespace RTFunctions.Functions.Data
 		#endregion
 	}
 
+	[Serializable]
 	public class LevelSong : BaseSong
     {
         public LevelSong() : base()
@@ -516,6 +519,7 @@ namespace RTFunctions.Functions.Data
 		#endregion
 	}
 
+	[Serializable]
 	public class LevelBeatmap : BaseBeatmap
     {
 		public LevelBeatmap() : base()
