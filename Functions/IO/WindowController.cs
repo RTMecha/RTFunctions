@@ -1,4 +1,5 @@
-﻿using RTFunctions.Functions.Managers;
+﻿using RTFunctions.Functions.Data;
+using RTFunctions.Functions.Managers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -47,10 +48,11 @@ namespace RTFunctions.Functions.IO
 
         public static void SetResolution(int x, int y, bool fullScreen = false)
         {
-            if (GameStorageManager.inst)
-                GameStorageManager.inst.playerGUICanvasScaler.referenceResolution = new UnityEngine.Vector2(x, y);
-
             CurrentResolution = new UnityEngine.Vector2Int(x, y);
+
+            if (GameManager.inst && !EditorManager.inst && (GameManager.inst.gameState == GameManager.State.Paused || GameManager.inst.gameState == GameManager.State.Finish))
+                ResetResolution();
+
             UnityEngine.Screen.SetResolution(x < 0 ? 1280 : x, y < 0 ? 720 : y, fullScreen);
         }
 
@@ -64,6 +66,6 @@ namespace RTFunctions.Functions.IO
 
         public static void SetTitle(string title) => SetWindowText(WindowHandle, title);
 
-        public static void ResetTitle() => SetWindowText(WindowHandle, "Project Arrhythmia");
+        public static void ResetTitle() => SetWindowText(WindowHandle, ProjectArrhythmia.Title);
     }
 }
