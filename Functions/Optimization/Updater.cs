@@ -867,5 +867,60 @@ namespace RTFunctions.Functions.Optimization
                 }
             }
         }
+
+        /// <summary>
+        /// Creates the GameObjects for the BackgroundObject.
+        /// </summary>
+        /// <param name="__instance"></param>
+        /// <param name="__result"></param>
+        /// <param name="__0"></param>
+        /// <returns></returns>
+        public static GameObject CreateBackgroundObject(BackgroundObject backgroundObject)
+        {
+            if (!backgroundObject.active)
+                return null;
+
+            float scaleZ = backgroundObject.zscale;
+            int depth = backgroundObject.depth;
+
+            var gameObject = BackgroundManager.inst.backgroundPrefab.Duplicate(BackgroundManager.inst.backgroundParent, backgroundObject.name);
+            gameObject.layer = 9;
+            gameObject.transform.localPosition = new Vector3(backgroundObject.pos.x, backgroundObject.pos.y, 32f + backgroundObject.layer * 10f);
+            gameObject.transform.localScale = new Vector3(backgroundObject.scale.x, backgroundObject.scale.y, scaleZ);
+            gameObject.transform.localRotation = Quaternion.Euler(new Vector3(backgroundObject.rotation.x, backgroundObject.rotation.y, backgroundObject.rot));
+
+            Object.Destroy(gameObject.GetComponent<SelectBackgroundInEditor>());
+            BackgroundManager.inst.backgroundObjects.Add(gameObject);
+
+            backgroundObject.gameObjects.Clear();
+            backgroundObject.transforms.Clear();
+            backgroundObject.renderers.Clear();
+
+            backgroundObject.gameObjects.Add(gameObject);
+            backgroundObject.transforms.Add(gameObject.transform);
+            backgroundObject.renderers.Add(gameObject.GetComponent<Renderer>());
+
+            if (backgroundObject.drawFade)
+            {
+                for (int i = 1; i < depth - backgroundObject.layer; i++)
+                {
+                    var gameObject2 = BackgroundManager.inst.backgroundFadePrefab.Duplicate(gameObject.transform, $"{backgroundObject.name} Fade [{i}]");
+
+                    gameObject2.transform.localPosition = new Vector3(0f, 0f, i);
+                    gameObject2.transform.localScale = Vector3.one;
+                    gameObject2.transform.localRotation = Quaternion.Euler(Vector3.zero);
+                    gameObject2.layer = 9;
+
+                    backgroundObject.gameObjects.Add(gameObject2);
+                    backgroundObject.transforms.Add(gameObject2.transform);
+                    backgroundObject.renderers.Add(gameObject2.GetComponent<Renderer>());
+                }
+            }
+
+            backgroundObject.SetShape(backgroundObject.shape.Type, backgroundObject.shape.Option);
+
+            return gameObject;
+        }
+
     }
 }
