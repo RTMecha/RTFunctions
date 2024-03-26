@@ -84,6 +84,7 @@ namespace RTFunctions
 		public static ConfigEntry<KeyCode> OpenPAPersistentFolder { get; set; }
 
 		public static ConfigEntry<bool> DebugsOn { get; set; }
+		public static ConfigEntry<bool> AllowControlsInputField { get; set; }
 		public static ConfigEntry<bool> IncreasedClipPlanes { get; set; }
 		private static ConfigEntry<string> DisplayName { get; set; }
 
@@ -229,6 +230,7 @@ namespace RTFunctions
 			DebugInfoToggleKey = Config.Bind("Debugging", "Show Debug Info Toggle Key", KeyCode.F6, "Shows a helpful info overlay with some information about the current gamestate.");
 			NotifyREPL = Config.Bind("Debugging", "Notify REPL", false, "If in editor, code ran will have their results be notified.");
 
+			AllowControlsInputField = Config.Bind("Game", "Allow Controls While Using InputField", true, "If you have this off, the player will not move while an InputField is being used.");
 			UseNewUpdateMethod = Config.Bind("Game", "Use New Update Method", true, "Possibly releases the fixed framerate of the game.");
             UseNewUpdateMethod.SettingChanged += UseNewUpdateMethodChanged;
 			ScreenshotsPath = Config.Bind("Game", "Screenshot Path", "screenshots", "The path to save screenshots to.");

@@ -900,7 +900,9 @@ namespace RTFunctions.Functions.Components.Player
             var anim = (Animator)playerObjects["Base"].values["Animator"];
             var player = playerObjects["RB Parent"].gameObject;
             var rb = (Rigidbody2D)playerObjects["RB Parent"].values["Rigidbody2D"];
-            if (PlayerAlive && Actions != null && CustomPlayer.active && CanMove && !RTHelpers.Paused && !LSHelpers.IsUsingInputField() && movementMode == MovementMode.KeyboardController && (!ModCompatibility.sharedFunctions.ContainsKey("EventsCoreEditorOffset") || !(bool)ModCompatibility.sharedFunctions["EventsCoreEditorOffset"]))
+            if (PlayerAlive && Actions != null && CustomPlayer.active && CanMove && !RTHelpers.Paused &&
+                (FunctionsPlugin.AllowControlsInputField.Value || !LSHelpers.IsUsingInputField()) && movementMode == MovementMode.KeyboardController &&
+                (!ModCompatibility.sharedFunctions.ContainsKey("EventsCoreEditorOffset") || !(bool)ModCompatibility.sharedFunctions["EventsCoreEditorOffset"]))
             {
                 float x = Actions.Move.Vector.x;
                 float y = Actions.Move.Vector.y;
