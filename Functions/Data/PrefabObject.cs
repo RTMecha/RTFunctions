@@ -11,6 +11,7 @@ namespace RTFunctions.Functions.Data
     {
         public PrefabObject() : base()
         {
+            editorData = new ObjectEditorData();
             events = new List<DataManager.GameData.EventKeyframe>
             {
                 new EventKeyframe(),
@@ -21,6 +22,7 @@ namespace RTFunctions.Functions.Data
 
         public PrefabObject(string name, float startTime) : base(name, startTime)
         {
+            editorData = new ObjectEditorData();
             events = new List<DataManager.GameData.EventKeyframe>
             {
                 new EventKeyframe(),
