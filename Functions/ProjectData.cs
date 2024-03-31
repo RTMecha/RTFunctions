@@ -395,31 +395,6 @@ namespace RTFunctions.Functions
 					{
 						Debug.LogFormat("{0}Saving " + levelThemes[i].id + " - " + levelThemes[i].name + " to level!", FunctionsPlugin.className);
 						jn["themes"][i] = ((BeatmapTheme)levelThemes[i]).ToJSON();
-						//jn["themes"][i]["id"] = levelThemes[i].id;
-						//jn["themes"][i]["name"] = levelThemes[i].name;
-						////if (ConfigEntries.SaveOpacityToThemes.Value)
-						//	jn["themes"][i]["gui"] = RTHelpers.ColorToHex(levelThemes[i].guiColor);
-						////else
-						////	jn["themes"][i]["gui"] = LSColors.ColorToHex(levelThemes[i].guiColor);
-						//jn["themes"][i]["bg"] = LSColors.ColorToHex(levelThemes[i].backgroundColor);
-						//for (int j = 0; j < levelThemes[i].playerColors.Count; j++)
-						//{
-						//	//if (ConfigEntries.SaveOpacityToThemes.Value)
-						//		jn["themes"][i]["players"][j] = RTHelpers.ColorToHex(levelThemes[i].playerColors[j]);
-						//	//else
-						//	//	jn["themes"][i]["players"][j] = LSColors.ColorToHex(levelThemes[i].playerColors[j]);
-						//}
-						//for (int j = 0; j < levelThemes[i].objectColors.Count; j++)
-						//{
-						//	//if (ConfigEntries.SaveOpacityToThemes.Value)
-						//		jn["themes"][i]["objs"][j] = RTHelpers.ColorToHex(levelThemes[i].objectColors[j]);
-						//	//else
-						//	//	jn["themes"][i]["objs"][j] = LSColors.ColorToHex(levelThemes[i].objectColors[j]);
-						//}
-						//for (int j = 0; j < levelThemes[i].backgroundColors.Count; j++)
-						//{
-						//	jn["themes"][i]["bgs"][j] = LSColors.ColorToHex(levelThemes[i].backgroundColors[j]);
-						//}
 					}
 				}
 
