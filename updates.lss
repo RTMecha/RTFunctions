@@ -1,3 +1,5 @@
+1.11.2 > [Apr 1, 2024]
+- Fixed an issue with parsing that prevented themes from being saved to a level if the themes shouldn't be added to the main theme list.
 1.11.1 > [Mar 29, 2024]
 - Fixed an issue with Prefab Objects not having the correct data type assigned to its editor data.
 1.11.0 > [Mar 26, 2024]
