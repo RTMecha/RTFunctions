@@ -26,6 +26,8 @@ namespace RTFunctions.Patchers
     [HarmonyPatch(typeof(DataManager))]
     public class DataManagerPatch : MonoBehaviour
     {
+        public static DataManager Instance { get => DataManager.inst; set => DataManager.inst = value; }
+
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
         static void StartPostfix(DataManager __instance)
@@ -61,11 +63,11 @@ namespace RTFunctions.Patchers
             var assetManager = new GameObject("AssetManager");
             assetManager.transform.SetParent(systemManager.transform);
             assetManager.AddComponent<AssetManager>();
-            
+
             var levelManager = new GameObject("LevelManager");
             levelManager.transform.SetParent(systemManager.transform);
             levelManager.AddComponent<LevelManager>();
-            
+
             var playerManager = new GameObject("PlayerManager");
             playerManager.transform.SetParent(systemManager.transform);
             playerManager.AddComponent<PlayerManager>();
@@ -287,6 +289,231 @@ namespace RTFunctions.Patchers
             __result = ((Functions.Data.Prefab)__0).ToJSON();
             return false;
         }
+
+        #region PlayerPrefs Patches
+
+        [HarmonyPatch("HasKey")]
+        [HarmonyPrefix]
+        static bool HasKeyPrefix(ref bool __result, string __0)
+        {
+            __result = ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0);
+            return false;
+        }
+        
+        [HarmonyPatch("SettingHasKey")]
+        [HarmonyPrefix]
+        static bool SettingHasKeyPrefix(ref bool __result, string __0)
+        {
+            __result = ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0);
+            return false;
+        }
+
+        [HarmonyPatch("UpdateSettingEnum")]
+        [HarmonyPrefix]
+        static bool UpdateSettingEnumPrefix(string __0, int __1)
+        {
+            ModCompatibility.sharedFunctions.AddSet(Instance.settingPrefix + __0, __1);
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingEnum")]
+        [HarmonyPrefix]
+        static bool GetSettingEnumPrefix(ref int __result, string __0, int __1)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0) && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0] is int num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = __1;
+            return false;
+        }
+
+        [HarmonyPatch("UpdateSettingString")]
+        [HarmonyPrefix]
+        static bool UpdateSettingStringPrefix(string __0, string __1)
+        {
+            ModCompatibility.sharedFunctions.AddSet(Instance.settingPrefix + __0, __1);
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingString", new Type[] { typeof(string) })]
+        [HarmonyPrefix]
+        static bool GetSettingStringPrefix1(ref string __result, string __0)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0) && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0] is string num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = "";
+            return false;
+        }
+        
+        [HarmonyPatch("GetSettingString", new Type[] { typeof(string), typeof(string) })]
+        [HarmonyPrefix]
+        static bool GetSettingStringPrefix2(ref string __result, string __0, string __1)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0) && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0] is string num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = __1;
+            return false;
+        }
+
+        [HarmonyPatch("UpdateSettingInt")]
+        [HarmonyPrefix]
+        static bool UpdateSettingIntPrefix(string __0, int __1)
+        {
+            ModCompatibility.sharedFunctions.AddSet(Instance.settingPrefix + __0, __1);
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingInt", new Type[] { typeof(string) })]
+        [HarmonyPrefix]
+        static bool GetSettingIntPrefix1(ref int __result, string __0)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0) && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0] is int num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = 0;
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingInt", new Type[] { typeof(string), typeof(int) })]
+        [HarmonyPrefix]
+        static bool GetSettingIntPrefix2(ref int __result, string __0, int __1)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0) && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0] is int num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = __1;
+            return false;
+        }
+
+        [HarmonyPatch("UpdateSettingFloat")]
+        [HarmonyPrefix]
+        static bool UpdateSettingFloatPrefix(string __0, float __1)
+        {
+            ModCompatibility.sharedFunctions.AddSet(Instance.settingPrefix + __0, __1);
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingFloat", new Type[] { typeof(string) })]
+        [HarmonyPrefix]
+        static bool GetSettingFloatPrefix1(ref float __result, string __0)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0) && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0] is float num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = 0f;
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingFloat", new Type[] { typeof(string), typeof(float) })]
+        [HarmonyPrefix]
+        static bool GetSettingFloatPrefix2(ref float __result, string __0, float __1)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0) && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0] is float num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = __1;
+            return false;
+        }
+        
+        [HarmonyPatch("UpdateSettingBool")]
+        [HarmonyPrefix]
+        static bool UpdateSettingBoolPrefix(string __0, bool __1)
+        {
+            ModCompatibility.sharedFunctions.AddSet(Instance.settingPrefix + __0, __1);
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingBool", new Type[] { typeof(string) })]
+        [HarmonyPrefix]
+        static bool GetSettingBoolPrefix1(ref bool __result, string __0)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0) && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0] is bool num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = false;
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingBool", new Type[] { typeof(string), typeof(bool) })]
+        [HarmonyPrefix]
+        static bool GetSettingBoolPrefix2(ref bool __result, string __0, bool __1)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0) && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0] is bool num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = __1;
+            return false;
+        }
+
+        [HarmonyPatch("UpdateSettingVector2D")]
+        [HarmonyPrefix]
+        static bool UpdateSettingVector2DPrefix(string __0, int __1, Vector2[] __2)
+        {
+            ModCompatibility.sharedFunctions.AddSet(Instance.settingPrefix + __0 + "_i", __1);
+            ModCompatibility.sharedFunctions.AddSet(Instance.settingPrefix + __0 + "_x", __2[__1].x);
+            ModCompatibility.sharedFunctions.AddSet(Instance.settingPrefix + __0 + "_y", __2[__1].y);
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingVector2D")]
+        [HarmonyPrefix]
+        static bool GetSettingVector2DPrefix(ref Vector2 __result, string __0)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0 + "_x") && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0 + "_x"] is float x &&
+                ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0 + "_y") && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0 + "_y"] is float y)
+            {
+                __result = new Vector2(x, y);
+                return false;
+            }
+
+            __result = Vector2.zero;
+            return false;
+        }
+
+        [HarmonyPatch("GetSettingVector2DIndex")]
+        [HarmonyPrefix]
+        static bool GetSettingVector2DIndexPrefix(ref int __result, string __0)
+        {
+            if (ModCompatibility.sharedFunctions.ContainsKey(Instance.settingPrefix + __0 + "_i") && ModCompatibility.sharedFunctions[Instance.settingPrefix + __0 + "_i"] is int num)
+            {
+                __result = num;
+                return false;
+            }
+
+            __result = 0;
+            return false;
+        }
+
+        #endregion
     }
 
     [HarmonyPatch(typeof(DataManager.GameData))]
