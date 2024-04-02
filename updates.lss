@@ -1,3 +1,5 @@
+1.11.4 > [Apr 2, 2024]
+- Added an onUpdate BeatmapObject function to fix some issues with other mods not updating things properly.
 1.11.3 > [Apr 1, 2024]
 - Replaced Unity's PlayerPrefs with my own system.
 1.11.2 > [Apr 1, 2024]
