@@ -298,6 +298,8 @@ namespace RTFunctions.Functions.Data
 			Solid
 		}
 
+		public Action onUpdate;
+
 		#region Methods
 
 		public static BeatmapObject DeepCopy(BeatmapObject orig, bool newID = true, bool copyVariables = true)
