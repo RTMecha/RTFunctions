@@ -295,9 +295,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             levelObject.SetActive(false);
 
             beatmapObject.levelObject = levelObject;
-
-            beatmapObject.onUpdate?.Invoke();
-
+            
             return levelObject;
         }
 
