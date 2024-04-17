@@ -59,7 +59,7 @@ namespace RTFunctions.Functions.IO
 		public static bool Paused => GameManager.inst && GameManager.inst.gameState == GameManager.State.Paused;
 		public static bool Playing => GameManager.inst && GameManager.inst.gameState == GameManager.State.Playing;
 
-		public static bool AprilFools => System.DateTime.Now.ToString("M") == "1 April";
+		public static bool AprilFools => System.DateTime.Now.ToString("M") == "1 April" || System.DateTime.Now.ToString("M") == "April 1";
 
 		public static float getPitch()
         {
