@@ -1,3 +1,7 @@
+1.11.6 > [Apr 19, 2024]
+- Fixed zen mode not working in editor.
+- Hopefully loading into levels with lots of prefabs is quicker now.
+- Fixed April fools bug... well after the day passed bruh
 1.11.5 > [Apr 2, 2024]
 - Removed the function from the last update due to it not working the way I needed it to.
 1.11.4 > [Apr 2, 2024]
