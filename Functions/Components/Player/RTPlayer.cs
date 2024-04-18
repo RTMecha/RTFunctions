@@ -189,7 +189,7 @@ namespace RTFunctions.Functions.Components.Player
 
         public bool CanTakeDamage
         {
-            get => DataManager.inst.GetSettingEnum("ArcadeDifficulty", 1) != 0 && !RTHelpers.Paused && (EditorManager.inst == null || !EditorManager.inst.isEditing) && canTakeDamage;
+            get => (EditorManager.inst || !PlayerManager.IsZenMode) && !RTHelpers.Paused && (EditorManager.inst == null || !EditorManager.inst.isEditing) && canTakeDamage;
             set => canTakeDamage = value;
         }
 
