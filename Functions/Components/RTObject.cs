@@ -5,6 +5,7 @@ using RTFunctions.Functions.Managers;
 using RTFunctions.Functions.Optimization;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -17,6 +18,7 @@ namespace RTFunctions.Functions.Components
     {
 		public bool CanDrag => ModCompatibility.sharedFunctions.ContainsKey("SelectedObjectCount") && ((int)ModCompatibility.sharedFunctions["SelectedObjectCount"]) < 2;
 		public static bool Enabled { get; set; }
+		public static bool CreateKeyframe { get; set; }
 
 		public bool Selected
 		{
@@ -51,10 +53,6 @@ namespace RTFunctions.Functions.Components
 
 		Renderer renderer;
 
-		public RTRotator rotator;
-
-		public EmptyActiveHandler emptyHandler;
-
 		#region Highlighting
 
 		public bool hovered;
@@ -86,11 +84,6 @@ namespace RTFunctions.Functions.Components
 			NegY
 		}
 
-		public RTScaler top;
-		public RTScaler left;
-		public RTScaler right;
-		public RTScaler bottom;
-
 		#endregion
 
 		#region Delegates
@@ -105,8 +98,9 @@ namespace RTFunctions.Functions.Components
 
 		void Awake()
 		{
-			if (GetComponent<Renderer>())
-				renderer = GetComponent<Renderer>();
+			var renderer = GetComponent<Renderer>();
+			if (renderer)
+				this.renderer = renderer;
 		}
 
 		public void GenerateDraggers()
@@ -114,65 +108,11 @@ namespace RTFunctions.Functions.Components
 			if (!Enabled || !EditorManager.inst || !Selected)
 				return;
 
-			if (!rotator)
-			{
-				var rotator = ObjectManager.inst.objectPrefabs[1].options[4].transform.GetChild(0).gameObject.Duplicate(transform.parent, "Rotator");
-				Destroy(rotator.GetComponent<SelectObjectInEditor>());
-				rotator.tag = "Helper";
-				rotator.transform.localScale = new Vector3(2f, 2f, 1f);
-				var rotatorRenderer = rotator.GetComponent<Renderer>();
-				rotatorRenderer.enabled = true;
-				rotatorRenderer.material.color = new Color(0f, 0f, 1f);
-				rotator.GetComponent<Collider2D>().enabled = true;
-				this.rotator = rotator.AddComponent<RTRotator>();
-				this.rotator.refObject = this;
-
-				rotator.SetActive(false);
-			}
-
-			if (!top)
-			{
-				top = CreateScaler(Axis.PosY, Color.green);
-				top.gameObject.SetActive(false);
-			}
-			if (!left)
-			{
-				left = CreateScaler(Axis.PosX, Color.red);
-				left.gameObject.SetActive(false);
-			}
-			if (!bottom)
-			{
-				bottom = CreateScaler(Axis.NegY, Color.green);
-				bottom.gameObject.SetActive(false);
-			}
-			if (!right)
-			{
-				right = CreateScaler(Axis.NegX, Color.red);
-				right.gameObject.SetActive(false);
-			}
-			if (!emptyHandler)
-			{
-				emptyHandler = transform.parent.gameObject.AddComponent<EmptyActiveHandler>();
-				emptyHandler.refObject = this;
-			}
-		}
-
-		RTScaler CreateScaler(Axis axis, Color color)
-		{
-			var scaler = ObjectManager.inst.objectPrefabs[3].options[0].transform.GetChild(0).gameObject.Duplicate(transform.parent, "Scaler");
-			Destroy(scaler.GetComponent<SelectObjectInEditor>());
-			scaler.tag = "Helper";
-			scaler.transform.localScale = new Vector3(2f, 2f, 1f);
-			scaler.GetComponent<Collider2D>().enabled = true;
-
-			var scalerRenderer = scaler.GetComponent<Renderer>();
-			scalerRenderer.enabled = true;
-			scalerRenderer.material.color = color;
-
-			var s = scaler.AddComponent<RTScaler>();
-			s.refObject = this;
-			s.axis = axis;
-			return s;
+			GameStorageManager.inst.objectRotator.refObject = this;
+			GameStorageManager.inst.objectScalerTop.refObject = this;
+			GameStorageManager.inst.objectScalerLeft.refObject = this;
+			GameStorageManager.inst.objectScalerBottom.refObject = this;
+			GameStorageManager.inst.objectScalerRight.refObject = this;
 		}
 
 		public void SetObject(BeatmapObject beatmapObject)
@@ -201,7 +141,8 @@ namespace RTFunctions.Functions.Components
 				{
 					var mod = ModCompatibility.mods["EditorManagement"];
 
-					if (!ModCompatibility.sharedFunctions.ContainsKey("ParentPickerActive") || !(bool)ModCompatibility.sharedFunctions["ParentPickerActive"])
+					if ((!ModCompatibility.sharedFunctions.ContainsKey("ParentPickerActive") || !(bool)ModCompatibility.sharedFunctions["ParentPickerActive"]) &&
+						(!ModCompatibility.sharedFunctions.ContainsKey("PrefabPickerActive") || !(bool)ModCompatibility.sharedFunctions["PrefabPickerActive"]))
 					{
 						TimelineObject timelineObject;
 
@@ -222,65 +163,133 @@ namespace RTFunctions.Functions.Components
 							if (mod.Methods.ContainsKey("AddSelectedObject") && Input.GetKey(KeyCode.LeftShift))
 								mod.Methods["AddSelectedObject"].DynamicInvoke(timelineObject);
 						}
+						return;
+					}
+
+					if (!ModCompatibility.sharedFunctions.ContainsKey("SelectedObjects") || ModCompatibility.sharedFunctions["SelectedObjects"] is not List<TimelineObject> ||
+						!ModCompatibility.sharedFunctions.ContainsKey("ParentPickerDisable") || !ModCompatibility.sharedFunctions.ContainsKey("RefreshObjectGUI"))
+						return;
+
+					var currentSelection = (TimelineObject)ModCompatibility.sharedFunctions["CurrentSelection"];
+					var selectedObjects = (List<TimelineObject>)ModCompatibility.sharedFunctions["SelectedObjects"];
+
+					if (ModCompatibility.sharedFunctions.ContainsKey("PrefabPickerActive")
+						&& (bool)ModCompatibility.sharedFunctions["PrefabPickerActive"])
+					{
+						if (string.IsNullOrEmpty(beatmapObject.prefabInstanceID))
+						{
+							EditorManager.inst.DisplayNotification("Object is not assigned to a prefab!", 2f, EditorManager.NotificationType.Error);
+							return;
+						}
+
+						if (ModCompatibility.sharedFunctions.ContainsKey("SelectinMultiple")
+						&& (bool)ModCompatibility.sharedFunctions["SelectinMultiple"])
+						{
+							foreach (var otherTimelineObject in selectedObjects.Where(x => x.IsBeatmapObject))
+							{
+								var otherBeatmapObject = otherTimelineObject.GetData<BeatmapObject>();
+
+								otherBeatmapObject.prefabID = beatmapObject.prefabID;
+								otherBeatmapObject.prefabInstanceID = beatmapObject.prefabInstanceID;
+
+								if (mod.Methods.ContainsKey("RenderTimelineObjectVoid"))
+									mod.Methods["RenderTimelineObjectVoid"].DynamicInvoke(otherTimelineObject);
+							}
+						}
+						else if (currentSelection.IsBeatmapObject)
+						{
+							var currentBeatmapObject = currentSelection.GetData<BeatmapObject>();
+
+							currentBeatmapObject.prefabID = beatmapObject.prefabID;
+							currentBeatmapObject.prefabInstanceID = beatmapObject.prefabInstanceID;
+
+							if (mod.Methods.ContainsKey("RenderTimelineObjectVoid"))
+								mod.Methods["RenderTimelineObjectVoid"].DynamicInvoke(currentSelection);
+							((Action<BeatmapObject>)ModCompatibility.sharedFunctions["RefreshObjectGUI"])?.Invoke(currentBeatmapObject);
+						}
+
+						((Action)ModCompatibility.sharedFunctions["ParentPickerDisable"])?.Invoke();
+
+						return;
 					}
 
 					if (ModCompatibility.sharedFunctions.ContainsKey("ParentPickerActive")
 						&& (bool)ModCompatibility.sharedFunctions["ParentPickerActive"]
-						&& ModCompatibility.sharedFunctions.ContainsKey("CurrentSelection") && ModCompatibility.sharedFunctions["CurrentSelection"] is TimelineObject
 						 && ModCompatibility.sharedFunctions.ContainsKey("ParentPickerDisable")
 						 && ModCompatibility.sharedFunctions.ContainsKey("RefreshObjectGUI"))
 					{
-						var currentSelection = (TimelineObject)ModCompatibility.sharedFunctions["CurrentSelection"];
-
-						var dictionary = new Dictionary<string, bool>();
-
-						foreach (var obj in DataManager.inst.gameData.beatmapObjects)
+						if (ModCompatibility.sharedFunctions.ContainsKey("SelectinMultiple")
+						&& (bool)ModCompatibility.sharedFunctions["SelectinMultiple"])
 						{
-							bool flag = true;
-							if (!string.IsNullOrEmpty(obj.parent))
+							bool success = false;
+							foreach (var otherTimelineObject in selectedObjects.Where(x => x.IsBeatmapObject))
 							{
-								string parentID = currentSelection.ID;
-								while (!string.IsNullOrEmpty(parentID))
-								{
-									if (parentID == obj.parent)
-									{
-										flag = false;
-										break;
-									}
-									int num2 = DataManager.inst.gameData.beatmapObjects.FindIndex(x => x.parent == parentID);
-									if (num2 != -1)
-									{
-										parentID = DataManager.inst.gameData.beatmapObjects[num2].id;
-									}
-									else
-									{
-										parentID = null;
-									}
-								}
+								success = SetParent(otherTimelineObject, beatmapObject);
 							}
-							if (!dictionary.ContainsKey(obj.id))
-								dictionary.Add(obj.id, flag);
+
+							if (!success)
+								EditorManager.inst.DisplayNotification("Cannot set parent to child / self!", 1f, EditorManager.NotificationType.Warning);
+							else
+								((Action)ModCompatibility.sharedFunctions["ParentPickerDisable"])?.Invoke();
+
+							return;
 						}
 
-						if (dictionary.ContainsKey(currentSelection.ID))
-							dictionary[currentSelection.ID] = false;
+						var tryParent = SetParent(currentSelection, beatmapObject);
 
-						if (dictionary.ContainsKey(beatmapObject.id) && dictionary[beatmapObject.id])
-						{
-							var bm = currentSelection.GetData<BeatmapObject>();
-							bm.parent = beatmapObject.id;
-							Updater.UpdateProcessor(bm);
-
-							((Action)ModCompatibility.sharedFunctions["ParentPickerDisable"])?.Invoke();
-							((Action<BeatmapObject>)ModCompatibility.sharedFunctions["RefreshObjectGUI"])?.Invoke(bm);
-						}
-						else
-						{
+						if (!tryParent)
 							EditorManager.inst.DisplayNotification("Cannot set parent to child / self!", 1f, EditorManager.NotificationType.Warning);
-						}
+						else
+							((Action)ModCompatibility.sharedFunctions["ParentPickerDisable"])?.Invoke();
 					}
 				}
 			}
+		}
+
+		public static bool SetParent(TimelineObject currentSelection, BeatmapObject beatmapObjectToParentTo)
+		{
+			var dictionary = new Dictionary<string, bool>();
+
+			foreach (var obj in DataManager.inst.gameData.beatmapObjects)
+			{
+				bool flag = true;
+				if (!string.IsNullOrEmpty(obj.parent))
+				{
+					string parentID = currentSelection.ID;
+					while (!string.IsNullOrEmpty(parentID))
+					{
+						if (parentID == obj.parent)
+						{
+							flag = false;
+							break;
+						}
+						int num2 = DataManager.inst.gameData.beatmapObjects.FindIndex(x => x.parent == parentID);
+						if (num2 != -1)
+						{
+							parentID = DataManager.inst.gameData.beatmapObjects[num2].id;
+						}
+						else
+						{
+							parentID = null;
+						}
+					}
+				}
+				if (!dictionary.ContainsKey(obj.id))
+					dictionary.Add(obj.id, flag);
+			}
+
+			if (dictionary.ContainsKey(currentSelection.ID))
+				dictionary[currentSelection.ID] = false;
+
+			if (dictionary.ContainsKey(beatmapObjectToParentTo.id) && dictionary[beatmapObjectToParentTo.id])
+			{
+				currentSelection.GetData<BeatmapObject>().parent = beatmapObjectToParentTo.id;
+				var bm = currentSelection.GetData<BeatmapObject>();
+				Updater.UpdateProcessor(bm);
+				((Action<BeatmapObject>)ModCompatibility.sharedFunctions["RefreshObjectGUI"])?.Invoke(bm);
+			}
+
+			return dictionary.ContainsKey(beatmapObjectToParentTo.id) && dictionary[beatmapObjectToParentTo.id];
 		}
 
 		void OnMouseEnter()
@@ -381,12 +390,17 @@ namespace RTFunctions.Functions.Components
 				index = beatmapObject.events[type].FindIndex(x => x.eventTime > timeOffset - 0.1f && x.eventTime < timeOffset + 0.1f);
 				AudioManager.inst.CurrentAudioSource.time = selectedKeyframe.eventTime + beatmapObject.StartTime;
 			}
-			else
+			else if (CreateKeyframe)
 			{
 				selectedKeyframe = EventKeyframe.DeepCopy((EventKeyframe)beatmapObject.events[type][nextIndex]);
 				selectedKeyframe.eventTime = timeOffset;
 				index = beatmapObject.events[type].Count;
 				beatmapObject.events[type].Add(selectedKeyframe);
+			}
+			else
+			{
+				index = beatmapObject.events[type].FindLastIndex(x => x.eventTime < timeOffset);
+				selectedKeyframe = (EventKeyframe)beatmapObject.events[type][index];
 			}
 
 			if (ModCompatibility.mods.ContainsKey("EditorManagement"))
@@ -407,15 +421,20 @@ namespace RTFunctions.Functions.Components
 				return;
 			}
 
+			if (ModCompatibility.sharedFunctions.ContainsKey("CurrentSelection") && ModCompatibility.sharedFunctions["CurrentSelection"] is TimelineObject currentSelection &&
+				currentSelection.ID == beatmapObject.id)
+			{
+				GameStorageManager.inst.objectDragger.position = new Vector3(transform.parent.position.x, transform.parent.position.y, transform.parent.position.z - 10f);
+				GameStorageManager.inst.objectDragger.rotation = transform.parent.rotation;
+			}
+
 			var m = 0f;
 
 			if (beatmapObject != null && ShowObjectsOnlyOnLayer && beatmapObject.editorData.layer != EditorManager.inst.layer)
 				m = -renderer.material.color.a + LayerOpacity;
 
 			if (!hovered && renderer != null && renderer.material.HasProperty("_Color"))
-            {
 				renderer.material.color += new Color(0f, 0f, 0f, m);
-            }
 
 			if (HighlightObjects && hovered && renderer != null && renderer.material.HasProperty("_Color"))
 			{
@@ -528,22 +547,6 @@ namespace RTFunctions.Functions.Components
 				if (dragging && mod.Methods.ContainsKey("RenderKeyframeDialog"))
 					mod.Methods["RenderKeyframeDialog"].DynamicInvoke(beatmapObject);
 			}
-
-			if (!EditorManager.inst || !Selected)
-            {
-				if (emptyHandler)
-					Destroy(emptyHandler);
-				if (rotator)
-					Destroy(rotator.gameObject);
-				if (top)
-					Destroy(top.gameObject);
-				if (left)
-					Destroy(left.gameObject);
-				if (bottom)
-					Destroy(bottom.gameObject);
-				if (right)
-					Destroy(right.gameObject);
-            }
 		}
 
         public List<HoverTooltip.Tooltip> tooltipLanguages = new List<HoverTooltip.Tooltip>();
