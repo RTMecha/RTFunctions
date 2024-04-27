@@ -66,7 +66,7 @@ namespace RTFunctions.Functions.Managers
         void Update() => objectDragger.gameObject.SetActive(EditorManager.inst && EditorManager.inst.isEditing &&
                 ModCompatibility.sharedFunctions.ContainsKey("SelectedObjectCount") && (int)ModCompatibility.sharedFunctions["SelectedObjectCount"] == 1 &&
                 ModCompatibility.sharedFunctions.ContainsKey("CurrentSelection") && ModCompatibility.sharedFunctions["CurrentSelection"] is TimelineObject currentSelection &&
-                currentSelection.IsBeatmapObject && currentSelection.GetData<BeatmapObject>().objectType != BeatmapObject.ObjectType.Empty &&
+                (currentSelection.IsBeatmapObject && currentSelection.GetData<BeatmapObject>().objectType != BeatmapObject.ObjectType.Empty || currentSelection.IsPrefabObject) &&
                 RTObject.Enabled);
 
         RTScaler CreateScaler(Axis axis, Color color)
