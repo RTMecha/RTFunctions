@@ -240,8 +240,7 @@ namespace RTFunctions.Functions.Optimization
                                 spawner.deactivateList.Sort((a, b) => a.KillTime.CompareTo(b.KillTime));
                                 spawner.RecalculateObjectStates();
 
-                                if (!beatmapObject.TimeWithinLifespan())
-                                    levelObject.SetActive(false);
+                                levelObject.SetActive(beatmapObject.TimeWithinLifespan());
 
                                 foreach (var levelParent in levelObject.parentObjects)
                                 {
@@ -270,10 +269,10 @@ namespace RTFunctions.Functions.Optimization
                             {
                                 var spawner = levelProcessor.engine.objectSpawner;
 
+                                levelObject.KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
+
                                 spawner.deactivateList.Sort((a, b) => a.KillTime.CompareTo(b.KillTime));
                                 spawner.RecalculateObjectStates();
-
-                                levelObject.KillTime = beatmapObject.StartTime + beatmapObject.GetObjectLifeLength(0.0f, true);
                             }
 
                             break;
