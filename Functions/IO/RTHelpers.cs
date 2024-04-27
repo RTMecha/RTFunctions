@@ -442,6 +442,7 @@ namespace RTFunctions.Functions.IO
 		}
 
 		public static System.Action<Data.BeatmapObject.Modifier> VerifyModifier { get; set; }
+		public static System.Action<Data.BeatmapObject.Modifier> VerifyBGModifier { get; set; }
 
         #region Color
 
