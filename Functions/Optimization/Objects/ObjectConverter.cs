@@ -273,7 +273,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 beatmapObject.shape == 9 ? new PlayerObject(visualObject, top.transform) :
                 new SolidObject(visualObject, top.transform, opacity, hasCollider, isSolid, isBackground, beatmapObject.opacityCollision);
 
-            if (EditorManager.inst && (!beatmapObject.fromPrefab || shape != 9))
+            if (EditorManager.inst && shape != 9)
             {
                 var obj = visualObject.AddComponent<RTObject>();
                 obj.SetObject(beatmapObject);
