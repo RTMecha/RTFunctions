@@ -226,8 +226,6 @@ namespace RTFunctions.Functions.Optimization.Objects
 
             LevelParentObject currentParent = null;
 
-            int num = 0;
-            //foreach (var parentObject in parentObjects)
             for (int i = 0; i < parentObjects.Count; i++)
             {
                 var parentObject = parentObjects[i];
@@ -235,7 +233,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 if (currentParent == null)
                     currentParent = parentObject;
 
-                if ((!currentParent.BeatmapObject.desync || num == 0 || !parentObject.Active || !spawned))
+                if ((!currentParent.BeatmapObject.desync || i == 0 || !parentObject.Active || !spawned))
                 {
                     if (parentObject.ParentAdditivePosition)
                         positionAddedOffset += parentObject.ParentOffsetPosition;
@@ -300,8 +298,6 @@ namespace RTFunctions.Functions.Optimization.Objects
                 }
 
                 currentParent = parentObject;
-
-                num++;
             }
         }
     }
