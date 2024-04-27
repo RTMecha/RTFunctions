@@ -441,6 +441,8 @@ namespace RTFunctions.Functions.IO
 			return "no shape";
 		}
 
+		public static System.Action<Data.BeatmapObject.Modifier> VerifyModifier { get; set; }
+
         #region Color
 
         public static string ColorToHex(Color32 color) => color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
