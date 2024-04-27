@@ -1,3 +1,8 @@
+1.11.8 > [Apr 28, 2024]
+- Selecting the visual of a Beatmap Object spawned from a Prefab Object now selects the Prefab Object, as well as hovering the object highlighting all objects spawned from it.
+- Prefab Objects can now be dragged around.
+- Fixed updating autokill not working correctly.
+- Fixed a rare case where multiple objects with the same ID cause the objects to not spawn correctly and completely freak out when trying to be animated.
 1.11.7 > [Apr 24, 2024]
 - Fixed up object dragging, so now the drag UI parts don't scale weirdly.
 1.11.6 > [Apr 19, 2024]
