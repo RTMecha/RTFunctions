@@ -197,6 +197,7 @@ namespace RTFunctions.Functions.Data
                 modifierObject = beatmapObject;
             }
 
+			public bool IsValid(List<Modifier> modifiers) => commands.Count > 0 && modifiers.Has(x => x.commands[0] == commands[0]);
 			public bool verified = false;
 
             public BeatmapObject modifierObject;
