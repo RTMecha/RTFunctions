@@ -51,8 +51,7 @@ namespace RTFunctions.Functions.Optimization.Objects
             var beatmapObjects = gameData.BeatmapObjects;
             for (int i = 0; i < beatmapObjects.Count; i++)
             {
-                if (!this.beatmapObjects.ContainsKey(beatmapObjects[i].id))
-                    this.beatmapObjects.Add(beatmapObjects[i].id, beatmapObjects[i]);
+                this.beatmapObjects.AddSet(beatmapObjects[i].id, beatmapObjects[i]);
             }
 
             for (int i = 0; i < beatmapObjects.Count; i++)
@@ -87,7 +86,7 @@ namespace RTFunctions.Functions.Optimization.Objects
                 }
             }
 
-            cachedSequences.Add(beatmapObject.id, collection);
+            cachedSequences.AddSet(beatmapObject.id, collection);
 
             yield break;
         }
@@ -453,7 +452,8 @@ namespace RTFunctions.Functions.Optimization.Objects
                     eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], kf.relative, (AxisMode)Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, 2)) :
                     new Vector3Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
 
-                keyframes.Add(currentKeyfame);
+                if (!keyframes.Has(x => x.Time == currentKeyfame.Time))
+                    keyframes.Add(currentKeyfame);
                 num++;
             }
 
@@ -483,6 +483,10 @@ namespace RTFunctions.Functions.Optimization.Objects
                     value.y = random.y;
                 }
                 currentValue = kf.relative ? currentValue + value : value;
+
+                if (keyframes.Has(x => x.Time == eventKeyframe.eventTime))
+                    continue;
+
                 if (eventKeyframe.random != 6)
                 {
                     keyframes.Add(new Vector2Keyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
@@ -522,7 +526,8 @@ namespace RTFunctions.Functions.Optimization.Objects
                     eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], kf.relative, vector3Sequence) :
                     new FloatKeyframe(eventKeyframe.eventTime, currentValue, Ease.GetEaseFunction(eventKeyframe.curveType.Name), currentKeyfame);
 
-                keyframes.Add(currentKeyfame);
+                if (!keyframes.Has(x => x.Time == currentKeyfame.Time))
+                    keyframes.Add(currentKeyfame);
                 num++;
             }
 
@@ -543,7 +548,8 @@ namespace RTFunctions.Functions.Optimization.Objects
 
                 value = Mathf.Clamp(value, 0, GameManager.inst.LiveTheme.objectColors.Count - 1);
 
-                keyframes.Add(eventKeyframe.random == 6 ? new DynamicThemeKeyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
+                if (!keyframes.Has(x => x.Time == eventKeyframe.eventTime))
+                    keyframes.Add(eventKeyframe.random == 6 ? new DynamicThemeKeyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name),
                     eventKeyframe.eventRandomValues[2], eventKeyframe.eventRandomValues[0], eventKeyframe.eventRandomValues[1], false,
                     Mathf.Clamp((int)eventKeyframe.eventRandomValues[3], 0, GameManager.inst.LiveTheme.objectColors.Count - 1), vector3Sequence) :
                     new ThemeKeyframe(eventKeyframe.eventTime, value, Ease.GetEaseFunction(eventKeyframe.curveType.Name)));
