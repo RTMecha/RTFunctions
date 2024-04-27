@@ -63,10 +63,11 @@ namespace RTFunctions.Functions.Components
 		public static float LayerOpacity { get; set; }
 		public static bool ShowObjectsOnlyOnLayer { get; set; }
 
-        #endregion
+		#endregion
 
-        #region Dragging
+		#region Dragging
 
+		PrefabObject prefabObjectToDrag;
         bool dragging;
 
 		bool setKeyframeValues;
@@ -105,14 +106,7 @@ namespace RTFunctions.Functions.Components
 
 		public void GenerateDraggers()
 		{
-			if (!Enabled || !EditorManager.inst || !Selected)
-				return;
 
-			GameStorageManager.inst.objectRotator.refObject = this;
-			GameStorageManager.inst.objectScalerTop.refObject = this;
-			GameStorageManager.inst.objectScalerLeft.refObject = this;
-			GameStorageManager.inst.objectScalerBottom.refObject = this;
-			GameStorageManager.inst.objectScalerRight.refObject = this;
 		}
 
 		public void SetObject(BeatmapObject beatmapObject)
@@ -134,7 +128,7 @@ namespace RTFunctions.Functions.Components
 		void OnMouseDown()
 		{
 			onMouseDown?.Invoke();
-			if (EditorManager.inst && EditorManager.inst.isEditing && DataManager.inst.gameData.beatmapObjects.Count > 0 && !string.IsNullOrEmpty(id) && !LSHelpers.IsUsingInputField() && !EventSystem.current.IsPointerOverGameObject())
+			if (EditorManager.inst && EditorManager.inst.isEditing && !string.IsNullOrEmpty(id) && !LSHelpers.IsUsingInputField() && !EventSystem.current.IsPointerOverGameObject())
 			{
 				startDragTime = Time.time;
 				if (ModCompatibility.mods.ContainsKey("EditorManagement"))
@@ -154,15 +148,11 @@ namespace RTFunctions.Functions.Components
 						if (mod.Methods.ContainsKey("RenderTimelineObjectVoid"))
 							mod.Methods["RenderTimelineObjectVoid"].DynamicInvoke(timelineObject);
 
-						if (!timelineObject.selected)
-						{
-							EditorManager.inst.ClearDialogs();
+						if (mod.Methods.ContainsKey("SetCurrentObject") && !Input.GetKey(KeyCode.LeftShift))
+							mod.Methods["SetCurrentObject"].DynamicInvoke(timelineObject, Input.GetKey(KeyCode.LeftAlt));
+						if (mod.Methods.ContainsKey("AddSelectedObject") && Input.GetKey(KeyCode.LeftShift))
+							mod.Methods["AddSelectedObject"].DynamicInvoke(timelineObject);
 
-							if (mod.Methods.ContainsKey("SetCurrentObject") && !Input.GetKey(KeyCode.LeftShift))
-								mod.Methods["SetCurrentObject"].DynamicInvoke(timelineObject, Input.GetKey(KeyCode.LeftAlt));
-							if (mod.Methods.ContainsKey("AddSelectedObject") && Input.GetKey(KeyCode.LeftShift))
-								mod.Methods["AddSelectedObject"].DynamicInvoke(timelineObject);
-						}
 						return;
 					}
 
@@ -323,6 +313,26 @@ namespace RTFunctions.Functions.Components
 
 		void OnMouseDrag()
         {
+			if (beatmapObject.fromPrefab && ModCompatibility.sharedFunctions.ContainsKey("CurrentSelection") && ModCompatibility.sharedFunctions["CurrentSelection"] is TimelineObject currentSelection)
+			{
+				if (!currentSelection.IsPrefabObject || currentSelection.ID != beatmapObject.prefabInstanceID)
+					return;
+
+				prefabObjectToDrag = currentSelection.GetData<PrefabObject>();
+
+				selectedKeyframe = (EventKeyframe)prefabObjectToDrag.events[0];
+
+				var vector = new Vector3(Input.mousePosition.x, Input.mousePosition.y, transform.localPosition.z);
+				var vector2 = Camera.main.ScreenToWorldPoint(vector);
+				var vector3 = new Vector3((float)((int)vector2.x), (float)((int)vector2.y), transform.localPosition.z);
+
+				dragging = true;
+
+				Drag(vector2, vector3);
+
+				return;
+            }
+
 			onMouseDrag?.Invoke();
 
 			dragTime = Time.time;
@@ -335,72 +345,85 @@ namespace RTFunctions.Functions.Components
 				if (!dragging && selectedKeyframe == null)
 				{
 					dragging = true;
-					SetCurrentKeyframe(0);
+					selectedKeyframe = SetCurrentKeyframe(0, beatmapObject);
 				}
 
-				if (selectedKeyframe != null)
-				{
-					if (!setKeyframeValues)
-                    {
-						setKeyframeValues = true;
-						dragKeyframeValues = new Vector2(selectedKeyframe.eventValues[0], selectedKeyframe.eventValues[1]);
-						dragOffset = Input.GetKey(KeyCode.LeftShift) ? vector3 : vector2;
-					}
-
-					var finalVector = Input.GetKey(KeyCode.LeftShift) ? vector3 : vector2;
-
-					if (Input.GetKey(KeyCode.LeftControl) && firstDirection == Axis.Static)
-					{
-						if (dragOffset.x > finalVector.x)
-							firstDirection = Axis.PosX;
-
-						if (dragOffset.x < finalVector.x)
-							firstDirection = Axis.NegX;
-
-						if (dragOffset.y > finalVector.y)
-							firstDirection = Axis.PosY;
-
-						if (dragOffset.y < finalVector.y)
-							firstDirection = Axis.NegY;
-					}
-
-					if (firstDirection == Axis.Static || firstDirection == Axis.PosX || firstDirection == Axis.NegX)
-						selectedKeyframe.eventValues[0] = dragKeyframeValues.x - dragOffset.x + (Input.GetKey(KeyCode.LeftShift) ? vector3.x : vector2.x);
-					if (firstDirection == Axis.Static || firstDirection == Axis.PosY || firstDirection == Axis.NegY)
-						selectedKeyframe.eventValues[1] = dragKeyframeValues.y - dragOffset.y + (Input.GetKey(KeyCode.LeftShift) ? vector3.y : vector2.y);
-					Updater.UpdateProcessor(beatmapObject, "Keyframes");
-				}
+				Drag(vector2, vector3);
 			}
+		}
+
+		void Drag(Vector3 vector2, Vector3 vector3)
+		{
+			if (selectedKeyframe == null)
+				return;
+
+			if (!setKeyframeValues)
+			{
+				setKeyframeValues = true;
+				dragKeyframeValues = new Vector2(selectedKeyframe.eventValues[0], selectedKeyframe.eventValues[1]);
+				dragOffset = Input.GetKey(KeyCode.LeftShift) ? vector3 : vector2;
+			}
+
+			var finalVector = Input.GetKey(KeyCode.LeftShift) ? vector3 : vector2;
+
+			if (Input.GetKey(KeyCode.LeftControl) && firstDirection == Axis.Static)
+			{
+				if (dragOffset.x > finalVector.x)
+					firstDirection = Axis.PosX;
+
+				if (dragOffset.x < finalVector.x)
+					firstDirection = Axis.NegX;
+
+				if (dragOffset.y > finalVector.y)
+					firstDirection = Axis.PosY;
+
+				if (dragOffset.y < finalVector.y)
+					firstDirection = Axis.NegY;
+			}
+
+			if (firstDirection == Axis.Static || firstDirection == Axis.PosX || firstDirection == Axis.NegX)
+				selectedKeyframe.eventValues[0] = dragKeyframeValues.x - dragOffset.x + (Input.GetKey(KeyCode.LeftShift) ? vector3.x : vector2.x);
+			if (firstDirection == Axis.Static || firstDirection == Axis.PosY || firstDirection == Axis.NegY)
+				selectedKeyframe.eventValues[1] = dragKeyframeValues.y - dragOffset.y + (Input.GetKey(KeyCode.LeftShift) ? vector3.y : vector2.y);
+
+			if (prefabObjectToDrag != null)
+				Updater.UpdatePrefab(prefabObjectToDrag, "Offset");
+			else
+				Updater.UpdateProcessor(beatmapObject, "Keyframes");
 		}
 
 		float startDragTime;
 		float dragTime;
 
-		public void SetCurrentKeyframe(int type)
+		public static EventKeyframe SetCurrentKeyframe(int type, BeatmapObject beatmapObject = null, PrefabObject prefabObject = null)
 		{
+			if (prefabObject != null)
+				return (EventKeyframe)prefabObject.events[type];
+
 			var timeOffset = AudioManager.inst.CurrentAudioSource.time - beatmapObject.StartTime;
 			int nextIndex = beatmapObject.events[type].FindIndex(x => x.eventTime >= timeOffset);
 			if (nextIndex < 0)
 				nextIndex = beatmapObject.events[type].Count - 1;
 
 			int index;
+			EventKeyframe selected;
 			if (beatmapObject.events[type].Has(x => x.eventTime > timeOffset - 0.1f && x.eventTime < timeOffset + 0.1f))
 			{
-				selectedKeyframe = (EventKeyframe)beatmapObject.events[type].Find(x => x.eventTime > timeOffset - 0.1f && x.eventTime < timeOffset + 0.1f);
+				selected = (EventKeyframe)beatmapObject.events[type].Find(x => x.eventTime > timeOffset - 0.1f && x.eventTime < timeOffset + 0.1f);
 				index = beatmapObject.events[type].FindIndex(x => x.eventTime > timeOffset - 0.1f && x.eventTime < timeOffset + 0.1f);
-				AudioManager.inst.CurrentAudioSource.time = selectedKeyframe.eventTime + beatmapObject.StartTime;
+				AudioManager.inst.CurrentAudioSource.time = selected.eventTime + beatmapObject.StartTime;
 			}
 			else if (CreateKeyframe)
 			{
-				selectedKeyframe = EventKeyframe.DeepCopy((EventKeyframe)beatmapObject.events[type][nextIndex]);
-				selectedKeyframe.eventTime = timeOffset;
+				selected = EventKeyframe.DeepCopy((EventKeyframe)beatmapObject.events[type][nextIndex]);
+				selected.eventTime = timeOffset;
 				index = beatmapObject.events[type].Count;
-				beatmapObject.events[type].Add(selectedKeyframe);
+				beatmapObject.events[type].Add(selected);
 			}
 			else
 			{
 				index = beatmapObject.events[type].FindLastIndex(x => x.eventTime < timeOffset);
-				selectedKeyframe = (EventKeyframe)beatmapObject.events[type][index];
+				selected = (EventKeyframe)beatmapObject.events[type][index];
 			}
 
 			if (ModCompatibility.mods.ContainsKey("EditorManagement"))
@@ -411,6 +434,8 @@ namespace RTFunctions.Functions.Components
 				if (mod.Methods.ContainsKey("SetCurrentKeyframe"))
 					mod.Methods["SetCurrentKeyframe"].DynamicInvoke(beatmapObject, type, index, false, false);
 			}
+
+			return selected;
 		}
 
         void Update()
@@ -421,13 +446,41 @@ namespace RTFunctions.Functions.Components
 				return;
 			}
 
-			if (ModCompatibility.sharedFunctions.ContainsKey("CurrentSelection") && ModCompatibility.sharedFunctions["CurrentSelection"] is TimelineObject currentSelection &&
-				currentSelection.ID == beatmapObject.id)
+			if (ModCompatibility.sharedFunctions.ContainsKey("CurrentSelection") && ModCompatibility.sharedFunctions["CurrentSelection"] is TimelineObject currentSelection)
 			{
-				GameStorageManager.inst.objectDragger.position = new Vector3(transform.parent.position.x, transform.parent.position.y, transform.parent.position.z - 10f);
-				GameStorageManager.inst.objectDragger.rotation = transform.parent.rotation;
+				if (!beatmapObject.fromPrefab && currentSelection.ID == beatmapObject.id)
+				{
+					GameStorageManager.inst.objectDragger.position = new Vector3(transform.parent.position.x, transform.parent.position.y, transform.parent.position.z - 10f);
+					GameStorageManager.inst.objectDragger.rotation = transform.parent.rotation;
+				}
+				if (beatmapObject.fromPrefab && currentSelection.ID == beatmapObject.prefabInstanceID)
+				{
+					var prefabObject = currentSelection.GetData<PrefabObject>();
+					GameStorageManager.inst.objectDragger.position = new Vector3(prefabObject.events[0].eventValues[0], prefabObject.events[0].eventValues[1], -90f);
+					GameStorageManager.inst.objectDragger.rotation = Quaternion.Euler(0f, 0f, prefabObject.events[2].eventValues[0]);
+				}
 			}
 
+			if (EventSystem.current.IsPointerOverGameObject() || beatmapObject == null)
+                return;
+
+            SetTooltip();
+
+            if (beatmapObject.fromPrefab)
+            {
+				if (string.IsNullOrEmpty(beatmapObject.prefabInstanceID))
+					return;
+
+				foreach (var bm in DataManager.inst.gameData.beatmapObjects.Where(x => x.fromPrefab && x.prefabInstanceID == beatmapObject.prefabInstanceID && x.objectType != DataManager.GameData.BeatmapObject.ObjectType.Empty))
+                {
+					if (Updater.TryGetObject(bm, out Optimization.Objects.LevelObject levelObject) && levelObject.visualObject != null && levelObject.visualObject.Renderer)
+                    {
+						SetColor(levelObject.visualObject.Renderer);
+                    }
+                }
+				return;
+            }
+			
 			var m = 0f;
 
 			if (beatmapObject != null && ShowObjectsOnlyOnLayer && beatmapObject.editorData.layer != EditorManager.inst.layer)
@@ -450,68 +503,118 @@ namespace RTFunctions.Functions.Components
 
 				renderer.material.color += color;
 			}
+		}
 
-			if (EditorManager.inst.showHelp && beatmapObject != null)
+		void FixedUpdate()
+		{
+			if (!dragging || !ModCompatibility.mods.ContainsKey("EditorManagement"))
+				return;
+
+			var mod = ModCompatibility.mods["EditorManagement"];
+
+			if (!beatmapObject.fromPrefab && mod.Methods.ContainsKey("RenderKeyframeDialog"))
+				mod.Methods["RenderKeyframeDialog"].DynamicInvoke(beatmapObject);
+			else if (beatmapObject.fromPrefab && prefabObjectToDrag != null && mod.Methods.ContainsKey("RenderPrefabObjectDialog"))
+				mod.Methods["RenderPrefabObjectDialog"].DynamicInvoke(prefabObjectToDrag);
+		}
+
+		void SetColor(Renderer renderer)
+		{
+			var m = 0f;
+
+			if (HighlightObjects && hovered && renderer != null && renderer.material.HasProperty("_Color"))
 			{
-				TipEnabled = true;
+				var color = Input.GetKey(KeyCode.LeftShift) ? new Color(
+					renderer.material.color.r > 0.9f ? -HighlightDoubleColor.r : HighlightDoubleColor.r,
+					renderer.material.color.g > 0.9f ? -HighlightDoubleColor.g : HighlightDoubleColor.g,
+					renderer.material.color.b > 0.9f ? -HighlightDoubleColor.b : HighlightDoubleColor.b,
+					0f) : new Color(
+					renderer.material.color.r > 0.9f ? -HighlightColor.r : HighlightColor.r,
+					renderer.material.color.g > 0.9f ? -HighlightColor.g : HighlightColor.g,
+					renderer.material.color.b > 0.9f ? -HighlightColor.b : HighlightColor.b,
+					0f);
 
-				if (tooltipLanguages.Count == 0)
-				{
-					tooltipLanguages.Add(RTHelpers.NewTooltip(beatmapObject.name + " [ " + beatmapObject.StartTime + " ]", "", new List<string>()));
-				}
+				renderer.material.color += color;
+			}
+		}
 
-				string parent = "";
-				if (!string.IsNullOrEmpty(beatmapObject.parent))
-				{
-					parent = "<br>P: " + beatmapObject.parent + " (" + beatmapObject.GetParentType() + ")";
-				}
-				else
-				{
-					parent = "<br>P: No Parent" + " (" + beatmapObject.GetParentType() + ")";
-				}
+		void SetTooltip()
+		{
+			if (!EditorManager.inst.showHelp || beatmapObject == null)
+				return;
 
-				string text = "";
-				if (beatmapObject.shape != 4 || beatmapObject.shape != 6)
-				{
-					text = "<br>S: " + RTHelpers.GetShape(beatmapObject.shape, beatmapObject.shapeOption).Replace("eight_circle", "eighth_circle").Replace("eigth_circle_outline", "eighth_circle_outline");
+			TipEnabled = true;
 
-					if (!string.IsNullOrEmpty(beatmapObject.text))
-					{
-						text += "<br>T: " + beatmapObject.text;
-					}
-				}
-				if (beatmapObject.shape == 4)
-				{
-					text = "<br>S: Text" +
-						"<br>T: " + beatmapObject.text;
-				}
-				if (beatmapObject.shape == 6)
-				{
-					text = "<br>S: Image" +
-						"<br>T: " + beatmapObject.text;
-				}
+			if (tooltipLanguages.Count == 0)
+			{
+				tooltipLanguages.Add(RTHelpers.NewTooltip(beatmapObject.name + " [ " + beatmapObject.StartTime + " ]", "", new List<string>()));
+			}
 
-				string ptr = "";
-				if (beatmapObject.fromPrefab && !string.IsNullOrEmpty(beatmapObject.prefabID) && !string.IsNullOrEmpty(beatmapObject.prefabInstanceID))
-				{
-					ptr = "<br>PID: " + beatmapObject.prefabID + " | " + beatmapObject.prefabInstanceID;
-				}
-				else
-				{
-					ptr = "<br>Not from prefab";
-				}
+			string parent = "";
+			if (!string.IsNullOrEmpty(beatmapObject.parent))
+			{
+				parent = "<br>P: " + beatmapObject.parent + " (" + beatmapObject.GetParentType() + ")";
+			}
+			else
+			{
+				parent = "<br>P: No Parent" + " (" + beatmapObject.GetParentType() + ")";
+			}
 
-				Color col = LSColors.transparent;
-				if (renderer.material.HasProperty("_Color"))
-                {
-					col = renderer.material.color;
-				}
+			string text = "";
+			if (beatmapObject.shape != 4 || beatmapObject.shape != 6)
+			{
+				text = "<br>S: " + RTHelpers.GetShape(beatmapObject.shape, beatmapObject.shapeOption).Replace("eight_circle", "eighth_circle").Replace("eigth_circle_outline", "eighth_circle_outline");
 
-				if (tooltipLanguages[0].desc != "N/ST: " + beatmapObject.name + " [ " + beatmapObject.StartTime + " ]")
+				if (!string.IsNullOrEmpty(beatmapObject.text))
 				{
-					tooltipLanguages[0].desc = "N/ST: " + beatmapObject.name + " [ " + beatmapObject.StartTime + " ]";
+					text += "<br>T: " + beatmapObject.text;
 				}
-				if (tooltipLanguages[0].hint != "ID: {" + beatmapObject.id + "}" +
+			}
+			if (beatmapObject.shape == 4)
+			{
+				text = "<br>S: Text" +
+					"<br>T: " + beatmapObject.text;
+			}
+			if (beatmapObject.shape == 6)
+			{
+				text = "<br>S: Image" +
+					"<br>T: " + beatmapObject.text;
+			}
+
+			string ptr = "";
+			if (beatmapObject.fromPrefab && !string.IsNullOrEmpty(beatmapObject.prefabID) && !string.IsNullOrEmpty(beatmapObject.prefabInstanceID))
+			{
+				ptr = "<br>PID: " + beatmapObject.prefabID + " | " + beatmapObject.prefabInstanceID;
+			}
+			else
+			{
+				ptr = "<br>Not from prefab";
+			}
+
+			Color col = LSColors.transparent;
+			if (renderer.material.HasProperty("_Color"))
+			{
+				col = renderer.material.color;
+			}
+
+			if (tooltipLanguages[0].desc != "N/ST: " + beatmapObject.name + " [ " + beatmapObject.StartTime + " ]")
+			{
+				tooltipLanguages[0].desc = "N/ST: " + beatmapObject.name + " [ " + beatmapObject.StartTime + " ]";
+			}
+
+			if (tooltipLanguages[0].hint != "ID: {" + beatmapObject.id + "}" +
+				parent +
+				"<br>O: {X: " + beatmapObject.origin.x + ", Y: " + beatmapObject.origin.y + "}" +
+				text +
+				"<br>D: " + beatmapObject.Depth +
+				"<br>ED: {L: " + beatmapObject.editorData.layer + ", B: " + beatmapObject.editorData.Bin + "}" +
+				"<br>POS: {X: " + transform.position.x + ", Y: " + transform.position.y + ", Z: " + transform.position.z + "}" +
+				"<br>SCA: {X: " + transform.localScale.x + ", Y: " + transform.localScale.y + "}" +
+				"<br>ROT: " + transform.eulerAngles.z +
+				"<br>COL: " + RTHelpers.ColorToHex(col) +
+				ptr)
+			{
+				tooltipLanguages[0].hint = "ID: {" + beatmapObject.id + "}" +
 					parent +
 					"<br>O: {X: " + beatmapObject.origin.x + ", Y: " + beatmapObject.origin.y + "}" +
 					text +
@@ -521,34 +624,10 @@ namespace RTFunctions.Functions.Components
 					"<br>SCA: {X: " + transform.localScale.x + ", Y: " + transform.localScale.y + "}" +
 					"<br>ROT: " + transform.eulerAngles.z +
 					"<br>COL: " + RTHelpers.ColorToHex(col) +
-					ptr)
-				{
-					tooltipLanguages[0].hint = "ID: {" + beatmapObject.id + "}" +
-						parent +
-						"<br>O: {X: " + beatmapObject.origin.x + ", Y: " + beatmapObject.origin.y + "}" +
-						text +
-						"<br>D: " + beatmapObject.Depth +
-						"<br>ED: {L: " + beatmapObject.editorData.layer + ", B: " + beatmapObject.editorData.Bin + "}" +
-						"<br>POS: {X: " + transform.position.x + ", Y: " + transform.position.y + ", Z: " + transform.position.z + "}" +
-						"<br>SCA: {X: " + transform.localScale.x + ", Y: " + transform.localScale.y + "}" +
-						"<br>ROT: " + transform.eulerAngles.z +
-						"<br>COL: " + RTHelpers.ColorToHex(col) +
-						ptr;
-				}
+					ptr;
 			}
 		}
 
-		void FixedUpdate()
-		{
-			if (ModCompatibility.mods.ContainsKey("EditorManagement"))
-			{
-				var mod = ModCompatibility.mods["EditorManagement"];
-
-				if (dragging && mod.Methods.ContainsKey("RenderKeyframeDialog"))
-					mod.Methods["RenderKeyframeDialog"].DynamicInvoke(beatmapObject);
-			}
-		}
-
-        public List<HoverTooltip.Tooltip> tooltipLanguages = new List<HoverTooltip.Tooltip>();
+		public List<HoverTooltip.Tooltip> tooltipLanguages = new List<HoverTooltip.Tooltip>();
 	}
 }
