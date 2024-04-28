@@ -613,6 +613,9 @@ namespace RTFunctions.Functions.Optimization
                             Debug.LogError($"{className}Failed to set object ID.\n{ex}");
                         }
 
+                        if (string.IsNullOrEmpty(beatmapObject.parent) && !string.IsNullOrEmpty(prefabObject.parent))
+                            beatmapObject.parent = prefabObject.parent;
+
                         beatmapObject.active = false;
                         beatmapObject.fromPrefab = true;
                         beatmapObject.prefabInstanceID = iD;
@@ -714,6 +717,9 @@ namespace RTFunctions.Functions.Optimization
                         {
                             Debug.LogError($"{className}Failed to set object ID.\n{ex}");
                         }
+
+                        if (string.IsNullOrEmpty(beatmapObject.parent) && !string.IsNullOrEmpty(prefabObject.parent))
+                            beatmapObject.parent = prefabObject.parent;
 
                         beatmapObject.active = false;
                         beatmapObject.fromPrefab = true;

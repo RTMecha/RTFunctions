@@ -53,6 +53,8 @@ namespace RTFunctions.Functions.Data
 
         public float autoKillOffset = -1f;
 
+        public string parent;
+
         public bool fromModifier;
 
         #region Methods
@@ -184,17 +186,16 @@ namespace RTFunctions.Functions.Data
         public static PrefabObject Parse(JSONNode jn)
         {
             var prefabObject = new PrefabObject();
-            prefabObject.ID = jn["id"];
+            prefabObject.ID = jn["id"] != null ? jn["id"] : LSText.randomString(16);
             prefabObject.prefabID = jn["pid"];
             prefabObject.StartTime = jn["st"].AsFloat;
+            prefabObject.parent = jn["p"];
 
             if (!string.IsNullOrEmpty(jn["rc"]))
                 prefabObject.RepeatCount = jn["rc"].AsInt;
 
             if (!string.IsNullOrEmpty(jn["ro"]))
                 prefabObject.RepeatOffsetTime = jn["ro"].AsFloat;
-
-            prefabObject.ID = jn["id"] != null ? jn["id"] : LSText.randomString(16);
 
             if (jn["sp"] != null)
                 prefabObject.speed = jn["sp"].AsFloat;
@@ -299,6 +300,8 @@ namespace RTFunctions.Functions.Data
 
             jn["id"] = ID;
             jn["pid"] = prefabID;
+            if (!string.IsNullOrEmpty(parent))
+                jn["p"] = parent;
 
             jn["ed"] = ((ObjectEditorData)editorData).ToJSONVG();
 
