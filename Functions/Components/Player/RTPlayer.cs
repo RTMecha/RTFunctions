@@ -51,6 +51,8 @@ namespace RTFunctions.Functions.Components.Player
         public static bool LockBoost { get; set; } = false;
         public static float SpeedMultiplier { get; set; } = 1f;
 
+        public static Vector2 PlayerForce { get; set; }
+
         #region Base
 
         public MyGameActions Actions { get; set; }
@@ -921,13 +923,13 @@ namespace RTFunctions.Functions.Components.Player
 
                 var pitch = RTHelpers.Pitch;
 
-                Vector3 vector;
+                Vector2 vector;
                 if (isBoosting)
                 {
-                    vector = new Vector3(lastMoveHorizontal, lastMoveVertical, 0f);
+                    vector = new Vector2(lastMoveHorizontal, lastMoveVertical);
                     vector = vector.normalized;
 
-                    rb.velocity = vector * boostSpeed * pitch * SpeedMultiplier;
+                    rb.velocity = PlayerForce + vector * boostSpeed * pitch * SpeedMultiplier;
                     if (stretch && rb.velocity.magnitude > 0f)
                     {
                         float e = 1f + rb.velocity.magnitude * stretchAmount / 20f;
@@ -936,13 +938,13 @@ namespace RTFunctions.Functions.Components.Player
                 }
                 else
                 {
-                    vector = new Vector3(x, y, 0f);
+                    vector = new Vector2(x, y);
                     if (vector.magnitude > 1f)
                         vector = vector.normalized;
 
                     var sp = (bool)PlayerModel.basePart.sprintSneakActive ? faceController.Sprint.IsPressed ? 1.3f : faceController.Sneak.IsPressed ? 0.1f : 1f : 1f;
 
-                    rb.velocity = vector * idleSpeed * pitch * sp * SpeedMultiplier;
+                    rb.velocity = PlayerForce + vector * idleSpeed * pitch * sp * SpeedMultiplier;
                     if (stretch && rb.velocity.magnitude > 0f)
                     {
                         if (rotateMode != RotateMode.None && rotateMode != RotateMode.FlipX)
