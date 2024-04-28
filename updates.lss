@@ -1,3 +1,6 @@
+1.11.9 > [Apr 29, 2024]
+- Added Prefab Object parenting. PRefab Objects can now be parented to regular objects. Basically, all unparented objects spawned from the prefab will be parented to the object specified.
+- Added configs for customizing the in-game interface background blur.
 1.11.8 > [Apr 28, 2024]
 - Selecting the visual of a Beatmap Object spawned from a Prefab Object now selects the Prefab Object, as well as hovering the object highlighting all objects spawned from it.
 - Prefab Objects can now be dragged around.
