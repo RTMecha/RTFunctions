@@ -3,6 +3,7 @@
 - Prefab Objects can now be dragged around.
 - Fixed updating autokill not working correctly.
 - Fixed a rare case where multiple objects with the same ID cause the objects to not spawn correctly and completely freak out when trying to be animated.
+- Added song link and level name to metadata. Song link will be for songs that cannot be included on the upcoming online server. Storyline data from dev+ is stored, but not used yet.
 1.11.7 > [Apr 24, 2024]
 - Fixed up object dragging, so now the drag UI parts don't scale weirdly.
 1.11.6 > [Apr 19, 2024]
