@@ -761,6 +761,34 @@ namespace RTFunctions.Functions.Data
 			Debug.Log($"{FunctionsPlugin.className}Checking keyframe counts");
 			ProjectData.Reader.ClampEventListValues(gameData.eventObjects.allEvents, EventCount);
 
+			if (jn["events"].Count > 13 && jn["events"][13] != null && gameData.eventObjects.allEvents.Count > 36)
+            {
+				var playerForce = gameData.eventObjects.allEvents[36];
+				var firstKF = (Data.EventKeyframe)playerForce[0];
+
+				firstKF.id = LSText.randomNumString(8);
+				firstKF.eventTime = 0f;
+				firstKF.SetEventValues(jn["events"][13][0]["ev"][0].AsFloat, jn["events"][13][0]["ev"][1].AsFloat);
+
+				for (int i = 1; i < jn["events"][13].Count; i++)
+				{
+					var eventKeyframe = new Data.EventKeyframe();
+					var kfjn = jn["events"][13][i];
+
+					eventKeyframe.id = LSText.randomNumString(8);
+
+					if (kfjn["ct"] != null && DataManager.inst.AnimationListDictionaryStr.ContainsKey(kfjn["ct"]))
+						eventKeyframe.curveType = DataManager.inst.AnimationListDictionaryStr[kfjn["ct"]];
+
+					eventKeyframe.eventTime = kfjn["t"].AsFloat;
+					eventKeyframe.SetEventValues(
+						kfjn["ev"][0].AsFloat,
+						kfjn["ev"][1].AsFloat);
+
+					gameData.eventObjects.allEvents[36].Add(eventKeyframe);
+				}
+            }
+
 			ConvertedGameData = gameData;
 
 			return gameData;
@@ -1126,11 +1154,16 @@ namespace RTFunctions.Functions.Data
 					jn["events"][12][i]["ev"][0] = eventKeyframe.eventValues[0];
 				}
 
-				jn["events"][13][0]["ct"] = "Linear";
-				jn["events"][13][0]["t"] = 0f;
-				jn["events"][13][0]["ev"][0] = 0f;
-				jn["events"][13][0]["ev"][1] = 0f;
-				jn["events"][13][0]["ev"][2] = 0f;
+				// Player
+				for (int i = 0; i < eventObjects.allEvents[36].Count; i++)
+				{
+					var eventKeyframe = eventObjects.allEvents[36][i];
+					jn["events"][13][i]["ct"] = eventKeyframe.curveType.Name;
+					jn["events"][13][i]["t"] = eventKeyframe.eventTime;
+					jn["events"][13][i]["ev"][0] = eventKeyframe.eventValues[0];
+					jn["events"][13][i]["ev"][1] = eventKeyframe.eventValues[1];
+					jn["events"][13][i]["ev"][2] = 0f;
+				}
 			}
 
 			return jn;
@@ -1312,6 +1345,8 @@ namespace RTFunctions.Functions.Data
 			"winbase", // 33
 			"winposx", // 34
 			"winposy", // 35
+			"playerforce", // 36
+			"mosaic", // 37
 		};
 
 		public static List<BaseEventKeyframe> DefaultKeyframes = new List<BaseEventKeyframe>
@@ -1363,20 +1398,23 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[5]
+				eventValues = new float[8]
 				{
 					0f, // Bloom Intensity
 					7f, // Bloom Diffusion
 					1f, // Bloom Threshold
 					0f, // Bloom Anamorphic Ratio
-					18f // Bloom Color
+					18f, // Bloom Color
+					0f, // Bloom Hue
+					0f, // Bloom Sat
+					0f, // Bloom Val
 				},
 				id = LSText.randomNumString(8),
 			}, // Bloom
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[7]
+				eventValues = new float[10]
 				{
 					0f, // Vignette Intensity
 					0f, // Vignette Smoothness
@@ -1384,7 +1422,10 @@ namespace RTFunctions.Functions.Data
 					0f, // Vignette Roundness
 					0f, // Vignette Center X
 					0f, // Vignette Center Y
-					18f // Vignette Color
+					18f, // Vignette Color
+					0f, // Vignette Hue
+					0f, // Vignette Sat
+					0f, // Vignette Val
                 },
 				id = LSText.randomNumString(8),
 			}, // Vignette
@@ -1452,13 +1493,21 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[5]
+				eventValues = new float[13]
 				{
 					0f,
 					0f,
 					18f,
 					18f,
 					0f,
+					1f, // Top Opacity
+					0f, // Top Hue
+					0f, // Top Sat
+					0f, // Top Val
+					1f, // Bottom Opacity
+					0f, // Bottom Hue
+					0f, // Bottom Sat
+					0f, // Bottom Val
 				},
 				id = LSText.randomNumString(8),
 			}, // Gradient
@@ -1489,10 +1538,13 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[2]
+				eventValues = new float[5]
 				{
 					18f, // Color
-					0f // Active
+					0f, // Active
+					0f, // Hue
+					0f, // Sat
+					0f, // Val
 				},
 				id = LSText.randomNumString(8),
 			}, // BG
@@ -1505,7 +1557,7 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[7]
+				eventValues = new float[11]
 				{
 					0f,
 					0f,
@@ -1513,7 +1565,11 @@ namespace RTFunctions.Functions.Data
 					1f,
 					1f,
 					0f,
-					18f
+					18f,
+					1f, // Opacity
+					0f, // Hue
+					0f, // Sat
+					0f, // Val
 				},
 				id = LSText.randomNumString(8),
 			}, // Timeline
@@ -1608,11 +1664,15 @@ namespace RTFunctions.Functions.Data
 			new Data.EventKeyframe
 			{
 				eventTime = 0f,
-				eventValues = new float[3]
+				eventValues = new float[7]
 				{
 					0f, // Intensity
 					0f, // Size
 					18f, // Color
+					1f, // Opacity
+					0f, // Hue
+					0f, // Sat
+					0f, // Val
                 },
 				id = LSText.randomNumString(8),
 			}, // Danger
@@ -1666,6 +1726,25 @@ namespace RTFunctions.Functions.Data
                 },
 				id = LSText.randomNumString(8),
 			}, // Window Position Y
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[2]
+				{
+					0f, // Player Force X
+					0f, // Player Force Y
+                },
+				id = LSText.randomNumString(8),
+			}, // Player Force
+			new Data.EventKeyframe
+			{
+				eventTime = 0f,
+				eventValues = new float[1]
+				{
+					0f, // Intensity
+                },
+				id = LSText.randomNumString(8),
+			}, // Mosaic
 		};
 
 		public static bool SaveOpacityToThemes { get; set; } = false;

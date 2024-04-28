@@ -167,6 +167,9 @@ namespace RTFunctions.Functions.Data
             "x4",
             "y4",
             "z4",
+            "x5",
+            "y5",
+            "z5",
         };
         
         static readonly string[] raxis = new string[]
@@ -183,6 +186,9 @@ namespace RTFunctions.Functions.Data
             "rx4",
             "ry4",
             "rz4",
+            "rx5",
+            "ry5",
+            "rz5",
         };
     }
 }
