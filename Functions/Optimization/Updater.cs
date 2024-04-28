@@ -614,7 +614,14 @@ namespace RTFunctions.Functions.Optimization
                         }
 
                         if (string.IsNullOrEmpty(beatmapObject.parent) && !string.IsNullOrEmpty(prefabObject.parent))
+                        {
                             beatmapObject.parent = prefabObject.parent;
+                            beatmapObject.parentType = prefabObject.parentType;
+                            beatmapObject.parentOffsets = prefabObject.parentOffsets.ToList();
+                            beatmapObject.parentAdditive = prefabObject.parentAdditive;
+                            beatmapObject.parallaxSettings = prefabObject.parentParallax;
+                            beatmapObject.desync = prefabObject.desync;
+                        }
 
                         beatmapObject.active = false;
                         beatmapObject.fromPrefab = true;
@@ -719,7 +726,14 @@ namespace RTFunctions.Functions.Optimization
                         }
 
                         if (string.IsNullOrEmpty(beatmapObject.parent) && !string.IsNullOrEmpty(prefabObject.parent))
+                        {
                             beatmapObject.parent = prefabObject.parent;
+                            beatmapObject.parentType = prefabObject.parentType;
+                            beatmapObject.parentOffsets = prefabObject.parentOffsets.ToList();
+                            beatmapObject.parentAdditive = prefabObject.parentAdditive;
+                            beatmapObject.parallaxSettings = prefabObject.parentParallax;
+                            beatmapObject.desync = prefabObject.desync;
+                        }
 
                         beatmapObject.active = false;
                         beatmapObject.fromPrefab = true;

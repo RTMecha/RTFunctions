@@ -3,6 +3,8 @@ using SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using UnityEngine;
 using BasePrefabObject = DataManager.GameData.PrefabObject;
 
 namespace RTFunctions.Functions.Data
@@ -54,6 +56,26 @@ namespace RTFunctions.Functions.Data
         public float autoKillOffset = -1f;
 
         public string parent;
+
+        public string parentType = "111";
+
+        public float[] parentOffsets = new float[3]
+        {
+            0f,
+            0f,
+            0f
+        };
+
+        public float[] parentParallax = new float[3]
+        {
+            1f,
+            1f,
+            1f
+        };
+
+        public string parentAdditive = "000";
+
+        public bool desync;
 
         public bool fromModifier;
 
@@ -376,6 +398,29 @@ namespace RTFunctions.Functions.Data
                 jn["e"]["rot"]["rz"] = events[2].eventRandomValues[2].ToString();
             }
             return jn;
+        }
+
+        public void SetParentAdditive(int index, bool additive)
+        {
+            var stringBuilder = new StringBuilder(parentAdditive);
+            stringBuilder[index] = additive ? '1' : '0';
+            parentAdditive = stringBuilder.ToString();
+            Debug.Log($"{FunctionsPlugin.className}Set Parent Additive: {parentAdditive}");
+        }
+
+        public bool GetParentType(int index) => parentType[index] == '1';
+
+        public void SetParentType(int index, bool active)
+        {
+            var stringBuilder = new StringBuilder(parentType);
+            stringBuilder[index] = active ? '1' : '0';
+            parentType = stringBuilder.ToString();
+            Debug.Log("Set Parent Type: " + parentType);
+        }
+        public void SetParentOffset(int index, float value)
+        {
+            if (index >= 0 && index < parentOffsets.Length)
+                parentOffsets[index] = value;
         }
 
         #endregion

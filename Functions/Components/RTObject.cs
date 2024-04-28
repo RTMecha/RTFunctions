@@ -212,8 +212,17 @@ namespace RTFunctions.Functions.Components
 						&& (bool)ModCompatibility.sharedFunctions["SelectinMultiple"])
 						{
 							bool success = false;
-							foreach (var otherTimelineObject in selectedObjects.Where(x => x.IsBeatmapObject))
+							foreach (var otherTimelineObject in selectedObjects)
 							{
+								if (otherTimelineObject.IsPrefabObject)
+								{
+									var prefabObject = otherTimelineObject.GetData<PrefabObject>();
+									prefabObject.parent = beatmapObject.id;
+									Updater.UpdatePrefab(prefabObject);
+
+									success = true;
+									continue;
+								}
 								success = SetParent(otherTimelineObject, beatmapObject);
 							}
 
@@ -221,6 +230,17 @@ namespace RTFunctions.Functions.Components
 								EditorManager.inst.DisplayNotification("Cannot set parent to child / self!", 1f, EditorManager.NotificationType.Warning);
 							else
 								((Action)ModCompatibility.sharedFunctions["ParentPickerDisable"])?.Invoke();
+
+							return;
+						}
+
+						if (currentSelection.IsPrefabObject)
+						{
+							var prefabObject = currentSelection.GetData<PrefabObject>();
+							prefabObject.parent = beatmapObject.id;
+							Updater.UpdatePrefab(prefabObject);
+							PrefabEditor.inst.OpenPrefabDialog();
+							((Action)ModCompatibility.sharedFunctions["ParentPickerDisable"])?.Invoke();
 
 							return;
 						}
