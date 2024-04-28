@@ -35,7 +35,7 @@ namespace RTFunctions
 	/// <summary>
 	/// Base plugin for initializing all the patches.
 	/// </summary>
-	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.11.8")]
+	[BepInPlugin("com.mecha.rtfunctions", "RT Functions", " 1.11.9")]
 	[BepInProcess("Project Arrhythmia.exe")]
 	public class FunctionsPlugin : BaseUnityPlugin
 	{
@@ -78,6 +78,8 @@ namespace RTFunctions
 			return blurMat;
 		}
 
+		public static Shader blurColored;
+
 		#region Configs
 
 		public static ConfigEntry<KeyCode> OpenPAFolder { get; set; }
@@ -116,6 +118,8 @@ namespace RTFunctions
 		public static ConfigEntry<bool> PrioritizeVG { get; set; }
 
 		public static ConfigEntry<string> DiscordRichPresenceID { get; set; }
+		public static ConfigEntry<float> InterfaceBlurSize { get; set; }
+		public static ConfigEntry<Color> InterfaceBlurColor { get; set; }
 
 		#endregion
 
@@ -243,6 +247,11 @@ namespace RTFunctions
 			ReplayLevel = Config.Bind("Game", "Replay Level in Background After Completion", true, "When completing a level, having this on will replay the level with no players in the background of the end screen.");
 			PrioritizeVG = Config.Bind("Game", "Priotize VG format", true, "Due to LS file formats also being in level folders with VG formats, VG format will need to be prioritized, though you can turn this off if a VG level isn't working and it has a level.lsb file.");
 
+			InterfaceBlurSize = Config.Bind("Game", "Interface Blur Size", 3f, "The size of the in-game interface blur.");
+			InterfaceBlurColor = Config.Bind("Game", "Interface Blur Color", new Color(0.4f, 0.4f, 0.4f), "The color of the in-game interface blur.");
+			InterfaceBlurSize.SettingChanged += InterfaceBlurChanged;
+			InterfaceBlurColor.SettingChanged += InterfaceBlurChanged;
+
 			DisplayName = Config.Bind("User", "Display Name", "Player", "Sets the username to show in levels and menus.");
 
 			OpenPAFolder = Config.Bind("File", "Open Project Arrhythmia Folder", KeyCode.F4, "Opens the folder containing the Project Arrhythmia application and all files related to it.");
@@ -281,6 +290,17 @@ namespace RTFunctions
 			Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(UpdateSettings);
 
 			blur = GetBlur();
+
+            try
+			{
+				var assetBundle = AssetBundle.LoadFromFile(RTFile.ApplicationDirectory + "BepInEx/plugins/Assets/shadercolored.asset");
+				blurColored = assetBundle.LoadAsset<Shader>("simpleblur.shader");
+				assetBundle.Unload(false);
+			}
+            catch (Exception ex)
+            {
+				Debug.LogException(ex);
+            }
 
 			// Patchers
 			{
@@ -362,6 +382,15 @@ namespace RTFunctions
 		}
 
         #region Settings Changed
+
+		void InterfaceBlurChanged(object sender, EventArgs e)
+        {
+			if (GameStorageManager.inst && GameStorageManager.inst.guiBlur)
+            {
+				GameStorageManager.inst.guiBlur.material.SetFloat("_Size", InterfaceBlurSize.Value);
+				GameStorageManager.inst.guiBlur.material.color = InterfaceBlurColor.Value;
+			}
+        }
 
         void DiscordChanged(object sender, EventArgs e)
 		{
@@ -838,8 +867,8 @@ namespace RTFunctions
 				return;
 
 			var camera = Camera.main;
-			camera.farClipPlane = IncreasedClipPlanes.Value ? 100000 : 32f;
-			camera.nearClipPlane = IncreasedClipPlanes.Value ? -100000 : 0.1f;
+			camera.farClipPlane = IncreasedClipPlanes.Value ? 100000 : ModCompatibility.EventsCoreInstalled ? 22f : 32f;
+			camera.nearClipPlane = IncreasedClipPlanes.Value ? -100000 : ModCompatibility.EventsCoreInstalled ? -9.9f : 0.1f;
 		}
 
 		public static void SetAntiAliasing()
