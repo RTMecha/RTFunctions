@@ -61,13 +61,44 @@ namespace RTFunctions.Functions.Managers
             objectScalerLeft = CreateScaler(Axis.PosX, Color.red);
             objectScalerBottom = CreateScaler(Axis.NegY, Color.green);
             objectScalerRight = CreateScaler(Axis.NegX, Color.red);
+
+            if (!EditorManager.inst)
+            {
+                playerGUIBack = GameManager.inst.menuUI.GetComponentInChildren<Image>();
+                playerGUIBack.gameObject.SetActive(false);
+
+                var guiBlurObject = ObjectManager.inst.objectPrefabs[0].options[0].transform.GetChild(0).gameObject.Duplicate(transform.parent, "blur");
+                guiBlur = guiBlurObject.GetComponent<Renderer>();
+                guiBlur.enabled = true;
+                guiBlurObject.transform.localScale = new Vector3(1000f, 1000f, 1f);
+
+                guiBlur.material = ObjectManager.inst.norm;
+                guiBlur.material.shader = FunctionsPlugin.blurColored;
+                guiBlur.material.SetFloat("_Size", FunctionsPlugin.InterfaceBlurSize.Value);
+                guiBlur.material.color = FunctionsPlugin.InterfaceBlurColor.Value;
+
+                Destroy(guiBlurObject.GetComponent<SelectObjectInEditor>());
+                Destroy(guiBlurObject.GetComponent<Collider2D>());
+            }
         }
 
-        void Update() => objectDragger.gameObject.SetActive(EditorManager.inst && EditorManager.inst.isEditing &&
+        void Update()
+        {
+            objectDragger.gameObject.SetActive(EditorManager.inst && EditorManager.inst.isEditing &&
                 ModCompatibility.sharedFunctions.ContainsKey("SelectedObjectCount") && (int)ModCompatibility.sharedFunctions["SelectedObjectCount"] == 1 &&
                 ModCompatibility.sharedFunctions.ContainsKey("CurrentSelection") && ModCompatibility.sharedFunctions["CurrentSelection"] is TimelineObject currentSelection &&
                 (currentSelection.IsBeatmapObject && currentSelection.GetData<BeatmapObject>().objectType != BeatmapObject.ObjectType.Empty || currentSelection.IsPrefabObject) &&
                 RTObject.Enabled);
+
+            if (guiBlur)
+            {
+                var cameraMain = Camera.main;
+                guiBlur.gameObject.SetActive(GameManager.inst.gameState != GameManager.State.Playing && GameManager.inst.gameState != GameManager.State.Reversing);
+                if (GameManager.inst.gameState != GameManager.State.Playing && GameManager.inst.gameState != GameManager.State.Reversing)
+                    guiBlur.transform.localPosition = new Vector3(cameraMain.transform.position.x, cameraMain.transform.position.y,
+                        (FunctionsPlugin.IncreasedClipPlanes.Value ? -100000 : ModCompatibility.EventsCoreInstalled ? -9.9f : 0.1f) + 0.1f);
+            }
+        }
 
         RTScaler CreateScaler(Axis axis, Color color)
         {
@@ -96,6 +127,9 @@ namespace RTFunctions.Functions.Managers
         public RTScaler objectScalerBottom;
 
         public Transform objectDragger;
+
+        public Renderer guiBlur;
+        public Image playerGUIBack;
 
         public CanvasScaler playerGUICanvasScaler;
 
