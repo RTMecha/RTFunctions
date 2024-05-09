@@ -397,6 +397,10 @@ namespace RTFunctions.Functions.Managers
                 Debug.Log("shape_option -> so");
                 _json = _json.Replace("\"shape_option\"", "\"so\"");
             }
+
+            // To fix alpha screwing the font up
+            _json = _json.Replace("<font=LiberationSans>", "<font=LiberationSans SDF>").Replace("<font=\"LiberationSans\">", "<font=LiberationSans SDF>");
+
             return _json;
         }
 
