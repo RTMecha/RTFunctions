@@ -1,3 +1,6 @@
+1.11.11 > [May 10, 2024]
+- Fixed LiberationSans SDF being just LiberationSans in some cases.
+- Shake X values should no longer be 0 if the shake event's value count is 2.
 1.11.10 > [May 5, 2024]
 - Added Analog Glitch and Digital Glitch loading / saving to level.lsb.
 1.11.9 > [Apr 29, 2024]
