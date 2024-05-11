@@ -322,8 +322,6 @@ namespace RTFunctions.Functions.Data
 
             jn["id"] = ID;
             jn["pid"] = prefabID;
-            if (!string.IsNullOrEmpty(parent))
-                jn["p"] = parent;
 
             jn["ed"] = ((ObjectEditorData)editorData).ToJSONVG();
 
@@ -352,6 +350,27 @@ namespace RTFunctions.Functions.Data
             jn["st"] = StartTime.ToString();
 
             jn["sp"] = speed.ToString();
+
+            if (parentType != "111")
+                jn["pt"] = parentType;
+
+            if (parentOffsets.Any(x => x != 0f))
+            {
+                for (int i = 0; i < parentOffsets.Length; i++)
+                    jn["po"][i] = parentOffsets[i].ToString();
+            }
+
+            if (parentAdditive != "000")
+                jn["pa"] = parentAdditive;
+
+            if (parentParallax.Any(x => x != 1f))
+            {
+                for (int i = 0; i < parentParallax.Length; i++)
+                    jn["ps"][i] = parentParallax[i].ToString();
+            }
+
+            if (!string.IsNullOrEmpty(parent))
+                jn["p"] = parent;
 
             jn["akt"] = ((int)autoKillType).ToString();
 
