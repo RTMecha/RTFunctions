@@ -1,3 +1,5 @@
+1.11.12 > [May 12, 2024]
+- Fixed Prefab Object parenting not saving due to an oversight.
 1.11.11 > [May 10, 2024]
 - Fixed LiberationSans SDF being just LiberationSans in some cases.
 - Shake X values should no longer be 0 if the shake event's value count is 2.
